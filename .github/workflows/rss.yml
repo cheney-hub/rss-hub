@@ -44,6 +44,8 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
         run: python build_feed.py
 
       - uses: actions/upload-pages-artifact@v3

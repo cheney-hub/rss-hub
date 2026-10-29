@@ -77,7 +77,10 @@ CYCLE_TPL = """
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "{n}"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then

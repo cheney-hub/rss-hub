@@ -4,20 +4,26 @@
 由 **GitHub Actions** 定时重建、**GitHub Pages** 对外发布。全程免费、无需服务器、无需本机常开。
 
 ```
-feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml  ──►  GitHub Pages  ──►  RSS 客户端
-（源清单）      （Actions 里跑）      （提交回仓库）       （对外订阅）
+feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►  GitHub Pages  ──►  RSS 阅读器
+（源清单）      （Actions 里跑）      docs/feed-screen.xml                        ──►  墨水屏设备
 ```
+
+同一份数据出两个版本：**完整版**标题原样；**墨水屏版**标题裁到 22 个全角字符、只留 12 条，
+专门给 296×152 这类小屏（如 Dot Quote/0）用。
 
 ## 订阅地址
 
 | 用途 | 地址 |
 |---|---|
 | 主地址（推荐） | `https://cheney-hub.github.io/rss-hub/feed.xml` |
+| 墨水屏版 | `https://cheney-hub.github.io/rss-hub/feed-screen.xml` |
 | 说明页 | https://cheney-hub.github.io/rss-hub/ |
+| 墨水屏预览 | https://cheney-hub.github.io/rss-hub/screen.html |
 | 镜像 1（raw） | `https://raw.githubusercontent.com/cheney-hub/rss-hub/main/docs/feed.xml` |
 | 镜像 2（jsDelivr） | `https://cdn.jsdelivr.net/gh/cheney-hub/rss-hub@main/docs/feed.xml` |
 
 把主地址粘进 FreshRSS / Feedly / Inoreader / NetNewsWire / 阅读 等任意 RSS 阅读器即可。
+小屏设备（墨水屏、电子价签、桌面小电视）用墨水屏版，标题不会被切成半截。
 
 ## 当前实况
 
@@ -29,6 +35,7 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml  ──►  GitHub
 | 发布频率 | 白天每分钟一版，深夜整点一版（自定义 Actions 部署，不受 Pages 10 次/小时限制） |
 | 单轮耗时 | 3～5 秒（43 源并发 12 路） |
 | 单次作业 | 白天 55 分钟 / 55 轮；单轮约 5 秒抓取 + 约 20 秒部署 |
+| 墨水屏版 | 标题 ≤ 22 全角字符（约一行 22 字），只保留最新 12 条，一屏 4 条分 3 页 |
 
 ## 快速开始
 
@@ -48,8 +55,10 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml  ──►  GitHub
 ├── feeds.txt                  # 订阅源清单：注释行 = 中文源名，下一行 = 地址
 ├── build_feed.py              # 【主链路】采集 + 去重 + 生成 RSS，Actions 调用
 ├── docs/                      # ← GitHub Pages 发布的目录（站点根）
-│   ├── feed.xml               #   生成的订阅文件（每 10 轮备份提交一次）
-│   └── index.html             #   订阅说明页（前端读取 feed.xml 渲染）
+│   ├── feed.xml               #   完整版订阅文件（每 10 轮备份提交一次）
+│   ├── feed-screen.xml        #   墨水屏版：标题裁到一行、只留 12 条
+│   ├── index.html             #   订阅说明页（前端读取 feed.xml 渲染）
+│   └── screen.html            #   墨水屏预览：按 296×152 像素 1:1 模拟
 ├── .github/workflows/
 │   ├── minute.yml             #   分钟级发布：白天每小时 55 轮循环，每分钟部署一次
 │   ├── nightly.yml            #   夜间整点发布：北京 00:00–06:00 每小时一次
@@ -80,6 +89,27 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml  ──►  GitHub
 5. 每 10 轮把 `docs/feed.xml` 备份提交一次，仓库历史不会因高频发布而膨胀。
 
 细节规则见 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
+## 小屏 / 墨水屏适配
+
+参考 [Dot Quote/0](https://dot.mindreset.tech/docs/quote_0) 的规格（296 × 152 px、2.66 英寸、125 PPI、黑白），
+同一轮采集顺带生成 `docs/feed-screen.xml`，规则：
+
+| 项目 | 完整版 | 墨水屏版 |
+|---|---|---|
+| 标题长度 | 原样 | 最多 **22 个全角字符**（一行 280 px @ 11 px 字号留余量） |
+| 条目数 | 最多 60 条 | 最新 **12 条**（一屏 4 条 × 3 页） |
+| 截断方式 | — | 优先在 `，。：｜` 等标点断句；书名号/引号没闭合就退到其前面；补 `…` 收尾 |
+| 直接可看 | 任意阅读器 | 打开 <https://cheney-hub.github.io/rss-hub/screen.html> 看 1:1 版面 |
+
+想调宽度或条数，改运行参数即可（不用改代码）：
+
+```bash
+SCREEN_TITLE_WIDTH=18 SCREEN_ITEMS=8 python3 build_feed.py
+```
+
+对应环境变量：`SCREEN_TITLE_WIDTH`（全角字符数）、`SCREEN_ITEMS`（条数）、`SCREEN_OUT`（输出路径）。
+`docs/screen.html` 是纯前端模拟，读取 `feed-screen.xml` 后按 4 条一页渲染，可翻页/放大/暂停轮播。
 
 ## 加一个源
 

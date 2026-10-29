@@ -19,14 +19,15 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
               │   ├─ 每源解析出「最新 1 条」              │
               │   ├─ 失败源 → 用上一份 feed 的同源条目顶上 │
               │   ├─ 跨源去重 + 按时间倒序                │
-              │   └─ 生成 docs/feed.xml                  │
+              │   ├─ 生成 docs/feed.xml（完整版）          │
+              │   └─ 生成 docs/feed-screen.xml（小屏版）    │
               │           ↓ 打包为 artifact               │
               │           ↓ deploy-pages 部署             │
               └───────────────────┬──────────────────────┘
                                   ↓
                     Pages（自定义 Actions 部署产物）
                                   ↓
-                   https://cheney-hub.github.io/rss-hub/feed.xml
+        feed.xml（完整）/ feed-screen.xml（墨水屏）/ screen.html（预览）
 ```
 
 一次作业的大致时序：
@@ -55,6 +56,8 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | 去重 | `dedupe()` / `norm_title()` | 见第四节 |
 | 回退 | `load_prev_items()` | 从上一份 `feed.xml` 抽出「源地址 → 条目」映射 |
 | 生成 | `build_rss()` | RSS 2.0 + `atom:link self`，`ttl=5`，条目上限 60 |
+| 小屏排版 | `fit_title()` / `text_width()` | 按全角/半角折算宽度（`east_asian_width`，`W/F/A` 记 1、其余 0.5），超宽时优先在标点断句、再处理未闭合的 `《》“”（）`，最后补 `…` |
+| 双份输出 | `write_feed()` | 完整版写 `feed.xml`；同一批条目裁标题、限条数后写 `feed-screen.xml` |
 
 ## 四、关键规则
 
@@ -111,7 +114,10 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | `REFRESH_SECONDS` | `0` | 循环刷到第几秒收工，0 = 只跑一轮 |
 | `FETCH_TIMEOUT` | `20` | 单源超时（秒） |
 | `CONCURRENCY` | `12` | 并发抓取数 |
-| `MAX_ITEMS`（代码常量） | `60` | 输出条目上限 |
+| `MAX_ITEMS`（代码常量） | `60` | 完整版输出条目上限 |
+| `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-screen.xml` | 墨水屏版输出路径 |
+| `SCREEN_TITLE_WIDTH` | `22` | 墨水屏标题宽度上限（全角字符数，22 × 11 px ≈ 242 px < 296 px） |
+| `SCREEN_ITEMS` | `12` | 墨水屏版条目数（4 条/页 × 3 页） |
 
 ### `aggregate_rss.py`（通道 B）
 

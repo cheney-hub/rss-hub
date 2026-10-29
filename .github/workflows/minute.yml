@@ -51,7 +51,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "1"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -88,7 +91,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "2"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -125,7 +131,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "3"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -162,7 +171,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "4"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -199,7 +211,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "5"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -236,7 +251,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "6"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -273,7 +291,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "7"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -310,7 +331,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "8"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -347,7 +371,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "9"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -384,7 +411,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "10"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -421,7 +451,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "11"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -458,7 +491,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "12"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -495,7 +531,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "13"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -532,7 +571,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "14"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -569,7 +611,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "15"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -606,7 +651,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "16"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -643,7 +691,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "17"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -680,7 +731,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "18"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -717,7 +771,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "19"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -754,7 +811,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "20"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -791,7 +851,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "21"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -828,7 +891,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "22"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -865,7 +931,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "23"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -902,7 +971,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "24"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -939,7 +1011,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "25"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -976,7 +1051,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "26"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1013,7 +1091,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "27"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1050,7 +1131,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "28"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1087,7 +1171,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "29"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1124,7 +1211,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "30"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1161,7 +1251,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "31"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1198,7 +1291,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "32"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1235,7 +1331,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "33"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1272,7 +1371,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "34"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1309,7 +1411,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "35"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1346,7 +1451,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "36"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1383,7 +1491,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "37"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1420,7 +1531,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "38"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1457,7 +1571,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "39"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1494,7 +1611,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "40"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1531,7 +1651,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "41"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1568,7 +1691,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "42"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1605,7 +1731,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "43"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1642,7 +1771,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "44"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1679,7 +1811,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "45"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1716,7 +1851,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "46"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1753,7 +1891,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "47"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1790,7 +1931,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "48"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1827,7 +1971,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "49"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1864,7 +2011,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "50"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1901,7 +2051,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "51"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1938,7 +2091,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "52"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -1975,7 +2131,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "53"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -2012,7 +2171,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "54"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then
@@ -2049,7 +2211,10 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
+          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_ITEMS: "12"
           CYCLE: "55"
+
         run: |
           python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
           if [ $(( CYCLE % 10 )) -eq 1 ]; then

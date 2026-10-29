@@ -25,7 +25,7 @@
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   code,input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
   input{flex:1;min-width:240px;padding:11px 13px;border:1px solid var(--line);
-        border-radius:10px;background:var(--bg);color:var(--text)}
+        border-radius:10px;background:var(--bg);color:var(--text);font-size:12.5px}
   button{padding:11px 18px;border:0;border-radius:10px;background:var(--accent);
          color:#fff;font-size:14px;cursor:pointer}
   button:active{opacity:.85}
@@ -45,15 +45,26 @@
 <body>
 <div class="wrap">
   <h1>RSS 聚合头条</h1>
-  <div class="sub">多源头条合并 · 按发布时间倒序 · 由 GitHub Actions 每 5 分钟自动刷新</div>
+  <div class="sub">多源头条合并 · 按发布时间倒序 · 每分钟刷新（北京时间 00:00–06:00 每小时一次）</div>
 
   <div class="card">
     <div class="row">
       <input id="url" readonly value="https://cheney-hub.github.io/rss-hub/feed.xml">
-      <button onclick="copyUrl()">复制订阅地址</button>
+      <button onclick="copyUrl('url', this)">复制订阅地址</button>
     </div>
     <div class="meta" style="margin-top:10px">
       把这个地址粘贴到任意 RSS 阅读器即可（FreshRSS / Feedly / NetNewsWire / 阅读 / Inoreader）。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <input id="surl" readonly value="https://cheney-hub.github.io/rss-hub/feed-screen.xml">
+      <button onclick="copyUrl('surl', this)">复制墨水屏地址</button>
+    </div>
+    <div class="meta" style="margin-top:10px">
+      墨水屏版：标题已裁到 22 个全角字符内，一屏 4 条放得下，适合
+      <a href="./screen.html">Dot Quote/0（296 × 152）</a> 这类小屏设备。
     </div>
   </div>
 
@@ -70,17 +81,19 @@
 
   <div class="foot">
     <a href="./feed.xml">feed.xml</a> ·
+    <a href="./feed-screen.xml">feed-screen.xml</a> ·
+    <a href="./screen.html">墨水屏预览</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
   </div>
 </div>
 
 <script>
-function copyUrl(){
-  const el = document.getElementById('url');
+function copyUrl(id, btn){
+  const el = document.getElementById(id);
   el.select();
   navigator.clipboard.writeText(el.value).then(()=>{
-    const b = event.target; const t = b.textContent;
-    b.textContent = '已复制'; setTimeout(()=>b.textContent = t, 1200);
+    const t = btn.textContent;
+    btn.textContent = '已复制'; setTimeout(()=>btn.textContent = t, 1200);
   }).catch(()=>document.execCommand('copy'));
 }
 

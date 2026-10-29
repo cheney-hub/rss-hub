@@ -38,6 +38,18 @@ python3 build_feed.py
 | `CONCURRENCY` | `12` | 源增多到 60+ 可提到 16；被源站限流时降到 8 |
 | `FETCH_TIMEOUT` | `20` | 慢源多可提到 `25`；注意 `timeout-minutes: 12` 是总闸 |
 
+### 调墨水屏排版
+
+`docs/feed-screen.xml` 的规则由两个环境变量控制，改 `.github/workflows/` 下三处 `env:`（`minute.yml` 的模板在
+`tools/gen_minute_workflow.py` 的 `CYCLE_TPL` 里，改完重新生成）：
+
+| 变量 | 现值 | 说明 |
+|---|---|---|
+| `SCREEN_TITLE_WIDTH` | `22` | 标题上限（全角字符数）。屏幕 296 px、字号约 11 px，22 字 ≈ 242 px，留了余量；换成更窄的屏（如 250 px）就调到 18 |
+| `SCREEN_ITEMS` | `12` | 条数。一屏 4 条，`12` = 3 页；只想给一屏就设 `4` |
+
+调完打开 <https://cheney-hub.github.io/rss-hub/screen.html> 看效果（1:1 模拟 296×152，可翻页、放大 2×）。
+
 ### 手动触发一次
 
 - 网页：仓库 → **Actions** → 左侧「RSS 聚合」→ **Run workflow** → 选 `main`；

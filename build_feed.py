@@ -12,6 +12,10 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
   * 单次运行内可循环多轮（REFRESH_SECONDS），让 feed 更接近实时
   * 自动识别 UTF-8 / GB18030 编码、修补常见 HTML 实体
 
+同时输出两份 feed：
+  docs/feed.xml         完整版，标题原样，给电脑/手机上的阅读器
+  docs/feed-screen.xml  墨水屏版，标题裁到 296×152 屏幕一行放得下，条目也少
+
 环境变量：
   FEEDS_FILE       订阅源列表，默认 ./feeds.txt
   OUT_FILE         输出文件，默认 ./docs/feed.xml
@@ -20,6 +24,9 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
   REFRESH_SECONDS  循环刷新到第几秒结束（0 = 只跑一轮），默认 0
   FETCH_TIMEOUT    单源超时秒数，默认 20
   CONCURRENCY      并发数，默认 12
+  SCREEN_OUT       墨水屏版输出路径，默认与 OUT_FILE 同目录的 feed-screen.xml
+  SCREEN_TITLE_WIDTH 墨水屏标题宽度上限（全角字符数），默认 22
+  SCREEN_ITEMS     墨水屏版条目数上限，默认 12
 """
 import os
 import re
@@ -28,6 +35,7 @@ import time
 import gzip
 import html
 import email.utils
+import unicodedata
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
@@ -42,6 +50,12 @@ FEED_URL = os.environ.get("FEED_URL", "https://cheney-hub.github.io/rss-hub/feed
 REFRESH_SECONDS = int(os.environ.get("REFRESH_SECONDS", "0"))
 FETCH_TIMEOUT = int(os.environ.get("FETCH_TIMEOUT", "20"))
 CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
+
+# 墨水屏版（Dot Quote/0：296×152 px、125 PPI、黑白）
+SCREEN_OUT = os.environ.get(
+    "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-screen.xml"))
+SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "22"))
+SCREEN_ITEMS = max(1, int(os.environ.get("SCREEN_ITEMS", "12")))
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -264,29 +278,85 @@ def load_prev_items():
     return prev
 
 
+# ---------------- 墨水屏排版 ----------------
+# 屏幕 296×152 px。标题按一行排：正文宽 280 px、字号约 11 px，
+# 一屏放 4 条（标题 1 行 + 来源/时间 1 行），所以标题控制在 22 个全角字符内，
+# 留出字体差异与右侧留白的余量。
+BREAK_CHARS = "，,、；;：:｜|—）)！!？?·】」』 "
+
+
+def char_width(ch):
+    """全角算 1、半角算 0.5。CJK 环境里 “…” “—” 这类歧义宽度按全角算。"""
+    return 1.0 if unicodedata.east_asian_width(ch) in ("W", "F", "A") else 0.5
+
+
+def text_width(s):
+    return sum(char_width(c) for c in s or "")
+
+
+def _cut_index(s, max_w):
+    """返回不超过 max_w 全角宽度的最大字符下标。"""
+    acc = 0.0
+    for i, ch in enumerate(s):
+        w = char_width(ch)
+        if acc + w > max_w:
+            return i
+        acc += w
+    return len(s)
+
+
+def fit_title(title, max_w=SCREEN_TITLE_WIDTH):
+    """把标题裁到一行放得下：优先在标点处断句，去掉残句尾巴，再补省略号。"""
+    t = re.sub(r"\s+", " ", title or "").strip()
+    # 去掉 “标题 - 来源名” 这类尾巴（来源单独用 <source> 显示，重复占位）
+    t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
+    if text_width(t) <= max_w:
+        return t
+    cut = _cut_index(t, max_w - 1)          # 留 1 个全角位给省略号
+    head = t[:cut]
+    # 书名号 / 引号没闭合时，从它前面断开，别把《今宵酒…》切成半截
+    for opener, closer in (("《", "》"), ("“", "”"), ("「", "」"), ("（", "）"), ("(", ")")):
+        if head.count(opener) > head.count(closer):
+            pos = head.rfind(opener)
+            if pos >= int(len(head) * 0.5):     # 只在后半段出现才回退，否则会砍太狠
+                head = head[:pos]
+    for i in range(len(head) - 1, max(0, int(len(head) * 0.6)) - 1, -1):
+        if head[i] in BREAK_CHARS:
+            head = head[:i]
+            break
+    head = head.rstrip(BREAK_CHARS + "-—…")
+    return (head + "…") if head else t[:cut] + "…"
+
+
 # ---------------- 生成 RSS ----------------
 def esc(s):
     return html.escape(s or "", quote=True)
 
 
-def build_rss(items, feed_url, stats):
+def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
+              description=None, title_width=None, limit=None):
     now = email.utils.format_datetime(datetime.now(timezone.utc))
+    if description is None:
+        description = "多源 RSS 头条聚合，按发布时间倒序（源 %d 个）" % stats["total"]
+    if limit:
+        items = items[:limit]
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
         "<channel>",
-        "<title>RSS 聚合头条</title>",
+        "<title>%s</title>" % esc(channel_title),
         "<link>%s</link>" % esc(feed_url),
         '<atom:link href="%s" rel="self" type="application/rss+xml"/>' % esc(feed_url),
-        "<description>多源 RSS 头条聚合，按发布时间倒序（源 %d 个）</description>" % stats["total"],
+        "<description>%s</description>" % esc(description),
         "<language>zh-CN</language>",
         "<lastBuildDate>%s</lastBuildDate>" % now,
         "<generator>github-actions/rss-hub</generator>",
         "<ttl>5</ttl>",
     ]
     for it in items:
+        title = fit_title(it["title"], title_width) if title_width else it["title"]
         lines.append("<item>")
-        lines.append("<title>%s</title>" % esc(it["title"]))
+        lines.append("<title>%s</title>" % esc(title))
         lines.append("<link>%s</link>" % esc(it["link"]))
         if it.get("date_raw"):
             lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
@@ -349,14 +419,28 @@ def run_once(entries, prev_items):
     return items, stats
 
 
-def write_feed(items, stats):
-    os.makedirs(os.path.dirname(OUT_FILE) or ".", exist_ok=True)
-    xml_text = build_rss(items, FEED_URL, stats)
-    tmp = OUT_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
+def _write(path, xml_text):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    tmp = path + ".tmp"
+    # 统一 LF：Windows 上默认会写成 CRLF，进仓库会反复产生换行差异
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
         f.write(xml_text)
-    os.replace(tmp, OUT_FILE)
-    return xml_text
+    os.replace(tmp, path)
+
+
+def write_feed(items, stats):
+    xml_text = build_rss(items, FEED_URL, stats)
+    _write(OUT_FILE, xml_text)
+
+    # 墨水屏版：标题裁到一行、条数收紧，给 296×152 的小屏用
+    screen_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
+    screen_text = build_rss(
+        items, screen_url, stats,
+        channel_title="RSS 头条 · 墨水屏",
+        description="多源头条，标题已按 296×152 屏幕一行排好（源 %d 个）" % stats["total"],
+        title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS)
+    _write(SCREEN_OUT, screen_text)
+    return xml_text, screen_text
 
 
 def main():
@@ -364,7 +448,7 @@ def main():
     if not entries:
         print("feeds.txt 中没有有效地址")
         return 1
-    print("订阅源 %d 个，输出 %s" % (len(entries), OUT_FILE))
+    print("订阅源 %d 个，输出 %s / %s" % (len(entries), OUT_FILE, SCREEN_OUT))
 
     deadline = time.time() + REFRESH_SECONDS
     rounds = 0
