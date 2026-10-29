@@ -6,29 +6,57 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 10:53:19 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 11:01:50 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>礼来上调全年营收指引至最高920亿美元 调整后每股收益指引下调</title>
-<link>https://xueqiu.com/5124430882/414533529</link>
-<pubDate>Thu, 29 Oct 2026 18:49:14 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414533529|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>《尚公主》海外同步播出 多平台登顶热播榜</title>
-<link>https://www.chinanews.com.cn/cul/2026/10-29/10722871.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:48:34 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/cul/2026/10-29/10722871.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<title>宁夏鲜活大闸蟹首次出口马来西亚 盐碱水产闯开东南亚市场</title>
+<link>https://www.chinanews.com.cn/cj/2026/10-29/10722873.shtml</link>
+<pubDate>Thu, 29 Oct 2026 18:56:52 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722873.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
-<title>国新宏盛投资(北京)有限公司新进成为中国联通第九大股东</title>
-<link>https://flash.jin10.com/detail/20261029184826410800</link>
-<pubDate>Thu, 29 Oct 2026 18:48:26 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029184826410800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>据以色列媒体：约96%的议会选举选票已统计完毕，结果未发生变化。</title>
+<link>https://flash.jin10.com/detail/20261029185645571800</link>
+<pubDate>Thu, 29 Oct 2026 18:56:45 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029185645571800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>财联社10月29日电，道琼斯指数期货瞬时回吐0.6%的涨幅，因卡特彼勒业绩不佳盘前大跌超8%。</title>
+<link>https://api3.cls.cn/share/article/2519500?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 18:54:55 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519500?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+</item>
+<item>
+<title>瑞穗银行将微软目标价从600美元上调至625美元。</title>
+<link>https://xueqiu.com/5124430882/414534710</link>
+<pubDate>Thu, 29 Oct 2026 18:54:05 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414534710|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>牧原前三季度亏损93.19亿元，停建124个猪场应对猪价低谷</title>
+<link>https://wallstreetcn.com/articles/3784773</link>
+<pubDate>Thu, 29 Oct 2026 18:52:32 +0800</pubDate>
+<guid isPermaLink="false">https://wallstreetcn.com/articles/3784773|https://dedicated.wallstreetcn.com/rss.xml</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
+</item>
+<item>
+<title>俄国防部：乌军一天在特别军事行动中损失约1155名军人</title>
+<link>https://sputniknews.cn/20261029/1073860381.html</link>
+<pubDate>Thu, 29 Oct 2026 18:52:15 +0800</pubDate>
+<guid isPermaLink="false">https://sputniknews.cn/20261029/1073860381.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
+</item>
+<item>
+<title>Indonesia haze cost Malaysia US$1.97 billion in losses: study</title>
+<link>https://www.scmp.com/week-asia/health-environment/article/3372599/indonesia-haze-cost-malaysia-us197-billion-losses-study</link>
+<pubDate>Thu, 29 Oct 2026 10:48:34 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/week-asia/health-environment/article/3372599/indonesia-haze-cost-malaysia-us197-billion-losses-study|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
 <title>百合网创始人在朋友圈&quot;化缘&quot;1天收款近6千 本人发声</title>
@@ -43,13 +71,6 @@
 <pubDate>Thu, 29 Oct 2026 18:39:20 +0800</pubDate>
 <guid isPermaLink="false">https://www.jiemian.com/article/15265336.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
-</item>
-<item>
-<title>看了财报后，高盛、摩根大通双双下调谷歌目标价</title>
-<link>https://wallstreetcn.com/articles/3784771</link>
-<pubDate>Thu, 29 Oct 2026 18:37:49 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784771|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
 <title>字节猫箱火爆背后：有人为爱充值，有人嫌AI恋人太假</title>
@@ -75,7 +96,7 @@
 <item>
 <title>Spain Crash Investigators Focus on Train Traffic Controllers’ Role</title>
 <link>https://www.nytimes.com/2026/10/29/world/europe/spain-train-crash-renfe.html</link>
-<pubDate>Thu, 29 Oct 2026 10:31:59 +0000</pubDate>
+<pubDate>Thu, 29 Oct 2026 10:32:00 +0000</pubDate>
 <guid isPermaLink="false">https://www.nytimes.com/2026/10/29/world/europe/spain-train-crash-renfe.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
 </item>
@@ -94,13 +115,6 @@
 <source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
 </item>
 <item>
-<title>World’s first intergovernmental mediation organisation to ramp up outreach</title>
-<link>https://www.scmp.com/business/china-business/article/3372597/worlds-first-intergovernmental-mediation-organisation-ramp-outreach</link>
-<pubDate>Thu, 29 Oct 2026 10:29:13 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/business/china-business/article/3372597/worlds-first-intergovernmental-mediation-organisation-ramp-outreach|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
-</item>
-<item>
 <title>屏南快速公路進度 公路局：總期程可望縮短1至2年</title>
 <link>https://www.cna.com.tw/news/aloc/202610290309.aspx</link>
 <pubDate>Thu, 29 Oct 2026 18:22:00 +0800</pubDate>
@@ -113,6 +127,13 @@
 <pubDate>Thu, 29 Oct 2026 10:20:48 GMT</pubDate>
 <guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029145311202-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
 <source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+</item>
+<item>
+<title>在巴西总统选举中落败的博索纳罗抵美 称遭政治迫害</title>
+<link>https://www3.nhk.or.jp/nhkworld/zh/news/20261029_RS19/</link>
+<pubDate>Thu, 29 Oct 2026 19:15:44 +0900</pubDate>
+<guid isPermaLink="false">https://www3.nhk.or.jp/nhkworld/zh/news/20261029_RS19/|https://feed.quanwenrss.com/feed/nhkworld-zh.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nhkworld-zh.xml">NHK WORLD</source>
 </item>
 <item>
 <title>刚发布的苹果触屏电脑真烧心：这是屏坏了，还是故意的？</title>
@@ -155,6 +176,13 @@
 <pubDate>Thu, 29 Oct 2026 10:00:00 GMT</pubDate>
 <guid isPermaLink="false">https://www.8world.com/singapore/domestic-violent-trend-report-3324496|https://rsshub.rss.tips/8world/news</guid>
 <source url="https://rsshub.rss.tips/8world/news">8world</source>
+</item>
+<item>
+<title>受权发布丨张升民同志简历</title>
+<link>https://news.ifeng.com/c/8xcatVHVYai</link>
+<pubDate>Thu, 29 Oct 2026 09:59:41 GMT</pubDate>
+<guid isPermaLink="false">https://news.ifeng.com/c/8xcatVHVYai|https://rsshub.rss.tips/ifeng/news</guid>
+<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
 <title>Carney to push for closer ties at Canada-EU summit in Montreal</title>
@@ -206,25 +234,11 @@
 <source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
 </item>
 <item>
-<title>普京：俄罗斯主张给予非洲在联合国安理会中更公平代表权</title>
-<link>https://sputniknews.cn/20261029/1073857897.html</link>
-<pubDate>Thu, 29 Oct 2026 17:20:34 +0800</pubDate>
-<guid isPermaLink="false">https://sputniknews.cn/20261029/1073857897.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
-</item>
-<item>
 <title>习近平就西班牙高速列车追尾脱轨事故向西班牙国王费利佩六世致慰问电</title>
 <link>https://m.bjnews.com.cn/detail/1793263233129241.html</link>
 <pubDate>Thu, 29 Oct 2026 17:18:51 +0800</pubDate>
 <guid isPermaLink="false">https://m.bjnews.com.cn/detail/1793263233129241.html|https://feed.quanwenrss.com/feed/bjnews-yaowen.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
-</item>
-<item>
-<title>17岁男生遭假警察上门殴打，被强迫跪下磕头、叫爹</title>
-<link>https://news.ifeng.com/c/8xcXbrDDzek</link>
-<pubDate>Thu, 29 Oct 2026 09:02:43 GMT</pubDate>
-<guid isPermaLink="false">https://news.ifeng.com/c/8xcXbrDDzek|https://rsshub.rss.tips/ifeng/news</guid>
-<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
 <title>弗拉维奥·博索纳罗称将在海外反对卢拉政府</title>
@@ -253,13 +267,6 @@
 <pubDate>Thu, 29 Oct 2026 14:13:58 +0800</pubDate>
 <guid isPermaLink="false">https://cn.nikkei.com/industry/tradingretail/64530-2026-10-29-14-13-58.html|https://feed.quanwenrss.com/feed/nikkei-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nikkei-latest.xml">日经中文网·最新</source>
-</item>
-<item>
-<title>日本千叶县发生震度5弱地震 未引发海啸</title>
-<link>https://www3.nhk.or.jp/nhkworld/zh/news/20261029_RS12/</link>
-<pubDate>Thu, 29 Oct 2026 13:54:23 +0900</pubDate>
-<guid isPermaLink="false">https://www3.nhk.or.jp/nhkworld/zh/news/20261029_RS12/|https://feed.quanwenrss.com/feed/nhkworld-zh.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nhkworld-zh.xml">NHK WORLD</source>
 </item>
 <item>
 <title>西班牙高铁事故：调度中心指令失误 红灯仍放行</title>

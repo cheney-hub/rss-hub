@@ -8,8 +8,8 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 
 输出两份：
   docs/feed.xml       完整版：标题原样，给电脑 / 手机上的 RSS 阅读器
-  docs/feed-wrap.xml  设备版：纯文本标题、字段极简、标题按行宽折行
-                      （第一行作标题主体，放不下的续到下一行）
+  docs/feed-wrap.xml  设备版：标题只放屏上真正显示得下的那部分，
+                      余下的文字接进 <description>（正文），
                       填进 Dot App 的「循环内容」列表即可
 
 特性：
@@ -27,12 +27,11 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
   FETCH_TIMEOUT     单源超时秒数，默认 20
   CONCURRENCY       并发数，默认 12
   SCREEN_OUT        设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml
-  SCREEN_LINE_WIDTH 设备版每行宽度（全角字符数），默认 13
-                    —— RSS 卡片在设备上是 296×152 的一行大字号，实测 13～14 个全角字满宽，
-                    超过就被 Dot 云端从右边硬切（还会补它自己的省略号）。按 13 折行，
-                    让换行发生在我们能控制的地方。
-  SCREEN_WRAP_LINES 最多折几行，默认 3
-  SCREEN_WRAP_SEP   折行分隔符：lf（换行）/ br（<br>）/ u2028，默认 lf
+  SCREEN_LINE_WIDTH 标题行宽度（全角字符数），默认 13
+                    —— 设备 296×152 屏是大字号单行，实测 13 个全角字满宽，
+                    再多就被 Dot 云端从右边切掉。所以标题只放得下多少给多少。
+  SCREEN_BODY_MAX   正文（description）最多保留多少全角字，默认 60
+                    —— 标题装不下的部分原文接进正文；太长的正文尾端补省略号。
 """
 import os
 import re
@@ -57,12 +56,11 @@ REFRESH_SECONDS = int(os.environ.get("REFRESH_SECONDS", "0"))
 FETCH_TIMEOUT = int(os.environ.get("FETCH_TIMEOUT", "20"))
 CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
 
-# 设备版（Dot Quote/0）：纯文本标题 + 按行宽折行，交给 Dot 云端渲染成位图
+# 设备版（Dot Quote/0）：标题截到屏宽，余下文字进正文，交给 Dot 云端渲染成位图
 SCREEN_OUT = os.environ.get(
     "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-wrap.xml"))
 LINE_WIDTH = float(os.environ.get("SCREEN_LINE_WIDTH", "13"))
-WRAP_LINES = max(1, int(os.environ.get("SCREEN_WRAP_LINES", "3")))
-WRAP_SEP = os.environ.get("SCREEN_WRAP_SEP", "lf")      # lf | br | u2028
+BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "60")))
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -290,20 +288,24 @@ def load_prev_items():
 # 设备按刷新间隔拉图显示。设备端（ESP32-C3，400KB 内存）不解析 XML，显示几条、字号多大
 # 都由云端模板决定，订阅方控制不了。
 #
-# 实测（2026-10-29，296×152 屏）：RSS 卡片 = 一行大字号标题，13～14 个全角字就满宽，
-# 超出部分被云端从右边硬切并补它自己的省略号。宽度抢不回来，就往下要空间：
-# 把标题按 13 全角折成最多 3 行，第一行是标题主体、放不下的续行。
+# 实测（2026-10-29，296×152 屏，用户真机截图）：
+#   * RSS 卡片标题 = 一行大字号，13 个全角字就满宽（「卡特彼勒第三季度电力与能源」正好顶格），
+#     之后的文字被云端直接切掉；
+#   * 标题里塞换行符（&#10; / <br> / U+2028）云端一律不认，折行方案在真机上只显示第一行。
+# 所以宽度抢不回来，改往下要空间：标题只放屏上显示得下的那 13 个字，
+# 余下的原文接进 <description>，让云端的正文区域接着排版。
 #
 # 这份设备版只做云端渲染照顾不到的四件事：
-#   1. 标题纯文本 —— 摘掉 emoji、箭头、几何图形、零宽字符（黑白墨水屏上它们是豆腐块或占位）；
-#   2. 标题折行 —— 在我们能控制的地方换行，而不是被云端硬切成一串省略号；
-#   3. 条目给满 60 条 —— 云端取「最新 N 条」，N 由它决定，给满随它挑；
+#   1. 纯文本 —— 摘掉 emoji、箭头、几何图形、零宽字符（黑白墨水屏上它们是豆腐块或占位）；
+#   2. 标题截到屏宽 —— 不让云端从字中间硬切，切点由我们定；
+#   3. 余文入正文 —— 标题装不下的原文写进 description，字不丢；
 #   4. 字段极简 —— guid 用短哈希、去掉 atom:link/generator/ttl，云端解析更轻。
 # 全程只走 RSS 只读通路，不调用任何需要密钥的 API。
 #
-# 允许在这些字符处收尾（反向找最近的一个）。冒号「：」故意不在里面：
-# 「雷普索尔首席执行官：展望未来…」在冒号处断开只剩主体、谓语全丢，反而不如多留几字。
+# 标题行收尾用这些标点更自然（只在需要回退时参考）。
 BREAK_CHARS = "，,、；;｜|—）)！!？?·】」』 "
+# 正文开头要剥掉的连接标点（正文另起一段，行首标点是中文排版大忌）。
+HEAD_STRIP = "，,、；;：:。."
 
 # 黑白墨水屏上这些字符要么显示成方块要么是透明占位，还白占宽度，直接摘掉。
 _RE_INVISIBLE = re.compile(
@@ -332,6 +334,11 @@ def text_width(s):
     return sum(char_width(c) for c in s or "")
 
 
+def _word_char(ch):
+    """半角字母 / 数字 / 词内连符号 —— 这些字符拼成的词不能从中间切开。"""
+    return ch.isascii() and (ch.isalnum() or ch in "'-_")
+
+
 def _cut_index(s, max_w):
     """返回不超过 max_w 全角宽度的最大字符下标。"""
     acc = 0.0
@@ -343,71 +350,43 @@ def _cut_index(s, max_w):
     return len(s)
 
 
-def wrap_title(title, line_w=None, max_lines=None):
-    """把标题折成 ≤max_lines 行、每行 ≤line_w 全角宽，尽量在标点处收尾。
+def split_title(title, line_w=None, body_max=None):
+    """把标题切成「屏上标题行」+「续到正文的余下文字」。
 
-    返回行列表（不是带换行符的整串），由调用方按目标渲染端自己拼分隔符。
-    RSS 卡片能否真显示成多行，取决于云端是否保留标题里的换行符；
-    折行不生效时渲染端只会显示第一行，与单行版内容一致，不会更差。
+    设备实测（296×152 屏）：一行大字号只放得下 line_w 个全角字，超出部分云端直接从
+    右边切掉（「卡特彼勒第三季度电力与能源」正好顶格）；标题里的换行符它也不认，
+    折行方案到真机上只会显示第一行。所以标题只管放得下的那一段，
+    装不下的原文整段返回，由调用方写进 <description>，字一个不丢。
+
+    返回 (head, tail)；标题本来就不超宽时 tail 为空串。
     """
     line_w = LINE_WIDTH if line_w is None else line_w
-    max_lines = WRAP_LINES if max_lines is None else max_lines
+    body_max = BODY_MAX if body_max is None else body_max
     t = plain_text(title)
+    # 去掉 “标题 - 来源名” 这类尾巴（来源单独用 <source> 显示，重复占位）
     t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
     if text_width(t) <= line_w:
-        return [t]
+        return t, ""
 
-    lines, rest = [], t
-    while rest:
-        if len(lines) >= max_lines - 1:                 # 已是最后一行
-            if text_width(rest) <= line_w:
-                lines.append(rest)
-            else:
-                cut = _cut_index(rest, line_w - 1)      # 留 1 个位给省略号
-                lines.append(rest[:cut].rstrip(BREAK_CHARS + "-—…") + "…")
-            break
-        cut = _cut_index(rest, line_w)
-        head = rest[:cut] or rest[:1]                   # 防御：绝不返回空串
-        # 行尾落在标点上更好读，但不许为此丢掉超过 30% 的宽度
-        for i in range(len(head) - 1, max(0, int(len(head) * 0.7)) - 1, -1):
-            if head[i] in BREAK_CHARS:
-                head = head[:i + 1]
-                break
-        head = head.rstrip(" 　")
-        if not head:
-            head = rest[:1]
-        lines.append(head)
-        rest = rest[len(head):].lstrip(" 　" + BREAK_CHARS + "-—…")
-
-    # 末行只剩一两个字（「8%」「元。」这种孤行）很难看：从上一行尾部挪字过来，
-    # 让末行至少占一半宽度。上一行本来就是满载的，让出几个字不影响可读性。
-    # 关键约束：挪到上一行末尾是标点就停——标点必须留在行尾，
-    # 跟着挪下去就变成「，同比增长…」这种行首标点，中文排版的大忌。
-    if len(lines) >= 2 and text_width(lines[-1]) < line_w * 0.35:
-        prev, last = lines[-2], lines[-1]
-        while (text_width(last) < line_w * 0.55 and len(prev) > 2
-               and prev[-1] not in BREAK_CHARS and last[:1] not in BREAK_CHARS):
-            last = prev[-1] + last
-            prev = prev[:-1]
-        if prev.strip(" 　"):
-            lines[-2], lines[-1] = prev, last
-        else:
-            lines.pop(-2)
-    return lines
-
-
-def join_title_xml(rows, sep="lf"):
-    """把多行标题拼成 XML 里的 title 文本，转义各段，绝不转义分隔符本身。"""
-    if len(rows) <= 1:
-        return esc(rows[0] if rows else "")
-    if sep == "br":
-        # <br> 必须放在 CDATA 里，否则整份 feed 就是非法 XML（连源都加不进去）。
-        # CDATA 内不做实体转义，所以只挡一下可能提前闭合的 ]]>
-        body = "<br>".join(rows).replace("]]>", "]]&gt;")
-        return "<![CDATA[%s]]>" % body
-    if sep == "u2028":
-        return "&#8232;".join(esc(r) for r in rows)     # U+2028
-    return "&#10;".join(esc(r) for r in rows)           # 默认：真实换行
+    cut = _cut_index(t, line_w)
+    if cut <= 0:
+        return t, ""
+    # 标题行末尾不留空格：切在字中间就硬切——正文紧跟着，读者能连起来读，
+    # 为了「断在标点上」少显示一个字并不划算。
+    head = t[:cut].rstrip(" 　")
+    # 正文不能以标点开头（「，停建124个猪场」）：那是被切断处的连接符，
+    # 正文本来就另起一段，读起来不需要它。
+    tail = t[cut:].lstrip(" 　" + HEAD_STRIP)
+    # 但半角词不能切一半（Fed officials signal patie|nce）：切点落在词中间就退到上一个空格。
+    # 0.6 的下限是防「一句话只剩半个词」——退得太狠不如直接切。
+    if head and tail and _word_char(head[-1]) and _word_char(tail[0]):
+        sp = head.rfind(" ")
+        if sp >= len(head) * 0.6:
+            head, tail = head[:sp].rstrip(" 　"), (head[sp + 1:] + tail).lstrip(" 　")
+    if body_max and text_width(tail) > body_max:
+        tc = _cut_index(tail, body_max - 1)         # 留 1 个位给省略号
+        tail = tail[:tc].rstrip(BREAK_CHARS + "-—…") + "…"
+    return head, tail
 
 
 # ---------------- 生成 RSS ----------------
@@ -416,10 +395,10 @@ def esc(s):
 
 
 def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
-              description=None, minimal=False, wrap=False):
-    """wrap=True 出设备版：标题折行、字段极简；否则出完整版，标题原样。
+              description=None, screen=False):
+    """screen=True 出设备版：标题截到屏宽 + 余文进 description + 字段极简。
 
-    minimal=True 省略 atom:link / generator / ttl，guid 改成 12 位短哈希，
+    字段极简指省略 atom:link / generator / ttl，guid 改成 12 位短哈希，
     单条体积降到原来的三成左右；对解析端来说仍是合法 RSS 2.0。
     """
     now = email.utils.format_datetime(datetime.now(timezone.utc))
@@ -432,7 +411,7 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
         "<title>%s</title>" % esc(channel_title),
         "<link>%s</link>" % esc(feed_url),
     ]
-    if not minimal:
+    if not screen:
         lines.append('<atom:link href="%s" rel="self" type="application/rss+xml"/>'
                      % esc(feed_url))
     lines += [
@@ -440,20 +419,22 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
         "<language>zh-CN</language>",
         "<lastBuildDate>%s</lastBuildDate>" % now,
     ]
-    if not minimal:
+    if not screen:
         lines += ["<generator>github-actions/rss-hub</generator>", "<ttl>5</ttl>"]
     for it in items:
-        title_xml = (join_title_xml(wrap_title(it["title"]), WRAP_SEP) if wrap
-                     else esc(it["title"]))
+        head, tail = split_title(it["title"]) if screen else (it["title"], "")
         lines.append("<item>")
-        lines.append("<title>%s</title>" % title_xml)
+        lines.append("<title>%s</title>" % esc(head))
+        # 标题装不下的原文接进正文：云端正文区只要能渲染，屏上就能接着读到后半句
+        if tail:
+            lines.append("<description>%s</description>" % esc(tail))
         lines.append("<link>%s</link>" % esc(it["link"]))
         if it.get("date_raw"):
             lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
         elif it.get("ts"):
             lines.append("<pubDate>%s</pubDate>" % email.utils.format_datetime(
                 datetime.fromtimestamp(it["ts"], timezone.utc)))
-        if minimal:
+        if screen:
             # 原来是把「链接|源地址」整串当 guid，动辄上百字节，小屏完全用不上。
             # 换成链接的短哈希，稳定、唯一，体积降到十几字节。
             seed = (it["link"] or it["title"]) + "|" + str(it["src"])
@@ -533,10 +514,10 @@ def write_feed(items, stats):
     wrap_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
     _write(SCREEN_OUT, build_rss(
         items, wrap_url, stats,
-        channel_title="RSS 头条 · 折行",
-        description="多源头条，纯文本标题，第一行作标题、超出续行（每行 %g 全角，"
-                    "最多 %d 行），源 %d 个" % (LINE_WIDTH, WRAP_LINES, stats["total"]),
-        minimal=True, wrap=True))
+        channel_title="RSS 头条 · 小屏",
+        description="多源头条，纯文本；标题只放屏上显示得下的 %g 全角字，"
+                    "余下原文接在正文里，源 %d 个" % (LINE_WIDTH, stats["total"]),
+        screen=True))
 
 
 def main():
@@ -544,8 +525,8 @@ def main():
     if not entries:
         print("feeds.txt 中没有有效地址")
         return 1
-    print("订阅源 %d 个，输出 %s / %s（每行 %g 全角、最多 %d 行、分隔符 %s）"
-          % (len(entries), OUT_FILE, SCREEN_OUT, LINE_WIDTH, WRAP_LINES, WRAP_SEP))
+    print("订阅源 %d 个，输出 %s / %s（标题 %g 全角、正文最多 %g 全角）"
+          % (len(entries), OUT_FILE, SCREEN_OUT, LINE_WIDTH, BODY_MAX))
 
     deadline = time.time() + REFRESH_SECONDS
     rounds = 0

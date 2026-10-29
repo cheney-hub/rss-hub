@@ -21,15 +21,17 @@
   .stage.z2{height:340px}
 
   /* 尺寸按 296×152 写死；样式只是示意，真实渲染由 Dot 云端模板决定 */
-  .device{width:296px;height:152px;padding:12px 14px;background:#fff;color:#000;
-          border-radius:7px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;
+  .device{width:296px;height:152px;padding:11px 13px;background:#fff;color:#000;
+          border-radius:7px;overflow:hidden;display:flex;flex-direction:column;
           box-shadow:0 0 0 1px #b9bec6, 0 12px 30px rgba(0,0,0,.20);
           transform-origin:center top;cursor:pointer;user-select:none}
   .stage.z2 .device{transform:scale(2)}
-  .wl{font-size:12px;line-height:1.5;font-weight:600;overflow:hidden}
-  .wl div{white-space:nowrap;overflow:hidden}
-  .wl div:not(:first-child){font-weight:400;opacity:.92}
-  .m{font-size:9px;margin-top:8px;opacity:.55;white-space:nowrap;overflow:hidden;
+  /* 标题行：13 全角顶格，多一个字都放不下 —— 这就是云端能显示的极限 */
+  .t{font-size:20px;line-height:1.25;font-weight:600;white-space:nowrap;overflow:hidden}
+  /* 正文：标题装不下的原文，小字号接在下面 */
+  .b{margin-top:8px;font-size:12px;line-height:1.55;overflow:hidden;
+     display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+  .m{margin-top:auto;font-size:9px;opacity:.5;white-space:nowrap;overflow:hidden;
      text-overflow:ellipsis}
 
   .note{color:var(--sub);font-size:12px;text-align:center;margin-top:16px;line-height:1.9}
@@ -42,11 +44,12 @@
 <body>
 <div class="wrap">
   <h1>屏幕效果</h1>
-  <p class="sub">读的是设备版 <code>feed-wrap.xml</code>：第一行作标题主体，放不下的续到下一行（最多 3 行，加粗行是标题）。点击屏幕可放大。</p>
+  <p class="sub">读的是设备版 <code>feed-wrap.xml</code>：标题只放屏上显示得下的 13 全角字，装不下的原文接在正文里。点击屏幕可放大。</p>
 
   <div class="stage" id="stage">
     <div class="device" onclick="toggleZoom()" title="点击放大 / 缩小">
-      <div class="wl" id="wl">—</div>
+      <div class="t" id="t">—</div>
+      <div class="b" id="b">—</div>
       <div class="m" id="m">—</div>
     </div>
   </div>
@@ -57,9 +60,9 @@
   </div>
 
   <div class="specs">
-    标题纯文本（emoji / 装饰符号已摘除）· 每行 <code>SCREEN_LINE_WIDTH</code> 全角 ·
-    最多 <code>SCREEN_WRAP_LINES</code> 行 · 条目给满 60 条 · 字段极简 · <b>全程无密钥</b><br>
-    能否真显示成多行取决于 Dot 云端是否保留换行符，屏上若只有一行见
+    标题纯文本（emoji / 装饰符号已摘除）· 标题 <code>SCREEN_LINE_WIDTH</code> 全角 ·
+    正文最多 <code>SCREEN_BODY_MAX</code> 全角 · 条目给满 60 条 · 字段极简 · <b>全程无密钥</b><br>
+    正文能否显示取决于 Dot 云端是否渲染 <code>&lt;description&gt;</code>，不渲染时屏上就只剩标题那 13 字，见
     <a href="https://github.com/cheney-hub/rss-hub/blob/main/OPERATIONS.md#14-设备上标题被截断或只有一行">运维手册排障</a>。
   </div>
 
@@ -74,7 +77,6 @@
 <script>
 let items = [], idx = 0, zoomed = false;
 const $ = id => document.getElementById(id);
-const esc1 = s => (s || '').replace(/[<>&]/g, '');
 
 function ago(s){
   if(!s) return '';
@@ -90,10 +92,9 @@ function ago(s){
 function render(){
   if (!items.length) return;
   const it = items[idx % items.length];
-  $('wl').innerHTML = (it.title || '')
-    .split(/[\r\n\u2028]+|<br\s*\/?>/i)
-    .filter(Boolean)
-    .map(p => '<div>' + esc1(p) + '</div>').join('');
+  $('t').textContent = it.title || '';
+  $('b').textContent = it.body || '';
+  $('b').style.display = it.body ? '-webkit-box' : 'none';
   $('m').textContent = [it.src, ago(it.date)].filter(Boolean).join(' · ');
 }
 
@@ -108,13 +109,14 @@ fetch('./feed-wrap.xml?t=' + Date.now(), {cache:'no-store'})
     const doc = new DOMParser().parseFromString(txt, 'text/xml');
     items = [...doc.querySelectorAll('item')].map(it => ({
       title: (it.querySelector('title')||{}).textContent || '',
+      body:  (it.querySelector('description')||{}).textContent || '',
       src:   (it.querySelector('source')||{}).textContent || '',
       date:  (it.querySelector('pubDate')||{}).textContent || ''
     }));
     render();
     setInterval(() => { idx++; render(); }, 8000);   // 每 8 秒轮播一条，模拟设备切换
   })
-  .catch(() => { $('wl').textContent = '无法加载 feed-wrap.xml'; });
+  .catch(() => { $('t').textContent = '无法加载 feed-wrap.xml'; });
 </script>
 </body>
 </html>

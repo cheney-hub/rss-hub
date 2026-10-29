@@ -2,8 +2,8 @@
 
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
-> 标题转纯文本（摘掉 emoji / 装饰符号，避免墨水屏豆腐块）、按 13 全角折行（第一行作标题、超出续行）、
-> 字段极简化。完整版 `feed.xml` 同时兼容任意标准 RSS 阅读器。
+> 标题转纯文本（摘掉 emoji / 装饰符号，避免墨水屏豆腐块）、标题只留屏上显示得下的 13 全角字、
+> 余下原文接进 `<description>` 正文、字段极简化。完整版 `feed.xml` 同时兼容任意标准 RSS 阅读器。
 
 把几十个 RSS 源的**最新一条**抓下来，跨源去重、按发布时间倒序，合成一个新的 RSS，
 由 **GitHub Actions** 定时重建、**GitHub Pages** 对外发布。全程免费、无需服务器、无需本机常开，
@@ -11,7 +11,7 @@
 
 ```
 feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub Pages ──► RSS 阅读器
-（源清单）    （Actions 里跑）   docs/feed-wrap.xml                    ──► Dot 设备（折行）
+（源清单）    （Actions 里跑）   docs/feed-wrap.xml                    ──► Dot 设备（标题＋正文）
 ```
 
 ## 订阅地址
@@ -26,7 +26,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 | 镜像 2（jsDelivr） | `https://cdn.jsdelivr.net/gh/cheney-hub/rss-hub@main/docs/feed.xml` |
 
 完整版粘进 FreshRSS / Feedly / Inoreader / NetNewsWire / 阅读 等任意阅读器即可。
-设备版填进 Dot App 的「循环内容」列表——**页首小字显示「RSS 头条 · 折行」才说明用对了源**。
+设备版填进 Dot App 的「循环内容」列表——**页首小字显示「RSS 头条 · 小屏」才说明用对了源**。
 
 ## 当前实况
 
@@ -37,7 +37,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 | 抓取频率 | 白天（北京 06:00–23:59）**每分钟一轮**；深夜（00:00–06:00）每小时一轮 |
 | 发布频率 | 白天每分钟一版，深夜整点一版（自定义 Actions 部署，不受 Pages 10 次/小时限制） |
 | 单轮耗时 | 3～5 秒（43 源并发 12 路） |
-| 设备版标题 | 每行 13 全角、最多 3 行，第一行作标题主体，放不下的续行 |
+| 设备版标题 | 前 13 全角进标题、余下原文进正文（不带省略号占位，字不丢） |
 
 ## 快速开始
 
@@ -46,7 +46,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 | 直接订阅 | 上面的地址，无需任何操作 |
 | 加减订阅源 | 改 `feeds.txt` 提交即可，Actions 自动重建（[OPERATIONS.md](OPERATIONS.md#加减订阅源)） |
 | 本地跑一遍 | `python3 build_feed.py`（零依赖，Python 3.8+） |
-| 调刷新节奏 / 折行参数 | [OPERATIONS.md](OPERATIONS.md#调参) |
+| 调刷新节奏 / 排版参数 | [OPERATIONS.md](OPERATIONS.md#调参) |
 | 出问题了 | [OPERATIONS.md 故障排查](OPERATIONS.md#故障排查) |
 
 ## 目录结构
@@ -57,7 +57,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ├── build_feed.py            # 主程序：采集 + 去重 + 生成两份 RSS
 ├── docs/                    # ← GitHub Pages 发布的目录（站点根）
 │   ├── feed.xml             #   完整版（每 10 轮备份提交一次）
-│   ├── feed-wrap.xml        #   设备版：纯文本标题 + 折行 + 字段极简
+│   ├── feed-wrap.xml        #   设备版：纯文本标题 + 标题截到屏宽 + 余文进正文
 │   ├── index.html           #   订阅说明页
 │   └── screen.html          #   屏幕效果预览（读 feed-wrap.xml）
 ├── .github/workflows/
@@ -103,37 +103,35 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 | 项目 | 完整版 `feed.xml` | 设备版 `feed-wrap.xml` |
 |---|---|---|
 | 标题字符 | 原样（可含 emoji） | **纯文本**：emoji、箭头、几何图形、零宽字符、变体选择符全部摘除（黑白屏上是豆腐块或占位） |
-| 标题排版 | 原样 | **折行**：每行 13 全角，第一行作标题主体，放不下的续到下一行，最多 3 行 |
+| 标题长度 | 原样 | **只放屏上显示得下的 13 全角**，超出的字一个不丢，全部移入正文 |
+| 正文 | 无 | `<description>` = 标题装不下的原文（最多 60 全角，再长才在尾端补 `…`） |
 | 条目数 | 上限 60 条 | 60 条（云端取「最新 N 条」，N 由它决定，给满随它挑） |
-| 字段 | title / link / pubDate / guid / source，含 `atom:link`、`generator`、`ttl` | 同样字段，但 guid 用 12 位短哈希，channel 去掉上述三项 |
+| 字段 | title / link / pubDate / guid / source，含 `atom:link`、`generator`、`ttl` | 同上 + description；guid 用 12 位短哈希，channel 去掉上述三项 |
 
-**实测依据（2026-10-29，296×152 屏）**：RSS 卡片是一行大字号，约 13～14 个全角字就满宽，
-超出部分由云端从右边硬切并补它自己的省略号。宽度抢不回来，就往下要空间——折行：
+**实测依据（2026-10-29，296×152 屏，真机截图）**
 
-```
-花旗：将微软(MSFT.O)          ← 第一行：标题主体（13 全角满载，标点处收尾）
-目标价从636美元上调至680美      ← 续行：放不下的自动接上
-元。
-```
+1. RSS 卡片的标题是**一行大字号**，13 个全角字正好顶格——「卡特彼勒第三季度电力与能源」占满整行，
+   后面的字被云端直接切掉，并补上它自己的省略号；
+2. 标题里塞换行符试过三种写法（`&#10;` / `<br>` / U+2028），云端**一律不认**，屏上永远只有一行。
 
-排版细节：行尾优先落在 `，、；！？` 等标点；断点必须保住 80% 宽度，宁可硬切也不砍成半句；
-`《》“”（）` 没闭合会退到符号前，不会切成半截；末行只剩一两个字时从上一行尾部挪字过来补，
-但**撞到标点就停**（避免出现「，同比增长…」这种行首标点）；只有末行还装不下才补 `…`。
+宽度抢不回来，就往下要空间：标题只管放得下的 13 个字，余下原文写进 `<description>`，
+让云端的正文区域接着排——一屏能读到的字数从 13 涨到 13 + 最多 60。
 
-**断句不认冒号**是有原因的：「雷普索尔首席执行官：展望未来」若在冒号处收尾只剩主体、谓语全丢。
-
-**折行不生效怎么办**：RSS 卡片能否真显示成多行，取决于云端是否保留标题里的换行符——这一点无法预知，
-所以做了配置项。屏上仍是一行，依次试：
-
-```bash
-SCREEN_WRAP_SEP=br python3 build_feed.py       # 云端按 HTML 解析
-SCREEN_WRAP_SEP=u2028 python3 build_feed.py    # 老派行分隔符
+```xml
+<title>卡特彼勒第三季度电力与能源</title>        <!-- 标题行：13 全角顶格，云端不会再切 -->
+<description>业务营收同比增长12%</description>     <!-- 正文：标题装不下的原文，字不丢 -->
 ```
 
-三种都不行就是云端吃掉了换行，折行此路不通，退回单行（把 `SCREEN_LINE_WIDTH` 调小一点，
-至少让断句位置好看些）。**折行失效也不会更差**：第一行前 13 字就是单行版的内容。
+排版细节：
 
-改工作流 `env:` 才能长期生效，参数说明见 [OPERATIONS.md#调参](OPERATIONS.md#调参)。
+- 标题行**末尾不加 `…`**：正文紧接着就是原文，省略号只会白挤掉一个字；
+- 正文**不以标点开头**（`，、；：。` 会被剥掉）——行首标点是中文排版大忌；
+- 半角词不会被切一半：切点落在词中间时退到上一个空格（`Fed officials signal`，而不是 `…signal patie`）；
+- 正文超过 `SCREEN_BODY_MAX`（默认 60 全角）才在尾端补 `…`。
+
+**如果云端不渲染 `<description>`**，屏上仍然只有那 13 字标题，和改之前完全一样，不会更差。
+判断是否生效很简单：看标题后面有没有接着出现正文那句。
+`SCREEN_LINE_WIDTH` / `SCREEN_BODY_MAX` 改工作流 `env:` 才能长期生效，参数说明见 [OPERATIONS.md#调参](OPERATIONS.md#调参)。
 
 ## 为什么不用 Dot 文本 API
 
@@ -172,7 +170,7 @@ python3 build_feed.py
   想降载就改轮数（见 [OPERATIONS.md#刷新节奏](OPERATIONS.md#刷新节奏)）；
 - 每分钟档期间，每小时最后约 5 分钟是收尾空档；深夜则是整点之间的一小时空档；
 - `github.io` 在部分网络环境访问偏慢，可用上面两个镜像（跟随仓库备份，约 10 分钟一次）；
-- 折行能否生效取决于 Dot 云端，不受本项目控制（见上节）。
+- 正文能否显示取决于 Dot 云端是否渲染 `<description>`，不受本项目控制；不渲染时退化为 13 字标题。
 
 ## 凭证与安全
 

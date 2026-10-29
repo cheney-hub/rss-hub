@@ -78,8 +78,7 @@ CYCLE_TPL = """
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_LINE_WIDTH: "13"
-          SCREEN_WRAP_LINES: "3"
-          SCREEN_WRAP_SEP: "lf"
+          SCREEN_BODY_MAX: "60"
           CYCLE: "{n}"
 
         run: |
