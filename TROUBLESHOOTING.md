@@ -224,5 +224,6 @@ curl -s https://cheney-hub.github.io/rss-hub/feed-screen.xml | grep "<title>" | 
 改工作流的 `env:` 才能长期生效（见 [OPERATIONS.md](OPERATIONS.md#调墨水屏版)）。先看内容示意：
 <https://cheney-hub.github.io/rss-hub/screen.html>。
 
-另外几个已知的排版细节：标题优先在 `，。：｜` 处断句；`《》“”（）` 没闭合会退到符号前，不会切成半截；
+另外几个已知的排版细节：标题只在 `，、；！？` 处收尾，且断点必须保住 80% 宽度（冒号不算断点——
+「雷普索尔首席执行官：展望未来」在冒号处断只剩主体，谓语全丢）；`《》“”（）` 没闭合会退到符号前，不会切成半截；
 截断处统一补 `…`；末尾「- 来源名」这类尾巴会先被去掉（来源已单独用 `<source>` 给）。

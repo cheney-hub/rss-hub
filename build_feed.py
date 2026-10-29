@@ -297,7 +297,9 @@ def load_prev_items():
 #   4. 字段极简 —— guid 用短哈希、去掉 atom:link/generator/ttl，云端抓取解析更轻。
 # 未经限长的完整版照旧输出 feed.xml，普通 RSS 阅读器用它。
 # 想一屏看多条，走 push_text.py（文本 API：标题 1 行 + 正文 3 行），那才是真正能塞 4 条的路。
-BREAK_CHARS = "，,、；;：:｜|—）)！!？?·】」』 "
+# 允许在这些字符处收尾（反向找最近的一个）。冒号「：」故意不在里面：
+# 「雷普索尔首席执行官：展望未来…」在冒号处断开只剩主体、谓语全丢，反而不如多留几字。
+BREAK_CHARS = "，,、；;｜|—）)！!？?·】」』 "
 
 # 黑白墨水屏上这些字符要么显示成方块要么是透明占位，还白占宽度，直接摘掉。
 _RE_INVISIBLE = re.compile(
@@ -352,7 +354,9 @@ def fit_title(title, max_w=SCREEN_TITLE_WIDTH):
             pos = head.rfind(opener)
             if pos >= int(len(head) * 0.5):     # 只在后半段出现才回退，否则会砍太狠
                 head = head[:pos]
-    for i in range(len(head) - 1, max(0, int(len(head) * 0.6)) - 1, -1):
+    # 在标点处收尾更好读，但不能丢太多字：断点必须保留 80% 以上宽度，
+    # 否则宁可硬切（比如「商务部：若欧方一意孤…」不要变成「商务部…」）。
+    for i in range(len(head) - 1, max(0, int(len(head) * 0.8)) - 1, -1):
         if head[i] in BREAK_CHARS:
             head = head[:i]
             break

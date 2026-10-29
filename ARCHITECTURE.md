@@ -16,7 +16,8 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
               │   ├─ 失败源 → 用上一份 feed 的同源条目顶上 │
               │   ├─ 跨源去重 + 按时间倒序                │
               │   ├─ 生成 docs/feed.xml（完整版）          │
-              │   └─ 生成 docs/feed-screen.xml（小屏版）    │
+              │   ├─ 生成 docs/feed-screen.xml（小屏版）    │
+              │   └─ push_text.py → Dot 文本 API（一屏 4 条）│
               │           ↓ 打包为 artifact               │
               │           ↓ deploy-pages 部署             │
               └───────────────────┬──────────────────────┘
@@ -53,7 +54,7 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | 回退 | `load_prev_items()` | 从上一份 `feed.xml` 抽出「源地址 → 条目」映射 |
 | 生成 | `build_rss()` | RSS 2.0 + `atom:link self`，`ttl=5`，条目上限 60；`minimal=True` 时省略 `atom:link`/`generator`/`ttl`，guid 改 12 位 md5 |
 | 字符净化 | `plain_text()` | 摘掉 emoji、箭头、几何图形、零宽与方向控制字符、变体选择符，全角空格归一；墨水屏是黑白双色，这些字符不是印成方块就是占位不显形 |
-| 小屏排版 | `fit_title()` / `text_width()` | 按全角/半角折算宽度（`east_asian_width`，`W/F/A` 记 1、其余 0.5），超宽时优先在标点断句、再处理未闭合的 `《》“”（）`，最后补 `…` |
+| 小屏排版 | `fit_title()` / `text_width()` | 按全角/半角折算宽度（`east_asian_width`，`W/F/A` 记 1、其余 0.5）；超宽时先处理未闭合的 `《》“”（）`，再在 `，、；！？` 处收尾（断点须保住 80% 宽度，冒号不算断点），最后补 `…` |
 | 双份输出 | `write_feed()` | 完整版写 `feed.xml`；同一批条目裁标题、限条数后写 `feed-screen.xml` |
 
 ## 四、关键规则
