@@ -6,14 +6,28 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 11:59:44 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 12:01:44 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>微软启动2017年以来首次美国高评级债券发行</title>
-<link>https://flash.jin10.com/detail/20261029195444944800</link>
-<pubDate>Thu, 29 Oct 2026 19:54:44 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029195444944800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>瑞士政府已作出评估，即如果瑞银将总部迁走，它在其他法律框架下会是什么处境。</title>
+<link>https://flash.jin10.com/detail/20261029195938202800</link>
+<pubDate>Thu, 29 Oct 2026 19:59:38 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029195938202800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>挂单报告：国际金下方多单密集 镑美留意两大上行动能</title>
+<link>https://flash.jin10.com/detail/20261029195749248800</link>
+<pubDate>Thu, 29 Oct 2026 19:57:49 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029195749248800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>*ST闻泰：与荷兰安世半导体管理人就谈判事项已达成保密安排</title>
+<link>https://flash.jin10.com/detail/20261029195614076800</link>
+<pubDate>Thu, 29 Oct 2026 19:56:14 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029195614076800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
@@ -29,20 +43,6 @@
 <pubDate>Thu, 29 Oct 2026 19:53:06 +0800</pubDate>
 <guid isPermaLink="false">https://wallstreetcn.com/articles/3784778|https://dedicated.wallstreetcn.com/rss.xml</guid>
 <source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
-</item>
-<item>
-<title>市场消息：微软(MSFT.O)拟通过美国债券发行筹集至少250亿美元。</title>
-<link>https://flash.jin10.com/detail/20261029195301839800</link>
-<pubDate>Thu, 29 Oct 2026 19:53:01 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029195301839800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>美的集团：2026年第三季度净利润149.47亿元，同比增长25.93%</title>
-<link>https://flash.jin10.com/detail/20261029195255298800</link>
-<pubDate>Thu, 29 Oct 2026 19:52:55 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029195255298800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
 <title>微软拟通过美元债券发行至少募资250亿美元。</title>
@@ -73,6 +73,13 @@
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
+<title>埃塞俄比亚总理：埃塞俄比亚认为建设首座核电站离不开俄罗斯合作</title>
+<link>https://sputniknews.cn/20261029/1073861478.html</link>
+<pubDate>Thu, 29 Oct 2026 19:51:00 +0800</pubDate>
+<guid isPermaLink="false">https://sputniknews.cn/20261029/1073861478.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
+</item>
+<item>
 <title>张志军：两岸应携手推动中华文化更好走向世界</title>
 <link>https://www.chinanews.com.cn/gn/2026/10-29/10722925.shtml</link>
 <pubDate>Thu, 29 Oct 2026 19:50:13 +0800</pubDate>
@@ -85,6 +92,13 @@
 <pubDate>Thu, 29 Oct 2026 19:49:29 +0800</pubDate>
 <guid isPermaLink="false">https://www.chinanews.com.cn/aseaninfo/2026/10-29/10722927.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>俄副防长：俄国防部愿同东盟与东盟防长扩大会加强合作</title>
+<link>https://sputniknews.cn/20261029/1073861587.html</link>
+<pubDate>Thu, 29 Oct 2026 19:48:55 +0800</pubDate>
+<guid isPermaLink="false">https://sputniknews.cn/20261029/1073861587.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
 </item>
 <item>
 <title>中国国防部：菲方不能任由一小撮人肆意妄为在南海挑衅生事</title>
@@ -120,6 +134,13 @@
 <pubDate>Thu, 29 Oct 2026 19:41:52 +0800</pubDate>
 <guid isPermaLink="false">https://www.caixin.com/2026-10-29/102498627.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
+</item>
+<item>
+<title>克宫 ：梅拉尼娅人道主义工作经验丰富 有助于阿廖什基行动</title>
+<link>https://sputniknews.cn/20261029/1073861347.html</link>
+<pubDate>Thu, 29 Oct 2026 19:40:16 +0800</pubDate>
+<guid isPermaLink="false">https://sputniknews.cn/20261029/1073861347.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
 </item>
 <item>
 <title>中国诚通控股集团有限公司新进成为华大九天第八大股东</title>
@@ -388,20 +409,6 @@
 <source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
-<title>俄国防部：乌军一天在特别军事行动中损失约1155名军人</title>
-<link>https://sputniknews.cn/20261029/1073860381.html</link>
-<pubDate>Thu, 29 Oct 2026 18:52:15 +0800</pubDate>
-<guid isPermaLink="false">https://sputniknews.cn/20261029/1073860381.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
-</item>
-<item>
-<title>俄罗斯技术能够帮助非洲防治荒漠化</title>
-<link>https://sputniknews.cn/20261029/1073860257.html</link>
-<pubDate>Thu, 29 Oct 2026 18:52:00 +0800</pubDate>
-<guid isPermaLink="false">https://sputniknews.cn/20261029/1073860257.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
-</item>
-<item>
 <title>季候风交替期开始 本地烟霾情况料改善</title>
 <link>https://www.8world.com/singapore/haze-watch-and-forecast-3324656</link>
 <pubDate>Thu, 29 Oct 2026 10:52:00 GMT</pubDate>
@@ -428,13 +435,6 @@
 <pubDate>Thu, 29 Oct 2026 18:45:53 +0800</pubDate>
 <guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078983.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
-</item>
-<item>
-<title>俄国防部：俄军过去一昼夜对乌军使用的交通基础设施实施打击</title>
-<link>https://sputniknews.cn/20261029/1073860158.html</link>
-<pubDate>Thu, 29 Oct 2026 18:44:24 +0800</pubDate>
-<guid isPermaLink="false">https://sputniknews.cn/20261029/1073860158.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
 </item>
 <item>
 <title>百合网创始人在朋友圈&quot;化缘&quot;1天收款近6千 本人发声</title>
