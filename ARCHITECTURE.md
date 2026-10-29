@@ -1,14 +1,10 @@
 # 架构说明
 
-## 一、三条通道
+本项目**专为 Dot (Quote/0) 墨水屏设备开发**，只有一条主链路：
 
-| 通道 | 代码 | 常驻要求 | 刷新下限 | 现状 |
-|---|---|---|---|---|
-| **A. GitHub Actions + Pages** | `build_feed.py` + `minute.yml` / `nightly.yml` | 无 | 白天 **1 分钟**，深夜 **1 小时** | **当前线上** |
-| B. 本地 / 树莓派推送 | `aggregate_rss.py` + `pi/` | 需一台常开的机器 | 取决于 timer 周期（可 1 分钟） | 备选 |
-| C. 自托管服务 | `server.js` | 需常驻进程与公网入口 | 60 秒 | 归档 |
-
-三者的抓取与去重规则完全一致，切换只换执行环境，`feeds.txt` 不用改。
+| 通道 | 代码 | 常驻要求 | 刷新下限 |
+|---|---|---|---|
+| **GitHub Actions + Pages** | `build_feed.py` + `minute.yml` / `nightly.yml` | 无 | 白天 **1 分钟**，深夜 **1 小时** |
 
 ## 二、通道 A 的数据流
 
@@ -119,29 +115,6 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-screen.xml` | 墨水屏版输出路径 |
 | `SCREEN_TITLE_WIDTH` | `24` | 墨水屏标题宽度上限（全角字符数）。设备渲染由 Dot 云端模板决定，此值只是「一行放得下」的保守截断，防超长标题被云端硬切 |
 | `SCREEN_ITEMS` | `60` | 墨水屏版条目数。Dot 云端取「最新 N 条」且 N 由它决定，给满随它挑 |
-
-### `aggregate_rss.py`（通道 B）
-
-| 环境变量 | 默认 | 说明 |
-|---|---|---|
-| `GITHUB_TOKEN` | 空 | PAT，需 `repo` 写权限；不设则只本地生成 |
-| `GITHUB_REPO` | 空 | `owner/repo` |
-| `GITHUB_BRANCH` | `main` | 推送分支 |
-| `FEED_PATH` | `docs/feed.xml` | 仓库内路径 |
-| `FEED_URL` | 按 owner/repo 推算 | 频道 `<link>`，会自动去掉 `docs/` 前缀 |
-| `DRY_RUN` | 空 | `=1` 只生成不推送 |
-
-### `server.js`（通道 C）
-
-| 环境变量 | 默认 | 说明 |
-|---|---|---|
-| `PORT` | `3000` | 监听端口 |
-| `CACHE_TTL` | `60` | 后台刷新周期（秒） |
-| `FETCH_TIMEOUT` | `20000` | 单源超时（毫秒） |
-| `FETCH_CONCURRENCY` | `12` | 并发数 |
-
-接口：`/feed.xml`、`/rss.xml`（同内容）、`/status.json`（`ok`/`items`/`sources`/`lastBuiltAt`/`refreshing`）、`/` 状态页。
-注意 `/healthz` 被部分托管平台占用，所以自检接口叫 `/status.json`。
 
 ## 六、设计取舍
 

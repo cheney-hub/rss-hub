@@ -22,7 +22,7 @@ RULES = [
     (r"(?i)\bauthorization\s*:\s*bearer\s+[A-Za-z0-9._-]{20,}", "Bearer 令牌"),
 ]
 SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv"}
-SKIP_FILES = {"tools/check_secrets.py", "pi/rss-hub.env.example"}
+SKIP_FILES = {"tools/check_secrets.py"}
 BINARY_EXT = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".zip", ".gz", ".woff", ".woff2"}
 
 
@@ -70,7 +70,7 @@ def main():
     print("发现疑似凭据，请移除后再提交：", file=sys.stderr)
     for p, lineno, label, snippet in hits:
         print("  %s:%d  [%s]  %s" % (p, lineno, label, snippet), file=sys.stderr)
-    print("\n提示：真实值放仓库 Secret 或本机 /etc/rss-hub/rss-hub.env，仓库里只留说明。", file=sys.stderr)
+    print("\n提示：真实值放仓库 Secret，仓库里只留说明。", file=sys.stderr)
     return 1
 
 

@@ -90,7 +90,7 @@ python3 build_feed.py                       # 输出到 docs/feed.xml（默认�
 OUT_FILE=/tmp/t.xml REFRESH_SECONDS=0 python3 build_feed.py   # 换个路径、只跑一轮
 ```
 
-无第三方依赖，Python 3.8+ 即可。Windows、macOS、树莓派都一样。
+无第三方依赖，Python 3.8+ 即可。Windows、macOS、Linux 都一样。
 
 ### 回滚某次发布
 
@@ -141,11 +141,10 @@ git checkout <commit> -- docs/feed.xml && git commit -m "revert feed" && git pus
 |---|---|---|
 | Actions 定时提交 feed | 无需你提供 | 仓库内置 `GITHUB_TOKEN`（`permissions: contents: write`），GitHub 签发、作业结束即失效 |
 | 手动 / 外部触发工作流 | GitHub 仓库 Secret（`GH_PAT`）或本地 shell 环境变量 | 需要 `workflow` 权限；Secret 只在工作流运行时可见 |
-| 通道 B（树莓派推送） | `/etc/rss-hub/rss-hub.env`（`600`）+ unit 的 `EnvironmentFile=` | 见 [pi/README.md](pi/README.md#2-生成凭证文件留在仓库之外) |
 
 当前仓库与 `origin` 都是无凭证状态，历史里也没有提交过任何真实 token。
 
-轮换顺序：GitHub → Settings → Developer settings → Personal access tokens → 吊销旧的、生成新的 → 更新 Secret / `/etc/rss-hub/rss-hub.env` → `sudo systemctl restart rss-aggregator.timer`。
+轮换顺序：GitHub → Settings → Developer settings → Personal access tokens → 吊销旧的、生成新的 → 更新仓库 Secret。
 
 ## 监控
 
@@ -184,7 +183,6 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"
 | 通道 | 实际刷新 | 成本 | 何时选它 |
 |---|---|---|---|
 | GitHub Actions（现状） | 1 分钟 | 0 | 默认 |
-| 树莓派 / VPS + systemd | 1 分钟，且不占 GitHub runner | ¥0～¥38/年 | 嫌高频占用，或想彻底自主 |
 | 外部定时器打 `workflow_dispatch` | 5～10 分钟 | 0 | 只补 cron 丢档，不想长跑作业 |
 
 外部定时器补档（备用，未启用）：
@@ -201,23 +199,6 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"
             -d '{"ref":"main"}'
 ```
 
-## 迁移到树莓派或 VPS
-
-1. 把整个目录拷到目标机（或 `git clone`），装好 `python3`；
-2. 生成 PAT（classic，勾 `repo`）；
-3. 执行 `bash pi/install.sh` —— 它会创建 `/etc/rss-hub/rss-hub.env`（`600`）并按实际路径/用户改写 unit；凭证只填进那个文件，不进仓库：
-
-```bash
-GITHUB_TOKEN=你的PAT GITHUB_REPO=你的用户名/rss-hub bash pi/install.sh
-# 或先安装、再编辑：sudo nano /etc/rss-hub/rss-hub.env
-```
-
-4. 验证：`sudo systemctl start rss-aggregator.service && journalctl -u rss-aggregator.service -f`。
-
-详细步骤与排障见 [pi/README.md](pi/README.md)。VPS 同理，路径与用户由 `install.sh` 自动适配（也可用 `RUN_USER=` / `PYTHON_BIN=` 指定）。
-
-迁移后建议**保留** GitHub Actions（两条独立通道，谁挂了都不至于断更）；若确认只用自托管，把 workflow 里的 `schedule` 段删掉即可。
-
 ## 成本
 
 | 项目 | 费用 |
@@ -225,7 +206,6 @@ GITHUB_TOKEN=你的PAT GITHUB_REPO=你的用户名/rss-hub bash pi/install.sh
 | 仓库 + Actions（public repo） | 0 |
 | Pages 托管与流量 | 0 |
 | PAT | 0 |
-| 自托管（可选） | 树莓派 ¥0（已有）／腾讯云轻量 ¥38～68/年／RackNerd $21.99/年／Oracle Cloud 永久免费（需信用卡） |
 
 ## 备份与恢复
 

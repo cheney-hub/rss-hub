@@ -19,16 +19,15 @@ curl -s https://api.github.com/repos/cheney-hub/rss-hub/actions/runs?per_page=5 
 | feed 打不开 / 404 | Pages 没开或目录选错 | [1](#1-feed-打不开返回-404) |
 | feed 能开但 0 条 | 源全挂，或文件被写成空 | [2](#2-feed-能打开但一条都没有) |
 | `lastBuildDate` 长期不动 | 定时任务没触发，或作业失败 | [3](#3-feed-长时间不更新) [4](#4-actions-作业失败) |
-| 运行记录里有 cancelled | 整点抢占，正常调度 | [14](#14-运行记录里出现-cancelled) |
-| 报 `in progress deployment` | Pages 部署撞锁 | [15](#15-deployment-request-failed--due-to-in-progress-deployment) |
+| 运行记录里有 cancelled | 整点抢占，正常调度 | [13](#13-运行记录里出现-cancelled) |
+| 报 `in progress deployment` | Pages 部署撞锁 | [14](#14-deployment-request-failed--due-to-in-progress-deployment) |
 | 作业成功但仓库没新提交 | 权限不足（只读 token） | [5](#5-作业成功但提交被拒) |
 | 某个源反复失败 | 源站 404 / 反爬 / 已停更 | [6](#6-单个源一直失败) |
 | 同一新闻出现两次 | 去重阈值或链接带参数 | [7](#7-条目重复) |
 | 标题出现乱码 | 站点编码是 GBK 且声明缺失 | [8](#8-标题乱码) |
 | 说明页空白 | 浏览器 CORS 或 feed 内容异常 | [9](#9-说明页空白或载入失败) |
-| 墨水屏上标题被截断 / 放不下 / 出现方块 | 用了完整版，或宽度阈值偏大，或标题带 emoji | [16](#16-墨水屏上标题被截断难看--一行放不下) |
+| 墨水屏上标题被截断 / 放不下 / 出现方块 | 用了完整版，或宽度阈值偏大，或标题带 emoji | [15](#15-墨水屏上标题被截断难看--一行放不下) |
 | 推送后「凭据扫描」失败 | 文件里混进了 token / 口令 | [12](#12-凭据扫描失败) |
-| 树莓派服务状态 `condition failed` | 凭证文件缺失或为空 | [13](#13-树莓派服务不执行) |
 
 ---
 
@@ -158,39 +157,19 @@ python3 tools/check_secrets.py --all    # 连未跟踪文件一起扫
 
 输出会给出 `文件:行号 [类型] 片段`。处置：
 
-1. 把真实值移到仓库之外（GitHub Secret 或 `/etc/rss-hub/rss-hub.env`），文件里只留变量名；
+1. 把真实值移到仓库之外（GitHub Secret），文件里只留变量名；
 2. 若该值**已经推送上去**，光删文件没用——历史里仍在：
    - 先把那个 token **吊销重发**（这是唯一可靠的止血）；
    - 再决定是否清理历史（`git filter-repo` 后强推，会改写所有 SHA，协作仓库慎用）。
 3. 文档里要举例时用明显假的占位（如 `你的PAT`），不要写成「平台前缀 + 一长串字符」的形态，规则会当成真凭据。
 
-## 13. 树莓派服务不执行
-
-```bash
-systemctl status rss-aggregator.service      # 看 Active 与 Condition
-sudo systemctl show -p ConditionResult rss-aggregator.service
-```
-
-出现 `condition failed` 或日志一片空，基本是 `ConditionFileNotEmpty=/etc/rss-hub/rss-hub.env` 没过：
-
-```bash
-sudo install -d -m 700 /etc/rss-hub
-sudo install -m 600 pi/rss-hub.env.example /etc/rss-hub/rss-hub.env
-sudo nano /etc/rss-hub/rss-hub.env          # 填 GITHUB_TOKEN / GITHUB_REPO
-sudo systemctl start rss-aggregator.service
-```
-
-`401` / `404` 都从这个文件里的值查起，别去改 unit 文件——unit 里没有凭证。
-
----
-
-## 14. 运行记录里出现 cancelled
+## 13. 运行记录里出现 cancelled
 
 正常现象，不是故障。`minute.yml` 的 `concurrency` 用了 `cancel-in-progress: true`：整点触发时若上一轮还在跑（比如被排过队、拖过了整点），新的一轮直接接管，保证每次触发都从第 1 轮重新开始、时刻不会逐小时后移累积。
 
 判断有没有问题只看线上：`lastBuildDate` 在 10 分钟内就是正常。
 
-## 15. `Deployment request failed ... due to in progress deployment`
+## 14. `Deployment request failed ... due to in progress deployment`
 
 Pages 同一时刻只允许一个部署，撞上就会报这个 400。三个工作流都会部署，处理方式不同：
 
@@ -199,7 +178,7 @@ Pages 同一时刻只允许一个部署，撞上就会报这个 400。三个工�
 
 如果这个错误还出现，说明两次部署间隔小于约 25 秒，把 `rss.yml` 里的 `sleep 35` 调大。
 
-## 16. 墨水屏上标题被截断难看 / 一行放不下
+## 15. 墨水屏上标题被截断难看 / 一行放不下
 
 分两种情况：
 
@@ -233,16 +212,3 @@ curl -s https://cheney-hub.github.io/rss-hub/feed-screen.xml | grep "<title>" | 
 
 另外几个已知的排版细节：标题优先在 `，。：｜` 处断句；`《》“”（）` 没闭合会退到符号前，不会切成半截；
 截断处统一补 `…`；末尾「- 来源名」这类尾巴会先被去掉（来源已单独用 `<source>` 给）。
-
----
-
-## 旧通道遗留问题（一般用不到）
-
-早期有一版跑在 WorkBuddy 云沙箱上的自托管服务（`server.js`，地址 `rss-hub.app.workbuddy.host`）。免费沙箱闲置会被平台回收，表现为 `/status.json` 返回 503 且 `"refreshing": true`（冷启动中间态，等 15～40 秒会自恢复）。
-
-现在主链路已搬到 GitHub，**这个站点可作为备用通道**，也可以直接不再管它。若在本地重新拉起：
-
-```bash
-npm start          # 默认 3000 端口
-curl -s localhost:3000/status.json
-```

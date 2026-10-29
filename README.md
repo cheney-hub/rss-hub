@@ -1,5 +1,11 @@
 # rss-hub · RSS 聚合头条
 
+> **本项目专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
+> 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出针对它的显示链路做了专门适配：
+> 标题转纯文本（摘除 emoji/符号，避免墨水屏豆腐块）、按全角宽度优雅截断、字段极简化，
+> 并按「Dot 云端抓取渲染、设备只拉图」的真实机制设计（详见[小屏适配](#小屏--墨水屏适配dot-quote0)）。
+> 完整版 `feed.xml` 仍兼容任意标准 RSS 阅读器。
+
 把几十个 RSS 源的**最新一条**抓下来，跨源去重、按发布时间倒序，合成一个新的 RSS，
 由 **GitHub Actions** 定时重建、**GitHub Pages** 对外发布。全程免费、无需服务器、无需本机常开。
 
@@ -45,7 +51,6 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 | 加减订阅源 | 改 `feeds.txt` 提交即可，Actions 自动重建（[OPERATIONS.md](OPERATIONS.md#加删订阅源)） |
 | 本地跑一遍看结果 | `python3 build_feed.py`，产物在 `docs/feed.xml`（[OPERATIONS.md](OPERATIONS.md#本地调试)） |
 | 换成自己的仓库 | Fork 后改三处：`FEED_URL`、Pages 设置、`docs/index.html` 里的地址（[OPERATIONS.md](OPERATIONS.md#换到自己的仓库)） |
-| 搬到树莓派 / VPS | [pi/README.md](pi/README.md) / [OPERATIONS.md](OPERATIONS.md#迁移到树莓派或-vps) |
 | 出问题了 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
 ## 目录结构
@@ -64,20 +69,12 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 │   ├── nightly.yml            #   夜间整点发布：北京 00:00–06:00 每小时一次
 │   ├── rss.yml                #   改源即时发布：改 feeds.txt 立刻重建一次
 │   └── guard.yml              #   凭据扫描：推送时检查有无混入 token
-├── aggregate_rss.py           # 【备选】本地/树莓派版：抓完直接用 Contents API 推仓库
-├── pi/                        # 【备选】树莓派 systemd 自启 + 定时 + 自恢复
-│   ├── rss-hub.env.example    #   凭证模板（值为空，真实文件放 /etc/rss-hub/）
-│   └── README.md              #   树莓派部署与排障
 ├── tools/check_secrets.py     # 仓库凭据扫描脚本（本地与 CI 共用）
 ├── tools/gen_minute_workflow.py # 生成 minute.yml（改轮数就是改这里）
-├── server.js                  # 【归档】早期自托管版：Node 常驻服务，自带状态页
-├── package.json               # server.js 的启动脚本
 ├── ARCHITECTURE.md            # 架构、算法规则、参数与取舍
 ├── OPERATIONS.md              # 运维手册：改源、凭证、监控、迁移
 └── TROUBLESHOOTING.md         # 故障排查
 ```
-
-三条通道并存，但只有第一条（Actions + Pages）是当前在用的；另外两条保留为可迁移的备选，代码都能直接跑。
 
 ## 工作方式
 
@@ -152,7 +149,7 @@ python3 build_feed.py
 - `.gitignore` 屏蔽 `*.env` / `.env*` / `*.pem` / `*.key` / `id_rsa*` 等；
 - `tools/check_secrets.py` 可随时自查：`python3 tools/check_secrets.py`；
 - `.github/workflows/guard.yml` 在每次推送时自动跑同一套规则，混进真 token 会让这次构建失败；
-- 需要凭证的场景（树莓派推送、外部触发器）一律放在**仓库之外**：本机 `/etc/rss-hub/rss-hub.env`（`600`）或 GitHub 仓库 Secret。详见 [OPERATIONS.md#凭证管理](OPERATIONS.md#凭证管理)。
+- 需要凭证的场景（外部触发器）一律放在**仓库之外**：GitHub 仓库 Secret。详见 [OPERATIONS.md#凭证管理](OPERATIONS.md#凭证管理)。
 
 ## 监控
 
