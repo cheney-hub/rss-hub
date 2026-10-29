@@ -6,15 +6,43 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 08:16:03 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 08:24:52 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>商务部：如欧方对中国产品采取歧视性限制措施，中方必将采取一切必要措施</title>
-<link>https://www.chinanews.com.cn/cj/2026/10-29/10722765.shtml</link>
-<pubDate>Thu, 29 Oct 2026 16:12:37 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722765.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<title>海油工程：第三季度净利润5.88亿元，同比增长16.15%</title>
+<link>https://flash.jin10.com/detail/20261029161940522800</link>
+<pubDate>Thu, 29 Oct 2026 16:19:40 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029161940522800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>411项重点任务清单 湖南以“四个一批”推进重点产业链建设</title>
+<link>https://www.chinanews.com.cn/cj/2026/10-29/10722786.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:18:46 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722786.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>三一重工：第三季度净利润同比增长20.62%</title>
+<link>https://api3.cls.cn/share/article/2519220?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 16:17:19 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519220?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+</item>
+<item>
+<title>5 of the best things to do in Hong Kong this Halloween weekend, October 30 to November 1</title>
+<link>https://www.scmp.com/lifestyle/article/3372501/5-best-things-do-hong-kong-halloween-weekend-october-30-november-1</link>
+<pubDate>Thu, 29 Oct 2026 08:15:06 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/lifestyle/article/3372501/5-best-things-do-hong-kong-halloween-weekend-october-30-november-1|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>华虹宏力：董事会主席兼总裁提议回购3亿至5亿元股份</title>
+<link>https://xueqiu.com/5124430882/414493742</link>
+<pubDate>Thu, 29 Oct 2026 16:14:41 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414493742|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
 <title>嘉士伯第三季度啤酒销量下降3.5%，软饮料业务增长抵消部分压力</title>
@@ -24,20 +52,6 @@
 <source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
 </item>
 <item>
-<title>香港恒生指数收跌0.59% 恒生科技指数跌2.84%</title>
-<link>https://xueqiu.com/5124430882/414492148</link>
-<pubDate>Thu, 29 Oct 2026 16:09:50 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414492148|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>克里姆林宫：希望人道主义援助能在周四或周五抵达俄罗斯控制的阿列什基镇，想离开的人将能够离开。</title>
-<link>https://flash.jin10.com/detail/20261029160919762800</link>
-<pubDate>Thu, 29 Oct 2026 16:09:19 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029160919762800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
 <title>多所高校“砍学分”</title>
 <link>https://www.yicai.com/news/103415272.html</link>
 <pubDate>Thu, 29 Oct 2026 08:05:11 GMT</pubDate>
@@ -45,16 +59,9 @@
 <source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
 </item>
 <item>
-<title>CK Asset pauses Hong Kong sales launch at Yuen Long’s Montage development</title>
-<link>https://www.scmp.com/business/companies/article/3372560/ck-asset-pauses-hong-kong-sales-launch-yuen-longs-montage-development</link>
-<pubDate>Thu, 29 Oct 2026 08:00:20 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/business/companies/article/3372560/ck-asset-pauses-hong-kong-sales-launch-yuen-longs-montage-development|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
-</item>
-<item>
 <title>15-Minute Lesson Plan: Reporting on Teen Activism and A.I. Data Centers</title>
 <link>https://www.nytimes.com/2026/10/29/learning/15-minute-lesson-plan-reporting-on-teen-activism-and-ai-data-centers.html</link>
-<pubDate>Thu, 29 Oct 2026 08:00:02 +0000</pubDate>
+<pubDate>Thu, 29 Oct 2026 08:00:03 +0000</pubDate>
 <guid isPermaLink="false">https://www.nytimes.com/2026/10/29/learning/15-minute-lesson-plan-reporting-on-teen-activism-and-ai-data-centers.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
 </item>
@@ -164,6 +171,13 @@
 <source url="https://feed.quanwenrss.com/feed/xinhua-gj.xml">新华社·国际</source>
 </item>
 <item>
+<title>商务部：如欧方对中国产品采取歧视性限制措施，中方必将采取一切必要措施</title>
+<link>https://www.mycaijing.com/article/detail/586522?source_id=40</link>
+<pubDate>Thu, 29 Oct 2026 15:16:47 +0800</pubDate>
+<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586522?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
+</item>
+<item>
 <title>香港大埔宏福苑大火调查报告出炉 房屋局长何永贤辞职担责</title>
 <link>https://www.8world.com/greater-china/hong-kong-tai-po-fire-report-3324476</link>
 <pubDate>Thu, 29 Oct 2026 07:16:03 GMT</pubDate>
@@ -197,13 +211,6 @@
 <pubDate>Thu, 29 Oct 2026 15:03:09 +0800</pubDate>
 <guid isPermaLink="false">https://m.huxiu.com/article/4901403.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
-</item>
-<item>
-<title>今日国家再次实施调控，成品油价格适当调整</title>
-<link>https://www.mycaijing.com/article/detail/586520?source_id=40</link>
-<pubDate>Thu, 29 Oct 2026 15:02:32 +0800</pubDate>
-<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586520?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
 </item>
 <item>
 <title>钢琴家反田恭平因超速被判3个月拘禁刑 缓刑两年</title>
