@@ -167,7 +167,7 @@ class TestNeverBlanks(RotateEdgeBase):
 
 
 class TestBacktrackUncappedByDesign(RotateEdgeBase):
-    """第二级台阶不设年龄上限 —— **这是刻意的产品取舍，不是缺陷**。
+    """唯一的那条规则不设年龄上限 —— **这是刻意的产品取舍，不是缺陷**。
 
     理由（产品裁决）：墨水屏上没有发布时间，「停住不动」和「设备坏了」无法区分，
     有内容变化才说明设备活着，所以「宁可播旧的也不空屏」。
@@ -403,8 +403,8 @@ class TestPoolChurn(RotateEdgeBase):
         """连续 60 窗、每窗注入 3 条、池子截到 20 条。
 
         断言：不抛异常 / 不出现同一条连续两窗重播 / lag 非负 / 片数不超过条数。
-        lag 的上界只要求「不为负」—— 现有机制在挤兑下会掉到第二级台阶，
-        上屏内容可以明显偏旧，这一点由 TestBacktrackHasNoAgeCap 单独钉住。
+        lag 的上界只要求「不为负」—— 机制没有年龄上限，挤兑时照样播池里最新的
+        未播片（可能很旧），这一点由 TestBacktrackUncappedByDesign 单独钉住。
         """
         rnd = random.Random(2026)
         limit = 20

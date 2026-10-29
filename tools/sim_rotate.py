@@ -101,7 +101,7 @@ def simulate(hours=24, per_window=2.35, seed=7, builder=None, verbose=False):
     rnd = random.Random(seed)
     pool, state, uid = [], {}, 0
     onscreen, rank_hist, lags, seen, minted = [], [], [], set(), 0
-    cycles = 0
+    cycles, worst = 0, []
 
     for w in range(1, hours * 3600 // DWELL):
         now = w * DWELL
@@ -129,9 +129,17 @@ def simulate(hours=24, per_window=2.35, seed=7, builder=None, verbose=False):
         rank_hist.append(rank)
         seen.add(pick["uid"])
         if verbose:
-            print("%02d:%02d 片=%s 落后=%s 名次=%d 延迟=%d分 %s"
-                  % (hour, (now // 60) % 60, state.get("bucket"), state.get("lag"),
-                     rank, (now - pick["ts"]) / 60, pick["title"]))
+            worst.append((now - pick["ts"], now, state, rank, pick["title"], n_new))
+
+    if verbose:
+        # 只打最差的那一端。以前这里是「前 40 窗」，而 40 窗只覆盖 0:00–3:20 —— 全是夜间，
+        # 于是 `--verbose` 永远展示不出真正的尾部，看着像「最差 7 分」。尾部在哪必须能看见。
+        worst.sort(key=lambda x: -x[0])
+        print("\n延迟最大的 10 个窗（尾部来自哪里）：")
+        for d, now, st, rank, title, n_new in worst[:10]:
+            print("  %02d:%02d 延迟 %3.0f 分 · 落后 %s 片 · 名次 %d · 池 %s 片 · 本窗新增 %d 条 · %s"
+                  % ((now // 3600) % 24, (now // 60) % 60, d / 60,
+                     st.get("lag"), rank, st.get("pool"), n_new, title))
 
     return _stats(onscreen, rank_hist, lags, seen, minted, cycles)
 
@@ -193,8 +201,7 @@ def main():
           % (DWELL, LIMIT, 2.35))
     if "--verbose" in sys.argv:
         show("单跑 seed=7（单次结果方差很大，结论看默认的多种子均值）", simulate())
-        print("\n--- 逐窗明细（前 40 窗）---")
-        simulate(hours=4, verbose=True)
+        simulate(verbose=True)          # 跑满 24 小时，只打延迟最大的 10 个窗
         return
     # 单种子方差很大（p90 能在个位数和几十分钟之间跳），只报一次容易得出错误结论，
     # 所以默认跑 6 个种子并报均值；质疑某个数时用 --verbose 逐窗看。
