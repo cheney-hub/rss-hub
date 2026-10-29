@@ -4,7 +4,8 @@
 RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 
 读 feeds.txt（注释行 = 中文源名，下一行 = 地址）
-→ 每源抓最新 PER_SOURCE 条 → 跨源去重 → 按发布时间倒序、超 ITEM_LIMIT 砍最旧 → 生成 RSS 2.0
+→ 每源抓最新 PER_SOURCE 条 → 跨源去重 → 按发布时间倒序（ITEM_LIMIT=0 默认不限）
+→ 生成 RSS 2.0
 
 输出三份：
   docs/feed.xml       完整版：标题原样、全部条目按时间倒序 + 摘要正文，给电脑 / 手机上的 RSS 阅读器
@@ -43,8 +44,8 @@ ROTATE_SECONDS / ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tes
   OUT_FILE           完整版输出，默认 ./docs/feed.xml
   FEED_URL           频道 <link>，默认 https://cheney-hub.github.io/rss-hub/feed.xml
   REFRESH_SECONDS    循环刷新到第几秒结束（0 = 只跑一轮），默认 0
-  PER_SOURCE         每源取几条，默认 3
-  ITEM_LIMIT         去重后条目上限，默认 120（超出按时间砍最旧）
+  PER_SOURCE         每源取几条，默认 5
+  ITEM_LIMIT         去重后条目上限，默认 0 = 不限；真正的上界是 源数 × PER_SOURCE（现 49×5=245）
   FETCH_TIMEOUT      单源超时秒数，默认 20
   CONCURRENCY        并发数，默认 12
   SCREEN_OUT         设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml
@@ -55,12 +56,15 @@ ROTATE_SECONDS / ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tes
                      —— 正文 = 标题装不下的余文 + 原 feed 的 description/摘要原文；
                      296×152 屏正文区约 4 行 × 22 全角 ≈ 88 字，取 90 刚好填满。
                      太长的正文尾端会补省略号。
-  FEED_BODY_MAX      完整版正文最多保留多少全角字，默认 300（0 = 不限）
-                     —— 只用来防止单条摘要把整份文件撑大，与屏宽无关。
+  FEED_BODY_MAX      完整版正文最多保留多少全角字，默认 0 = 不限（完整版全文照发）
+                     —— 正数才用来防止单条摘要把整份文件撑大，与屏宽无关。
   ROTATE_SECONDS     每条在屏上驻留多少秒（= 设备刷新周期），默认 300（rotate.py 读）
                      —— 调大等于放慢轮播。Pages CDN 缓存 600 秒，
                      若真机上出现「同一条连显两次」，把它改成 600。
-  ROTATE_POOL_MAX    轮播池上限，默认 0 = 不限（= 去重后的全部条目）（rotate.py 读）
+  ROTATE_POOL_MAX    轮播池上限，默认 120（0 = 不限）（rotate.py 读）
+                     —— 设备端只消费「最新 120 条」：最差滞后 = 池条数 ÷ 每窗新增，
+                     池子涨到 245 条会把最差滞后从 4.3 小时推到 8 小时以上，
+                     所以完整版条数放开（ITEM_LIMIT=0）后设备池子仍钉在 120。
   ROTATE_STATE       轮播状态文件，默认与 OUT_FILE 同目录的 rotate.json
   ROTATE_STATE_URL   线上状态地址，默认 FEED_URL 同目录的 rotate.json
   SOURCE_TZ_OFFSET   源没写时区时按哪个时区解释，默认 8（北京 +08）
@@ -114,8 +118,8 @@ UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 RETRY_DELAY = 1.0
 
-PER_SOURCE = max(1, int(os.environ.get("PER_SOURCE", "3")))   # 每源取几条
-ITEM_LIMIT = max(1, int(os.environ.get("ITEM_LIMIT", "120")))  # 去重后上限，超出按时间砍最旧
+PER_SOURCE = max(1, int(os.environ.get("PER_SOURCE", "5")))   # 每源取几条
+ITEM_LIMIT = max(0, int(os.environ.get("ITEM_LIMIT", "0")))   # 去重后上限，0 = 不限（默认）
 
 
 # ---------------- feeds.txt 解析 ----------------
@@ -450,7 +454,9 @@ def run_once(entries, prev_items):
 
     items.sort(key=lambda x: (-(x.get("ts") or 0), item_guid(x)))
     items, dropped = dedupe(items)
-    if len(items) > ITEM_LIMIT:                  # 超上限：按时间排序后节选最新的
+    # ITEM_LIMIT=0 表示不限（1.3.0 起默认）：完整版要能装下全部条目，
+    # 真正的规模上界是 源数 × PER_SOURCE；设备端的规模由 ROTATE_POOL_MAX 另行收口。
+    if ITEM_LIMIT and len(items) > ITEM_LIMIT:  # 超上限：按时间排序后节选最新的
         dropped += len(items) - ITEM_LIMIT
         items = items[:ITEM_LIMIT]
     stats = {"total": len(entries), "ok": ok, "fail": fail, "stale": stale,

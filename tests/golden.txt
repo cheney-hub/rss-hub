@@ -1,6 +1,6 @@
 == 版本 ==
 version <VER>（格式校验见 tests/test_core.py）
-LINE_WIDTH 13  BODY_MAX 90  FEED_BODY_MAX 300
+LINE_WIDTH 13  BODY_MAX 90  FEED_BODY_MAX 0
 
 == 宽度 ==
 卡特彼勒第三季度电力与能源业务营收增长12%         20.5 1.01.01.01.01.01.0

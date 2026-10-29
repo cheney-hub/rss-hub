@@ -30,9 +30,10 @@ from version import __version__
 # 屏幕参数走环境变量，其余显示规则都是常量。
 LINE_WIDTH = float(os.environ.get("SCREEN_LINE_WIDTH", "13"))
 BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "90")))
-# 完整版（给电脑 / 手机阅读器）的正文上限，和屏宽无关，只用来防止单条摘要撑爆整份文件。
-# 120 条 × 300 全角 ≈ 110 KB，阅读器打开无压力；给 0 表示不截断。
-FEED_BODY_MAX = max(0.0, float(os.environ.get("FEED_BODY_MAX", "300")))
+# 完整版（给电脑 / 手机阅读器）的正文上限，和屏宽无关。
+# 0 = 不限（完整版全文照发，用户要能在阅读器里读到全文；1.3.0 起默认 0）；
+# 正数才是「防止单条摘要把整份文件撑大」的保险丝。
+FEED_BODY_MAX = max(0.0, float(os.environ.get("FEED_BODY_MAX", "0")))
 
 # ---------------- 文本清洗 ----------------
 # RSS 里的 description 常带 HTML 标签、命名实体、连续空白。这里统一洗成
@@ -276,6 +277,7 @@ def compose_body(tail, summary, title="", body_max=None):
             parts.append(s)
 
     body = " ".join(parts)
+    # body_max=0 = 不限（完整版默认，全文照发）；`if body_max` 恰好把 0 当假值跳过截断。
     if body_max and text_width(body) > body_max:
         bc = _cut_index(body, body_max - 1)         # 留 1 个位给省略号
         body = body[:bc].rstrip(BREAK_CHARS + "-—…") + "…"

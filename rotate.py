@@ -36,7 +36,10 @@ from render import item_guid
 # 每条在屏上驻留多少秒（= 设备刷新周期）。调大等于放慢轮播。
 # Pages CDN 缓存 600 秒，若真机上出现「同一条连显两次」，把它改成 600。
 ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))
-ROTATE_POOL_MAX = max(0, int(os.environ.get("ROTATE_POOL_MAX", "0")))   # 0 = 池子不限
+# 轮播池上限：设备端只消费「最新 120 条」。最差滞后 = 池条数 ÷ 每窗新增，
+# 池子涨到 245 条会把最差滞后从 4.3 小时推到 8 小时以上 —— 所以完整版条数放开
+# （ITEM_LIMIT=0）之后，设备池子仍显式钉在 120（0 = 不限，1.2.x 时代的默认值）。
+ROTATE_POOL_MAX = max(0, int(os.environ.get("ROTATE_POOL_MAX", "120")))
 
 ROTATE_STATE_VERSION = 3      # 状态结构版本，改了就自动丢弃旧状态（宁可重复一条，不能乱序）
 # 容忍的墙钟回拨窗数（1 窗 = ROTATE_SECONDS，2 窗 = 10 分钟）：NTP 校正会往回跳几十秒，

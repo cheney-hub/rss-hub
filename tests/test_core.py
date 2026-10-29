@@ -462,12 +462,20 @@ class TestFullFeed(unittest.TestCase):
         self.assertIn("<description>这是原 feed 的导语", xml)
 
     def test_summary_truncated_by_feed_body_max(self):
-        it = {"title": "标题", "link": "http://x/1", "src": "s", "ts": 1,
-              "summary": "字" * 900}
-        xml = R.build_rss([it], "http://x/feed.xml", {"total": 1})
-        body = re.search(r"<item>.*?<description>(.*?)</description>", xml, re.S).group(1)
-        self.assertLessEqual(R.text_width(body), R.FEED_BODY_MAX)
+        """显式传 body_max=300 时超长摘要要截断补省略号。
+
+        刻意不依赖 R.FEED_BODY_MAX 的环境默认值：默认值是调参对象（1.3.0 起默认 0 = 不限），
+        测试不该跟随调参漂移，行为测试只锁函数本身。
+        """
+        body = R.compose_body("", "字" * 900, "标题", body_max=300)
+        self.assertLessEqual(R.text_width(body), 300)
         self.assertTrue(body.endswith("…"))
+
+    def test_summary_not_truncated_when_body_max_zero(self):
+        """body_max=0 = 不限（完整版默认口径）：超长摘要原样返回，不出现省略号。"""
+        body = R.compose_body("", "字" * 900, "标题", body_max=0)
+        self.assertEqual(len(body), 900)
+        self.assertNotIn("…", body)
 
     def test_title_not_truncated_in_full_feed(self):
         """完整版标题要原样保留 —— 截断只该发生在设备版。"""

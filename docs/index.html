@@ -45,7 +45,7 @@
 <body>
 <div class="wrap">
   <h1>RSS 聚合头条</h1>
-  <div class="sub">多源头条合并 · 每源 3 条去重后取 120 条 · 白天每 5 分钟重建一版（夜间每小时）· 设备版每版换一条、走完全部才回头</div>
+  <div class="sub">多源头条合并 · 每源 5 条去重后全文收录（设备轮播池取最新 120 条） · 白天每 5 分钟重建一版（夜间每小时）· 设备版每版换一条、走完全部才回头</div>
   <div class="sub">本项目专为 <a href="https://dot.mindreset.tech/docs/quote_0">Dot (Quote/0) 墨水屏设备</a>开发，标题已按墨水屏显示优化；完整版同样兼容任意 RSS 阅读器。</div>
 
   <div class="card">
@@ -65,7 +65,7 @@
     </div>
     <div class="meta" style="margin-top:10px">
       设备版：标题转纯文本、只放屏上显示得下的 13 全角字，装不下的原文接进正文，一个字都不丢；
-      每版只发一条、5 分钟轮换一条；正文 = 标题余文 + 原文摘要（最多 90 全角），全池 120 条走完才从头开始。
+      每版只发一条、5 分钟轮换一条；正文 = 标题余文 + 原文摘要（最多 90 全角），全池（最新 120 条）走完才从头开始。
       适合填进 <a href="./screen.html">Dot Quote/0</a> 的循环内容列表（显示样式由 Dot 云端渲染）。
     </div>
   </div>
@@ -87,7 +87,7 @@
     <a href="./feed-wrap.xml">feed-wrap.xml</a> ·
     <a href="./screen.html">屏幕效果</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
-    <div style="margin-top:6px">rss-hub v1.2.3 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
+    <div style="margin-top:6px">rss-hub v1.3.0 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
   </div>
 </div>
 
