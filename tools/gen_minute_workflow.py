@@ -41,8 +41,11 @@ on:
   workflow_dispatch:
 
 concurrency:
+  # 与 nightly.yml 同组：Pages 同一时刻只允许一个部署。
+  # cancel-in-progress: true 保证每个整点都重新对齐——万一上一次被排过队、拖过了整点，
+  # 这一次直接接管，触发时刻不会一路后移累积。
   group: rss-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write
