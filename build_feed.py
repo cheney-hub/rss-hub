@@ -25,7 +25,9 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
   FETCH_TIMEOUT    单源超时秒数，默认 20
   CONCURRENCY      并发数，默认 12
   SCREEN_OUT       墨水屏版输出路径，默认与 OUT_FILE 同目录的 feed-screen.xml
-  SCREEN_TITLE_WIDTH 墨水屏标题宽度上限（全角字符数），默认 24
+  SCREEN_TITLE_WIDTH 墨水屏标题宽度上限（全角字符数），默认 13
+                    —— RSS 卡片在设备上是大字号单行，296px 宽实测只放得下 13～14 个全角字，
+                    超过就被云端从右边硬切（还会补自己的省略号）。这里按 13 让我们的截断先发生。
   SCREEN_ITEMS     墨水屏版条目数上限，默认 60
 """
 import os
@@ -55,7 +57,7 @@ CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
 # 墨水屏版（Dot Quote/0，走 Dot 云端渲染，非设备直接解析）
 SCREEN_OUT = os.environ.get(
     "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-screen.xml"))
-SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "24"))
+SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "13"))
 SCREEN_ITEMS = max(1, int(os.environ.get("SCREEN_ITEMS", "60")))
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -284,12 +286,17 @@ def load_prev_items():
 # 云端模板渲染成位图 → 设备按刷新间隔拉图显示。设备端（ESP32-C3，400KB 内存）不解析 XML，
 # 显示几条、字号多大都由云端模板决定，订阅方控制不了。
 #
-# 所以这份小屏版不做「猜测排版」，只做云端渲染做不到的事：
+# 实测（2026-10-29，296×152 屏）：RSS 卡片 = 一行大字号标题，约 13～14 个全角字就满宽，
+# 超出部分被云端从右边硬切并补它自己的省略号。所以要「我们能控制的截断」先发生，
+# 默认按 13 全角预截；云端就不会再动刀。
+#
+# 这份小屏版只做云端渲染做不到的事：
 #   1. 标题纯文本 —— 摘掉 emoji、箭头、几何图形、零宽字符等（黑白墨水屏上它们是豆腐块或占位）；
 #   2. 标题限长 —— 超长标题由我们这边在标点处优雅截断，而不是被云端硬切成一串省略号；
 #   3. 条目给足 —— 云端每次取「最新 N 条」，N 由 Dot 决定，我们给满 60 条随它挑；
 #   4. 字段极简 —— guid 用短哈希、去掉 atom:link/generator/ttl，云端抓取解析更轻。
 # 未经限长的完整版照旧输出 feed.xml，普通 RSS 阅读器用它。
+# 想一屏看多条，走 push_text.py（文本 API：标题 1 行 + 正文 3 行），那才是真正能塞 4 条的路。
 BREAK_CHARS = "，,、；;：:｜|—）)！!？?·】」』 "
 
 # 黑白墨水屏上这些字符要么显示成方块要么是透明占位，还白占宽度，直接摘掉。

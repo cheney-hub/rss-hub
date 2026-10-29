@@ -3,94 +3,294 @@
 <channel>
 <title>RSS 头条 · 墨水屏</title>
 <link>https://cheney-hub.github.io/rss-hub/feed-screen.xml</link>
-<atom:link href="https://cheney-hub.github.io/rss-hub/feed-screen.xml" rel="self" type="application/rss+xml"/>
-<description>多源头条，标题已按 296×152 屏幕一行排好（源 43 个）</description>
+<description>多源头条，纯文本标题，已为小屏墨水屏精简（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 08:38:03 +0000</lastBuildDate>
-<generator>github-actions/rss-hub</generator>
-<ttl>5</ttl>
+<lastBuildDate>Thu, 29 Oct 2026 09:55:48 +0000</lastBuildDate>
 <item>
-<title>希捷科技(STX.O)、西部数据(WDC.O…</title>
-<link>https://flash.jin10.com/detail/20261029163338454800</link>
-<pubDate>Thu, 29 Oct 2026 16:33:38 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029163338454800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>英国房贷获批数量降至2023…</title>
+<link>https://flash.jin10.com/detail/20261029174949479800</link>
+<pubDate>Thu, 29 Oct 2026 17:49:49 +0800</pubDate>
+<guid isPermaLink="false">578f39a7eee1</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
-<title>《华侨青年》暨南大学预科教育百年纪念特刊发布</title>
-<link>https://www.chinanews.com.cn/txy/2026/10-29/10722795.shtml</link>
-<pubDate>Thu, 29 Oct 2026 16:32:43 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/txy/2026/10-29/10722795.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>宁波银行：第三季度净利润同比增长11.91%</title>
-<link>https://api3.cls.cn/share/article/2519244?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 16:32:42 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519244?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
-</item>
-<item>
-<title>A股双创指数均跌超4%，算力硬件集体调整…</title>
-<link>https://wallstreetcn.com/articles/3784738</link>
-<pubDate>Thu, 29 Oct 2026 16:32:12 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784738|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
-</item>
-<item>
-<title>南昌80后小伙做脑机接口：又融资7亿</title>
-<link>https://www.36kr.com/p/4046523820004489</link>
-<pubDate>Thu, 29 Oct 2026 16:31:57 +0800</pubDate>
-<guid isPermaLink="false">https://www.36kr.com/p/4046523820004489|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
-</item>
-<item>
-<title>Spain begins 3 days of mourning after…</title>
-<link>https://www.scmp.com/news/world/europe/article/3372573/spain-begins-3-days-mourning-after-high-speed-train-disaster</link>
-<pubDate>Thu, 29 Oct 2026 08:31:55 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/news/world/europe/article/3372573/spain-begins-3-days-mourning-after-high-speed-train-disaster|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<title>China promotes General…</title>
+<link>https://www.scmp.com/news/china/military/article/3372591/china-promotes-general-zhang-shengmin-politburo</link>
+<pubDate>Thu, 29 Oct 2026 09:48:24 +0000</pubDate>
+<guid isPermaLink="false">7f992aaee86c</guid>
 <source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
-<title>在岸人民币兑美元收盘报6.6621…</title>
-<link>https://xueqiu.com/5124430882/414497947</link>
-<pubDate>Thu, 29 Oct 2026 16:30:47 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414497947|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>能源价格下跌 英国10年期…</title>
+<link>https://xueqiu.com/5124430882/414517292</link>
+<pubDate>Thu, 29 Oct 2026 17:48:24 +0800</pubDate>
+<guid isPermaLink="false">cd49a25fd116</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
-<title>日化产品“食品化”？不能为“卖相”丢安全</title>
-<link>https://www.peopleapp.com/column/30053440339-500007761566</link>
-<pubDate>Thu, 29 Oct 2026 16:29:16 +0800</pubDate>
-<guid isPermaLink="false">https://www.peopleapp.com/column/30053440339-500007761566|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
+<title>国家能源局：9月核发绿证3…</title>
+<link>https://www.chinanews.com.cn/sh/2026/10-29/10722850.shtml</link>
+<pubDate>Thu, 29 Oct 2026 17:44:18 +0800</pubDate>
+<guid isPermaLink="false">fc76b7455251</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
-<title>宏福苑火災獨立報告 政府啟動部門首長調查…</title>
-<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029125207592-1029_00822_001.html</link>
-<pubDate>Thu, 29 Oct 2026 08:25:06 GMT</pubDate>
-<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029125207592-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
-<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+<title>伊朗军方：在伊方条件满足…</title>
+<link>https://www.jiemian.com/article/15265010.html</link>
+<pubDate>Thu, 29 Oct 2026 17:39:05 +0800</pubDate>
+<guid isPermaLink="false">533f2c5aa9cc</guid>
+<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
 </item>
 <item>
-<title>17岁男生被人冒充警察骗出家门殴打…</title>
-<link>https://c.m.163.com/news/a/LADNAAL30512D3VJ.html</link>
-<pubDate>Thu, 29 Oct 2026 08:20:21 GMT</pubDate>
-<guid isPermaLink="false">https://c.m.163.com/news/a/LADNAAL30512D3VJ.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
+<title>联影营收破百亿…</title>
+<link>https://m.huxiu.com/article/4901451.html?type=text</link>
+<pubDate>Thu, 29 Oct 2026 17:38:18 +0800</pubDate>
+<guid isPermaLink="false">9a871bff9b77</guid>
+<source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
 </item>
 <item>
-<title>穆迪：私募信贷对接AI融资，哪些风险点值得关注</title>
-<link>https://international.caixin.com/2026-10-29/102498562.html</link>
-<pubDate>Thu, 29 Oct 2026 16:17:53 +0800</pubDate>
-<guid isPermaLink="false">https://international.caixin.com/2026-10-29/102498562.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<title>After 28 Years Walking…</title>
+<link>https://www.nytimes.com/2026/10/29/world/europe/karl-bushby-walking-globe-uk.html</link>
+<pubDate>Thu, 29 Oct 2026 09:29:39 +0000</pubDate>
+<guid isPermaLink="false">811638e71b8e</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+</item>
+<item>
+<title>农事“丰”景｜金秋时节…</title>
+<link>https://h.xinhuaxmt.com/vh512/app/13350543</link>
+<pubDate>Thu, 29 Oct 2026 17:28:49 +0800</pubDate>
+<guid isPermaLink="false">1a74e62f78fc</guid>
+<source url="https://feed.quanwenrss.com/feed/xinhua-yw.xml">新华社·要闻</source>
+</item>
+<item>
+<title>舊衣變暖流 弘道二手精品…</title>
+<link>https://www.cna.com.tw/news/ahel/202610290261.aspx</link>
+<pubDate>Thu, 29 Oct 2026 17:23:00 +0800</pubDate>
+<guid isPermaLink="false">5ef28bccec36</guid>
+<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
+</item>
+<item>
+<title>习近平就西班牙高速列车追…</title>
+<link>https://m.bjnews.com.cn/detail/1793263233129241.html</link>
+<pubDate>Thu, 29 Oct 2026 17:18:51 +0800</pubDate>
+<guid isPermaLink="false">67b3fd5856ca</guid>
+<source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
+</item>
+<item>
+<title>《令人心动的 offer 8》…</title>
+<link>https://www.guokr.com/article/470569/</link>
+<pubDate>Thu, 29 Oct 2026 17:15:06 +0800</pubDate>
+<guid isPermaLink="false">e338c1654faa</guid>
+<source url="https://feed.quanwenrss.com/feed/guokr-science.xml">果壳·科学</source>
+</item>
+<item>
+<title>马上评｜血缘亲情…</title>
+<link>https://m.thepaper.cn/newsDetail_forward_34359795</link>
+<pubDate>Thu, 29 Oct 2026 09:13:03 +0000</pubDate>
+<guid isPermaLink="false">14ca93816764</guid>
+<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
+</item>
+<item>
+<title>蔡司杨晓光：通过AI技术…</title>
+<link>https://finance.sina.com.cn/hy/hyjz/2026-10-29/doc-iniwwtux5265042.shtml</link>
+<pubDate>Thu, 29 Oct 2026 09:11:40 GMT</pubDate>
+<guid isPermaLink="false">c8c526d92d54</guid>
+<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
+</item>
+<item>
+<title>欧盟11月起对小包加征2欧…</title>
+<link>https://www.caixin.com/2026-10-29/102498498.html</link>
+<pubDate>Thu, 29 Oct 2026 17:09:11 +0800</pubDate>
+<guid isPermaLink="false">60b581561486</guid>
 <source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
 </item>
 <item>
-<title>涉用电单车贩运124枚丧尸烟弹 38岁快递员被控</title>
-<link>https://www.zaobao.com.sg/news/singapore/story20261029-9914786</link>
-<pubDate>Thu, 29 Oct 2026 08:17:33 GMT</pubDate>
-<guid isPermaLink="false">https://www.zaobao.com.sg/news/singapore/story20261029-9914786|https://rsshub.rss.tips/zaobao/realtime/singapore</guid>
+<title>兆易创新Q3净利润同比增长…</title>
+<link>https://wallstreetcn.com/articles/3784765</link>
+<pubDate>Thu, 29 Oct 2026 17:08:53 +0800</pubDate>
+<guid isPermaLink="false">310580fed73c</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
+</item>
+<item>
+<title>出海变局：流量失灵…</title>
+<link>https://www.36kr.com/p/4046656058037128</link>
+<pubDate>Thu, 29 Oct 2026 17:06:55 +0800</pubDate>
+<guid isPermaLink="false">f0528e32e497</guid>
+<source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
+</item>
+<item>
+<title>宏福苑報告揭火災很可能由…</title>
+<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029170619465-1029_00822_001.html</link>
+<pubDate>Thu, 29 Oct 2026 09:06:19 GMT</pubDate>
+<guid isPermaLink="false">72849cce4396</guid>
+<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+</item>
+<item>
+<title>17岁男生遭假警察上门殴打…</title>
+<link>https://news.ifeng.com/c/8xcXbrDDzek</link>
+<pubDate>Thu, 29 Oct 2026 09:02:43 GMT</pubDate>
+<guid isPermaLink="false">b4e6ab34b05b</guid>
+<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
+</item>
+<item>
+<title>国防部：菲方军舰非法坐滩…</title>
+<link>https://c.m.163.com/news/a/LAE1V00L0514R9P4.html</link>
+<pubDate>Thu, 29 Oct 2026 09:00:15 GMT</pubDate>
+<guid isPermaLink="false">41e837af1107</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
+</item>
+<item>
+<title>美国中期选举：特朗普不参…</title>
+<link>https://www.zaobao.com/news/world/story20261029-9910257</link>
+<pubDate>Thu, 29 Oct 2026 09:00:00 +0000</pubDate>
+<guid isPermaLink="false">710d9aa07b87</guid>
+<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
+</item>
+<item>
+<title>俞汝捷</title>
+<link>https://www.infzm.com/contents/343592</link>
+<pubDate>Thu, 29 Oct 2026 17:00:00 +0800</pubDate>
+<guid isPermaLink="false">306475e73be2</guid>
+<source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
+</item>
+<item>
+<title>2026全球数商大会10月30日…</title>
+<link>https://www.yicai.com/news/103415409.html</link>
+<pubDate>Thu, 29 Oct 2026 08:56:31 GMT</pubDate>
+<guid isPermaLink="false">bb12b43f674d</guid>
+<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
+</item>
+<item>
+<title>俄总统新闻秘书…</title>
+<link>https://sputniknews.cn/20261029/1073857433.html</link>
+<pubDate>Thu, 29 Oct 2026 16:53:13 +0800</pubDate>
+<guid isPermaLink="false">a42f1fc8aaf4</guid>
+<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
+</item>
+<item>
+<title>花拉公园地铁站男厕完成改…</title>
+<link>https://www.zaobao.com.sg/news/singapore/story20261029-9914887</link>
+<pubDate>Thu, 29 Oct 2026 08:52:08 GMT</pubDate>
+<guid isPermaLink="false">c022bb1615ea</guid>
 <source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
+</item>
+<item>
+<title>青沼英二坦言对…</title>
+<link>https://www.cnbeta.com.tw/articles/game/1584308.htm</link>
+<pubDate>Thu, 29 Oct 2026 16:50:00 +0800</pubDate>
+<guid isPermaLink="false">4d3fcc7b549f</guid>
+<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
+</item>
+<item>
+<title>华能国际近5日震荡持平大…</title>
+<link>https://www.eeo.com.cn/2026/1029/1078800.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:49:50 +0800</pubDate>
+<guid isPermaLink="false">d143379d26a9</guid>
+<source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
+</item>
+<item>
+<title>收1600新元向狮城女游客泼…</title>
+<link>https://www.8world.com/greater-china/acid-singaporean-tourist-hong-kong-man-jailed-8-years-3324566</link>
+<pubDate>Thu, 29 Oct 2026 08:42:00 GMT</pubDate>
+<guid isPermaLink="false">b1f00e6fcd63</guid>
+<source url="https://rsshub.rss.tips/8world/news">8world</source>
+</item>
+<item>
+<title>Audio reveals exchanges…</title>
+<link>https://www.bbc.com/news/articles/cmqxnl312v34o</link>
+<pubDate>Thu, 29 Oct 2026 08:38:54 +0000</pubDate>
+<guid isPermaLink="false">9f0adee4a1dd</guid>
+<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
+</item>
+<item>
+<title>日韩防长会谈 一致同意就…</title>
+<link>https://china.kyodonews.net/articles/-/17611</link>
+<pubDate>Thu, 29 Oct 2026 17:35:00 +0900</pubDate>
+<guid isPermaLink="false">d3be84907ace</guid>
+<source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
+</item>
+<item>
+<title>AI巨头面临全新评价体系…</title>
+<link>https://www.mycaijing.com/article/detail/586523?source_id=40</link>
+<pubDate>Thu, 29 Oct 2026 16:23:19 +0800</pubDate>
+<guid isPermaLink="false">593e0b38edf0</guid>
+<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
+</item>
+<item>
+<title>弗拉维奥·博索纳罗称将在…</title>
+<link>https://h.xinhuaxmt.com/vh512/app/13350318</link>
+<pubDate>Thu, 29 Oct 2026 16:10:03 +0800</pubDate>
+<guid isPermaLink="false">1c63e8caa432</guid>
+<source url="https://feed.quanwenrss.com/feed/xinhua-gj.xml">新华社·国际</source>
+</item>
+<item>
+<title>何永賢問責辭職…</title>
+<link>https://hk01.com/sns/article/60404686</link>
+<pubDate>Thu, 29 Oct 2026 07:58:01 GMT</pubDate>
+<guid isPermaLink="false">01e8e23c32bb</guid>
+<source url="https://rsshub.rss.tips/hk01/hot">香港01·热榜</source>
+</item>
+<item>
+<title>美军被迫复活高超导弹…</title>
+<link>https://mil.ifeng.com/c/8xcQmqvbDmt</link>
+<pubDate>Thu, 29 Oct 2026 15:46:29 +0800</pubDate>
+<guid isPermaLink="false">c28a6ccfcc90</guid>
+<source url="https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml">凤凰网军事·最新</source>
+</item>
+<item>
+<title>成田机场26年度上半年国际…</title>
+<link>https://cn.nikkei.com/industry/tradingretail/64530-2026-10-29-14-13-58.html</link>
+<pubDate>Thu, 29 Oct 2026 14:13:58 +0800</pubDate>
+<guid isPermaLink="false">471871765ab7</guid>
+<source url="https://feed.quanwenrss.com/feed/nikkei-latest.xml">日经中文网·最新</source>
+</item>
+<item>
+<title>日本千叶县发生震度5弱地…</title>
+<link>https://www3.nhk.or.jp/nhkworld/zh/news/20261029_RS12/</link>
+<pubDate>Thu, 29 Oct 2026 13:54:23 +0900</pubDate>
+<guid isPermaLink="false">9bf7b3872d6d</guid>
+<source url="https://feed.quanwenrss.com/feed/nhkworld-zh.xml">NHK WORLD</source>
+</item>
+<item>
+<title>西班牙高铁事故…</title>
+<link>https://www.dw.com/zh/%E8%A5%BF%E7%8F%AD%E7%89%99%E9%AB%98%E9%93%81%E4%BA%8B%E6%95%85%EF%BC%9A%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E6%8C%87%E4%BB%A4%E5%A4%B1%E8%AF%AF-%E7%BA%A2%E7%81%AF%E4%BB%8D%E6%94%BE%E8%A1%8C/a-79789821</link>
+<pubDate>Thu, 29 Oct 2026 03:02:00 +0000</pubDate>
+<guid isPermaLink="false">601bda794831</guid>
+<source url="https://feed.quanwenrss.com/feed/dw-latest.xml">德国之声中文·最新</source>
+</item>
+<item>
+<title>【抵近观察⑨】叩问…</title>
+<link>https://app.gmdaily.cn/as/opened/n/b2cb13e3ed764783945a223af650d9b2</link>
+<pubDate>Thu, 29 Oct 2026 07:11:36 +0800</pubDate>
+<guid isPermaLink="false">63869543cf53</guid>
+<source url="https://feed.quanwenrss.com/feed/gmw-hot.xml">光明网·热点</source>
+</item>
+<item>
+<title>消息人士：欧盟放弃…</title>
+<link>https://ici.radio-canada.ca/rci/zh-hans/%E6%96%B0%E9%97%BB/2296617/%E6%AC%A7%E7%9B%9F-%E5%87%86%E6%88%90%E5%91%98-%E5%8A%A0%E6%8B%BF%E5%A4%A7-%E8%81%94%E7%9B%9F</link>
+<pubDate>Wed, 28 Oct 2026 21:06:38 +0000</pubDate>
+<guid isPermaLink="false">34dc43f3c161</guid>
+<source url="https://feed.quanwenrss.com/feed/rci-zh-hans-latest.xml">加拿大国际广播电台 RCI 中文·最新</source>
+</item>
+<item>
+<title>香港特首就宏福苑大火致歉</title>
+<link>https://www.ftchinese.com/story/001111231</link>
+<pubDate>Wed, 28 Oct 2026 16:00:00 +0000</pubDate>
+<guid isPermaLink="false">5cfb854bb0b8</guid>
+<source url="https://feed.quanwenrss.com/feed/ftchinese-all.xml">FT中文网·全部</source>
+</item>
+<item>
+<title>世界各国的文字几乎都变成…</title>
+<link>https://daily.zhihu.com/story/9793540</link>
+<pubDate>Thu, 29 Oct 2026 00:00:00 +0800</pubDate>
+<guid isPermaLink="false">4414249d38a7</guid>
+<source url="https://feed.quanwenrss.com/feed/zhihu-latest.xml">知乎日报·最新</source>
+</item>
+<item>
+<title>比斯特系列揭晓2026年…</title>
+<link>https://www.hbrchina.org/#/article/detail?id=482037</link>
+<pubDate>Mon, 26 Oct 2026 17:30:55 +0800</pubDate>
+<guid isPermaLink="false">d03beedf6358</guid>
+<source url="https://feed.quanwenrss.com/feed/hbrchina-latest.xml">哈佛商业评论中文版·最新</source>
 </item>
 </channel></rss>

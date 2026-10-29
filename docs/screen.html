@@ -35,12 +35,14 @@
   .m{font-size:9px;margin-top:10px;opacity:.55;white-space:nowrap;overflow:hidden;
      text-overflow:ellipsis}
 
-  .ctrl{display:flex;gap:8px;justify-content:center;align-items:center;
-        margin:6px 0 4px;flex-wrap:wrap}
-  .ctrl button{border:1px solid var(--line);background:var(--card);color:var(--fg);
-               border-radius:9px;padding:7px 13px;font-size:13px;cursor:pointer}
-  .ctrl button:active{opacity:.8}
-  .ctrl .num{color:var(--sub);font-size:13px;min-width:52px;text-align:center}
+  /* 文本 API 版面：标题 1 行 + 正文 3 行 + 右下角落款（Dot 官方固定布局） */
+  .device.api{justify-content:flex-start;padding:13px 14px}
+  .device.api .t1{font-size:15px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden}
+  .device.api .b{margin-top:6px;font-size:10px;line-height:1.5;overflow:hidden}
+  .device.api .b div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .device.api .sig{position:relative;margin-top:auto;text-align:right;font-size:8px;opacity:.6}
+  .cap{color:var(--sub);font-size:12px;text-align:center;margin:10px 0 16px}
+
   .note{color:var(--sub);font-size:12px;text-align:center;margin-top:14px;line-height:1.9}
   .specs{color:var(--sub);font-size:12px;text-align:center;margin-top:6px;line-height:1.9}
   .specs code{font-size:11px}
@@ -51,8 +53,9 @@
 <body>
 <div class="wrap">
   <h1>小屏效果示意</h1>
-  <p class="sub">Dot Quote/0 的显示由 Dot 云端渲染，本页只示意「一次一条」的内容效果，实际样式以设备为准。</p>
+  <p class="sub">Dot Quote/0 的显示由 Dot 云端渲染，本页只示意两种喂法的效果差异，实际样式以设备为准。</p>
 
+  <div class="cap">① RSS 卡片（现状）：一行大字号，约 13 个汉字满宽 —— 一屏只有一条</div>
   <div class="stage" id="stage">
     <div class="device" onclick="toggleZoom()" title="点击放大 / 缩小">
       <div class="q" id="q">—</div>
@@ -60,22 +63,23 @@
     </div>
   </div>
 
-  <div class="ctrl">
-    <button onclick="step(-1)">‹ 上一条</button>
-    <span class="num" id="num">1 / 1</span>
-    <button onclick="step(1)">下一条 ›</button>
-    <button id="play" onclick="togglePlay()">暂停轮播</button>
-    <button id="zoom" onclick="toggleZoom()">放大 2×</button>
+  <div class="cap">② 文本 API：标题 1 行 + 正文 3 行 + 右下角落款 —— 一屏四条</div>
+  <div class="stage">
+    <div class="device api">
+      <div class="t1" id="t1">—</div>
+      <div class="b" id="b"></div>
+      <div class="sig" id="sig">—</div>
+    </div>
   </div>
 
   <div class="note">
     设备刷新间隔在 Dot App 里设置（1 分钟 ～ 12 小时，电池模式睡眠期间不刷新）；<br>
-    Dot 云端多久抓一次本源由 Dot 侧调度，订阅方无法控制，但本源每分钟都是新鲜的。
+    Dot 云端多久抓一次 RSS 源由 Dot 侧调度，订阅方无法控制，但本源每分钟都是新鲜的。
   </div>
 
   <div class="specs">
     订阅源：本站 <code>feed-screen.xml</code> —— 纯文本标题（emoji / 装饰符号已摘除）、<br>
-    标题在标点处优雅截断（<code>SCREEN_TITLE_WIDTH</code>，默认 24 全角）、条目给足 60 条、字段极简
+    标题在标点处优雅截断（<code>SCREEN_TITLE_WIDTH</code>，默认 13 全角 = 实测一行容量）、条目给足 60 条、字段极简
   </div>
 
   <div class="foot">
@@ -86,7 +90,7 @@
 </div>
 
 <script>
-let items = [], idx = 0, timer = null, zoomed = false, playing = true;
+let items = [], idx = 0, zoomed = false;
 
 const $ = id => document.getElementById(id);
 
@@ -104,26 +108,23 @@ function ago(s){
 function render(){
   if (!items.length) return;
   const it = items[idx % items.length];
-  $('q').textContent = it.title;
-  const when = ago(it.date);
-  $('m').textContent = [it.src, when].filter(Boolean).join(' · ');
-  $('num').textContent = (idx % items.length + 1) + ' / ' + items.length;
+  $('q').textContent = it.title;                       // ① RSS 卡片：只有这一行
+  $('m').textContent = [it.src, ago(it.date)].filter(Boolean).join(' · ');
+
+  // ② 文本 API：标题 1 行 + 正文 3 行
+  const next = [1,2,3].map(k => items[(idx + k) % items.length]).filter(Boolean);
+  $('t1').textContent = it.title;
+  $('b').innerHTML = next.map(x => '<div>' + x.title.replace(/[<>&]/g, '') + '</div>').join('');
+  const now = new Date();
+  $('sig').textContent = String(now.getMonth()+1).padStart(2,'0') + '-' +
+                         String(now.getDate()).padStart(2,'0') + ' ' +
+                         String(now.getHours()).padStart(2,'0') + ':' +
+                         String(now.getMinutes()).padStart(2,'0');
 }
 
-function step(d){ idx += d; render(); restart(); }
-function restart(){
-  if (timer) clearInterval(timer);
-  if (playing) timer = setInterval(() => { idx++; render(); }, 8000);
-}
-function togglePlay(){
-  playing = !playing;
-  $('play').textContent = playing ? '暂停轮播' : '继续轮播';
-  restart();
-}
 function toggleZoom(){
   zoomed = !zoomed;
   $('stage').className = zoomed ? 'stage z2' : 'stage';
-  $('zoom').textContent = zoomed ? '缩小' : '放大 2×';
 }
 
 fetch('./feed-screen.xml', {cache:'no-store'})
@@ -135,7 +136,8 @@ fetch('./feed-screen.xml', {cache:'no-store'})
       src:   (it.querySelector('source')||{}).textContent || '',
       date:  (it.querySelector('pubDate')||{}).textContent || ''
     }));
-    render(); restart();
+    render();
+    setInterval(() => { idx++; render(); }, 8000);   // 每 8 秒换一组，模拟轮播
   })
   .catch(() => { $('q').textContent = '无法加载 feed-screen.xml'; });
 </script>
