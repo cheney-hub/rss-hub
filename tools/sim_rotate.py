@@ -36,8 +36,8 @@
   4. 落后片数：`window - bucket`，即屏上是几分钟前的内容；「落后 ≥2 片」的窗占比
      就是「在吃池子存货」的比例，尾巴有多长全看它
 
-默认跑 6 个种子报均值：单种子方差很大（p90 能在 5 分和 14 分之间跳，最差在 3.3~5.9 小时之间），
-拿单次结果跟别人对表会得出相反结论。`--verbose` 才单跑一次并打逐窗明细。
+默认跑 6 个种子报均值：单种子方差很大（p90 在 **4~60 分**之间跳、最差 3.7~6.0 小时），
+拿单次结果跟别人对表会得出相反结论。`--seed=N` 单跑指定种子（可配 `--verbose` 看尾部）。
 """
 import math
 import os
@@ -209,12 +209,12 @@ def show(tag, r):
           % (r["rank_med"], r["rank_p90"], r["rank_zero"] * 100))
     print("  落后片数（window-bucket）：中位 %d 片 · 最大 %d 片 · 播的是旧片（落后 ≥2 片）占 %.0f%%"
           % (r["lag_med"], r["lag_max"], r["stale"] * 100))
-    print("  分布（跨种子稳定）：%.0f%% 在 6 分内 · %.0f%% 超过 30 分（这批中位 %.0f 分）"
+    print("  分布：%.0f%% 在 6 分内 · %.0f%% 超过 30 分（这批中位 %.0f 分）"
           % (r["fast"] * 100, r["slow"] * 100, r["slow_med"]))
 
 
-def _arg_seed(default=7):
-    """`--seed=N`：换一条随机序列复现别人的数（对表时固定种子用）。"""
+def _arg_seed(default=None):
+    """`--seed=N`：换一条随机序列复现别人的数（对表时固定种子用）。没给就返回 default。"""
     for arg in sys.argv:
         if arg.startswith("--seed="):
             return int(arg.split("=", 1)[1])
@@ -224,11 +224,17 @@ def _arg_seed(default=7):
 def main():
     print("参数：节拍 %d 秒 · 池上限 %d 条 · 白天每窗新增 %.2f 条（泊松）"
           % (DWELL, LIMIT, 2.35))
+    seed = _arg_seed()
     if "--verbose" in sys.argv:
-        seed = _arg_seed()
+        seed = 7 if seed is None else seed
         show("单跑 seed=%d（单次结果方差很大，结论看默认的多种子均值）" % seed,
              simulate(seed=seed))
         simulate(seed=seed, verbose=True)   # 跑满 24 小时，只打延迟最大的 10 个窗
+        return
+    if seed is not None:
+        # `--seed=N` 单独用也必须生效。以前这里只在 --verbose 分支取种子，于是
+        # `--seed=7` 被静默忽略、打出来的还是 6 种子均值 —— 对表时最危险的一种错。
+        show("单跑 seed=%d（--seed 指定的种子）" % seed, simulate(seed=seed))
         return
     # 单种子方差很大（p90 能在个位数和几十分钟之间跳），只报一次容易得出错误结论，
     # 所以默认跑 6 个种子并报均值；质疑某个数时用 --verbose 逐窗看。
