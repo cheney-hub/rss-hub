@@ -1,8 +1,7 @@
+# 本地运行产物（生成物 docs/feed.xml、docs/feed-wrap.xml 要入库，供 Pages 兜底）
 __pycache__/
 *.pyc
-state.json
 docs/rotate.json
-/feed.xml
 .DS_Store
 Thumbs.db
 

@@ -11,6 +11,8 @@ on:
     paths:
       - "feeds.txt"
       - "build_feed.py"
+      - "render.py"          # 改排版规则也要立刻重建，否则要等下一个整点
+      - "version.py"
       - ".github/workflows/rss.yml"
 
 concurrency:
@@ -39,13 +41,18 @@ jobs:
           python-version: "3.12"
 
       - name: 抓取并生成 feed（单轮）
+        # 参数必须与 minute.yml 一致：这里少写一项就会写成代码默认值，
+        # 出现「手动改源那一次排版跟平时不一样」的怪现象（历史上 SCREEN_BODY_MAX 就写错过）
         env:
           REFRESH_SECONDS: "0"
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_LINE_WIDTH: "13"
-          SCREEN_BODY_MAX: "60"
+          SCREEN_BODY_MAX: "90"
+          FEED_BODY_MAX: "300"
+          PER_SOURCE: "3"
+          ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
         run: python build_feed.py
 

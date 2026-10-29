@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 """渲染层：一条资讯 → 屏上能显示的一段文字 → 一份合法 RSS。
 
-这里全是纯函数：不联网、不写文件，除两个屏幕参数外不读任何外部状态，
+这里全是纯函数：不联网、不写文件，除三个正文长度参数外不读任何外部状态，
 所以 tests/test_core.py 能把它们直接拉进内存里跑，不用打桩。
+`tests/test_golden.py` 另外拿固定输入跟 tests/golden.txt 逐字节比对，
+任何「顺手改了排版」的动作都会在那里现形。
 
 和 build_feed.py 的分工：
   * render.py     显示规则 —— 纯文本化、宽度折算、标题切分、正文合成、去重键、RSS 生成
@@ -11,6 +13,8 @@
 
 为什么拆：原先 776 行的单文件里，排版规则和 urllib 重试挤在一起，
 改一个「13 全角」的常量要在一堆网络代码里翻。分开后两边都能独立读、独立测。
+
+版本：见 version.py（唯一真源）。本文件只消费，不定义。
 """
 
 import os
@@ -21,9 +25,14 @@ import unicodedata
 import email.utils
 from datetime import datetime, timezone
 
+from version import __version__
+
 # 屏幕参数走环境变量，其余显示规则都是常量。
 LINE_WIDTH = float(os.environ.get("SCREEN_LINE_WIDTH", "13"))
 BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "90")))
+# 完整版（给电脑 / 手机阅读器）的正文上限，和屏宽无关，只用来防止单条摘要撑爆整份文件。
+# 120 条 × 300 全角 ≈ 110 KB，阅读器打开无压力；给 0 表示不截断。
+FEED_BODY_MAX = max(0.0, float(os.environ.get("FEED_BODY_MAX", "300")))
 
 # ---------------- 文本清洗 ----------------
 # RSS 里的 description 常带 HTML 标签、命名实体、连续空白。这里统一洗成
@@ -154,6 +163,27 @@ def _word_char(ch):
     return ch.isascii() and (ch.isalnum() or ch in "._-")
 
 
+# 数字后面紧跟这些字时，数字属于「数量」，不能留在上一行末尾
+# （「信息超3」+「亿条」在屏上读起来像断了）。只列单位 / 量词，不含普通名词字。
+_UNIT_AFTER_NUMBER = "亿万千百元%％个条人年月日号吨台辆架艘份项家只张片次倍成点分秒克斤升米里度"
+
+
+def _avoid_orphan_number(t, cut, line_w):
+    """切点落在「数字|量词」之间时，退到数字前面。
+
+    「日本今年前10月外泄信息超3|亿条」屏上是「…超3」，正文从「亿条」开始，
+    一眼看去是断的。退半个到一个字宽换整句通顺；退得太狠（不足行宽一半）就硬切。
+    """
+    if cut <= 0 or cut >= len(t):
+        return cut
+    if not (t[cut - 1].isdigit() and t[cut] in _UNIT_AFTER_NUMBER):
+        return cut
+    i = cut
+    while i > 0 and (t[i - 1].isdigit() or t[i - 1] in ".．"):
+        i -= 1
+    return i if text_width(t[:i]) >= line_w * 0.5 else cut
+
+
 def _cut_index(s, max_w):
     """返回不超过 max_w 全角宽度的最大字符下标。"""
     acc = 0.0
@@ -195,6 +225,7 @@ def split_title(title, line_w=None, body_max=None):
             i -= 1
         if text_width(t[:i]) >= line_w * 0.6:
             cut = i
+    cut = _avoid_orphan_number(t, cut, line_w)
     # 切点落在连接标点上（「万事达盘前上涨1.8%，」）时，标题别拖着逗号收尾，
     # 那是被切断的痕迹；余文本来就从下一句开始。
     head = t[:cut].rstrip(" 　").rstrip("，,、；;") or t[:cut].rstrip(" 　")
@@ -252,16 +283,9 @@ def esc(s):
     return html.escape(s or "", quote=True)
 
 
-def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
-              description=None, screen=False):
-    """screen=True 出设备版：标题截到屏宽 + 余文进 description + 字段极简。
-
-    字段极简指省略 atom:link / generator / ttl，guid 改成 12 位短哈希，
-    单条体积降到原来的三成左右；对解析端来说仍是合法 RSS 2.0。
-    """
+def _channel_lines(feed_url, channel_title, description, total, screen):
+    """<channel> 头部：设备版砍掉 atom:link / generator / ttl 三项省体积。"""
     now = email.utils.format_datetime(datetime.now(timezone.utc))
-    if description is None:
-        description = "多源 RSS 头条聚合，按发布时间倒序（源 %d 个）" % stats["total"]
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
@@ -278,35 +302,66 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
         "<lastBuildDate>%s</lastBuildDate>" % now,
     ]
     if not screen:
-        lines += ["<generator>github-actions/rss-hub</generator>", "<ttl>5</ttl>"]
+        # 版本号写进 generator：从订阅端就能看出线上跑的是哪一版，排障不用去翻提交历史
+        lines += ["<generator>rss-hub %s</generator>" % esc(__version__), "<ttl>5</ttl>"]
+    return lines
+
+
+def _item_lines(it, screen):
+    """一个 <item> 的字段。两种版本的差别集中在这里，一眼能对照。"""
+    if screen:
+        head, tail = split_title(it["title"])
+        body = compose_body(tail, it.get("summary"), it["title"])
+    else:
+        # 完整版不丢摘要：以前这里正文恒为空，阅读器里只剩标题，原 feed 的导语一段都读不到。
+        # 标题保持原样（不截断），摘要单独截到 FEED_BODY_MAX。
+        head = it["title"]
+        body = compose_body("", it.get("summary"), it["title"], body_max=FEED_BODY_MAX)
+
+    lines = ["<item>", "<title>%s</title>" % esc(head)]
+    # 设备版：标题装不下的余文 + 原 feed 摘要；完整版：原 feed 摘要
+    if body:
+        lines.append("<description>%s</description>" % esc(body))
+    lines.append("<link>%s</link>" % esc(it["link"]))
+    if it.get("date_raw"):
+        lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
+    elif it.get("ts"):
+        lines.append("<pubDate>%s</pubDate>" % email.utils.format_datetime(
+            datetime.fromtimestamp(it["ts"], timezone.utc)))
+    if screen:
+        # 原来是把「链接|源地址」整串当 guid，动辄上百字节，小屏完全用不上。
+        # 换成短哈希，稳定、唯一，体积降到十几字节；也是轮播判断「是否已展示」的键。
+        lines.append('<guid isPermaLink="false">%s</guid>' % item_guid(it))
+    else:
+        # 完整版仍用「链接|源地址」：同一篇文章被两个源收录时 guid 不同，阅读器不会吞条目
+        lines.append('<guid isPermaLink="false">%s</guid>'
+                     % esc((it["link"] or it["title"]) + "|" + str(it["src"])))
+    if it.get("src_name"):
+        lines.append('<source url="%s">%s</source>'
+                     % (esc(it["src"]), esc(plain_text(it["src_name"]))))
+    lines.append("</item>")
+    return lines
+
+
+def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
+              description=None, screen=False):
+    """出一份 RSS 2.0。
+
+    screen=False 完整版：标题原样（可含 emoji），正文放清洗后的原 feed 摘要，
+                 字段齐全（含 atom:link / generator / ttl），给标准阅读器用。
+    screen=True  设备版：标题截到屏宽 + 余文进 description + 字段极简，
+                 省略 atom:link / generator / ttl，guid 改成 12 位短哈希，
+                 单条体积降到完整版的三成左右；对解析端来说仍是合法 RSS 2.0。
+
+    stats 用 .get 取：调用方可能只传部分键（CI 烟测就只传六项），
+    这里不该因为少一个统计字段把整份 feed 搞崩。
+    """
+    total = stats.get("total", 0)
+    if description is None:
+        description = "多源 RSS 头条聚合，按发布时间倒序（源 %d 个）" % total
+    lines = _channel_lines(feed_url, channel_title, description, total, screen)
     for it in items:
-        if screen:
-            head, tail = split_title(it["title"])
-            body = compose_body(tail, it.get("summary"), it["title"])
-        else:
-            head, tail, body = it["title"], "", ""
-        lines.append("<item>")
-        lines.append("<title>%s</title>" % esc(head))
-        # 标题装不下的余文 + 原 feed 摘要，一起进正文：屏上正文区能接着读到后半句
-        if body:
-            lines.append("<description>%s</description>" % esc(body))
-        lines.append("<link>%s</link>" % esc(it["link"]))
-        if it.get("date_raw"):
-            lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
-        elif it.get("ts"):
-            lines.append("<pubDate>%s</pubDate>" % email.utils.format_datetime(
-                datetime.fromtimestamp(it["ts"], timezone.utc)))
-        if screen:
-            # 原来是把「链接|源地址」整串当 guid，动辄上百字节，小屏完全用不上。
-            # 换成链接的短哈希，稳定、唯一，体积降到十几字节；也是轮播判断「是否已展示」的键。
-            lines.append('<guid isPermaLink="false">%s</guid>' % item_guid(it))
-        else:
-            lines.append('<guid isPermaLink="false">%s</guid>'
-                         % esc((it["link"] or it["title"]) + "|" + str(it["src"])))
-        if it.get("src_name"):
-            lines.append('<source url="%s">%s</source>'
-                         % (esc(it["src"]), esc(plain_text(it["src_name"]))))
-        lines.append("</item>")
+        lines.extend(_item_lines(it, screen))
     lines.append("</channel></rss>")
     return "\n".join(lines)
 

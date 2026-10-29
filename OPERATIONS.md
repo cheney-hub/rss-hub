@@ -1,5 +1,7 @@
 # 运维手册
 
+当前版本 **v1.1.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+
 ## 日常操作
 
 ### 加减订阅源
@@ -46,8 +48,9 @@ python3 tools/gen_minute_workflow.py 13
 | `PER_SOURCE` | `3` | 每源取几条进池；调大池子更大、一轮更久，单源超时开销也更大 |
 | `ITEM_LIMIT` | `120` | 去重后条目上限，超出按发布时间砍最旧 |
 | `SCREEN_LINE_WIDTH` | `13` | 标题行宽度（全角字符数）。296×152 屏真机实测 13 字顶格，多出来的字云端直接切；调小会让标题更短、正文更长 |
-| `SCREEN_BODY_MAX` | `90` | 正文（`<description>`）最多保留多少全角字，约合 4 行 × 22 字。给 0 表示不限 |
-| `ROTATE_SECONDS` | `300` | 轮播节拍，必须等于设备刷新间隔。设备设 5 分钟这里就 300；改 600 可规避 Pages 10 分钟缓存导致的漏看 |
+| `SCREEN_BODY_MAX` | `90` | 设备版正文（`<description>`）最多保留多少全角字，约合 4 行 × 22 字。给 0 表示不限 |
+| `FEED_BODY_MAX` | `300` | 完整版正文上限（全角字），只用来防止单条摘要撑大文件，与屏宽无关。给 0 表示不限 |
+| `ROTATE_SECONDS` | `300` | 轮播节拍，必须等于设备刷新间隔。设备设 5 分钟这里就 300；改 600 可规避 Pages 10 分钟缓存导致的漏看。**夜间也保持 300**：它定的是「时间片粒度」，夜间每小时只跑一轮，自然就是一小时换一条 |
 | `ROTATE_BUCKETS` | `0` | 一轮最多播几个时间片，`0` = 池子里有多少片就走多少。片数 = 一轮条数，也决定新条目最迟多久上屏 |
 | `ROTATE_POOL_MAX` | `0` | 轮播池上限，`0` = 全部（去重后的所有条目） |
 | `SOURCE_TZ_OFFSET` | `8` | 源没写时区时按哪个时区解释（默认北京 +08）。不要依赖运行机本地时区，否则本地与 CI 排序不一致 |
@@ -60,6 +63,10 @@ python3 tools/gen_minute_workflow.py 13
 设备版还自动做了三件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、
 标题超宽时把余下原文搬进 `<description>`（一个字都不丢）、
 字段极简（guid 短哈希、去掉 `atom:link`/`generator`/`ttl`，同条数下体积约 −22%，仍完全合法）。
+
+完整版（给电脑 / 手机阅读器）的正文取原 feed 的 `description` / `content:encoded` 摘要，
+上限由 `FEED_BODY_MAX`（默认 300 全角）控制 —— 这个值只影响文件体积，与屏宽无关；
+定得太小，阅读器里就只能读到摘要开头一句。
 
 调完看 <https://cheney-hub.github.io/rss-hub/screen.html> 预览效果，以设备实际显示为准。
 
@@ -79,8 +86,10 @@ curl -X POST \
 ### 本地调试
 
 ```bash
+python3 build_feed.py --version                              # 打印版本号
 python3 build_feed.py                                        # 生成 docs/feed.xml + docs/feed-wrap.xml
 OUT_FILE=/tmp/t.xml REFRESH_SECONDS=0 python3 build_feed.py   # 换路径、只跑一轮
+python3 -m unittest discover -s tests -v                      # 单测 + 行为基线
 ```
 
 零第三方依赖，Python 3.8+，Windows / macOS / Linux 都一样。
@@ -119,15 +128,16 @@ git commit -m "revert feed" && git push
 
 ## 刷新节奏
 
-当前是 **5 分钟一版**（设备刷新周期也是 5 分钟），全天不间断，runner 占用约 13 轮 × 24 小时。
+当前白天 **5 分钟一版**（北京时间 06:00–23:59，设备刷新周期也是 5 分钟），
+夜间 00:00–05:59 降为每小时一版；runner 占用约 13 轮 × 18 小时 + 6 次/天。
 节奏与轮播绑定：`ROTATE_SECONDS` 就是「一条在屏上待多久」，改它等于改轮播速度。
 
 | 目标节奏 | 怎么改 | 一轮走完（43 条） |
 |---|---|---|
-| **5 分钟（现状）** | `gen_minute_workflow.py 13`，周期 300 秒，cron `7 * * * *` | 约 3.6 小时 |
+| **5 分钟（现状）** | `gen_minute_workflow.py 13`，周期 300 秒，cron `7 * * * *` | 约 4.2 小时（120 条 ≈ 51 片） |
 | 10 分钟（CDN 缓存吃条时改这个） | `tools/gen_minute_workflow.py` 里 `PERIOD=600`、轮数 6；yml 里 `ROTATE_SECONDS: "600"` | 约 7 小时 |
 | 2 分钟 | `PERIOD=120`、轮数 30；不要动 `ROTATE_SECONDS`（否则设备跟不上） | 约 1.4 小时 |
-| 省 runner | `gen_minute_workflow.py 1`（每小时只跑一轮），轮播自然变成 1 小时一条 | 约 1.8 天 |
+| 省 runner | `gen_minute_workflow.py 1`（每小时只跑一轮），轮播自然变成 1 小时一条 | 约 2 天 |
 
 两个绕不开的约束，也是这套设计的原因：
 
@@ -378,8 +388,9 @@ Pages 同一时刻只允许一个部署，撞上就报这个 400。三个工作�
 curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | python3 -m json.tool
 ```
 
-`window` = 当前时间窗（`now // ROTATE_SECONDS`），`shown` = 本轮已展示的 guid，
-`pool` = 池子条数，`cycle` = 第几轮。
+`window` = 当前时间窗（`now // ROTATE_SECONDS`），`bucket` = 当前上屏的时间片号，
+`shown` = 本轮已播过的时间片号（**不是 guid**），`queue` = 本轮清单快照（片号，从新到旧），
+`pool` = 池子**片数**、`items` = 池子**条数**，`cycle` = 第几轮。
 
 | 现象 | 原因 | 处置 |
 |---|---|---|

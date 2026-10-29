@@ -1,0 +1,349 @@
+== 版本 ==
+version <VER>（格式校验见 tests/test_core.py）
+LINE_WIDTH 13  BODY_MAX 90  FEED_BODY_MAX 300
+
+== 宽度 ==
+卡特彼勒第三季度电力与能源业务营收增长12%         20.5 1.01.01.01.01.01.0
+净亏损20.15亿元，同比由盈转亏              14.5 1.01.01.00.50.50.5
+财联社10月29日电，瑞士政府已评估瑞银迁址影响，称若无总部 35.0 1.01.01.00.50.51.0
+【独家】金十数据10月29日讯，微软启动2017年以来首次美 34.0 1.01.01.01.01.01.0
+万事达(MA.N)盘前上涨1.8%，第三季度业绩超出预期。  24.0 1.01.01.00.50.50.5
+港股收盘                           4.0 1.01.01.01.0
+《中国与欧亚经济联盟经贸合作协定》联委会第五次会议召开，双方 39.0 1.01.01.01.01.01.0
+国机精工第二大股东国新投资有限公司三季度增仓346.71万股 36.0 1.01.01.01.01.01.0
+美联储维持利率不变 鲍威尔称通胀仍然偏高 🚀🔥 → 后续路径 33.0 1.01.01.01.01.01.0
+AAAA BBBB CCCC DDDD 这是一段中英混排的标 35.5 0.50.50.50.50.50.5
+  前后有空格和全角空格　的标题               16.0 0.50.51.01.01.01.0
+短                              1.0 1.0
+日本今年前10月外泄信息超3亿条 或系AI无差别攻击     23.0 1.01.01.01.01.00.5
+
+== split_title ==
+IN  '卡特彼勒第三季度电力与能源业务营收增长12%'
+  HEAD '卡特彼勒第三季度电力与能源'  13.0
+  TAIL '业务营收增长12%' 7.5
+IN  '净亏损20.15亿元，同比由盈转亏'
+  HEAD '净亏损20.15亿元，同比由盈' 12.5
+  TAIL '转亏' 2.0
+IN  '财联社10月29日电，瑞士政府已评估瑞银迁址影响，称若无总部将面临更严监管'
+  HEAD '瑞士政府已评估瑞银迁址影响'  13.0
+  TAIL '称若无总部将面临更严监管' 12.0
+IN  '【独家】金十数据10月29日讯，微软启动2017年以来首次美国高评级债券发行'
+  HEAD '微软启动2017年以来首次美国' 13.0
+  TAIL '高评级债券发行' 7.0
+IN  '万事达(MA.N)盘前上涨1.8%，第三季度业绩超出预期。'
+  HEAD '万事达(MA.N)盘前上涨1.8%' 12.0
+  TAIL '第三季度业绩超出预期。' 11.0
+IN  '港股收盘'
+  HEAD '港股收盘'           4.0
+  TAIL '' 0.0
+IN  '《中国与欧亚经济联盟经贸合作协定》联委会第五次会议召开，双方就深化合作交换意见'
+  HEAD '《中国与欧亚经济联盟经贸合'  13.0
+  TAIL '作协定》联委会第五次会议召开，双方就深化合作交换意见' 26.0
+IN  '国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%'
+  HEAD '国机精工第二大股东国新投资'  13.0
+  TAIL '有限公司三季度增仓346.71万股，持股比例升至5.2%' 23.0
+IN  '美联储维持利率不变 鲍威尔称通胀仍然偏高 🚀🔥 → 后续路径取决于数据'
+  HEAD '美联储维持利率不变 鲍威尔'  12.5
+  TAIL '称通胀仍然偏高 后续路径取决于数据' 16.5
+IN  'AAAA BBBB CCCC DDDD 这是一段中英混排的标题 with spaces and 1234 numbers'
+  HEAD 'AAAA BBBB CCCC DDDD 这是一' 13.0
+  TAIL '段中英混排的标题 with spaces and 1234 numbers' 22.5
+IN  '  前后有空格和全角空格\u3000的标题  '
+  HEAD '前后有空格和全角空格 的标'  12.5
+  TAIL '题' 1.0
+IN  '短'
+  HEAD '短'              1.0
+  TAIL '' 0.0
+IN  '日本今年前10月外泄信息超3亿条 或系AI无差别攻击'
+  HEAD '日本今年前10月外泄信息超'  12.0
+  TAIL '3亿条 或系AI无差别攻击' 11.0
+
+== split_title 不同屏宽 ==
+lw=10 -> ('卡特彼勒第三季度电力', '与能源业务营收增长12%')
+lw=12 -> ('卡特彼勒第三季度电力与能', '源业务营收增长12%')
+lw=13 -> ('卡特彼勒第三季度电力与能源', '业务营收增长12%')
+lw=14 -> ('卡特彼勒第三季度电力与能源业', '务营收增长12%')
+
+== strip_dateline / norm_title ==
+'卡特彼勒第三季度电力与能源业务营收增长12%' -> '卡特彼勒第三季度电力与能源业务营收增长12%' | key='卡特彼勒第三季度电力与能源业务营收增长%'
+'净亏损20.15亿元，同比由盈转亏'      -> '净亏损20.15亿元，同比由盈转亏' | key='净亏损亿元同比由盈转亏'
+'财联社10月29日电，瑞士政府已评估瑞银迁址影响' -> '瑞士政府已评估瑞银迁址影响，称若无总部将面临更严监管' | key='瑞士政府已评估瑞银迁址影响称若无总部将面'
+'【独家】金十数据10月29日讯，微软启动2017' -> '微软启动2017年以来首次美国高评级债券发行' | key='微软启动年以来首次美国高评级债券发行'
+'万事达(MA.N)盘前上涨1.8%，第三季度业绩' -> '万事达(MA.N)盘前上涨1.8%，第三季度业绩超出预期。' | key='万事达盘前上涨%第三季度业绩超出预期'
+'港股收盘'                   -> '港股收盘' | key='港股收盘'
+'《中国与欧亚经济联盟经贸合作协定》联委会第五次会' -> '《中国与欧亚经济联盟经贸合作协定》联委会第五次会议召开，双方就深化合作交换意见' | key='《中国与欧亚经济联盟经贸合作协定》联委会'
+'国机精工第二大股东国新投资有限公司三季度增仓34' -> '国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%' | key='国机精工第二大股东国新投资有限公司三季度'
+'美联储维持利率不变 鲍威尔称通胀仍然偏高 🚀🔥 ' -> '美联储维持利率不变 鲍威尔称通胀仍然偏高 🚀🔥 → 后续路径取决于数据' | key='美联储维持利率不变鲍威尔称通胀仍然偏高🚀'
+'AAAA BBBB CCCC DDDD 这是一段' -> 'AAAA BBBB CCCC DDDD 这是一段中英混排的标题 with spaces and 1234 numbers' | key='这是一段中英混排的标题'
+'  前后有空格和全角空格\u3000的标题  ' -> '  前后有空格和全角空格\u3000的标题  ' | key='前后有空格和全角空格的标题'
+'短'                      -> '短' | key='短'
+'日本今年前10月外泄信息超3亿条 或系AI无差别' -> '日本今年前10月外泄信息超3亿条 或系AI无差别攻击' | key='日本今年前月外泄信息超亿条或系无差别攻击'
+
+== compose_body ==
+T '卡特彼勒第三季度电力与能源业务营收增长12%'
+  BODY '业务营收增长12%'  w=7.5
+T '净亏损20.15亿元，同比由盈转亏'
+  BODY '转亏 国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。'  w=39.5
+T '财联社10月29日电，瑞士政府已评估瑞银迁址影响'
+  BODY '称若无总部将面临更严监管 【卡特彼勒第三季度电力与能源业务营收增长12%】金十数据10月29日讯，卡特彼勒(CAT.N)第三季度调整后每股收益5.20美元，市场预估4.90美元。'  w=77.5
+T '【独家】金十数据10月29日讯，微软启动2017'
+  BODY '高评级债券发行 带 HTML 标签的摘要 内容，含 & 实体与换行，用来验证纯文本清洗。'  w=38.5
+
+== compose_body 长度上限 ==
+bm=0 -> '字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字'
+bm=40 -> '字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字…'
+bm=60 -> '字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字…'
+bm=90 -> '字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字…'
+
+== dedupe ==
+kept 4 dropped 1
+  '财联社10月29日电，瑞士政府已评估瑞银' a
+  '港股收盘'               c
+  '港股收盘'               d
+  '卡特彼勒第三季度电力与能源业务营收增长1' e
+
+== item_guid / esc ==
+83ddc647ba7d  '财联社10月29日电，瑞'
+175a1c959753  '瑞士政府已评估瑞银迁址影'
+360e2acfc3c9  '港股收盘'
+badf69e66c95  '港股收盘'
+dcf1bda235e8  '卡特彼勒第三季度电力与能'
+
+== build_rss（设备版）==
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>RSS 聚合头条</title>
+<link>http://x/feed.xml</link>
+<description>多源 RSS 头条聚合，按发布时间倒序（源 3 个）</description>
+<language>zh-CN</language>
+<lastBuildDate><DATE></lastBuildDate>
+<item>
+<title>卡特彼勒第三季度电力与能源</title>
+<description>业务营收增长12%</description>
+<link>http://x/0</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">4a4214bd3bd4</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>净亏损20.15亿元，同比由盈</title>
+<description>转亏 国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/1</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">d39a8e04bc76</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>瑞士政府已评估瑞银迁址影响</title>
+<description>称若无总部将面临更严监管 【卡特彼勒第三季度电力与能源业务营收增长12%】金十数据10月29日讯，卡特彼勒(CAT.N)第三季度调整后每股收益5.20美元，市场预估4.90美元。</description>
+<link>http://x/2</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">597d5344f50d</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>微软启动2017年以来首次美国</title>
+<description>高评级债券发行 带 HTML 标签的摘要 内容，含 &amp; 实体与换行，用来验证纯文本清洗。</description>
+<link>http://x/3</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">e13a895de698</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>万事达(MA.N)盘前上涨1.8%</title>
+<description>第三季度业绩超出预期。</description>
+<link>http://x/4</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">e6fc21771cb2</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>港股收盘</title>
+<description>国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/5</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">08f15ae8c491</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>《中国与欧亚经济联盟经贸合</title>
+<description>作协定》联委会第五次会议召开，双方就深化合作交换意见 【卡特彼勒第三季度电力与能源业务营收增长12%】金十数据10月29日讯，卡特彼勒(CAT.N)第三季度调整后每股收益5.20美元，市场预估4.90…</description>
+<link>http://x/6</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">0ab52aacb301</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>国机精工第二大股东国新投资</title>
+<description>有限公司三季度增仓346.71万股，持股比例升至5.2% 带 HTML 标签的摘要 内容，含 &amp; 实体与换行，用来验证纯文本清洗。</description>
+<link>http://x/7</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">16cd3766ecd1</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>美联储维持利率不变 鲍威尔</title>
+<description>称通胀仍然偏高 后续路径取决于数据</description>
+<link>http://x/8</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">d17864b5ca28</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>AAAA BBBB CCCC DDDD 这是一</title>
+<description>段中英混排的标题 with spaces and 1234 numbers 国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/9</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">5180f97877c3</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>前后有空格和全角空格 的标</title>
+<description>题 【卡特彼勒第三季度电力与能源业务营收增长12%】金十数据10月29日讯，卡特彼勒(CAT.N)第三季度调整后每股收益5.20美元，市场预估4.90美元。</description>
+<link>http://x/10</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">21ba565e812d</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>短</title>
+<description>带 HTML 标签的摘要 内容，含 &amp; 实体与换行，用来验证纯文本清洗。</description>
+<link>http://x/11</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">9db14a8958a3</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>日本今年前10月外泄信息超</title>
+<description>3亿条 或系AI无差别攻击</description>
+<link>http://x/12</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">78d73dc86aaa</guid>
+<source url="s0">源0</source>
+</item>
+</channel></rss>
+
+== build_rss（完整版）==
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>RSS 聚合头条</title>
+<link>http://x/feed.xml</link>
+<atom:link href="http://x/feed.xml" rel="self" type="application/rss+xml"/>
+<description>多源 RSS 头条聚合，按发布时间倒序（源 3 个）</description>
+<language>zh-CN</language>
+<lastBuildDate><DATE></lastBuildDate>
+<generator>rss-hub <VER></generator>
+<ttl>5</ttl>
+<item>
+<title>卡特彼勒第三季度电力与能源业务营收增长12%</title>
+<link>http://x/0</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/0|s0</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>净亏损20.15亿元，同比由盈转亏</title>
+<description>国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/1</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/1|s1</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>财联社10月29日电，瑞士政府已评估瑞银迁址影响，称若无总部将面临更严监管</title>
+<description>【卡特彼勒第三季度电力与能源业务营收增长12%】金十数据10月29日讯，卡特彼勒(CAT.N)第三季度调整后每股收益5.20美元，市场预估4.90美元。</description>
+<link>http://x/2</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/2|s2</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>【独家】金十数据10月29日讯，微软启动2017年以来首次美国高评级债券发行</title>
+<description>带 HTML 标签的摘要 内容，含 &amp; 实体与换行，用来验证纯文本清洗。</description>
+<link>http://x/3</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/3|s0</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>万事达(MA.N)盘前上涨1.8%，第三季度业绩超出预期。</title>
+<link>http://x/4</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/4|s1</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>港股收盘</title>
+<description>国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/5</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/5|s2</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>《中国与欧亚经济联盟经贸合作协定》联委会第五次会议召开，双方就深化合作交换意见</title>
+<description>【卡特彼勒第三季度电力与能源业务营收增长12%】金十数据10月29日讯，卡特彼勒(CAT.N)第三季度调整后每股收益5.20美元，市场预估4.90美元。</description>
+<link>http://x/6</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/6|s0</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%</title>
+<description>带 HTML 标签的摘要 内容，含 &amp; 实体与换行，用来验证纯文本清洗。</description>
+<link>http://x/7</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/7|s1</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>美联储维持利率不变 鲍威尔称通胀仍然偏高 🚀🔥 → 后续路径取决于数据</title>
+<link>http://x/8</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/8|s2</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>AAAA BBBB CCCC DDDD 这是一段中英混排的标题 with spaces and 1234 numbers</title>
+<description>国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/9</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/9|s0</guid>
+<source url="s0">源0</source>
+</item>
+<item>
+<title>  前后有空格和全角空格　的标题  </title>
+<description>【卡特彼勒第三季度电力与能源业务营收增长12%】金十数据10月29日讯，卡特彼勒(CAT.N)第三季度调整后每股收益5.20美元，市场预估4.90美元。</description>
+<link>http://x/10</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/10|s1</guid>
+<source url="s1">源1</source>
+</item>
+<item>
+<title>短</title>
+<description>带 HTML 标签的摘要 内容，含 &amp; 实体与换行，用来验证纯文本清洗。</description>
+<link>http://x/11</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/11|s2</guid>
+<source url="s2">源2</source>
+</item>
+<item>
+<title>日本今年前10月外泄信息超3亿条 或系AI无差别攻击</title>
+<link>http://x/12</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/12|s0</guid>
+<source url="s0">源0</source>
+</item>
+</channel></rss>
+
+== rotate_pick 序列 ==
+T0(1,1) T1(1,2) T2(1,3) T3(1,4) T4(1,5) T5(1,6) T6(1,7) T7(1,8) T8(1,9) T0(2,1) T1(2,2) T2(2,3)
+
+== plain_text ==
+'A🚀B🔥C' -> 'ABC'
+'→指针←' -> '指针'
+'零\u200b宽\ufeff字符' -> '零宽字符'
+'全角\u3000空格' -> '全角 空格'
+'  ·|、,， 收尾  ' -> '收尾'

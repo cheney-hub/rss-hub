@@ -1,5 +1,7 @@
 # rss-hub · RSS 聚合头条
 
+> 当前版本 **v1.1.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+>
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
 > 标题转纯文本（摘掉 emoji / 装饰符号，避免墨水屏豆腐块）、标题只留屏上显示得下的 13 全角字、
@@ -39,7 +41,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 | 单轮耗时 | 40 秒左右（43 源 × 3 条，并发 12 路） |
 | 设备版标题 | 前 13 全角进标题 |
 | 设备版正文 | 标题余文 + 原 feed 的摘要原文，最多 90 全角（屏上正文区约 4 行） |
-| 设备版条目 | **每版只发 1 条**，5 分钟换一条，全池 120 条走完（约 10 小时）才回头 |
+| 设备版条目 | **每版只发 1 条**，5 分钟换一条，全池 120 条约 51 个时间片、走完（约 4.2 小时）才回头 |
 
 ## 快速开始
 
@@ -56,6 +58,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ```
 .
 ├── feeds.txt                # 订阅源清单：注释行 = 中文源名，下一行 = 地址
+├── version.py               # 版本号唯一真源（RSS 的 generator、页面页脚都取这里）
 ├── build_feed.py            # 抓取与编排：拉源、解析、失败回退、轮播游标、写文件
 ├── render.py                # 渲染层（纯函数）：纯文本化、宽度折算、标题切分、正文合成、去重键、RSS 生成
 ├── docs/                    # ← GitHub Pages 发布的目录（站点根）
@@ -72,8 +75,11 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ├── tools/gen_minute_workflow.py  # 生成 minute.yml（改轮数就是改这里）
 ├── tools/check_secrets.py        # 凭据扫描（本地与 CI 共用）
 ├── tools/review_check.py         # 审查门禁：把 CODE_REVIEW.md 的硬规则做成可执行检查
-├── tests/test_core.py            # 核心纯函数单测（22 例，零依赖、不联网）
-├── tools/golden_snapshot.py      # 行为快照：重构前后各跑一次，diff 为空才算没改行为
+├── tests/test_core.py            # 核心纯函数单测（38 例，零依赖、不联网）
+├── tests/test_golden.py          # 行为基线比对（渲染输出必须与 golden.txt 逐字节一致）
+├── tests/golden.txt              # 行为基线（脚本生成，不手改）
+├── tools/golden_snapshot.py      # 生成/更新上面那份基线
+├── CHANGELOG.md             # 版本历史与行为变更记录
 ├── CODE_REVIEW.md           # 代码审查标准与流程（提交前必读）
 └── OPERATIONS.md            # 运维手册 + 故障排查
 ```
@@ -142,8 +148,8 @@ w = now // 300  同一时间窗内重复构建不推进（幂等，多跑几轮�
 |---|---|---|
 | 标题字符 | 原样（可含 emoji） | **纯文本**：emoji、箭头、几何图形、零宽字符、变体选择符全部摘除（黑白屏上是豆腐块或占位） |
 | 标题长度 | 原样 | **只放屏上显示得下的 13 全角**，超出的字一个不丢，全部移入正文 |
-| 正文 | 无 | `<description>` = 标题余文 + 原 feed 的 `description` / `content:encoded` 摘要（最多 90 全角，再长尾端补 `…`） |
-| 条目数 | 上限 60 条 | **只发 1 条**：轮播到的那条（云端只会渲染第一条，多给也用不上） |
+| 正文 | 原 feed 的 `description` / `content:encoded` 摘要（最多 300 全角，再长尾端补 `…`） | `<description>` = 标题余文 + 原 feed 摘要（最多 90 全角，再长尾端补 `…`） |
+| 条目数 | 上限 120 条 | **只发 1 条**：轮播到的那条（云端只会渲染第一条，多给也用不上） |
 | 字段 | title / link / pubDate / guid / source，含 `atom:link`、`generator`、`ttl` | 同上 + description；guid 用 12 位短哈希，channel 去掉上述三项 |
 
 **实测依据（2026-10-29，296×152 屏，真机截图）**
@@ -153,7 +159,7 @@ w = now // 300  同一时间窗内重复构建不推进（幂等，多跑几轮�
 2. 标题里塞换行符试过三种写法（`&#10;` / `<br>` / U+2028），云端**一律不认**，屏上永远只有一行。
 
 宽度抢不回来，就往下要空间：标题只管放得下的 13 个字，余下原文写进 `<description>`，
-让云端的正文区域接着排——一屏能读到的字数从 13 涨到 13 + 最多 60。
+让云端的正文区域接着排——一屏能读到的字数从 13 涨到 13 + 最多 90。
 
 ```xml
 <title>卡特彼勒第三季度电力与能源</title>        <!-- 标题行：13 全角顶格，云端不会再切 -->
@@ -215,17 +221,28 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：22 个用例（含分层契约）
-python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节
+python3 -m unittest discover -s tests -v    # 单测：39 个用例（含分层契约、行为基线）
+python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
 
-三条铁律（都是踩过坑换来的）：
+行为基线是这套流程的核心：`tests/golden.txt` 存着渲染层在固定输入上的逐字节输出，
+任何「顺手改了排版」的改动都会被 `test_golden` 抓住。确实要改排版时：
 
-1. **不手改生成文件**：`minute.yml` 由脚本生成，改结构请改 `tools/gen_minute_workflow.py` 再重新生成；
+```bash
+python3 tools/golden_snapshot.py --write    # 更新基线
+# 并在 CHANGELOG.md 写清改了什么、为什么 —— 否则下次没人知道这条 baseline 是被谁动了
+```
+
+四条铁律（都是踩过坑换来的）：
+
+1. **不手改生成文件**：`minute.yml` 由脚本生成、`tests/golden.txt` 由快照脚本生成，
+   改结构请改脚本后重新生成（门禁会比对，手改必红）；
 2. **改了 `build_feed.py` 要先取消正在跑的 `minute.yml` 作业**，再重新 dispatch——
    跑着的作业用的是它启动时 checkout 的旧代码，会每 5 分钟用旧逻辑覆盖新发布；
-3. **改参数必须同步 `OPERATIONS.md` 的参数表**，门禁会检查代码里的每个环境变量是否在文档中出现过。
+3. **改参数必须同步 `OPERATIONS.md` 的参数表**，门禁会检查代码里的每个环境变量是否在文档中出现过；
+4. **发版必须三件套**：`version.py` 加版本号 → `CHANGELOG.md` 记一条 → 页面页脚跟上，
+   门禁会检查 README / OPERATIONS / 两个页面上有没有出现当前版本号。
 
 ## 凭证与安全
 
@@ -240,6 +257,18 @@ python3 tools/check_secrets.py              # 凭据扫描
 
 - Actions 运行历史：https://github.com/cheney-hub/rss-hub/actions
 - 线上自检：`curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep lastBuildDate`
+
+## 版本
+
+| 位置 | 怎么看 |
+|---|---|
+| 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.1.0` |
+| 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
+| 历史 | [CHANGELOG.md](CHANGELOG.md) |
+
+版本号语义：主版本 = 输出格式变化（订阅端要跟着改）；次版本 = 新增能力或排版规则调整；
+修订号 = 只修 bug，输出应逐字节不变（可用行为基线验证）。
 
 ## 说明
 

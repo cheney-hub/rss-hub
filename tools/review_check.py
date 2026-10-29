@@ -40,9 +40,12 @@ SKIP_DIRS = {".git", "__pycache__", "node_modules", ".workbuddy", "docs"}
 _RE_OUTBOUND = re.compile(r"https?://[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
 GENERATED = {
     ".github/workflows/minute.yml": "tools/gen_minute_workflow.py",
+    "tests/golden.txt": "tools/golden_snapshot.py",
 }
 # 生成物、第三方产物、数据文件不参与风格类检查
 STYLE_EXEMPT = set(GENERATED) | {"docs/feed.xml", "docs/feed-wrap.xml", "feeds.txt"}
+# 版本号必须出现在这几处页面上（人一眼能看到的地方），漏一处就是发版漏了
+VERSION_DOCS = ("README.md", "OPERATIONS.md", "docs/index.html", "docs/screen.html")
 
 CRITICAL, REQUIRED, NIT, INFO = "Critical", "Required", "Nit", "Info"
 RANK = {CRITICAL: 0, REQUIRED: 1, NIT: 2, INFO: 3}
@@ -192,19 +195,26 @@ def check_yaml(path, text, rep):
 
 def check_generated(rep):
     """生成物与脚本是否一致 —— 手改 711 行生成文件是最难发现的一类漂移。"""
+    # 生成脚本可能要 import 仓库根目录的模块（golden_snapshot 就依赖 build_feed/render），
+    # 所以把根目录的 .py 一起搬进沙箱，脚本在沙箱里跑，不碰工作区
+    root_py = [f for f in os.listdir(ROOT) if f.endswith(".py")]
     for target, gen in GENERATED.items():
         target_path = os.path.join(ROOT, *target.split("/"))
         gen_path = os.path.join(ROOT, *gen.split("/"))
         if not (os.path.exists(target_path) and os.path.exists(gen_path)):
             continue
         tmp = tempfile.mkdtemp()
+        cmd = [sys.executable, os.path.join(tmp, "tools", os.path.basename(gen_path))]
         try:
             # 复制成同样的相对结构，脚本就会在沙箱里生成，不碰工作区
             dst = os.path.join(tmp, "tools")
             os.makedirs(dst)
+            for f in root_py:                                # 根目录模块
+                shutil.copy2(os.path.join(ROOT, f), os.path.join(tmp, f))
             shutil.copy2(gen_path, os.path.join(dst, os.path.basename(gen_path)))
-            subprocess.run([sys.executable, os.path.join(dst, os.path.basename(gen_path))],
-                           cwd=tmp, capture_output=True, timeout=120)
+            if os.path.basename(gen_path) == "golden_snapshot.py":
+                cmd.append("--write")                        # 该脚本默认打印到 stdout
+            subprocess.run(cmd, cwd=tmp, capture_output=True, timeout=120)
             fresh_p = os.path.join(tmp, *target.split("/"))
             if not os.path.exists(fresh_p):
                 rep.add(REQUIRED, target, 1, "生成脚本没有产出该文件，检查 %s" % gen)
@@ -261,6 +271,30 @@ def check_doc_sync(rep):
                     "环境变量 %s 在文档里没有出现，改代码请同步参数表" % n)
 
 
+def check_version_sync(rep):
+    """版本号必须从 version.py 一路传到页面上。
+
+    漏更新的后果不是报错，而是「页脚写着 v1.0.0、线上跑的是 1.1.0」，
+    排查时按旧版行为去推断，越查越偏。这里只做「有没有出现」的判断，
+    CHANGELOG 里出现历史版本号是正常的，所以不查那一份。
+    """
+    vp = os.path.join(ROOT, "version.py")
+    if not os.path.exists(vp):
+        rep.add(REQUIRED, "version.py", 0, "缺少版本号真源版本文件")
+        return
+    m = re.search(r'__version__\s*=\s*"([^"]+)"', read(vp))
+    if not m:
+        rep.add(REQUIRED, "version.py", 0, "version.py 里没有 __version__ = \"x.y.z\"")
+        return
+    ver = m.group(1)
+    for name in VERSION_DOCS:
+        p = os.path.join(ROOT, *name.split("/"))
+        if not os.path.exists(p):
+            rep.add(REQUIRED, name, 0, "版本号应展示的文件不存在")
+        elif ver not in read(p):
+            rep.add(REQUIRED, name, 0, "没有出现当前版本号 %s，发版要同步页面" % ver)
+
+
 def main():
     args = sys.argv[1:]
     strict = "--strict" in args
@@ -293,6 +327,7 @@ def main():
         check_generated(rep)
         check_tests(rep)
     check_doc_sync(rep)
+    check_version_sync(rep)
 
     # ---- 输出 ----
     print("代码审查门禁 · %s" % os.path.basename(ROOT))
