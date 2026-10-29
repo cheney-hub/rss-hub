@@ -6,15 +6,50 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 10:20:46 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 10:34:29 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>花旗：将微软(MSFT.O)目标价从636美元上调至680美元。</title>
-<link>https://flash.jin10.com/detail/20261029181924776800</link>
-<pubDate>Thu, 29 Oct 2026 18:19:24 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029181924776800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>看智驾、逛公园、登黄山，德国总统访华走进安徽</title>
+<link>https://www.chinanews.com.cn/gn/2026/10-29/10722859.shtml</link>
+<pubDate>Thu, 29 Oct 2026 18:30:37 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/gn/2026/10-29/10722859.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>花旗：将波士顿科学(BSX.N)目标价从48美元下调至44美元。</title>
+<link>https://flash.jin10.com/detail/20261029182945505800</link>
+<pubDate>Thu, 29 Oct 2026 18:29:45 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029182945505800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>外交部部长助理蔡伟同玻利维亚外交部副部长帕斯举行中玻外交部间第11次政治磋商</title>
+<link>https://xueqiu.com/5124430882/414528704</link>
+<pubDate>Thu, 29 Oct 2026 18:29:07 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414528704|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>政府就宏福苑火災鞠躬道歉 房屋局局長何永賢請辭承擔政治責任</title>
+<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029145311202-1029_00822_001.html</link>
+<pubDate>Thu, 29 Oct 2026 10:20:48 GMT</pubDate>
+<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029145311202-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
+<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+</item>
+<item>
+<title>被AI炒高的铜价，正遭遇现实供需检验</title>
+<link>https://wallstreetcn.com/articles/3784749</link>
+<pubDate>Thu, 29 Oct 2026 18:20:12 +0800</pubDate>
+<guid isPermaLink="false">https://wallstreetcn.com/articles/3784749|https://dedicated.wallstreetcn.com/rss.xml</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
+</item>
+<item>
+<title>刚发布的苹果触屏电脑真烧心：这是屏坏了，还是故意的？</title>
+<link>https://www.guokr.com/article/470571/</link>
+<pubDate>Thu, 29 Oct 2026 18:15:04 +0800</pubDate>
+<guid isPermaLink="false">https://www.guokr.com/article/470571/|https://feed.quanwenrss.com/feed/guokr-science.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/guokr-science.xml">果壳·科学</source>
 </item>
 <item>
 <title>ATFX:柬埔寨团队走进查克托穆克步行街 面向市民开展金融知识普及</title>
@@ -24,11 +59,18 @@
 <source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
 </item>
 <item>
-<title>谷歌母公司持有SpaceX股票公允价值达752亿美元</title>
-<link>https://api3.cls.cn/share/article/2519440?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 18:13:03 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519440?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+<title>Christine Lagarde to Step Down as Chief of European Central Bank</title>
+<link>https://www.nytimes.com/2026/10/29/business/christine-lagarde-resigns-ecb.html</link>
+<pubDate>Thu, 29 Oct 2026 10:10:11 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/business/christine-lagarde-resigns-ecb.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+</item>
+<item>
+<title>中国共产党第二十届中央委员会第五次全体会议公报</title>
+<link>https://app.gmdaily.cn/as/opened/n/02ed3a1a9c76478cbfaeec8951b4951b</link>
+<pubDate>Thu, 29 Oct 2026 18:09:25 +0800</pubDate>
+<guid isPermaLink="false">https://app.gmdaily.cn/as/opened/n/02ed3a1a9c76478cbfaeec8951b4951b|https://feed.quanwenrss.com/feed/gmw-hot.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/gmw-hot.xml">光明网·热点</source>
 </item>
 <item>
 <title>Thailand and Vietnam meat seizures highlight deepening risk of unsafe food on the table</title>
@@ -45,39 +87,11 @@
 <source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
 </item>
 <item>
-<title>受权发布丨张升民同志简历</title>
-<link>https://www.chinanews.com.cn/gn/2026/10-29/10722857.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:03:25 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/gn/2026/10-29/10722857.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>Connections Companion No. 1,237</title>
-<link>https://www.nytimes.com/2026/10/29/crosswords/connections-companion-1237.html</link>
-<pubDate>Thu, 29 Oct 2026 10:00:11 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/crosswords/connections-companion-1237.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
-</item>
-<item>
-<title>中国共产党第二十届中央委员会第五次全体会议公报</title>
-<link>https://www.yicai.com/news/103415547.html</link>
-<pubDate>Thu, 29 Oct 2026 09:59:24 GMT</pubDate>
-<guid isPermaLink="false">https://www.yicai.com/news/103415547.html|https://rsshub.rss.tips/yicai/news</guid>
-<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
-</item>
-<item>
 <title>详解Anthropic招股书 AI实验室能否兑现经济、公益双承诺</title>
 <link>https://www.caixin.com/2026-10-29/102498443.html</link>
 <pubDate>Thu, 29 Oct 2026 17:59:10 +0800</pubDate>
 <guid isPermaLink="false">https://www.caixin.com/2026-10-29/102498443.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
-</item>
-<item>
-<title>欧洲央行确认，行长拉加德将提前8个月卸任！</title>
-<link>https://wallstreetcn.com/articles/3784768</link>
-<pubDate>Thu, 29 Oct 2026 17:58:32 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784768|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
 <title>中共中央将于30日上午举行新闻发布会，介绍和解读党的二十届五中全会精神</title>
@@ -157,13 +171,6 @@
 <source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
 </item>
 <item>
-<title>《令人心动的 offer 8》，造星失败！</title>
-<link>https://www.guokr.com/article/470569/</link>
-<pubDate>Thu, 29 Oct 2026 17:15:06 +0800</pubDate>
-<guid isPermaLink="false">https://www.guokr.com/article/470569/|https://feed.quanwenrss.com/feed/guokr-science.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/guokr-science.xml">果壳·科学</source>
-</item>
-<item>
 <title>马上评｜血缘亲情，从来不是违法犯罪的挡箭牌</title>
 <link>https://m.thepaper.cn/newsDetail_forward_34359795</link>
 <pubDate>Thu, 29 Oct 2026 09:13:03 +0000</pubDate>
@@ -176,13 +183,6 @@
 <pubDate>Thu, 29 Oct 2026 17:06:55 +0800</pubDate>
 <guid isPermaLink="false">https://www.36kr.com/p/4046656058037128|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
-</item>
-<item>
-<title>宏福苑報告揭火災很可能由一支煙造成 棚網及生口等致重大傷亡</title>
-<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029170619465-1029_00822_001.html</link>
-<pubDate>Thu, 29 Oct 2026 09:06:19 GMT</pubDate>
-<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029170619465-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
-<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
 </item>
 <item>
 <title>17岁男生遭假警察上门殴打，被强迫跪下磕头、叫爹</title>
@@ -260,13 +260,6 @@
 <pubDate>Thu, 29 Oct 2026 03:02:00 +0000</pubDate>
 <guid isPermaLink="false">https://www.dw.com/zh/%E8%A5%BF%E7%8F%AD%E7%89%99%E9%AB%98%E9%93%81%E4%BA%8B%E6%95%85%EF%BC%9A%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E6%8C%87%E4%BB%A4%E5%A4%B1%E8%AF%AF-%E7%BA%A2%E7%81%AF%E4%BB%8D%E6%94%BE%E8%A1%8C/a-79789821|https://feed.quanwenrss.com/feed/dw-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/dw-latest.xml">德国之声中文·最新</source>
-</item>
-<item>
-<title>【抵近观察⑨】叩问：2500多岁大运河的前世今生</title>
-<link>https://app.gmdaily.cn/as/opened/n/b2cb13e3ed764783945a223af650d9b2</link>
-<pubDate>Thu, 29 Oct 2026 07:11:36 +0800</pubDate>
-<guid isPermaLink="false">https://app.gmdaily.cn/as/opened/n/b2cb13e3ed764783945a223af650d9b2|https://feed.quanwenrss.com/feed/gmw-hot.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/gmw-hot.xml">光明网·热点</source>
 </item>
 <item>
 <title>消息人士：欧盟放弃“准成员”称谓，转而寻求与加拿大建立更紧密的联盟关系</title>
