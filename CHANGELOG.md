@@ -27,6 +27,12 @@
 - 提交前铁律 2 的范围从 `build_feed.py` 扩到 **`build_feed.py` / `rotate.py` / `render.py`**：
   1.2.2 之后轮播不在 build_feed 里了，只写一个文件名会让人以为改 rotate.py 不用停旧作业。
 - `review.yml` 顶部注释里的用例数同步为 83。
+- **铁律 2 的描述改准**：原文说跑着的作业「用的是它启动时 checkout 的旧代码」，实际是
+  「上一次备份轮 `git pull` 到的代码」——`minute.yml` 只在 `CYCLE % 10 == 1` 那一轮拉取，
+  所以最长 50 分钟才更新，不是永久锁死。同时补上 `OPERATIONS.md` 新增的 §16：怎么查有没有
+  在跑、三种取消方式（网页 / `gh run cancel` / 一次 API 调用）、取消有 20 秒~5 分钟的延迟、
+  取消后如何手动补一轮单次构建。这一段是踩了坑才写出来的：上一轮判断「没有 token 无法 cancel」
+  是错的，git 的凭据管理器里就存着一个带 `repo, workflow` 权限的 PAT，取出来直接打 API 即可。
 
 ## [1.2.2] - 2026-10-29
 

@@ -229,6 +229,7 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"     # �
 | 说明页空白 | 浏览器 CORS 或 feed 异常 | [9](#9-说明页空白或载入失败) |
 | 设备上标题被切 / 没有正文 / 出现方块 | 用了完整版，或标题宽度不对 | [14](#14-设备上标题被截断或只有一行) |
 | 推送后「凭据扫描」失败 | 文件里混进了 token | [11](#11-凭据扫描失败) |
+| 改完代码推送被旧产物覆盖 / 要先停作业 | 节拍作业仍在跑 | [16](#16-正在跑的节拍作业怎么取消改代码前必做) |
 
 ### 1. feed 打不开、返回 404
 
@@ -412,3 +413,51 @@ curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | pyth
 | 轮播卡死不动 | `rotate.json` 的 `dwell` 和当前 `ROTATE_SECONDS` 不一致（改过节拍），或它的 `window` 明显超前（写它的那次运行时钟错了 / 文件被写坏，`w > prev_w` 永远不成立就会一直 hold） | 两种都已自动识别并丢弃状态重新起轮（回拨在 2 窗 = 10 分钟内视为正常的 NTP 抖动，冻结一版即可）；仍有问题就删掉线上 `rotate.json` |
 | `items` 比预期少 | 部分源本轮抓取失败用了回退条目，guid 去重后合并 | 看同一轮日志里的 `[回退]` 行 |
 | 某个源的内容一直不上设备版 | 该源的 `pubDate` 在未来（时区写错 / 服务器时钟漂移 / 年份拼错）。片号晚于当前窗的片按设计不参与轮播，免得它霸屏 | 看每轮日志：有这类条目时 `上屏` 那行末尾会追加「另有 N 条时间戳晚于当前，已排除出设备版轮播」；`curl …/feed.xml \| grep -A2 '<source url="该源'` 核对 `pubDate`，改对后自动恢复 |
+
+### 16. 正在跑的节拍作业怎么取消（改代码前必做）
+
+`minute.yml` 一次跑 13 轮、约 65 分钟，期间**每轮都重新构建并部署 Pages**。而作业里的 `.py`
+只在上一次「备份轮」（`CYCLE % 10 == 1`，即第 1、11、21… 轮）执行 `git pull --rebase` 时才更新
+—— 所以你在作业运行中推送的新代码，最长要等 50 分钟才被它用上；这期间每一轮都会用旧代码
+的产物覆盖 Pages，表现是线上 `<generator>` 的版本串被写回旧值（**内容通常一致，只有版本号在骗人**）。
+
+**判断有没有在跑**（不需要 gh，取本机 git 已存的凭据即可）：
+
+```bash
+TOK=$(printf 'protocol=https\nhost=github.com\n\n' | git credential fill | sed -n 's/^password=//p')
+curl -s -H "Authorization: Bearer $TOK" \
+  "https://api.github.com/repos/cheney-hub/rss-hub/actions/runs?status=in_progress" | grep total_count
+```
+
+**三种取消方式**（任选）：
+
+1. **网页**：Actions → `RSS 五分钟节拍发布` → 点开那条 run → 右上角 **Cancel workflow**；
+2. **gh CLI**（需一次 `gh auth login`，token 带 `workflow` 权限）：
+   `gh run list -R cheney-hub/rss-hub --status in_progress` 拿到 id，
+   再 `gh run cancel -R cheney-hub/rss-hub <run-id>`；
+3. **一次 API 调用**（上面那个 `$TOK` 已足够，实测有效）：
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+  -H "Authorization: Bearer $TOK" \
+  "https://api.github.com/repos/cheney-hub/rss-hub/actions/runs/<run-id>/cancel"
+# 202 = 已受理；随后把 status 轮询到 completed / conclusion=cancelled
+```
+
+几个实测细节：
+
+- **取消有延迟**：GitHub 在「当前步骤结束」时才真的停。实测提交取消到变 `cancelled` 用了 23 秒；
+  若正好卡在每轮尾部的 `sleep`（最长 5 分钟），要等它睡完。别以为没生效就重复点。
+- **取消后线上停在上一轮产物**：不着急就等下一个整点 `:07`；着急就手动补一轮单次构建
+  （约 40 秒，不会起 65 分钟的循环）：
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "Authorization: Bearer $TOK" \
+  -H 'Accept: application/vnd.github+json' -d '{"ref":"main"}' \
+  "https://api.github.com/repos/cheney-hub/rss-hub/actions/workflows/400290755/dispatches"
+```
+
+- **不要为了「让它别覆盖」去停用 workflow**：`actions/workflows/400351196/disable` 或删掉
+  `minute.yml` 等于停掉设备更新，只有真要停服才这么做；只是为了发版，取消当次 run 即可。
+- **单条运行记录删不掉**：GitHub 只提供删除日志（`DELETE .../runs/<id>/logs`），运行记录本身
+  会一直留在 Actions 列表里；整个 workflow 被删除时它的记录才会一起消失。

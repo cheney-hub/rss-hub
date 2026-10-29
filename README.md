@@ -303,7 +303,9 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 1. **不手改生成文件**：`minute.yml` 由脚本生成、`tests/golden.txt` 由快照脚本生成，
    改结构请改脚本后重新生成（门禁会比对，手改必红）；
 2. **改了 `build_feed.py` / `rotate.py` / `render.py` 要先取消正在跑的 `minute.yml` 作业**，
-   再重新 dispatch——跑着的作业用的是它启动时 checkout 的旧代码，会每 5 分钟用旧逻辑覆盖新发布；
+   再重新 dispatch——作业里的代码只在「备份轮」（`CYCLE % 10 == 1`，每 10 轮一次）`git pull`
+   时才更新，其余每轮都拿那份旧代码重新构建并覆盖 Pages（线上版本串被写回旧值就是这么来的）；
+   取消方式（网页按钮 / `gh run cancel` / 一次 API 调用）见 `OPERATIONS.md` §16；
 3. **改参数必须同步 `OPERATIONS.md` 的参数表**，门禁会检查代码里的每个环境变量是否在文档中出现过；
 4. **发版必须三件套**：`version.py` 加版本号 → `CHANGELOG.md` 记一条 → 页面页脚跟上，
    门禁会检查 README / OPERATIONS / 两个页面上有没有出现当前版本号。
