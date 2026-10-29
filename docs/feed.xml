@@ -6,92 +6,492 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 14:04:14 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 14:50:12 +0000</lastBuildDate>
 <generator>rss-hub 1.2.0</generator>
 <ttl>5</ttl>
 <item>
-<title>【风口研报·洞察】“红利价值+困境反转+供需改善”三重驱动，火电板块电价上行信号持续强化，叠加公募持仓处于历史10%分位，明年业绩弹性与高股息兼备；从分红来源到配置时机</title>
-<description>①从分红来源到配置时机；②“红利价值+困境反转+供需改善”三重驱动，火电板块电价上行信号持续强化，叠加公募持仓处于历史10%分位，明年业绩弹性与高股息兼备；③今日全市场机构研报共发布493篇，杰瑞股份等6股评级得到上调，12家公司获得首度覆盖，其中第一创业获新财富分析师深度覆盖；④在个股机构关注度排行中，东方财富首次上榜，前五名依次为洽洽食品&gt;中信证券&gt;中煤能源&gt;东方财富&gt;中国神华。</description>
-<link>https://api3.cls.cn/share/article/2519346?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 21:59:32 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519346?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<title>【金牌纪要库】“电力”是红利策略核心配置之一，2027年年度长协上涨具备较强基础，若明年煤价回落，沿海低基数火电有望迎来“电价升、煤价降”的收入成本双击</title>
+<description>①“电力”是红利策略核心配置之一，2027年年度长协上涨具备较强基础，若明年煤价回落，沿海低基数火电有望迎来“电价升、煤价降”的收入成本双击；②强厄尔尼诺使2027年偏丰概率显著上升，长江电力低基数明确、雅砻江三季度发电量已率先转正增长19%；③辽宁广西差价合约机制托底电价、中国广核三台新机组明年全年化放量，核电逐步迎来“量增+价稳”的确定性修复窗口。</description>
+<link>https://api3.cls.cn/share/article/2519172?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 22:44:27 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519172?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
-<title>2026两岸青年新文创成果发布会在厦门举行</title>
-<description>中新网厦门10月29日电 (吴冠标)10月29日，以“正青春·同心创未来”为主题的2026两岸青年新文创成果发布会在厦门举行。活动集中发布赛事成果、表彰获奖选手，推动优秀作品与产业资源对接。</description>
-<link>https://www.chinanews.com.cn/cul/2026/10-29/10723017.shtml</link>
-<pubDate>Thu, 29 Oct 2026 21:58:56 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/cul/2026/10-29/10723017.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>新疆—成渝地区双城经济圈氢能综合应用试点城市群工作部署会在渝举行</title>
-<description>中新网重庆10月29日电(景诗雁)新疆—成渝地区双城经济圈氢能综合应用试点城市群工作部署会29日在重庆举行，标志着该项试点工作步入落地实施阶段。</description>
-<link>https://www.chinanews.com.cn/cj/2026/10-29/10723021.shtml</link>
-<pubDate>Thu, 29 Oct 2026 21:58:54 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10723021.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>小微货品“拼单”西行 “丝路拼箱”班列加速对接欧亚市场</title>
-<description>中新网长沙10月29日电 (记者 鲁毅)走进位于湖南长沙的中南国际陆港集装箱拼箱基地，一件件打包好的电子配件、汽车零部件、五金产品等零散小微货品，正等待分拣编组、集中装箱。“铁路运输要求不能偏载，前后左右要完全保持平衡。但不同客户的产品重量不一、外形尺寸各异，需要我们精确计算，拼成最符合装箱逻辑的方式。”该基地操作部经理周宇告诉记者。</description>
-<link>https://www.chinanews.com.cn/ydyl/2026/10-29/10723020.shtml</link>
-<pubDate>Thu, 29 Oct 2026 21:58:50 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/ydyl/2026/10-29/10723020.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>恒大物业出售落实 太盟集团将取得控股权</title>
-<description>金十数据10月29日讯，中国恒大集团清盘人于2025年9月宣布寻求出售旗下恒大物业(06666.HK)股权取得实质进展。据了解，太盟投资集团作为此前的排他性潜在买家，将取得恒大物业控股权。接近交易的人士指出，太盟拟向恒大物业发出全面收购要约，交易落地后，太盟将控股恒大物业。本次全面要约主要是港股收购规则要求的程序动作，太盟的目标是维持恒大物业的上市地位，无意实施私有化退市。本次交易此前已有多家潜在收购方参与洽谈，当时表达收购意向的还有广东省旅游控股集团有限公司。“太盟最终脱颖而出，核心原因是各方看重其在相关资产领域的过往良好纪录，尤其是先前投资万达商管的案例。”上述人士说道。</description>
-<link>https://flash.jin10.com/detail/20261029215829996800</link>
-<pubDate>Thu, 29 Oct 2026 21:58:29 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029215829996800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>美国白宫国家经济委员会主任哈塞特：美联储主席沃什在允许美联储出现“正常”异议方面做得很好。</title>
+<link>https://flash.jin10.com/detail/20261029224354259800</link>
+<pubDate>Thu, 29 Oct 2026 22:43:54 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029224354259800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
-<title>欧洲央行行长拉加德：自上次会议以来，金融环境已经有所收紧。</title>
-<link>https://flash.jin10.com/detail/20261029215818487800</link>
-<pubDate>Thu, 29 Oct 2026 21:58:18 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029215818487800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>霍尔木兹航运受阻，海湾油企加速海外储油</title>
+<description>沙特计划2027年起在新加坡储油，阿布扎比国家石油公司研究在印度扩大储油规模。伊朗战争持续冲击能源运输，海湾产油国正加快布局海外库存。点击查看… 霍尔木兹航运受阻，海湾油企加速海外储油 阅读金十完整报道</description>
+<link>https://flash.jin10.com/detail/20261029224324009800</link>
+<pubDate>Thu, 29 Oct 2026 22:43:24 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029224324009800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
-<title>欧洲央行按兵不动，英国10年期国债收益率创五周新低</title>
-<description>金十数据10月29日讯，欧洲央行周四决定维持利率不变后，英国国债收益率一度跌至5.244%，创9月23日以来的最低水平。Moneyfarm首席投资官理查德·弗拉克斯在一份报告中表示：“这一决定表明，欧洲央行希望暂停行动，评估9月加息的影响，再决定下一步举措。”此前，欧洲央行行长拉加德宣布将于明年2月卸任。弗拉克斯表示：“对于投资者而言，随着2027年临近，利率走势以及欧洲央行新领导层的政策方向都将成为重要议题。”</description>
-<link>https://flash.jin10.com/detail/20261029215739519800</link>
-<pubDate>Thu, 29 Oct 2026 21:57:39 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029215739519800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>乌克兰经济自战争爆发以来将首次出现萎缩</title>
+<description>金十数据10月29日讯，乌克兰央行表示，随着俄罗斯加大空袭力度，乌克兰经济今年将出现全面战争爆发以来的首次萎缩。乌克兰国家银行周四公布的最新经济预测显示，乌克兰国内生产总值（GDP）2026年将萎缩0.4%，此前预测为增长1.8%；这将是乌克兰经济自2022年以来首次萎缩。2022年，该国GDP跌幅超过30%。乌克兰央行在声明中表示：“俄罗斯的袭击导致商业活动大幅下滑，经济潜力遭受的损失也将制约复苏。”该行预计，2027年乌克兰经济将反弹0.4%，主要动力来自国防工业及其他项目投资增加。乌克兰农业部称，本销售季自7月以来，乌克兰粮食出口量同比下降32%。</description>
+<link>https://flash.jin10.com/detail/20261029224301053800</link>
+<pubDate>Thu, 29 Oct 2026 22:43:01 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029224301053800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
-<title>拉加德表示，增长面临下行风险，未来几个季度通胀率将远高于目标水平。</title>
-<link>https://xueqiu.com/5124430882/414577502</link>
-<pubDate>Thu, 29 Oct 2026 21:57:30 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414577502|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>美国天然气跌3.00%，报3.366美元/百万英热。此前美国能源信息署（EIA）公布的库存增幅高于预期。</title>
+<link>https://xueqiu.com/5124430882/414586371</link>
+<pubDate>Thu, 29 Oct 2026 22:41:47 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414586371|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
-<title>财联社10月29日电，拉加德表示，欧洲经济增长面临下行风险，未来几个季度通胀率将远高于目标水平。</title>
-<link>https://api3.cls.cn/share/article/2519762?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 21:57:30 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519762?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<title>财联社10月29日电，白宫经济顾问哈塞特表示，面对10月高通胀数据，美联储大概率将采取适当行动。</title>
+<link>https://api3.cls.cn/share/article/2519802?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 22:39:49 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519802?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
-<title>万事达卡股价上涨5%，创4月以来最大盘中涨幅。</title>
-<link>https://xueqiu.com/5124430882/414577156</link>
-<pubDate>Thu, 29 Oct 2026 21:55:30 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414577156|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>拉加德：若市场波动扰乱货币政策传导，欧洲央行将动用相关工具应对</title>
+<description>10月29日，欧洲央行行长克里斯蒂娜·拉加德表示，若市场走势威胁货币政策的顺畅传导，包括出现不合理且无序的市场波动，欧洲央行将有相关工具可供使用。她指出，相关工具的适用标准和条件已明确公布。</description>
+<link>https://www.jiemian.com/article/15266412.html</link>
+<pubDate>Thu, 29 Oct 2026 22:39:37 +0800</pubDate>
+<guid isPermaLink="false">https://www.jiemian.com/article/15266412.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
+</item>
+<item>
+<title>美国与芬兰10月29日签署科技合作谅解备忘录。</title>
+<link>https://xueqiu.com/5124430882/414584823</link>
+<pubDate>Thu, 29 Oct 2026 22:34:07 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414584823|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
-<title>拉加德：能源价格涨幅已超出基线水平</title>
-<description>欧洲央行行长拉加德表示，能源价格涨幅已超出基线水平。从中期来看，能源将进一步推高通胀。</description>
-<link>https://xueqiu.com/5124430882/414577077</link>
-<pubDate>Thu, 29 Oct 2026 21:55:08 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414577077|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+<title>中宣部组织召开学习宣传贯彻党的二十届五中全会精神电视电话会议</title>
+<description>新华社北京10月29日电 中宣部29日晚在京召开学习宣传贯彻党的二十届五中全会精神电视电话会议。中共中央政治局委员、中宣部部长李书磊出席会议并讲话。 会议指出，党的二十届五中全会是在基本实现社会主义现代化的关键时期召开的一次十分重要的会议。全会审议通过的《决定》，以习近平新时代中国特色社会主义思想为指导，深入贯彻习近平党建思想，系统总结新时代全面从严治党伟大成就，总结运用新时代全面从严治党宝贵经验，深入分析党的建设面临的新形势新任务新挑战，对持之以恒推进全面从严治党作出战略部署，是持续推进新时代党的建设新的伟大工程的纲领性文件，充分体现了以习近平同志为核心的党中央强党强国的历史主动，对于进一步开创新…</description>
+<link>https://h.xinhuaxmt.com/vh512/app/13350931</link>
+<pubDate>Thu, 29 Oct 2026 22:33:58 +0800</pubDate>
+<guid isPermaLink="false">https://h.xinhuaxmt.com/vh512/app/13350931|https://feed.quanwenrss.com/feed/xinhua-yw.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xinhua-yw.xml">新华社·要闻</source>
+</item>
+<item>
+<title>因离婚纠纷，一上市公司实控人所持4.15亿股被冻结</title>
+<description>炒股就看金麒麟分析师研报，权威，专业，及时，全面，助您挖掘潜力主题机会！ 10月29日晚间，大洋电机披露两份公告。一份是《关于控股股东、实际控制人收到协助执行通知书的公告》，公司收到广东省中山市第一人民法院《协助执行通知书》，因彭惠与鲁楚平离婚纠纷，法院裁定对鲁楚平名下价值30.77亿元的财产采取保全措施。 鲁楚平为大洋电机控股股东、实际控制人，彭惠则是其配偶。截至2026年三季报期末，鲁楚平直接持有公司6.14亿股，占总股本的24.79%，为公司第一大股东；彭惠持有4809万股，占1.94%，两人合计持股约26.73%。 另一份是《股票交易异常波动公告》，公司股票在10月27日至29日连续3个交易日收盘价涨幅偏离值累计超过20%，触发股票…</description>
+<link>https://finance.sina.com.cn/stock/s/2026-10-29/doc-iniwxekn5989026.shtml</link>
+<pubDate>Thu, 29 Oct 2026 14:33:49 GMT</pubDate>
+<guid isPermaLink="false">https://finance.sina.com.cn/stock/s/2026-10-29/doc-iniwxekn5989026.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
+<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
+</item>
+<item>
+<title>礼来股价又创新高，过去一年累计上涨近60%</title>
+<description>10月29日，美国制药巨头礼来（Eli Lilly）股价盘中最高触及1334.24美元，创历史新高，过去一年累计上涨59.36%，公司市值达到约1.15万亿美元。受减重药及糖尿病治疗药物需求强劲推动，礼来过去12个月营收同比增长49.58%，市场对其后续业绩表现保持乐观。 近期，多家华尔街机构上调礼来目标价。其中，Bernstein将目标价上调至1450美元，预计公司第三季度营收达到226.2亿美元，略高于市场预期，主要受Mounjaro海外销售强劲推动。RBC Capital维持“跑赢大盘”评级，目标价1500美元，看好Zepbound和Mounjaro的销量增长，尽管药品价格仍面临一定压力。Cantor Fitzgerald也将目标价上调至1440美元，预计上述两款药物的销售表现将继续支撑公司业绩。 .a…</description>
+<link>https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekt5194138.shtml</link>
+<pubDate>Thu, 29 Oct 2026 14:33:35 GMT</pubDate>
+<guid isPermaLink="false">https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekt5194138.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
+<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
+</item>
+<item>
+<title>重点解决什么？有哪些创新举措？详解上海推动中小企业高质量发展行动方案</title>
+<description>今天（10月29日）上午，上海市政府新闻办举行市政府新闻发布会，市政府副秘书长、市发展改革委主任刘健介绍《上海市推动中小企业高质量发展行动方案》有关情况，市委金融办副主任陶昌盛、市发展改革委副主任陈彦峰、市经济信息化委副主任蒲亚鹏、市知识产权局副局长余晨、市商务委二级巡视员朱文群共同出席新闻发布会，并回答记者提问。 ——热点问答—— 回应中小企业的诉求期盼，着力解决好政策落实落地的问题 Q 中央广播电视总台：近年来国家和上海为支持中小企业发展出台了不少政策，这次《行动方案》的制定主要有哪些考虑，和现有政策如何衔接，重点是要解决哪些问题？ A 刘健：为了制订好《行动方案》，我们开展了深入调研，系统梳理了近…</description>
+<link>https://www.yicai.com/news/103416244.html</link>
+<pubDate>Thu, 29 Oct 2026 14:33:29 GMT</pubDate>
+<guid isPermaLink="false">https://www.yicai.com/news/103416244.html|https://rsshub.rss.tips/yicai/news</guid>
+<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
+</item>
+<item>
+<title>美国三季度GDP增速超预期 9月通胀提速</title>
+<description>【财新网】美国商务部10月29日发布的数据显示，美国三季度GDP大幅超出预期，同时，9月通胀再度提速。 数据显示，美国三季度GDP季调后环比折年率初值为3.4%，超出市场预期的3.2%，也大幅高于二季度的2.2%。 美国三季度GDP快速增长主要是因为投资大幅增长，同时消费支出和政府支出保持稳健增长，但出口环比出现下降，再加上进口大幅增长，拖累了整体GDP增速。 衡量美国内需的指标——对国内私人购买者的最终销售环比增长4.9%，超过二季度4.6%的增速。对国内私人购买者的最终销售相当于GDP中的消费支出与私人固定投资总额之和。 具体来看，美国三季度的投资环比大幅增长19.4%，其中企业投资环比增长12.7%。投资对GDP的贡献也超过了消费，成为拉动…</description>
+<link>https://international.caixin.com/2026-10-29/102498651.html</link>
+<pubDate>Thu, 29 Oct 2026 22:32:37 +0800</pubDate>
+<guid isPermaLink="false">https://international.caixin.com/2026-10-29/102498651.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
+</item>
+<item>
+<title>房价下跌、租金上涨，双双创下三年来首次变局</title>
+<description>2026 年 9 月 23 日，加利福尼亚州绍森欧克斯，航拍视角下，社区街道两旁分布着两层独栋住宅 核心要点 10 月房屋价格中位数同比下跌 0.1%。 10 月租金中位数同比上涨 0.1%。 10 月全国多户住宅空置率为 7%。 高抵押贷款利率以及对整体经济的担忧已经对房地产市场造成冲击，过去数月房屋交易陷入停滞。如今这些因素开始传导至房价与租金层面。 房产经纪平台 Redfin 最新报告显示，美国房屋销售价格中位数出现三年多以来的首次下跌。截至 10 月 25 日的四周数据，房价同比仅微降 0.1%，而在此之前房价已经连续三年上涨。 尽管近几周抵押贷款利率有所回落，但整体仍较去年高出约整整一个百分点。Redfin 数据表明，高利率使得普通购房者的月供达到…</description>
+<link>https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekr8742984.shtml</link>
+<pubDate>Thu, 29 Oct 2026 14:32:18 GMT</pubDate>
+<guid isPermaLink="false">https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekr8742984.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
+<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
+</item>
+<item>
+<title>美国天然气库存单周增加800亿立方英尺</title>
+<description>10月29日，美国能源信息署（EIA）数据显示，截至2026年10月23日当周，美国天然气库存总量为3.724万亿立方英尺，较前一周增加800亿立方英尺；库存较去年同期低3.8%，较过去五年同期均值高1.0%。</description>
+<link>https://www.jiemian.com/article/15266399.html</link>
+<pubDate>Thu, 29 Oct 2026 22:32:17 +0800</pubDate>
+<guid isPermaLink="false">https://www.jiemian.com/article/15266399.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
+</item>
+<item>
+<title>【我闻】国开证券换帅背后 国开行的券商子股权何去何从</title>
+<description>【金融我闻/王娟娟】2026年三季报披露渐次展开。随着市场转冷，券商三季报业绩承压，中小券商更觉寒意。 截至10月27日，已有9家券商及券商类上市主体披露2026年前三季度业绩，第三季度归母净利润均较第二季度环比下滑。券业龙头中信证券（600030.SH / 06030.HK）的利润降幅约两成，几家中小券商的环比降幅则普遍超过50%，个别小券商单季亏损逾2亿元。市场波动之下，不同体量券商的经营韧性开始显现差异。 业绩分化之外，证券行业的存量竞争也在加剧。近年来，监管层“扶优限劣”、鼓励并购的政策导向日益鲜明，头部及中型券商接连通过并购整合、国际化布局提升竞争力。相比之下，小券商受制于资本实力和业务结构，拓展新业务、形成差异化优势的…</description>
+<link>https://wenews.caixin.com/2026-10-29/102498683.html</link>
+<pubDate>Thu, 29 Oct 2026 22:31:19 +0800</pubDate>
+<guid isPermaLink="false">https://wenews.caixin.com/2026-10-29/102498683.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
+</item>
+<item>
+<title>默沙东21价肺炎球菌疫苗获批 本地成年人可接种</title>
+<description>我国卫生科学局已批准美国制药公司默沙东研发的21价肺炎球菌结合疫苗CAPVAXIVE，供18岁以上成年人接种，以预防特定类型肺炎链球菌引起的肺炎及其他严重感染。 默沙东（MSD）星期四（10月29日）发文告说，CAPVAXIVE可预防21种特定血清型肺炎链球菌引起的疾病，包括侵袭性肺炎球菌疾病（invasive pneumococcal disease）及肺炎球菌肺炎（pneumococcal pneumonia）。 根据本地2024年的疾病监测数据估算，曾接种其他肺炎球菌疫苗的成年人，若再接种CAPVAXIVE，两种疫苗合计涵盖约78%引起成年人侵袭性肺炎球菌疾病的血清型分布。不过，这不代表疫苗能预防78%的病例。肺炎球菌疾病由肺炎链球菌引起，可造成肺炎、血液感染及脑膜炎等疾病，严重时可能…</description>
+<link>https://www.zaobao.com.sg/news/singapore/story20261029-9915462</link>
+<pubDate>Thu, 29 Oct 2026 14:31:03 GMT</pubDate>
+<guid isPermaLink="false">https://www.zaobao.com.sg/news/singapore/story20261029-9915462|https://rsshub.rss.tips/zaobao/realtime/singapore</guid>
+<source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
+</item>
+<item>
+<title>00后宝妈在儿童医院门口卖3元盒饭：每卖一份倒贴7元</title>
+<description>收起在这座偌大的城市里，玟玟的账本始终是亏的。但她和那些排队的人，似乎都在用另一种算法，将这件事一天一天地做下去。记者 |吴 雪在上海，3块钱能买到什么？也许，3块钱买不到什么，但能让人吃上一顿有尊严的热饭。一瓶便利店货架最底层的矿泉水，或者，一份香菇瘦肉粥、一份荷塘月色、一盅黄豆猪蹄汤——热的，当天做的，送到手上。在上海儿童医学中心张江院区门口，00后宝妈鄢玟经营着一个3元盒饭小摊，大家习惯喊她玟玟。这件事，她做了快小半年。玟玟今年26岁，本职为文职人员，月薪六七千元，住在周浦镇，家中有一个两岁的儿子。一份盒饭食材成本约10元，她卖3元，每卖一份倒贴7元。这笔账她并非不会算，只是发自内心地想要这样做。…</description>
+<link>https://c.m.163.com/news/a/LAEFU2CO0550A0OW.html</link>
+<pubDate>Thu, 29 Oct 2026 14:28:35 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LAEFU2CO0550A0OW.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
+</item>
+<item>
+<title>智利复活节岛东南海域发生6.3级地震</title>
+<description>据智利国家地震中心监测，当地时间10月29日4时49分，南太平洋海域发生6.3级地震，震中位于智利复活节岛东南方向约1480公里处。目前尚无人员伤亡和财产损失报告。（央视新闻）</description>
+<link>https://www.jiemian.com/article/15266389.html</link>
+<pubDate>Thu, 29 Oct 2026 22:28:30 +0800</pubDate>
+<guid isPermaLink="false">https://www.jiemian.com/article/15266389.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
+</item>
+<item>
+<title>理想汽车最走量的车，电池和智驾芯片都换成了自研</title>
+<description>10月28日晚，2026款理想i6上市，售价维持24.98万元不变，首销期限时权益价23.98万元。这款理想目前最走量的车型，把电池和智驾芯片都换成了自研——连山5C电池容量由87.3千瓦时增至96千瓦时，后驱版CLTC续航从720公里提升至780公里；智驾芯片由英伟达Thor-U换成自研马赫M100。这是10月20日理想Power Day发布“连山”电动技术体系后，首款上市的车型。i6上市一年交付接近19万辆，在理想产品阵容中累计销量最高。把自研体系装进这款车，意味着理想的自研投入从旗舰车型的小批量验证，转到了规模化放量阶段。乘联分会零售数据显示，今年1—9月理想i6零售160221辆，月均约1.78万辆，一款车占到理想同期交付量的约55%。在这个价格带，i6面对的是最难…</description>
+<link>https://www.yicai.com/news/103416234.html</link>
+<pubDate>Thu, 29 Oct 2026 14:28:01 GMT</pubDate>
+<guid isPermaLink="false">https://www.yicai.com/news/103416234.html|https://rsshub.rss.tips/yicai/news</guid>
+<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
+</item>
+<item>
+<title>US economy grows faster than expected 3.4% in 3Q, driven by consumers, AI investment</title>
+<description>The data is in contrast to households’ downbeat assessment of the economy, reflected in Trump’s record-low approval ratings. Shipping containers sit on a Maersk vessel at the port of Los Angeles in Long Beach, California. Photo: Reuters The US economy grew faster than expected in the third quarter as resilient consumer spending and AI-driven business investment more than offset the impact of higher oil prices stemming from the conflict in the Middle East. Gross domestic product increased at a 3.4 per cent annualised rate last quarter, the Commerce Department’s Bureau of Economic Analysis…</description>
+<link>https://www.scmp.com/news/world/united-states-canada/article/3372628/us-economy-grows-faster-expected-34-3q-driven-consumers-ai-investment</link>
+<pubDate>Thu, 29 Oct 2026 14:26:35 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/news/world/united-states-canada/article/3372628/us-economy-grows-faster-expected-34-3q-driven-consumers-ai-investment|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>部署态加速，智元要打通物理AI全链路</title>
+<description>在具身智能行业仍热衷于用高难度动作展示技术进步时，智元创新日上呈现了另外一种思路。 在这场发布会上，没有太多眼花缭乱的机器人特技，也没有太多夺眼球的集体舞蹈，反而更像是一场信息密度极高的技术研讨会。甚至，在世博中心的入口，智元还设置了一大面“论文墙”，呈现智元团队近期的核心技术进展。 过去三年，机器人学会了跑、跳、后空翻，但走出实验室才发现，单一技术突破撑不起复杂环境中的稳定工作。当GPT-6 Astra等大模型展现出物理任务规划能力后，“真实部署”已从口号，变成行业必须回答的问题。 智元的回答是一套组合拳： GO-3 Preview具身基座大模型、AGILE通用运动智能算法框架、WITA-OMNI原生多模态交互大模型分别攻坚作业…</description>
+<link>https://www.36kr.com/p/4047032889800965</link>
+<pubDate>Thu, 29 Oct 2026 22:25:57 +0800</pubDate>
+<guid isPermaLink="false">https://www.36kr.com/p/4047032889800965|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
+</item>
+<item>
+<title>Lee vows to stay on, says housing minister’s resignation his ‘political decision’</title>
+<description>Former housing minister’s Ho Wing-yin the sole political casualty of blaze inquiry as three other department heads stay in post. John Lee said resignation of the housing minister was his &quot;political decision&quot; and he would stay on as Chief Executive to lead reforms. Photo: Elson Li Hong Kong’s leader has said the housing minister’s resignation was his “comprehensive political decision” in establishing accountability for the city’s deadliest fire in decades as he pledged to go after the roles of up to 50 civil servants. Chief Executive John Lee Ka-chiu also said on Thursday that he decide…</description>
+<link>https://www.scmp.com/news/hong-kong/politics/article/3372627/lee-vows-stay-says-housing-ministers-resignation-his-political-decision</link>
+<pubDate>Thu, 29 Oct 2026 14:25:12 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/news/hong-kong/politics/article/3372627/lee-vows-stay-says-housing-ministers-resignation-his-political-decision|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>銅鑼灣銀行存100美元偽鈔 36歲內地女子惹官非</title>
+<description>今午(29日)5時35分，銅鑼灣告士打道281號一銀行職員報案，懷疑有人儲存的一張面額為100美元鈔票是偽鈔。警員接報到場，經初步調查後，以涉嫌「行使偽製紙幣」，拘捕一名姓張(36歲)內地女子，她現正被扣留調查。</description>
+<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029222453918-1029_00822_001.html</link>
+<pubDate>Thu, 29 Oct 2026 14:24:53 GMT</pubDate>
+<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029222453918-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
+<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+</item>
+<item>
+<title>美的集团、海尔智家第三季收入增长承压</title>
+<description>10月29日晚，美的集团（000333.SZ）和海尔智家（600690.SH）两大白电龙头齐齐发布三季报显示，在国内家电市场收缩的情况下，它们今年第三季度的收入均增长承压、出现同比下滑；汇兑损失让它们当季的归母扣非净利润同比减少。拓展数据中心液冷等新业务成为它们共同的选择。 今年前三季，美的集团实现营收3673.6亿元、同比增长1.2%，归母净利润413.9亿元、同比增长9.3%；其中，楼宇科技、机器人与自动化的收入分别为309亿元、249亿元，均同比增长10%，部分抵消了家电市场增长压力。前三季，其归母扣非净利润287.9亿元、同比减少22.5%，主要是由于人民币汇率走高，衍生金融工具收益减少。 在第三季国内家电市场下滑压力增大的情况下，美的集团今年…</description>
+<link>https://www.yicai.com/news/103416225.html</link>
+<pubDate>Thu, 29 Oct 2026 14:22:56 GMT</pubDate>
+<guid isPermaLink="false">https://www.yicai.com/news/103416225.html|https://rsshub.rss.tips/yicai/news</guid>
+<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
+</item>
+<item>
+<title>图集｜中国共产党第二十届中央委员会第五次全体会议在京举行</title>
+<description>点击加载图片 中国共产党第二十届中央委员会第五次全体会议，于2026年10月26日至29日在北京举行。中央委员会总书记习近平作重要讲话。 新华社记者 谢环驰 摄 点击加载图片 中国共产党第二十届中央委员会第五次全体会议，于2026年10月26日至29日在北京举行。中央政治局主持会议。 新华社记者 岳月伟 摄 点击加载图片 中国共产党第二十届中央委员会第五次全体会议，于2026年10月26日至29日在北京举行。这是习近平、李强、赵乐际、王沪宁、蔡奇、丁薛祥、李希等在主席台上。 新华社记者 李响 摄 点击加载图片 中国共产党第二十届中央委员会第五次全体会议，于2026年10月26日至29日在北京举行。这是习近平、李强、赵乐际、王沪宁、蔡奇、丁薛祥、李…</description>
+<link>https://m.thepaper.cn/newsDetail_forward_34362078</link>
+<pubDate>Thu, 29 Oct 2026 14:22:03 +0000</pubDate>
+<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34362078|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
+</item>
+<item>
+<title>‘A Few Good Men’ and a Few Busy Editors</title>
+<description>The actor Bradley Whitford remembers the afternoon in 1990 when Tom Cruise and Rob Reiner came to Broadway to catch a matinee of “A Few Good Men.” They were scoping out the play, written by Aaron Sorkin, with the thought that it might make a good movie. By that point, Whitford had been vaulted from an understudy in the military courtroom drama to its lead: Lt. Daniel Kaffee, a hotshot Navy lawyer saddled with an impossible case. The cast’s goal for that day’s performance was to “thread the needle,” Whitford, 67, says. “We wanted it to be good enough for Rob Reiner to direct, but maybe…</description>
+<link>https://www.nytimes.com/2026/10/29/t-magazine/a-few-good-men-broadway-live.html</link>
+<pubDate>Thu, 29 Oct 2026 14:21:29 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/t-magazine/a-few-good-men-broadway-live.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+</item>
+<item>
+<title>江西南昌：城市秋日花海“醉”迷人</title>
+<description>10月29日，江西南昌新建区马兰圩湿地公园，游客在花海里拍照。深秋时节，马兰圩湿地公园的连片花海绚丽绽放，吸引不少市民游客前来踏秋赏花。中新社记者 刘力鑫 摄 10月29日，江西南昌新建区马兰圩湿地公园，连片花海绚丽绽放，吸引不少市民游客前来踏秋赏花。中新社记者 刘力鑫 摄 10月29日，江西南昌新建区马兰圩湿地公园，游客在花海里拍照。深秋时节，马兰圩湿地公园的连片花海绚丽绽放，吸引不少市民游客前来踏秋赏花。中新社记者 刘力鑫 摄 10月29日，江西南昌新建区马兰圩湿地公园，连片花海绚丽绽放，吸引不少市民游客前来踏秋赏花。中新社记者 刘力鑫 摄 10月29日，江西南昌新建区马兰圩湿地公园，游客在花海里拍照。深秋时节，马兰圩…</description>
+<link>https://www.chinanews.com.cn/tp/2026/10-29/10723033.shtml</link>
+<pubDate>Thu, 29 Oct 2026 22:19:09 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/tp/2026/10-29/10723033.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>中共中央政治局委員增張升民 學者：打破軍方代表從缺局面</title>
+<description>（中央社記者李雅雯台北29日電）中共20屆五中全會今天在北京落幕。學者解析，增選張升民為中央政治局委員，打破1994年之後未在中央全會上增補中央政治局委員紀錄，這是符合現實的必然，用意在於安撫軍方。淡江大學兩岸關係研究中心首席顧問張五岳對中央社表示，中共20屆五中全會會議公報宣布21大會議將於2027年下半年召開，推估沒有意外的話，接下來六中全會召開後將緊接21大會議，不會有七中全會召開。張五岳強調反貪腐將持續進行。他說，中共20屆五中全會強調「全面從嚴治黨關鍵在從嚴治吏」，查核有沒有貪腐將只是「基本款」，更重要訴求在於政治忠誠與政治紀律，「21大前還會繼續再反（貪腐），會繼續從嚴治黨」。中央軍委副主席張升民被增…</description>
+<link>https://www.cna.com.tw/news/acn/202610290379.aspx</link>
+<pubDate>Thu, 29 Oct 2026 22:19:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cna.com.tw/news/acn/202610290379.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
+</item>
+<item>
+<title>Security chief vows revamp of fire department after report censures lax inspections</title>
+<description>Hong Kong Fire Services Department will enhance monitoring, licencing and tools to combat fire risks after committee cites failure of its supervision. A firefighter on the front lines of the blaze in Wang Fuk Court last November. Photo: Eugene Lee Hong Kong’s security chief has vowed to implement tougher enforcement against unauthorised shutdowns of fire safety systems and a structural overhaul of the Fire Services Department after it was criticised for relying on a “passive, paper-driven” audit regime. The independent committee that investigated the Wang Fuk Court fire said in its report…</description>
+<link>https://www.scmp.com/news/hong-kong/society/article/3372626/security-chief-vows-revamp-fire-department-after-report-censures-lax-inspections</link>
+<pubDate>Thu, 29 Oct 2026 14:18:59 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/news/hong-kong/society/article/3372626/security-chief-vows-revamp-fire-department-after-report-censures-lax-inspections|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>山东仲村镇：小手套“织”出大产业 年产劳保手套60亿副</title>
+<description>10月29日，山东省临沂市平邑县仲村镇，当地劳保手套生产企业车间内，工人们正加紧赶制订单。仲村镇现有手套棉纺相关企业690余家，年产劳保手套60亿副，被称为“中国劳保手套名镇”，产品出口日本、韩国、俄罗斯等多个国家。孙倩 摄 10月29日，山东省临沂市平邑县仲村镇，当地劳保手套生产企业车间内，工人们正加紧赶制订单。仲村镇现有手套棉纺相关企业690余家，年产劳保手套60亿副，被称为“中国劳保手套名镇”，产品出口日本、韩国、俄罗斯等多个国家。孙倩 摄 10月29日，山东省临沂市平邑县仲村镇，工作人员介绍手套产品。仲村镇现有手套棉纺相关企业690余家，年产劳保手套60亿副，被称为“中国劳保手套名镇”，产品出口日本、韩国、俄罗斯…</description>
+<link>https://www.chinanews.com.cn/tp/2026/10-29/10723032.shtml</link>
+<pubDate>Thu, 29 Oct 2026 22:17:51 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/tp/2026/10-29/10723032.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>Russian drone attack on Ukrainian train station kills at least 14, officials say</title>
+<description>Russian drone attack on Ukrainian train station kills at least 13, officials say Dnipro regional head Oleksandr Hanzha said at least 10 others were wounded in the attack, including an 11-year-old boy. By Tom McArthur Published: 2026-10-29T12:38:40Z Russian drone attack on Ukrainian train station kills at least 13, officials say Thirteen people have been killed after a Russian jet-powered drone hit a crowded platform at Dnipro railway station in the country&#x27;s north, Ukrainian officials have said. Dnipropetrovsk regional head Oleksandr Hanzha said at least 10 others were wounded in the attack…</description>
+<link>https://www.bbc.com/news/articles/c9p8gdlz1p2ko</link>
+<pubDate>Thu, 29 Oct 2026 14:17:35 +0000</pubDate>
+<guid isPermaLink="false">https://www.bbc.com/news/articles/c9p8gdlz1p2ko|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
+</item>
+<item>
+<title>出口撑起增长，吉利再算利润账</title>
+<description>吉利的三季报刷新了其同期纪录。 10月29日，吉利汽车发布2026年第三季度财报。第三季度，公司实现收入990亿元，同比增长10%；核心归母净利润52.1亿元，同比增长32%，两项指标均创同期新高。 吉利汽车董事会副主席桂生悦在当天的业绩会上，将其称为“一份高压下的季报”。在他看来，过去三个月，吉利遭遇了近几年少有的严峻竞争，各条产品线都面临同质化产品的挑战。 桂生悦坦言，从内部角度看，“未来要让大家更满意、超出大家预期”，同时对未来发展有个更清晰思考。新车型密集推出，过去的畅销产品很快迎来同类竞争，意味着吉利需要不断补上新的产品优势。 第三季度，吉利出口32.34万辆，同比增加约21.14万辆；海外增长迅猛，出口占总销量的…</description>
+<link>https://wallstreetcn.com/articles/3784790</link>
+<pubDate>Thu, 29 Oct 2026 22:17:11 +0800</pubDate>
+<guid isPermaLink="false">https://wallstreetcn.com/articles/3784790|https://dedicated.wallstreetcn.com/rss.xml</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
+</item>
+<item>
+<title>单季度砸出427亿，比亚迪重踩油门</title>
+<description>作者 | 周智宇 利润刚回到百亿元，比亚迪又加大了投入。 10月29日披露的三季报显示，比亚迪第三季度营收2214.88亿元，同比增长13.59%；归母净利润100.20亿元，同比增长28.08%；扣非归母净利润86.30亿元，同比增长25.25%。营收、归母净利润分别环比增长13.82%、21.58%。 前三季度，比亚迪营收5663.04亿元，与去年同期基本持平，归母净利润223.45亿元，同比下降4.24%。 同一季度，比亚迪购建固定资产、无形资产和其他长期资产支付的现金达到426.76亿元，环比增长88.49%，几乎赶上整个上半年的447.03亿元。前三季度累计支出仍比去年同期低约24%，但进入三季度，付款明显加快了。上半年披露的分部资本性支出中，汽车及相关业务占96.4%，投入重心仍…</description>
+<link>https://wallstreetcn.com/articles/3784789</link>
+<pubDate>Thu, 29 Oct 2026 22:16:56 +0800</pubDate>
+<guid isPermaLink="false">https://wallstreetcn.com/articles/3784789|https://dedicated.wallstreetcn.com/rss.xml</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
+</item>
+<item>
+<title>【红蚂蚁】甘榜精神也有代价 你可愿意付出？</title>
+<description>红蚂蚁成长时期的一些生活片段，你可能也觉得熟悉：邻居准备晚餐时炒了一大锅杂菜，开饭前将一份装进塑料盒，送过来我们家；另一位邻居的孩子升上中学，与红蚂蚁就读的中学相距不远，于是父亲每天早上一起载我们两人上学。有人以“甘榜精神”形容这种邻居之间频繁往来、彼此照应的情景。当时，人与人之间的交情未必特别深厚，却似乎多了一份信任与温情。 “甘榜”（kampung）指的是新加坡人在政府大规模兴建组屋前所居住的乡村，但随着大部分新加坡人搬进组屋，生活方式改变，邻里关系逐渐疏远，甘榜精神也日渐淡薄。 “找回甘榜精神”的呼声时有所闻，但真正为此付出时间和精力的人相对不多，最近就有两个例子在媒体报道中曝光：《联合早报》…</description>
+<link>https://www.zaobao.com.sg/news/singapore/story20261029-9916389</link>
+<pubDate>Thu, 29 Oct 2026 14:16:24 GMT</pubDate>
+<guid isPermaLink="false">https://www.zaobao.com.sg/news/singapore/story20261029-9916389|https://rsshub.rss.tips/zaobao/realtime/singapore</guid>
+<source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
+</item>
+<item>
+<title>杭州新添音乐空间 5000张黑胶唱片奏响老街</title>
+<description>10月29日，参观者在“杭州城市音乐客厅”内观赏黑胶唱片。中新社记者 钱晨菲 摄 10月29日，黑胶唱片吸引游客驻足。中新社记者 钱晨菲 摄 10月29日，“杭州城市音乐客厅”主理人张铭调试唱片机。中新社记者 钱晨菲 摄 10月29日，音乐爱好者欣赏、探讨音乐。中新社记者 钱晨菲 摄 10月29日，“杭州城市音乐客厅”主理人张铭检查唱片陈列。中新社记者 钱晨菲 摄 10月29日，“杭州城市音乐客厅”吸引市民游客打卡。中新社记者 钱晨菲 摄 10月29日，“杭州城市音乐客厅”吸引市民游客打卡。中新社记者 钱晨菲 摄</description>
+<link>https://www.chinanews.com.cn/tp/2026/10-29/10723031.shtml</link>
+<pubDate>Thu, 29 Oct 2026 22:14:39 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/tp/2026/10-29/10723031.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>元朗八鄉村屋檢2千萬冰毒 46歲非洲漢反抗襲警涉2罪被捕</title>
+<description>新界北區警員昨日（28日）經情報分析及深入調查後，在元朗八鄉展開打擊毒品行動。期間，在橫台山河瀝背村一村屋外截查一名男子，但該名男子企圖逃走，並以手襲擊一名男警務人員，其後他被制服。警員於村屋一單位內，檢獲約43公斤懷疑「冰」毒及一批毒品包裝工具，毒品市值超過2,000萬港元。 該名46歲非洲馬拉維籍男子，涉嫌「販運危險藥物」及「襲擊警務人員」被捕，現正被扣留調查。被捕非洲漢報稱無業，疑他受販毒集團金錢利誘，被招攬負責管倉及派送毒品。販毒集團亦趁年尾節日臨近，利用偏遠村屋囤積毒品，且以作茶葉包裝以逃避追查，相信行動已成功阻止該批毒品流入市面。 疑犯稍後將被暫控各一項「販運危險藥物」及「襲擊警務人員」罪…</description>
+<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029200035275-1029_00822_001.html</link>
+<pubDate>Thu, 29 Oct 2026 14:13:45 GMT</pubDate>
+<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029200035275-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
+<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+</item>
+<item>
+<title>全球最大“气体充电宝”落地新疆，光伏废电终于有救了？</title>
+<description>本文来自微信公众号： 酷玩实验室 ，作者：酷玩实验室几周前，新疆木垒木垒哈萨克自治县，戈壁滩上，一座新电站接进了电网。但这座电站的造型很不一样。从天上看，几座白色的长胶囊并排趴在地上，顶上印着“中国华电”，边上立着成片的蓝白高罐，再往外，是一眼望不到头的光伏板。这座电站专门干一件事：存电。新疆的光伏和风电非常丰富，这几年多到用不完，今年头两个月，新疆每100度光伏电里，就有14度没处用，直接浪费了。木垒的这座电站，就是把白天这些用不完的电先存起来，到了晚上用电最多的时候再放出来。一年下来，它能在用电高峰送出1.8亿度电，粗略计算够五万户人家用上一年。说起存电，大家脑子里多半是一排排电池，放大版的充电宝…</description>
+<link>https://m.huxiu.com/article/4901534.html?type=text</link>
+<pubDate>Thu, 29 Oct 2026 22:09:29 +0800</pubDate>
+<guid isPermaLink="false">https://m.huxiu.com/article/4901534.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
+</item>
+<item>
+<title>短剧变局：字节跳动AI生意自闭环｜特稿精选</title>
+<description>封面报道｜90天颠覆影视 【编者按：10月27日晚间，红果短剧辟谣“红果短剧年化收入400亿元”“等传言；随后，字节跳动官方驳斥“中国互联网的字节时间”的说法，并称短剧、短视频这类产品“属于充分竞争行业，市场竞争激烈”，还指出“腾讯公司短剧、短视频增长速度，远远超过抖音和红果。” 然而，行业对于字节跳动在短剧生产领域已经形成从上游版权、视频生成模型制作、下游应用生态分发的闭环商业生态。数据调研机构QuestMobile测算，截至2026年6月，红果短剧月活用户3.68亿，还差2000万月活就能追平字节的AI助手豆包；与此同时，腾讯视频、爱奇艺、芒果TV、优酷四大长视频平台用户规模均已被红果超越。而在2025年，微短剧用户日均观看超2小…</description>
+<link>https://weekly.caixin.com/2026-05-30/102449305.html</link>
+<pubDate>Thu, 29 Oct 2026 22:08:58 +0800</pubDate>
+<guid isPermaLink="false">https://weekly.caixin.com/2026-05-30/102449305.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
+</item>
+<item>
+<title>4070元的冰柜被仅退款商家维权时发现仍在用 买家发声</title>
+<description>收起红星新闻此前报道，近日，一则“4070元冰柜被退款未退货，商家跨千里维权”的消息引发关注。商家秦先生称，一买家在其电商平台的店铺下单三台冰柜后，在平台退款2台4070元且未退货，称“冰柜已销毁”。秦先生到买家店铺维权时发现，被退款的冰柜仍在通电使用。买家李先生（化姓）则称，冰柜未达到购买时商家承诺的温度，导致其店铺无法正常使用，曾提出过换货。其称，退款时，他已经不再负责店铺内的事务，并不清楚冰柜具体如何处理，他向店铺负责人转述过“可以自行处理”后得知冰柜“已销毁”，但他未亲眼见到具体处理情况。10月29日，李先生告诉红星新闻记者，他已提交立案材料，起诉商家及平台，要求退一赔三、停止侵权并赔偿精神损失…</description>
+<link>https://c.m.163.com/news/a/LAEJUIC0051492T3.html</link>
+<pubDate>Thu, 29 Oct 2026 14:05:33 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LAEJUIC0051492T3.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
+</item>
+<item>
+<title>Suspect in France Shootings Said He Targeted Muslims and Africans, Prosecutor Says</title>
+<description>A man accused of killing one person and wounding seven in a shooting spree near Paris last week admitted that he had targeted people “of a Muslim, African or North African type,” France’s antiterrorism prosecutor said at a news conference on Thursday. The suspect is 39 and has been identified only as Kévin T. by French officials. He acknowledged planning the attack in advance, telling investigators he had chosen the area because it was a “den of Islamists,” according to the prosecutor, Olivier Christen. The shootings took place last Friday in Trappes, a working-class city with a large…</description>
+<link>https://www.nytimes.com/2026/10/29/world/europe/france-shootings-suspect.html</link>
+<pubDate>Thu, 29 Oct 2026 14:05:08 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/world/europe/france-shootings-suspect.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+</item>
+<item>
+<title>將境外詐騙電話扮成境內撥打 2男潛醫院裝設備落網</title>
+<description>遼寧省錦州市有醫院早前遭兩名男子闖入，企圖安裝電訊裝備，用於境外電訊網絡詐騙活動。當地警方本月抓獲涉案疑犯，成功斬斷一條涉詐通訊鏈條。 據微信公眾號「錦州警方」消息，本月11日凌晨2時許，兩名男子潛入轄區某醫院，一人在走廊把風，另一人進入醫院安裝電訊設備的機房，私自架設固話GOIP設備，充當詐騙電話中轉站。GOIP是一款虛擬撥號設備，可實現人卡分離，遠程批量撥號。詐騙分子企圖借助該設備偽裝成本地號碼撥打電話，隱藏境外作案身份。 錦州市古塔區公安通過研判排查，迅速鎖定疑犯身份及活動軌迹，於本月13日下午2時採取行動，成功抓獲疑犯，案件正在進一步偵辦中。</description>
+<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029220455148-1029_00822_001.html</link>
+<pubDate>Thu, 29 Oct 2026 14:04:55 GMT</pubDate>
+<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029220455148-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
+<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+</item>
+<item>
+<title>中国共产党第二十一次全国代表大会于2027年下半年在北京召开</title>
+<description>中国共产党第二十届中央委员会第五次全体会议，于2026年10月26日至29日在北京举行。全会决定，中国共产党第二十一次全国代表大会于2027年下半年在北京召开。 点击加载图片 【专题】党的二十届五中全会 中国共产党第二十届中央委员会第五次全体会议公报 责任编辑：王嘉琦 图片编辑：朱伟辉</description>
+<link>https://m.thepaper.cn/newsDetail_forward_34362083</link>
+<pubDate>Thu, 29 Oct 2026 14:04:20 +0000</pubDate>
+<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34362083|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
+</item>
+<item>
+<title>今彩539第115262期 頭獎槓龜</title>
+<description>（中央社台北29日電）今彩539第115262期開獎，中獎號碼22、02、21、11、14；派彩結果，頭獎槓龜。貳獎198注中獎，每注獎金新台幣2萬元。3星彩中獎號碼043，壹獎39注中獎，每注獎金5000元。4星彩中獎號碼6644，壹獎10注中獎，每注獎金5萬元。實際中獎獎號及派彩內容，以台彩公司公布為準。1151029</description>
+<link>https://www.cna.com.tw/news/ahel/202610290378.aspx</link>
+<pubDate>Thu, 29 Oct 2026 22:04:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cna.com.tw/news/ahel/202610290378.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
+</item>
+<item>
+<title>夜读 | 为什么说，爱出门的人运气往往好？</title>
+<description>出门走走 疲惫自会慢慢消散很多时候，我们的疲惫并非身体劳累，而是心累。长期待在同一个空间，接触同样的人，重复同样的事，大脑就会慢慢进入“节能模式”。你以为休息就是躺平刷手机，可躺得越久，越觉得空虚；刷得越多，内心越发疲惫。可是，当你推开门，走出去，街边新开的小店、空气里不同的气味、路上形形色色的行人……这些细微的变化会让你的大脑切换到“探索模式”，慢慢修复困在原地时积攒的倦怠。困在四壁之间，注意力无处安放，只能反复向内纠缠，陷入无尽的内耗。而走到户外，目光被外部世界吸引，心反而得到了真正的歇息。所以，真正的休息，不是一直躺着，而是换一个环境。不必非要走得很远，也不是必须设定目标，只是去公园走…</description>
+<link>https://www.peopleapp.com/column/30053449294-500007763390</link>
+<pubDate>Thu, 29 Oct 2026 22:03:34 +0800</pubDate>
+<guid isPermaLink="false">https://www.peopleapp.com/column/30053449294-500007763390|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
+</item>
+<item>
+<title>放下教案执画笔 艺术治疗试点计划助学前中心校长解压</title>
+<description>本地约444所学前教育中心的400多名校长，未来一年将参与艺术治疗试点计划，促进心理健康。计划日后有望扩展至其他学前中心，惠及更多教师和辅助人员。 参与者将参加由专业艺术治疗师主持的两小时工作坊，学习通过艺术创作纾解压力、表达自我，以及调节情绪。这项计划由人民行动党心理健康小组带领行动党社区基金会（PCF）与新加坡艺术治疗师协会联合推出，于星期四（10月29日）正式启动，首批共有60名学前教育中心校长参与。 接下来一年，大约400名学前中心校长将参与这项试点计划；他们来自PCF旗下约350所Sparkletots学前教育中心、36所Skool4Kidz，以及58所M.Y World学前教育中心。负责这项计划的行动党心理健康小组成员、荷兰—武吉知马集选…</description>
+<link>https://www.zaobao.com.sg/news/singapore/story20261029-9917110</link>
+<pubDate>Thu, 29 Oct 2026 14:03:06 GMT</pubDate>
+<guid isPermaLink="false">https://www.zaobao.com.sg/news/singapore/story20261029-9917110|https://rsshub.rss.tips/zaobao/realtime/singapore</guid>
+<source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
+</item>
+<item>
+<title>放下教案拿起画笔 艺术治疗试点计划助学前中心校长纾解压力</title>
+<description>本地约60名学前教育中心校长星期四下午到乌节路*SCAPE，率先参加了为他们而设的艺术治疗项目，来纾解压力并调节情绪。（谢智扬摄） 本地约444所学前教育中心的400多名校长，未来一年将参与艺术治疗试点计划，促进心理健康。计划日后有望扩展至其他学前中心，惠及更多教师和辅助人员。 参与者将参加由专业艺术治疗师主持的两小时工作坊，学习通过艺术创作纾解压力、表达自我及调节情绪。 这项计划由人民行动党心理健康小组带领行动党社区基金会（PCF）与新加坡艺术治疗师协会联合推出，于星期四（10月29日）正式启动，首批共有60名学前教育中心校长参与。 接下来一年会有大约400名学前中心校长参与这个试点计划；他们来自PCF旗下约350所Sparklet…</description>
+<link>https://www.zaobao.com/news/singapore/story20261029-9917110</link>
+<pubDate>Thu, 29 Oct 2026 14:03:06 +0000</pubDate>
+<guid isPermaLink="false">https://www.zaobao.com/news/singapore/story20261029-9917110|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
+</item>
+<item>
+<title>威力彩第115087期 頭獎槓龜</title>
+<description>（中央社台北29日電）威力彩第115087期今晚開獎，第一區中獎號碼為26、11、37、06、03、16，第二區中獎號碼01。派彩結果，頭獎、貳獎都槓龜。派彩結果及中獎獎號以台彩公布為準。1151029</description>
+<link>https://www.cna.com.tw/news/ahel/202610290377.aspx</link>
+<pubDate>Thu, 29 Oct 2026 22:03:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cna.com.tw/news/ahel/202610290377.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
+</item>
+<item>
+<title>资产全球配，上海启动跨境再保险“外来外用”试点</title>
+<description>继今年6月将离岸再保险列为首批优先发展的业务场景后，跨境再保险分入业务再获境外投资新通道。 10月28日下午，上海市委金融办、国家金融监管总局上海监管局、中国人民银行上海总部、国家外汇管理局上海市分局在2026上海国际再保险会议开幕式上联合发布《跨境再保险分入业务收入境外投资便利化试点实施办法》，被业内称为“外来外用”的政策由此进入实操阶段。 其中，人保财险、太保产险、平安产险、中再产险作为四家首批试点机构，工商银行、中国银行、建设银行三家合作银行以及再保交易中心共同启动首批试点工作。 跨境再保险分入业务，是由境内保险机构承接离岸风险、收取境外保险机构保费的再保险业务，此类业务是中国再保险市场参与全球再…</description>
+<link>https://www.mycaijing.com/article/detail/586547?source_id=40</link>
+<pubDate>Thu, 29 Oct 2026 22:03:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586547?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
+</item>
+<item>
+<title>汽车暗格藏逾400条漏税烟 37岁马国司机被捕</title>
+<description>移民与关卡局星期四（10月29日）在脸书发文说，这起案件发生在10月7日，驻守在兀兰关卡的工作人员当时指示涉事车辆接受进一步检查，结果在车内多个经过改装的暗格中，发现超过400条及30包漏税香烟。（取自移民与关卡局脸书） 一名37岁马来西亚籍男子涉嫌利用改装汽车走私香烟，将超过400条及30包漏税香烟藏在车内多个暗格，企图从兀兰关卡入境我国，结果遭执法人员识破，当场起获大批私烟。 移民与关卡局星期四（10月29日）在脸书发文说，这起案件发生在10月7日，驻守在兀兰关卡的执法人员当时指示涉事车辆接受进一步检查，结果在车内多个经过改装的暗格中，发现超过400条及30包漏税香烟。 根据当局发布的照片，涉事车辆是一辆白色汽车。照片显…</description>
+<link>https://www.zaobao.com/news/singapore/story20261029-9917507</link>
+<pubDate>Thu, 29 Oct 2026 14:02:33 +0000</pubDate>
+<guid isPermaLink="false">https://www.zaobao.com/news/singapore/story20261029-9917507|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
+</item>
+<item>
+<title>渣打三季度营收约58亿美元，中国香港占比超26%</title>
+<description>受益于财富解决方案等业务的强劲增长，渣打集团（下称“渣打”）2026年三季度营收和利润双双录得双位数增长。 北京时间2026年10月28日公布的财报数据显示，渣打三季度营收约58亿美元，同比增长14%，税前利润为23亿美元，同比增长29%。 净利息收入作为渣打业绩的基本盘，实现稳步增长。财报数据显示，渣打三季度净利息收入为30亿美元，同比增长9%，主要受益于交易量的增长及资产负债表组合的优化。同时，净息差同步走阔：净息差上升9个基点至203个基点，体现负债付息率的下降速度快于总资产收益率的下降。 客户贷款和存款等业务规模的扩大在财报数据中亦有所体现。截至2026年9月30日，渣打客户贷款和垫款余额为3152.37亿美元，同比增长11%，存款…</description>
+<link>https://www.mycaijing.com/article/detail/586546?source_id=40</link>
+<pubDate>Thu, 29 Oct 2026 22:02:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586546?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
+</item>
+<item>
+<title>香港公布宏福苑火灾追责结果</title>
+<description>10月29日下午，随着中国香港特区调查宏福苑大火成因的独立委员会报告正式对外公布，中国香港特区政府的后续应对措施亦于同日正式出台，除特区政府房屋局局长辞职，还包括修例将围标刑事化，以及拟设楼宇维修支援及服务局接管楼宇复修资助计划等。 2025年11月26日下午，位于香港新界大埔的宏福苑多栋住宅楼发生火灾并造成重大人员伤亡。同年12月，香港特区政府行政长官李家超宣布成立独立委员会，负责审视此次火灾事故原因、追究责任并提出防范建议。 2026年8月6日，该委员会在其官网公开了跨部门调查专组的最终调查报告（同步刊载了专家报告及多名专家证人的简报），2025年底发生在中国香港新界大埔区宏福苑的大火起因及过程被认为已基本查明。…</description>
+<link>https://www.mycaijing.com/article/detail/586545?source_id=40</link>
+<pubDate>Thu, 29 Oct 2026 22:00:53 +0800</pubDate>
+<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586545?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
+</item>
+<item>
+<title>“基金买手”三季度重仓路径曝光，哪些主动权益基金被大幅增持？</title>
+<description>随着公募基金三季报披露全部收官，被称为“基金专业买手”的FOF基金操作路线也浮出水面。澎湃新闻记者据Wind数据统计，从持仓市值维度看，在主动权益基金（包括普通股票型基金、偏股混合型基金、平衡混合型基金、灵活配置型基金）中，由杨宗昌管理的易方达供给改革位居榜首，共计获得27只FOF持有，持仓市值达8.09亿元，三季度获增持超420万份；何一铖管理的易方达新常态A以4.30亿元的持仓市值位列第二，持有基金数为12只；郑希管理的易方达信息行业精选C以3.76亿元持仓市值紧随其后。持仓市值排名第四至第十位的基金则依次为易方达智造优势C、易方达瑞通C、易方达产业升级C、易方达瑞信E、兴全多维价值A、泰康恒泰回报C以及华夏创新前沿A。根据…</description>
+<link>https://m.thepaper.cn/newsDetail_forward_34361158</link>
+<pubDate>Thu, 29 Oct 2026 14:00:41 +0000</pubDate>
+<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34361158|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
+</item>
+<item>
+<title>These Patients Struggle With Runaway Bones. Finally There’s Hope.</title>
+<description>It was Jordyn Bugarin’s grandmother who first suspected what was wrong. In a television documentary that aired in the summer of 2006, she watched as a child showed off a shortened, misshapen big toe just like Jordyn’s. According to the narrator, this was one of the early signs of fibrodysplasia ossificans progressiva, or F.O.P., a rare genetic disorder that slowly turns muscle, tendons and connective tissue into bone. To the woman watching, it was a revelation: “That’s what Jordyn has,” she told her family. The mutated gene that causes F.O.P. was discovered only 20 years ago, and until…</description>
+<link>https://www.nytimes.com/2026/10/29/science/fop-bones-drugs.html</link>
+<pubDate>Thu, 29 Oct 2026 14:00:06 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/science/fop-bones-drugs.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+</item>
+<item>
+<title>睡前刷手机容易失眠？实在睡不着，推荐一个助眠方法→</title>
+<description>结束一天的忙碌，不少人回到家就窝在沙发上刷手机，结果一抬眼已近23点。2024年一项调查显示，超八成受访者有睡前刷手机的习惯，即便困意袭来，仍会继续刷下去。把睡前时光默认为“补偿式”娱乐时间，这种想法十分普遍，但这段时间恰恰又是一天中最不该“随便过”的。因为睡前3小时过得好不好，直接决定第二天是神清气爽还是昏昏沉沉。0119点，身体开始“换挡”不少人以为，睡眠是从躺上床那一刻才开始的事，但睡眠不是一个“开关动作”，而是循序渐进的过程。北京大学第六医院睡眠医学中心副主任范滕滕告诉记者，睡前行为本身就是睡眠的一部分，19~22点这3小时可看作“准备期”。北京大学人民医院睡眠医学科副主任、主任医师董霄松补充道，睡…</description>
+<link>https://www.peopleapp.com/column/30053449105-500007763367</link>
+<pubDate>Thu, 29 Oct 2026 21:59:34 +0800</pubDate>
+<guid isPermaLink="false">https://www.peopleapp.com/column/30053449105-500007763367|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
+</item>
+<item>
+<title>中国开源模型被“打回原形”了吗</title>
+<description>本文来自微信公众号： 未尽研究 ，作者：未尽研究中国开源模型与美国前沿AI之间的差距，正被重新评估。在Artificial Analysis将衡量AI模型综合能力的智能指数（Intelligence Index）升级到v5版后，国产模型排名集体大幅下滑，似乎一夜之间，差距被拉开了数个身位。现在，排名靠前的几乎都是美国的前沿闭源模型，遥遥领先于中国开源模型。Kimi K3.1 Pro虽然进入前十，但尚未开放权重；Qwen3.8 Max排名第13，同样如此。真正已经开放权重的现役国产模型中，DeepSeek V4.1 Flash 1017与GLM 5.3分别排名第14和第15，得分均低于Anthropic入门款的Claude Haiku 5.5。这与此前的排名大相径庭。就在几天前，Kimi K3.1 Pro还仅次于Claude Opus 5.5、Claud…</description>
+<link>https://m.huxiu.com/article/4901530.html?type=text</link>
+<pubDate>Thu, 29 Oct 2026 21:59:00 +0800</pubDate>
+<guid isPermaLink="false">https://m.huxiu.com/article/4901530.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
+</item>
+<item>
+<title>举重世锦赛女子53公斤级 张海琴获抓举总成绩双金</title>
+<description>10月29日，在宁波举行的2026举重世锦赛女子53公斤级比赛中，中国选手张海琴以抓举98公斤和总成绩221公斤收获两枚金牌，挺举以123公斤获得银牌。在B组参赛的朝鲜选手金笑炫率先举起123公斤，获得挺举金牌。</description>
+<link>https://www.peopleapp.com/column/30053449145-500007763369</link>
+<pubDate>Thu, 29 Oct 2026 21:56:15 +0800</pubDate>
+<guid isPermaLink="false">https://www.peopleapp.com/column/30053449145-500007763369|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
+</item>
+<item>
+<title>微软AI基础设施支出低于华尔街预期65亿美元 数据中心建设延迟才是主因</title>
+<description>根据微软公布的数据，在截至2026年9月的季度中，公司资本支出达到452亿美元，其中包括融资租赁相关支出，低于分析师预期的517亿美元，差额约为65亿美元。尽管未达到市场预期，但与去年同期相比，微软本季度资本支出仍增长约30%，反映出人工智能基础设施建设依然需要投入巨额资金。微软同时下调了2026年全年资本支出预测，将此前预计的1750亿美元调整至1700亿美元。不过，这一调整并不代表公司改变了大规模投资人工智能的战略方向。微软首席财务官艾米·胡德表示，部分第三方供应商未能按时交付所需的数据中心容量，导致相关支出推迟。微软预计，这些设施将在公司财年下半年陆续投入使用。随着项目建设推进，资本支出预计将重新加速增长，而内存…</description>
+<link>https://www.cnbeta.com.tw/articles/tech/1584326.htm</link>
+<pubDate>Thu, 29 Oct 2026 21:52:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/tech/1584326.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
+</item>
+<item>
+<title>美国员工工作热情持续下滑 AI与远程办公成最新争议焦点</title>
+<description>调查数据显示，仅有不到三分之一的美国员工表示自己在工作中保持积极投入状态，这一比例较此前进一步下降。与此同时，认为自己“积极脱离工作状态”或对工作缺乏兴趣的员工数量出现增长，表明越来越多劳动者在心理层面与工作产生疏离感。人工智能成为影响职场情绪的重要因素之一。随着各行业加速部署AI工具，不少员工担忧自动化将改变现有岗位结构，甚至威胁长期就业前景。调查发现，相较于将AI视为提升效率工具的员工，对AI抱有焦虑情绪的人群往往更容易产生职业不安全感，并降低对工作的投入程度。远程办公则呈现出复杂影响。一方面，灵活办公模式仍受到大量员工欢迎，有助于改善工作与生活平衡；另一方面，企业持续推动返岗办公政策，也引发…</description>
+<link>https://www.cnbeta.com.tw/articles/tech/1584324.htm</link>
+<pubDate>Thu, 29 Oct 2026 21:51:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/tech/1584324.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
+</item>
+<item>
+<title>全球OLED笔记本电脑出货量预计2027年增长超40%</title>
+<description>苹果新款MacBook Pro搭载名为PROLED XDR的显示屏，成为MacBook产品线中首款采用串联式OLED触控屏的机型。这一变化标志着苹果笔记本电脑显示技术的重要转折，也有望推动高端笔记本电脑市场加快向OLED技术转型。TrendForce预计，该款新机2027年的出货量将达到120万至150万台。不过，新款MacBook Pro的市场表现仍存在一定的不确定性。14英寸机型起售价高达2899美元，加上新款产品初期将与现有Mini-LED版本并行销售，可能限制消费者短期内的换机需求。尽管如此，此次产品更新进一步强化了苹果在高端市场的定位，也体现出其试图通过不同价格区间的产品布局扩大市场覆盖面的战略。在苹果进入这一市场之前，全球OLED笔记本电脑市场主要由联想、惠普和…</description>
+<link>https://www.cnbeta.com.tw/articles/tech/1584322.htm</link>
+<pubDate>Thu, 29 Oct 2026 21:50:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/tech/1584322.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
+</item>
+<item>
+<title>消息指又一美军将领遭革职 伊朗警告新袭击将对国际市场造成毁灭性冲击</title>
+<description>伊朗外长阿拉格齐星期三（10月28日）警告，任何由以色列挑起、在波斯湾地区展开的新一轮袭击，都可能对国际市场造成毁灭性冲击。（路透社） （华盛顿／德黑兰综合电）美国媒体《大西洋月刊》周三（10月28日）引述五角大楼官员说，美国将最高军事规划官员革职。在美国总统特朗普可能再次对伊朗发动大规模军事打击的时刻，此次人事变动令人感到意外。 官员透露，参谋长联席会议的战略、计划与政策主管陆军中将西尔维亚本周被革职。报道说，西尔维亚离职的原因不明，军方也没有公布接替人选。 自美国总统特朗普去年上任以来，军方高层出现频繁的人事变动，西尔维亚是最新被革职的军事将领。战争部长赫格塞斯上月说，美国已把将军的人数削减了两成…</description>
+<link>https://www.zaobao.com/news/world/story20261029-9917355</link>
+<pubDate>Thu, 29 Oct 2026 13:49:35 +0000</pubDate>
+<guid isPermaLink="false">https://www.zaobao.com/news/world/story20261029-9917355|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
 </item>
 <item>
 <title>Netanyahu&#x27;s bloc leading Israel election but short of majority, partial results show</title>
@@ -102,28 +502,20 @@
 <source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
-<title>Hong Kong housing chief quits over Tai Po fire, accepts political responsibility</title>
-<description>Winnie Ho says she hopes the ‘deceased may rest in peace, and that their families find peace to move forward and recover from their grief soon’. Winnie Ho says it has been a &quot;profound honour and a lifelong privilege to serve Hong Kong&quot;. Photo: Dickson Lee Hong Kong’s housing chief has resigned to take political responsibility for the devastating fire at Wang Fuk Court, offering condolences to the families of the victims and expressing hope that those who perished may rest in peace. Winnie Ho Wing-yin said on Thursday that she submitted her resignation to Chief Executive John Lee Ka-chiu t…</description>
-<link>https://www.scmp.com/news/hong-kong/society/article/3372620/hong-kong-housing-chief-quits-over-tai-po-fire-accepts-political-responsibility</link>
-<pubDate>Thu, 29 Oct 2026 13:45:18 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/news/hong-kong/society/article/3372620/hong-kong-housing-chief-quits-over-tai-po-fire-accepts-political-responsibility|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+<title>Rock collapse kills two in Turkey&#x27;s Cappadocia, local media reports</title>
+<description>Cappadocia: Rock collapse kills two in Turkey&#x27;s Cappadocia, local media reports One of the regions famous rock formations, known as &quot;fairy chimneys&quot;, reportedly collapsed outside an open-air museum. By Jaroslav Lukiv Published: 2026-10-29T13:44:39Z Cappadocia: Rock collapse kills two in Turkey&#x27;s Cappadocia, local media reports At least two people have been killed after a rock formation collapsed at a tourist site in Turkey&#x27;s historical region of Cappadocia, local media is reporting. One of the formations, known as &quot;fairy chimneys&quot;, reportedly collapsed at the popular Göreme Open Air Museum.…</description>
+<link>https://www.bbc.com/news/articles/cknv08nvzld4o</link>
+<pubDate>Thu, 29 Oct 2026 13:44:39 +0000</pubDate>
+<guid isPermaLink="false">https://www.bbc.com/news/articles/cknv08nvzld4o|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
-<title>Hong Kong to set up new body to oversee building renovations in regulatory overhaul</title>
-<description>New council will assign inspection consultants to property owners, handle tendering and evaluate performance as part of reforms following Tai Po blaze. Bamboo scaffolding and protective netting envelope older residential blocks undergoing repair work in Mong Kok. Photo: Silvia Siu Hong Kong will establish a dedicated body to oversee building renovations as part of a wide-ranging overhaul that includes restructuring the Buildings Department and tightening regulation of contractors. The move was revealed on Thursday as Chief Executive John Lee Ka-chiu and his ministers offered a formal apology…</description>
-<link>https://www.scmp.com/news/hong-kong/society/article/3372619/hong-kong-set-new-body-oversee-building-renovations-regulatory-overhaul</link>
-<pubDate>Thu, 29 Oct 2026 13:41:47 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/news/hong-kong/society/article/3372619/hong-kong-set-new-body-oversee-building-renovations-regulatory-overhaul|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
-</item>
-<item>
-<title>中国能建：第三季度归母净利润3.37亿元，同比下降4.88%</title>
-<description>中国能建10月29日公告，2026年第三季度实现营业收入1009.25亿元，同比下降9.45%；归母净利润3.37亿元，同比下降4.88%；基本每股收益0.01元。前三季度实现营业收入3092.37亿元，同比下降4.42%；归母净利润26.16亿元，同比下降17.13%；基本每股收益0.06元。</description>
-<link>https://www.jiemian.com/article/15266305.html</link>
-<pubDate>Thu, 29 Oct 2026 21:39:43 +0800</pubDate>
-<guid isPermaLink="false">https://www.jiemian.com/article/15266305.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
+<title>国立健保集团三家医院11月起延长探病时间</title>
+<description>From Nov 1, Tan Tock Seng Hospital, Khoo Teck Puat Hospital and Yishun Community Hospital under the National Healthcare Group will extend visiting hours, standardising them at 10am to 9pm daily, including weekends and public holidays, to give the public more time to visit hospitalised family members and friends.At Tan Tock Seng Hospital and its integrated care hub, daily visiting hours will be increased from eight hours to 11 hours. At Khoo Teck Puat Hospital and seven designated wards in Yishun Community Hospital, visiting hours will be extended from five hours to 11 hours. National Healthc…</description>
+<link>https://www.8world.com/singapore/nhg-hospitals-visiting-hours-extended-november-3324591</link>
+<pubDate>Thu, 29 Oct 2026 13:42:22 GMT</pubDate>
+<guid isPermaLink="false">https://www.8world.com/singapore/nhg-hospitals-visiting-hours-extended-november-3324591|https://rsshub.rss.tips/8world/news</guid>
+<source url="https://rsshub.rss.tips/8world/news">8world</source>
 </item>
 <item>
 <title>谷歌财报重挫市场信心，纳指低开跌1.35%，Alphabet跌幅扩大至13.7%，创历史最大跌幅</title>
@@ -134,44 +526,20 @@
 <source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
-<title>人民日报社论：把我们党建设得更好、更强</title>
-<description>新华社北京10月29日消息，10月30日出版的《人民日报》将刊发社论，题为《把我们党建设得更好、更强》。全文如下：10月26日至29日，中国共产党第二十届中央委员会第五次全体会议胜利举行。在全面建设社会主义现代化国家新征程上阔步前行，中国共产党人永葆赶考的清醒坚定，有力谱写马克思主义政党建设史册上又一光辉篇章。这次全会，是在中国共产党成立105周年重要节点、中华民族伟大复兴关键时期举行的一次十分重要的会议。全会听取和讨论了习近平总书记受中央政治局委托所作的工作报告，充分肯定党的二十届四中全会以来党和国家事业取得新进展新成效。全会深刻总结新时代全面从严治党伟大成就和宝贵经验，审议通过了《中共中央关于持之以恒推…</description>
-<link>https://m.thepaper.cn/newsDetail_forward_34361939</link>
-<pubDate>Thu, 29 Oct 2026 13:37:12 +0000</pubDate>
-<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34361939|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
+<title>称新加坡涉印尼股灾 社媒出现近400则不实帖文</title>
+<description>Nearly 400 false or unsubstantiated social media posts and videos have recently targeted Singapore, alleging that it orchestrated Indonesia’s stock market crash and that two prominent Indonesians secretly met Singapore’s ambassador. The content has amassed nearly 12 million views, with some accounts showing signs of coordinated posting.CNA Verify found that the posts circulated across multiple social media platforms from October 19 to 27. One suspected network comprised 68 similar-looking accounts that shared identical text and images, sometimes posting just seconds apart. However, investi…</description>
+<link>https://www.8world.com/singapore/indon-disinformation-campaigns-target-singapore-3324756</link>
+<pubDate>Thu, 29 Oct 2026 13:35:43 GMT</pubDate>
+<guid isPermaLink="false">https://www.8world.com/singapore/indon-disinformation-campaigns-target-singapore-3324756|https://rsshub.rss.tips/8world/news</guid>
+<source url="https://rsshub.rss.tips/8world/news">8world</source>
 </item>
 <item>
-<title>谷歌盘初大跌超13%，创其历史上最大单日跌幅，总市值蒸发5000亿美元</title>
-<description>10月29日消息，谷歌母公司Alphabet美股开盘大跌，现将跌幅扩大至13%，创其历史上最大单日跌幅，报283美元，市值较前一交易日收盘减少逾5000亿美元。</description>
-<link>https://www.jiemian.com/article/15266290.html</link>
-<pubDate>Thu, 29 Oct 2026 21:34:51 +0800</pubDate>
-<guid isPermaLink="false">https://www.jiemian.com/article/15266290.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
-</item>
-<item>
-<title>王石重回房地产？携万科旧将成立城市更新公司：“中国城市化依然充满机遇”</title>
-<description>淡出房地产赛道近十年后，75岁的万科创始人王石选择重返，布局城市更新赛道。近日，由王石担任董事长的深圳深石城市更新有限公司（下称“深石城市更新”）通过微信公众号连续发文，披露公司成立背景、发展方向。市场将其视作王石布局城市更新赛道的最新动作。 点击加载图片 工商信息显示，2026年9月28日，深石城市更新完成工商注册，注册资本1500万元，注册地位于深圳市盐田区梅沙街道，法定代表人为杜吉良。股权结构显示，该公司由深石管理咨询（深圳）有限公司、上海都心商业管理有限公司、江西华申产城企业管理有限公司、苏州博信新投资发展有限公司、宁波绿创企业发展有限公司各持20%股份。其中，深石管理咨询由王石持股99.9375%。随后，“…</description>
-<link>https://m.thepaper.cn/newsDetail_forward_34361355</link>
-<pubDate>Thu, 29 Oct 2026 13:33:26 +0000</pubDate>
-<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34361355|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
-</item>
-<item>
-<title>美股三大指数集体低开，谷歌跌逾11%、市值蒸发超4000亿美元</title>
-<description>美股三大指数集体低开，道琼斯指数跌0.65%，标普500指数跌0.53%，纳斯达克综合指数跌1.32%。谷歌跌逾11%，市值蒸发超4000亿美元；微软涨超1%，飞塔信息跌超26%，ServiceNow跌超18%，卡特彼勒跌超11%；礼来、eBay涨超3%，以上公司均公布财报。Lumentum涨超3%，迈威尔科技跌超11%；迈威尔科技据悉正就收购光学器件制造商Lumentum进行深入谈判。</description>
-<link>https://www.jiemian.com/article/15266273.html</link>
-<pubDate>Thu, 29 Oct 2026 21:31:51 +0800</pubDate>
-<guid isPermaLink="false">https://www.jiemian.com/article/15266273.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
-</item>
-<item>
-<title>谷歌云步步紧逼Azure，但微软赢得投资者青睐</title>
-<description>专题：聚焦美股2026年第三季度财报 谷歌首席执行官桑达尔・皮查伊与微软首席执行官萨提亚・纳德拉 微软与谷歌于周三发布财报，释放出大量值得解读的信息，两家分别是云计算行业的第二、第三名企业。但最值得关注的核心结论是：得益于自研张量处理单元（TPU）AI 芯片的销售，谷歌云部门的营收如今已经和微软 Azure 的营收咫尺之遥。回想不久之前，谷歌还只是云计算赛道的陪跑者，这样的进展着实令人惊叹。 不过我们先把这件事放一放。谷歌云业务第三季度的增长十分亮眼，却被其他不及华尔街分析师预期的财务数据掩盖光芒，尤其是搜索广告营收增长疲软。谷歌盘后股价大跌近 10%。反观微软，它的增长表现更受投资者认可，盘后股价上涨约 3%（微软…</description>
-<link>https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekt5159088.shtml</link>
-<pubDate>Thu, 29 Oct 2026 13:29:54 GMT</pubDate>
-<guid isPermaLink="false">https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekt5159088.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
-<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
+<title>“大衣哥”朱之文遭黑粉有组织举报，商家邀其演出后店铺出现大量差评</title>
+<description>10月27日，农民歌手“大衣哥”朱之文的经纪人接受看看新闻Knews记者采访时表示，曾有商家计划邀请朱之文演出，却因接连遭到投诉而承受巨大压力。有人曾向主办方放话，若邀请朱之文演出，就要让店铺经营不下去。经纪人称，此后店铺频繁遭遇多部门检查，短视频平台上也出现大量负面评论，线上订单受到影响。商家曾向他诉苦，自己夜里抽烟、难以入睡，甚至产生过轻生的念头。最终，商家因承受不住压力，取消了原定演出。“大衣哥”朱之文告诉看看新闻Knews记者，近一个月来，其已敲定的15场商演因有组织的举报和现场威胁而接连取消。这些黑粉建立了4个群组，成员规模在百人以上，专门紧盯他的行程，“朱志文几月几号在哪演出、当地文部部门电话…</description>
+<link>https://news.ifeng.com/c/8xcpEVwRr8u</link>
+<pubDate>Thu, 29 Oct 2026 13:30:41 GMT</pubDate>
+<guid isPermaLink="false">https://news.ifeng.com/c/8xcpEVwRr8u|https://rsshub.rss.tips/ifeng/news</guid>
+<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
 <title>人权专员：乌克兰可能会通过立法禁止用俄语唱歌</title>
@@ -198,92 +566,20 @@
 <source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
 </item>
 <item>
-<title>迈威尔据悉接近收购Lumentum，交易规模或达数百亿美元，双方股价走势分化</title>
-<description>10月29日，有消息称，芯片制造商迈威尔科技（Marvell Technology）正就收购光通信设备供应商Lumentum展开深入谈判，交易最快可能于下周敲定。受消息推动，Lumentum股价盘前上涨超过6%，而迈威尔股价下跌超过12%。目前，Lumentum市值约为830亿美元，迈威尔市值约为2210亿美元。如果最终达成全面收购协议，这笔交易有望跻身科技和电信行业历史上规模最大的十宗并购交易之列。 收购瞄准AI数据中心光通信需求，Lumentum部分产品订单已排至2029年 此次潜在收购的主要动力来自AI数据中心对高速光通信设备的需求激增。随着AI计算集群规模不断扩大，传统铜缆连接逐渐难以满足数据传输速度、功耗及传输距离等要求，光通信技术的重要性持续提升。 Lumentu…</description>
-<link>https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekn5948791.shtml</link>
-<pubDate>Thu, 29 Oct 2026 13:28:18 GMT</pubDate>
-<guid isPermaLink="false">https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwxekn5948791.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
-<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
+<title>历史性时刻，国考降温，7年来首次回落</title>
+<description>331万，这是2027年国考总报名人数。对比去年同期，这个数字少了近20万。截至10月24日16时，共有超过302万人通过资格审核。这是国考过审人数自2019年连续7年上涨之后，第一次掉头回落。也正因如此，导致现在的舆论里，“考公降温”的说法开始流传。但我们必须知道的是，降温不等于竞争消失，目前招录名额依旧稀缺，国考整体竞争水位仍处在高位，上岸难度没有明显降低。尽管国考难度依旧很高，但这一轮人数回落，也代表着考生报考心态走向理性的信号。并且，报名人数掉头向下，背后也有着多重力量共同作用。首先，今年考生报考更理性了，不再选择盲目跟风。当前岗位招录条件设计更精准，专业、学历、基层经历等门槛，和岗位需求匹配度要求更高了…</description>
+<link>https://news.ifeng.com/c/8xcpNgZFOHP</link>
+<pubDate>Thu, 29 Oct 2026 13:25:00 GMT</pubDate>
+<guid isPermaLink="false">https://news.ifeng.com/c/8xcpNgZFOHP|https://rsshub.rss.tips/ifeng/news</guid>
+<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
-<title>月薪最高8万元，FDE为何如此抢手？</title>
-<description>“不想谈FDE了。”2026年云栖大会的媒体群访环节，阿里云智能集团副总裁霍嘉的一句感慨，折射出这个岗位的热度与争议。 短短一年间，FDE成为AI行业招聘市场上的热门岗位。美国《商业内幕》援引Indeed数据称，2026年4月，FDE相关招聘需求同比增长约729%。然而，在工程师越来越抢手的另一面，企业究竟该为这种服务付多少钱，仍然没有统一答案。 “FDE到底怎么定价，至今没有形成公认的定价体系。”一位国企AI专项负责人张华（化名）告诉《IT时报》记者。与传统软件外包不同，这种被称为前线部署工程师（Forward Deployed Engineer）的角色，不只是把软件交付给客户，还要走进业务现场，参与需求判断、开发、上线和效果验证。 AI越来越擅长写代码…</description>
-<link>https://www.36kr.com/p/4046888827894272</link>
-<pubDate>Thu, 29 Oct 2026 21:27:34 +0800</pubDate>
-<guid isPermaLink="false">https://www.36kr.com/p/4046888827894272|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
-</item>
-<item>
-<title>中国建设银行伊春分行被罚1万元：违反支付结算管理相关规定</title>
-<description>10月28日金融一线消息，据中国人民银行伊春市分行行政处罚决定信息公示表显示，中国建设银行股份有限公司伊春分行因违反支付结算管理相关规定，被中国人民银行伊春市分行警告、并处罚款1万元。 .appendQr_wrap{border:1px solid #E6E6E6;padding:8px;} .appendQr_normal{float:left;} .appendQr_normal img{width:100px;} .appendQr_normal_txt{float:left;font-size:20px;line-height:100px;padding-left:20px;color:#333;} 责任编辑：黄诗涵</description>
-<link>https://finance.sina.com.cn/jryx/bank/2026-10-29/doc-iniwxekr8706724.shtml</link>
-<pubDate>Thu, 29 Oct 2026 13:26:45 GMT</pubDate>
-<guid isPermaLink="false">https://finance.sina.com.cn/jryx/bank/2026-10-29/doc-iniwxekr8706724.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
-<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
-</item>
-<item>
-<title>Philippine police obtain warrant to search Thomas Markle&#x27;s devices</title>
-<description>Images of child sexual abuse allegedly belonging to Meghan Markle&#x27;s father had reportedly been found in his former home in the Philippines. By Jonathan Head Published: 2026-10-29T13:25:07Z Philippine police obtain warrant to search Thomas Markle&#x27;s devices Philippine police have obtained a warrant to examine devices seized from the former home of Thomas Markle, father of the Duchess of Sussex. Earlier this month, it was reported that hundreds of images of child sexual abuse allegedly belonging to Thomas Markle Sr., 82, had been found at the property in the Philippines. Four boxes of material…</description>
-<link>https://www.bbc.com/news/articles/cm0j06y3pn75o</link>
-<pubDate>Thu, 29 Oct 2026 13:25:07 +0000</pubDate>
-<guid isPermaLink="false">https://www.bbc.com/news/articles/cm0j06y3pn75o|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
-</item>
-<item>
-<title>美元强、人民币更强，十年“跷跷板”为何失灵？</title>
-<description>10月29日，人民对兑美元中间价报6.7147，较前一日上调18个点，再次更新年内高点。部分原因是深夜两点美联储宣布暂不加息的决定，美元指数随即小幅下跌。 实际上，这轮人民币汇率升值可以追溯至2025年5月，上涨的决定性因素却和过去十年截然不同。尤其是今年以来，人民对兑美元中间价几乎日日刷新高，与之相伴的却是强劲的美元走势与持续走阔的中美负利差。 十年“跷跷板”失灵 美国联邦公开市场委员会10月28日会议声明，委员会决定将联邦基金利率目标区间维持在3.75%～4%，以支持美联储的双重使命，符合市场普遍预期。中金公司研报对此做出评价，尽管决策者抗通胀立场坚定，但也认为政策可以保持耐心。本轮加息更可能是一轮温和的、渐近性的调…</description>
-<link>https://www.yicai.com/news/103416051.html</link>
-<pubDate>Thu, 29 Oct 2026 13:23:55 GMT</pubDate>
-<guid isPermaLink="false">https://www.yicai.com/news/103416051.html|https://rsshub.rss.tips/yicai/news</guid>
-<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
-</item>
-<item>
-<title>一财社论：美联储货币政策锚定增长叙事</title>
-<description>28日美联储联邦公开市场委员会以10∶2的投票结果，将联邦基金利率维持在3.75%至4%的目标区间，会后声明将经济评价由“稳步”上调至“强劲”，并删除了加息有助于通胀及时回落的表述。 删除这一表述，反映美联储内部正逐渐形成三个共识：一是当前的通胀主要缘于地域冲突带来的能源供应冲击，具有短期特征；二是美联储决策正在转向经济增长叙事，倾向于认为当前AI技术变革，正在极大推动生产力的跃迁，而生产力的跃迁使经济内生价格稳压甚至产生通缩效应；三是美联储的前瞻指引作为一种预期管理，不仅没有为市场降噪，反而货币政策决策者的见解是对市场影响突出的一大噪声。 自美联储前主席格林斯潘卸任后，美联储掀起了二十余年的决策体系公开透…</description>
-<link>https://www.yicai.com/news/103416092.html</link>
-<pubDate>Thu, 29 Oct 2026 13:22:29 GMT</pubDate>
-<guid isPermaLink="false">https://www.yicai.com/news/103416092.html|https://rsshub.rss.tips/yicai/news</guid>
-<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
-</item>
-<item>
-<title>多地重大项目加快推进，基建投资增速有望年底回正</title>
-<description>冲刺全年经济目标，基建投资四季度仍将持续发力。 北京、陕西、湖南、安徽等地近期密集部署重大项目推进工作，加大民间投资支持力度，着力扩大有效投资，推动经济持续向新向优向好发展，努力完成全年经济社会发展目标任务。 截至10月28日，2026年8000亿元新型政策性金融工具全部完成投放，支持了一批重点领域项目建设，服务扩大有效投资。 此外，财政部近日安排使用地方政府债务结存限额5500亿元。其中安排专项债务结存限额2500亿元，分配给今年第四季度有实际项目资金需求的地区，并向经济大省倾斜，支持优先保障在建项目资金需求，新建项目聚焦“六张网”建设等重点领域，有效发挥政府投资带动作用。 今年前三季度，基础设施投资同比下降4.2%…</description>
-<link>https://www.yicai.com/news/103416093.html</link>
-<pubDate>Thu, 29 Oct 2026 13:22:20 GMT</pubDate>
-<guid isPermaLink="false">https://www.yicai.com/news/103416093.html|https://rsshub.rss.tips/yicai/news</guid>
-<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
-</item>
-<item>
-<title>吉晟生將成首家上櫃核醫藥廠 TLC新藥布局日本</title>
-<description>TLC-KY與日本臟器製藥29日舉行膝關節退化性關節炎新藥TLC599合作典禮，雙方將攜手推動在日本的開發與商業化。（TLC-KY提供）中央社記者何秀玲傳真 115年10月29日（中央社記者何秀玲台北29日電）台灣生技業者近期在資本市場及新藥海外布局各有進展，吉晟生通過上櫃申請，預計今年12月底掛牌，屆時將是國內首家上櫃核醫藥物專業研發製造公司；TLC-KY則攜手日本臟器製藥，推進新藥在日本開發與商業化。吉晟生今天透過新聞稿表示，公司成立於2011年，投入放射性診斷與治療藥物領域，以精準醫療及核醫新藥為發展主軸，為台灣首家設置迴旋加速器並通過PIC/S GMP認證的民營核醫藥廠，今年10月28日通過櫃買中心上櫃申請。吉晟生表示，目前已取得多項核…</description>
-<link>https://www.cna.com.tw/news/afe/202610290364.aspx</link>
-<pubDate>Thu, 29 Oct 2026 21:22:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cna.com.tw/news/afe/202610290364.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
-</item>
-<item>
-<title>嘉晶：火警影響區域占總產能低於10% 啟動備援機制</title>
-<description>（中央社記者張建中新竹29日電）磊晶廠嘉晶創新廠區28日局部區域發生火警，嘉晶今天表示，受影響的區域占總產能及產值比重低於10%，已啟動各廠區間的產能調度與備援機制，將客戶交期與營運影響降至最低。嘉晶今天針對位於新竹科學園區創新一路廠房局部火警事故進一步說明，指出這次受影響區域為公司5座生產廠區中的其中一座廠，這廠主要生產4吋、5吋及部分6吋、8吋產品，占整體總產值與總產能比重低於10%。嘉晶表示，經初步評估災情事故，主要影響為4吋、5吋磊晶產線，至於6吋、8吋磊晶設備受電力影響，機台復原時間推估約需1至2週。嘉晶指出，已啟動各廠區之間的產能調度與備援機制，將客戶交期與營運影響降至最低。預計復工後，產能較吃緊的6…</description>
-<link>https://www.cna.com.tw/news/afe/202610290365.aspx</link>
-<pubDate>Thu, 29 Oct 2026 21:22:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cna.com.tw/news/afe/202610290365.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
-</item>
-<item>
-<title>英國加強提升社會韌性 台灣經驗曾登上國會</title>
-<description>為提升社會韌性，英國政府近日啟動「準備好」（Be Ready）宣導計畫，罐頭食品是急難包建議儲備品之一，但目前未出現恐慌搶購行為或缺貨。中央社記者陳韻聿倫敦攝 115年10月29日（中央社記者陳韻聿倫敦29日專電）英國政府數年前即設置網站，提供指引，協助民眾為因應各種緊急狀態預作準備，近期考量國際安全局勢惡化、極端氣候等因素，更進一步加強推動提升社會韌性，而台灣經驗也曾引發英國國會興趣。今年4月，駐英國代表姚金祥應邀至英國國會的國家安全戰略聯席委員會，分享台灣建構全社會防衛韌性相關作為，期間曾向委員會出示有「小橘書」之稱的「台灣全民安全指引」。當時是台灣駐英最高階外交官罕見應邀赴國會答詢。姚金祥受邀作證，緣由…</description>
-<link>https://www.cna.com.tw/news/aopl/202610290363.aspx</link>
-<pubDate>Thu, 29 Oct 2026 21:17:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cna.com.tw/news/aopl/202610290363.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
-</item>
-<item>
-<title>K-drama Oh! My Guard: Jung Yong-hwa, Hong Seung-hee stumble in trifling fantasy romcom</title>
-<description>A wealthy agoraphobe’s dream to star in a drama with her favourite actor leads to predictable misunderstandings and clichés. Jung Yong-hwa in a still from Oh! My Guard, a new Korean drama now streaming on Viu. The lead cast also includes Hong Seung-hee, Lee Yi-kyung and Park Yoo-na. Lead cast: Jung Yong-hwa, Hong Seung-hee, Lee Yi-kyung, Park Yoo-na Jung Yong-hwa (Sell Your Haunted House) and Hong Seung-hee (To the Moon) headline Oh! My Guard, a frothy fantasy romantic comedy set in the entertainment world. The general rule with K-drama romcoms is that opposites attract, and at first this…</description>
-<link>https://www.scmp.com/lifestyle/k-drama/k-drama/article/3372570/k-drama-oh-my-guard-jung-yong-hwa-hong-seung-hee-stumble-trifling-fantasy-romcom</link>
-<pubDate>Thu, 29 Oct 2026 13:15:08 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/lifestyle/k-drama/k-drama/article/3372570/k-drama-oh-my-guard-jung-yong-hwa-hong-seung-hee-stumble-trifling-fantasy-romcom|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+<title>被指控干预以色列大选，卡塔尔嘲讽：显然我们拥有整个以色列</title>
+<description>卡塔尔外交部发言人10月29日发表声明，断然否认卡塔尔干预以色列选举、资助任何意在影响选举结果的活动的指控。卡塔尔外交部发言人在X上发声明声明称，卡塔尔拒绝以色列部分政客及其媒体关系人士提出的指控，称这些人在本周选举后发起了“又一轮虚假信息运动”，企图把卡塔尔拖入以色列国内政治纷争。“他们指控卡塔尔收买了内塔尼亚胡、以色列左翼，如今在这次最新的运动中，又说卡塔尔收买了阿拉伯选票。如果这些说法可信，那卡塔尔显然拥有整个以色列了。”声明说，这些指控“既荒谬又危险”。以色列竞选言论一再提及卡塔尔，暴露出以色列部分政界和媒体人士对卡塔尔“过度痴迷”。“卡塔尔不应成为某些以色列政客政治失败的替罪羊。与其转…</description>
+<link>https://original.ifeng.com/c/8xcnhuQURSd</link>
+<pubDate>Thu, 29 Oct 2026 13:16:46 GMT</pubDate>
+<guid isPermaLink="false">https://original.ifeng.com/c/8xcnhuQURSd|https://rsshub.rss.tips/ifeng/news</guid>
+<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
 <title>俄工业和贸易部长：俄罗斯准备在非洲设立汽车服务中心</title>
@@ -294,68 +590,12 @@
 <source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
 </item>
 <item>
-<title>指官員鞠躬「似做咗一場戲」 居民：何永賢辭職等同放生佢</title>
-<description>政府今日(29日)交代宏福苑火災獨立委員會調查報告舉行記者會，宏志閣居民阿花(化名)全程觀看直播。她坦言，政府官員「鞠躬一下，似做咗一場戲」，政府當為死者家屬作出交代，那一刻「有一秒的感動」。及後，她只覺憤怒，因全程到記者提問環節，當局未有向市民作出交代。至於災民善後處理，她批評政府在宏福大火後一、兩個月「安頓」災民後，政府就想盡快收購宏福苑業權。 對於何永賢一人承擔政治責任一事，阿花怒斥說「何永賢辭職等同放生佢」，認為因何今屆任期將至，即代表不需要承擔後果，是絕對不能接受！宏福苑火災發生的始末不是一人擔當處理。被問及何永賢請辭可領取長俸問題，當時李家超稱稍後再作交代，阿花卻認為應要停長俸作懲罰…</description>
-<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029211243529-1029_00822_001.html</link>
-<pubDate>Thu, 29 Oct 2026 13:12:43 GMT</pubDate>
-<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029211243529-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
-<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
-</item>
-<item>
 <title>星链限速罗生门带来的思考</title>
 <description>本文来自微信公众号： 太空与网络 ，作者：李刚星链限速罗生门带来的思考——商业航天的穿透式监管势在必行2026年10月，一场围绕星链服务被人为限速的争议，让全球商业航天在技术叙事之外看到了更复杂的问题，暴露出战略性空间信息基础设施更深层的治理争议。这场争议的特别之处在于技术现象很清楚，责任归属却无从落实。它不是一次偶然的服务故障，而是私营企业后台策略、政府非正式意图与军用资产运营边界三者交错之后产生的结构性模糊。对正处在组网关键期的中国商业航天而言，这是一次重要的提示，值得管理部门与企业认真对待。事件：一条“速度阈值”引发的地缘震荡风波起于10月13日前后。当时乌克兰军队反馈，搭载卫星通信终端的无人机…</description>
 <link>https://m.huxiu.com/article/4901523.html?type=text</link>
 <pubDate>Thu, 29 Oct 2026 21:10:33 +0800</pubDate>
 <guid isPermaLink="false">https://m.huxiu.com/article/4901523.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
-</item>
-<item>
-<title>被压价二十年的存储厂，借AI向苹果“复仇”</title>
-<description>闪存供应商与苹果之间长达二十年的不对等博弈，正在被人工智能浪潮悄然颠覆。曾经凭借巨额订单将供应商压至亏损边缘的苹果，如今不得不面对成本飙升的现实，而那些长期憋屈的存储厂商，终于迎来了属于自己的谈判筹码。 据TechInsights数据，过去一年，AI超大规模数据中心的需求推动闪存价格上涨五倍，每GB报价从约5美分升至逾30美分。微软、亚马逊、Meta等科技巨头今年已与铠侠（Kioxia）签署长期供货合同，以承诺较高价格换取稳定供应。 据《华尔街日报》估算，苹果今年将为闪存支出约250亿美元，而2025年购买同等规模存储仅花费约60亿美元。 苹果执行董事长Tim Cook将存储芯片价格的急剧攀升比作&quot;百年一遇的洪水&quot;，但据媒体援引知情人士透露…</description>
-<link>https://wallstreetcn.com/articles/3784758</link>
-<pubDate>Thu, 29 Oct 2026 21:09:29 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784758|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
-</item>
-<item>
-<title>美国三季度GDP年化增长3.4%，创一年新高，AI资本开支成核心驱动力</title>
-<description>美国经济三季度录得近一年最强增速，企业投资热潮——尤其是围绕人工智能的大规模资本支出——成为这一轮增长的核心引擎。 据美国经济分析局（BEA）周四发布的初步数据，美国三季度实际GDP年化季环比增长3.4%，超出彭博经济学家调查预期中值3.2%，并显著高于二季度2.2%的增速。 与此同时，三季度核心PCE物价指数年化季环比初值录得2.5%，低于前值3.3%，但略超预期2.4%。 美联储主席沃什周三在维持利率稳不变后表示&quot;经济增长已有所增强&quot;，并称消费支出和资本支出处于&quot;历史上较高水平的GDP占比&quot;，将当前状态定性为&quot;健康&quot;。 本次GDP报告是美国中期选举前最后一份重要经济健康检验，选举结果将决定国会两院的控制权归属，进而影响特朗普政府最后两…</description>
-<link>https://wallstreetcn.com/articles/3784782</link>
-<pubDate>Thu, 29 Oct 2026 21:06:03 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784782|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
-</item>
-<item>
-<title>短剧变局：字节跳动AI生意自闭环｜特稿精选</title>
-<description>封面报道｜90天颠覆影视 【编者按：10月27日晚间，红果短剧辟谣“红果短剧年化收入400亿元”“等传言；随后，字节跳动官方驳斥“中国互联网的字节时间”的说法，并称短剧、短视频这类产品“属于充分竞争行业，市场竞争激烈”，还指出“腾讯公司短剧、短视频增长速度，远远超过抖音和红果。” 然而，行业对于字节跳动在短剧生产领域已经形成从上游版权、视频生成模型制作、下游应用生态分发的闭环商业生态。数据调研机构QuestMobile测算，截至2026年6月，红果短剧月活用户3.68亿，还差2000万月活就能追平字节的AI助手豆包；与此同时，腾讯视频、爱奇艺、芒果TV、优酷四大长视频平台用户规模均已被红果超越。而在2025年，微短剧用户日均观看超2小…</description>
-<link>https://weekly.caixin.com/2026-05-30/102449305.html</link>
-<pubDate>Thu, 29 Oct 2026 21:05:26 +0800</pubDate>
-<guid isPermaLink="false">https://weekly.caixin.com/2026-05-30/102449305.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
-</item>
-<item>
-<title>內地院校改用數字人民幣出糧 業界料更多單位跟進</title>
-<description>江蘇省多所院校近日相繼發布通知，在職在編人員工資將逐步通過數字人民幣錢包發放。數據顯示截至上月末，已開展數字人民幣業務的地區累計總體交易43億筆，金額約31萬億元人民幣（約36.8萬億港元）。分析認為，趨勢上數字人民幣進入規模加速期，具便捷與安全的結構性優勢。 揚州大學文學院辦公室上周一（19日）發布通知，全校在編人員、人事代理人員需在本月開通數字人民幣錢包，自下月起工資將通過數字錢包發放。南通大學和江蘇師範大學亦相繼通知，將利用數字人民幣發放工資。據業內分析，此次江蘇大專院校數字人民幣試點部署帶有示範意義，未來隨着試點推進，或有更多省屬院校、事業單位跟進。 招聯首席經濟學家、上海金融與發展實驗室執行主…</description>
-<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029210525312-1029_00822_001.html</link>
-<pubDate>Thu, 29 Oct 2026 13:05:25 GMT</pubDate>
-<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029210525312-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
-<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
-</item>
-<item>
-<title>在泉州，连大桥也“戴上了簪花”</title>
-<description>在泉州走路，不要一直低头，要记得抬头看花。近日泉州，后渚大桥下海丝谷，连大桥也“戴上了簪花”，站在桥下，宛如一条盛开银河。</description>
-<link>https://www.peopleapp.com/column/30053448938-500007763357</link>
-<pubDate>Thu, 29 Oct 2026 21:04:49 +0800</pubDate>
-<guid isPermaLink="false">https://www.peopleapp.com/column/30053448938-500007763357|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
-</item>
-<item>
-<title>季候风减弱降雨增多 烟霾未来两周有望好转</title>
-<description>随着西南季候风的减弱，再加上新加坡与周边地区料降雨，本地下来烟霾情况有望好转。（档案照片） 随着西南季候风减弱，再加上新加坡与周边地区料迎降雨，本地未来两周的烟霾情况有望好转。 国家环境局星期四（10月29日）傍晚发文告指出，新加坡及周边地区正逐渐进入季风间歇期，风力微弱且风向多变，阵雨增多，雷电也加剧。 随着新加坡周边地区风势减弱且多变，林火烟霾较不会吹向新加坡。加上新加坡与周边地区雨天更频密，新加坡的烟霾状况接下来料会好转。 下个月的首两周，全岛部分地区几乎每日下午估计都将出现阵雨，雨势中度到强度。其中几天，阵雨或会持续至傍晚时分。其间，大部分地区的累计降雨量也将略高于长期平均值。 白天最高气温…</description>
-<link>https://www.zaobao.com/news/singapore/story20261029-9916981</link>
-<pubDate>Thu, 29 Oct 2026 13:04:39 +0000</pubDate>
-<guid isPermaLink="false">https://www.zaobao.com/news/singapore/story20261029-9916981|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
 </item>
 <item>
 <title>俄人权事务代表：为阿廖什基居民筹集的数十吨人道主义援助物资正在运送途中</title>
@@ -366,60 +606,12 @@
 <source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
 </item>
 <item>
-<title>败了就跑，什么操作？</title>
-<description>当地时间10月25日晚，巴西大选结果出炉：现任总统卢拉战胜自由党候选人弗拉维奥·博索纳罗（下称“小博索纳罗”），赢得连任。80岁的卢拉从首轮落后到二轮逆转，实现巴西媒体口中的“历史性逆转”。但比大选结果更有戏剧性的，是小博索纳罗接下来的表演——败选后不到48小时，他无视巴西最高法院要求上交护照、禁止离境的命令，辗转飞往美国。美国国务院确认，将向小博索纳罗及家属发放签证，网友则将他的名字Flavio改成Flyvio，调侃其“起飞”的速度。（来源：新华国际头条）一先梳理一下时间线——10月26日，巴西联邦最高法院裁定，小博索纳罗涉嫌腐败及洗钱、非法跨境资金转移等问题，责令其24小时内上交护照。面对镜头，小博索纳罗说：“我…</description>
-<link>https://www.peopleapp.com/column/30053449030-500007763362</link>
-<pubDate>Thu, 29 Oct 2026 21:01:41 +0800</pubDate>
-<guid isPermaLink="false">https://www.peopleapp.com/column/30053449030-500007763362|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
-</item>
-<item>
-<title>After Reinventing Mathematics, Can A.I. Eradicate Computer Bugs?</title>
-<description>In September, OpenAI announced that its new artificial intelligence technology needed less than a week to solve the Navier-Stokes problem, a mathematical puzzle that bedeviled the world’s smartest humans for decades. In the weeks that followed, the company released a deluge of additional findings that stunned leading mathematicians and raised new questions about the future of an academic field that has long been viewed as the pinnacle of human achievement. But the implications of A.I.’s newfound mathematical skills extend well beyond academic research. Using similar techniques, Silicon Val…</description>
-<link>https://www.nytimes.com/2026/10/29/science/ai-eradicate-computer-bugs.html</link>
-<pubDate>Thu, 29 Oct 2026 13:00:10 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/science/ai-eradicate-computer-bugs.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
-</item>
-<item>
-<title>“养老贷”再惹议 贷款缴社保划算吗？｜社保算账(含视频)</title>
-<description>【财新网】2025年夏天，湖北省荆门市农商银行曾推出一款“社银贷”产品，试图以银行信用贷款帮助参保人缴纳社保。时隔一年多，相关介绍文章近日再次引发热议。 网络流传的湖北省人社厅及《中国社会保障杂志》等文章介绍，该产品专为缴费能力不足的参保群众量身定制，无需抵押担保，凭借个人信用即可申请，提供低利率普惠贷款，“既解决了灵活就业人员社保缴费难题，又为银行机构拓展生意，实现‘社保增信、银行获客、群众受益’三方共赢。” 但舆论却有不同看法。一些人赞同称，灵活就业人员收入不稳定，“贷款缴社保”确实有助于其参保。但也有质疑，“没钱交社保，哪有钱还贷？” 目前，荆门市人社局、湖北省人社厅官网及《中国社会保障杂志…</description>
-<link>https://www.caixin.com/2026-10-29/102498240.html</link>
-<pubDate>Thu, 29 Oct 2026 21:00:07 +0800</pubDate>
-<guid isPermaLink="false">https://www.caixin.com/2026-10-29/102498240.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
-</item>
-<item>
-<title>智元上半年营收近20亿元 回应“AI击穿具身智能”</title>
-<description>【财新网】宇树上市后首份财报发布第二天，智元也披露营收数据。10月29日，在上海举行的2026智元创新日上，智元联合创始人、总裁兼 CTO 彭志辉称，2026年上半年，智元机器人出货量达9700台，收入接近20亿元；截至9月，智元已累计下线机器人2万台。 10月28日晚间，宇树科技（688836.SH）发布财报，2026年前三季度累计营收为18.17亿元，三季度营收同比上涨69.93%至6.65亿元，利润总额同比下降27.78%至1.12亿元。（详见财新网《宇树发布上市后首份财报 营收增速放缓、利润下降》） 10月29日收盘，宇树报662.39元/股，跌4.82%，总市值近2679亿元。 智元曾在7月向财新确认，已经开启港股上市进程。但近期人形机器人上市的监管形势整体收紧，多名金融…</description>
-<link>https://www.caixin.com/2026-10-29/102498620.html</link>
-<pubDate>Thu, 29 Oct 2026 21:00:07 +0800</pubDate>
-<guid isPermaLink="false">https://www.caixin.com/2026-10-29/102498620.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
-</item>
-<item>
-<title>逾8200公众参与交通总蓝图咨询 盼出行更便捷舒适</title>
-<description>文化、社区及青年部兼交通部政务部长马炎庆星期四（10月29日）在陆路交通管理局举办的愿景工作坊上，为更新版陆路交通总蓝图的新标志揭幕。（梁麒麟摄） 自去年11月为检讨陆路交通总蓝图启动公众咨询以来，陆路交通管理局已通过多种平台接触超过8200名公众。参与者期盼有更多出行选择、更适合步行的城市环境，以及更舒适便捷的公共交通体验。 陆交局星期四（10月29日）举办愿景工作坊，为这一轮公众咨询活动收尾。文化、社区及青年部兼交通部政务部长马炎庆也在现场为更新版陆路交通总蓝图的标志揭幕。 新标志的设计灵感源自新加坡人的日常出行，以三种颜色和形态各异的线条，代表步行、骑行及公共交通，共同勾勒出新加坡地图的轮廓，象征不同…</description>
-<link>https://www.zaobao.com/news/singapore/story20261029-9914609</link>
-<pubDate>Thu, 29 Oct 2026 13:00:00 +0000</pubDate>
-<guid isPermaLink="false">https://www.zaobao.com/news/singapore/story20261029-9914609|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
-</item>
-<item>
 <title>从不穿内衣到抢穿睡衣，女性开始不再关注曲线？</title>
 <description>近期，排队九小时，八万人预约，一个主打奶钱风的女装品牌非常火爆。 此品牌服装在面料上追求极致的软糯和垂坠感，使衣服几乎没有廓形和骨架，再加上卡通图案的密集排列，很多人上身的第一反应是：这不是睡衣吗？ 其实，现象背后呈现的是某种流行趋势——近年来，一些不刻意雕刻曲线的服装类型，正成为许多女孩的新宠。 从不穿内衣到抢穿睡衣 据探店观察，该服饰产品多采用长绒棉、氨纶、羊毛等，摸起来比较有质感，看起来也软乎乎的。同时，在视觉呈现上，大量使用奶油配色，密集排列小熊、蝴蝶结等卡通、可爱元素，把衣服包装得软萌无骨，给人以强烈的亲和力。价格方面，一件小熊头短裤售价255元、一条纯白色蕾丝短袖长裙标价589元。 市场上…</description>
 <link>https://www.infzm.com/contents/342802</link>
 <pubDate>Thu, 29 Oct 2026 21:00:00 +0800</pubDate>
 <guid isPermaLink="false">https://www.infzm.com/contents/342802|https://feed.quanwenrss.com/feed/nfzm-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
-</item>
-<item>
-<title>今年台风为什么这么多？厄尔尼诺是“头号推手”</title>
-<description>台风“蔷琵”刚给华东带来两天风雨，第31号台风“烟花”又在西北太平洋生成，截至29日上午5时仍是超强台风级别。目前，“烟花”对我国海区无影响，但不少人想问：今年台风是不是有点多？答案是：确实多，厄尔尼诺是首要推手。今年台风确实“超额”了今年台风数量激增，根源在于海洋与大气环流的异常共振，而首要推手，就是厄尔尼诺事件。截至目前，今年西北太平洋和南海已有31个台风生成，与2013年并列成为21世纪以来编号台风最多年份，而考虑到11~12月理论上还会有台风生成，这个纪录还有打破的可能。在中国气象局10月新闻发布会上，国家气象中心副主任黄卓介绍，9号台风“巴威”、13号台风“白海豚”、18号台风“沙德尔”三个台风先后登陆我…</description>
-<link>https://www.peopleapp.com/column/30053447216-500007763195</link>
-<pubDate>Thu, 29 Oct 2026 20:59:16 +0800</pubDate>
-<guid isPermaLink="false">https://www.peopleapp.com/column/30053447216-500007763195|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
 </item>
 <item>
 <title>《狮城有约》10月29日</title>
@@ -430,36 +622,12 @@
 <source url="https://rsshub.rss.tips/8world/news">8world</source>
 </item>
 <item>
-<title>继撤出中国大陆后 韩国三星家电据报部分退出香港市场</title>
-<description>继5月撤出中国大陆家电市场后，韩国科技巨头三星电子据报正在部分撤出香港家电市场。图为一名男子在韩国首尔三星电子瑞草大楼的商场内从三星标志旁走过。（法新社档案照片） （首尔/香港综合讯）继5月撤出中国大陆家电市场后，韩国科技巨头三星电子据报正在部分撤出香港家电市场，凸显国际家电制造商在市场竞争加剧下的经营压力。 据韩国经济电视台星期二（10月27日）报道，三星香港网上商城已停止销售包括冰箱、洗衣机、空调和吸尘器在内的主要家电产品。 三星香港客服代表称，停售部分家电是由于暂时缺货，他们并未收到任何关于撤出业务的正式通知，但据一名电子行业人士称，三星香港子公司大约在一至两个月前就开始为撤出做准备。 香港家电…</description>
-<link>https://www.zaobao.com/finance/china/story20261029-9916005</link>
-<pubDate>Thu, 29 Oct 2026 12:54:34 +0000</pubDate>
-<guid isPermaLink="false">https://www.zaobao.com/finance/china/story20261029-9916005|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
-</item>
-<item>
-<title>淡滨尼组屋居民诉供水屡受扰 市镇会：故障阀门已修复</title>
-<description>淡滨尼组屋10月18日晚间停水近四小时后，有顶楼住户向《联合早报》反映，近一个月来已多次遇到水压偏低或停水，头发上的护发素还没冲净，花洒却突然断水，导致她只能留在浴室拨电求助。《联合早报》早前报道，淡滨尼GreenGem第952A座组屋18日晚上约8时突然停水，有居民无法冲凉，家中也没有饮用水，直到午夜左右才恢复供水。 记者上星期四（10月22日）走访时，几乎每个楼层都有居民反映，18日晚上家中水压特别低。其他楼层的受访居民均称是入住以来首次遇到，顶楼17楼的受访住户则说，近期情况反复出现。居住在17楼的李姓居民（33岁，金融经理）今年1月首次通过OneService反映水压问题。她说，近一个月情况愈加频繁，9月27日一天内曾三度出现水…</description>
-<link>https://www.zaobao.com.sg/news/singapore/story20261029-9916795</link>
-<pubDate>Thu, 29 Oct 2026 12:52:34 GMT</pubDate>
-<guid isPermaLink="false">https://www.zaobao.com.sg/news/singapore/story20261029-9916795|https://rsshub.rss.tips/zaobao/realtime/singapore</guid>
-<source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
-</item>
-<item>
-<title>Record number of purges as Xi emphasises &#x27;party discipline&#x27; at China political gathering</title>
-<description>Xi&#x27;s anti-corruption campaign has become &quot;an effort to consolidate and maintain authority&quot;, observers say. By Kelly Ng, Ian Tang Published: 2026-10-29T11:34:03Z Record number of purges as Xi emphasises &#x27;party discipline&#x27; at China political gathering A record 33 members have been expelled from China&#x27;s Communist Party as it concluded a major annual political gathering, which had the most empty seats ever seen. The fifth plenum was attended by 279 Central Committee members, compared to 315 at the fourth plenum in October 2025 and 364 at the third one in July 2024. While recent plenums focused o…</description>
-<link>https://www.bbc.com/news/articles/cq5ynw94k7kzo</link>
-<pubDate>Thu, 29 Oct 2026 12:49:17 +0000</pubDate>
-<guid isPermaLink="false">https://www.bbc.com/news/articles/cq5ynw94k7kzo|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
-</item>
-<item>
-<title>China Confirms Expulsion of 33 Officials, as Xi’s Purge Deepens</title>
-<description>China’s ruling Communist Party announced on Thursday that it had formally expelled 33 senior political and military officials, including a prominent former diplomat and a military secretary of Xi Jinping, the country’s top leader. The announcement laid bare the depth of Mr. Xi’s anticorruption purges as he prepares to secure a fourth term in power next year. The party said the expulsions had been made earlier by the Politburo, a council of top officials. They were confirmed by the party’s Central Committee, which concluded a four-day meeting in Beijing on Thursday. The communiqué releas…</description>
-<link>https://www.nytimes.com/2026/10/29/world/asia/china-communist-party-purges.html</link>
-<pubDate>Thu, 29 Oct 2026 12:49:05 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/world/asia/china-communist-party-purges.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+<title>中国人日语作文大赛颁奖 赴日留学被取消的学生折桂</title>
+<description>【共同社北京10月29日电】“中国人日语作文大赛”颁奖仪式29日在北京的日本大使馆举行。中国人民大学19岁的庞睿获得最优秀奖。受去年11月日本首相高市早苗涉台国会答辩的影响，庞睿的赴日留学被取消，之后庞睿在作文中写下自己通过社交平台（SNS）与日本保持联系的经历。 高市的涉台国会答辩后，中国政府提醒公民避免前往日本，建议谨慎规划赴日留学安排。庞睿原本希望前往京都府留学，但赴日交换留学项目取消。 他以“交流被切断的世界里语言是否有意义”为主题写道，即使在直接交流受限的情况下，通过社交平台上的日语互动，语言仍会以另一种形式传向他人。 日本驻华大使金杉宪治在致辞中提及日本前首相福田康夫去世一事，指出“前首相福田尤…</description>
+<link>https://china.kyodonews.net/articles/-/17624</link>
+<pubDate>Thu, 29 Oct 2026 21:46:00 +0900</pubDate>
+<guid isPermaLink="false">https://china.kyodonews.net/articles/-/17624|https://feed.quanwenrss.com/feed/kyodo-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
 </item>
 <item>
 <title>美官员分析中国大陆攻台时间 国防部回应</title>
@@ -470,54 +638,6 @@
 <source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
-<title>10月29日新闻夜览</title>
-<description>前三季度我国跨区域人员流动量超512亿人次 记者29日从交通运输部获悉，前三季度我国交通运输经济运行总体平稳，主要指标规模较去年同期有所增长。详情&gt;&gt;&gt; 从“买东西”到寻共鸣 中国年轻人爱上“赶集” 暮色四合，江西景德镇陶溪川文创街区的红砖烟囱下，上千个创意摊位沿街铺开。25岁的南昌游客陶悦近年来每年都来这里“赶集”，于她而言，逛市集如同赴约一般令人期待。详情&gt;&gt;&gt; 中欧班列“东通道”口岸段最长桥梁铺轨完成 10月29日，在黑龙江省同江市佳同铁路扩能改造工程同江特大桥施工现场，由中铁五院设计、中铁二十三局承建的同江特大桥铺轨任务全部完成，标志着佳同铁路扩能改造工程正线施工主体工作基本完成，全线即将进入验收阶段。详…</description>
-<link>https://h.xinhuaxmt.com/vh512/app/13350796</link>
-<pubDate>Thu, 29 Oct 2026 20:42:38 +0800</pubDate>
-<guid isPermaLink="false">https://h.xinhuaxmt.com/vh512/app/13350796|https://feed.quanwenrss.com/feed/xinhua-yw.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xinhua-yw.xml">新华社·要闻</source>
-</item>
-<item>
-<title>Inflation Accelerated in October, PCE Index Shows</title>
-<description>Consumer prices accelerated in September, which could bolster the case for the Federal Reserve to raise interest rates in December after forgoing an increase this week. Prices, as measured by the Personal Consumption Expenditures index, increased 0.5 percent in September from a month earlier and 3.6 percent compared with the same time last year, according to a report released on Thursday by the Bureau of Economic Analysis. The pick up in prices provided further confirmation that inflation is running hotter than Fed officials would like. Their target, as measured by P.C.E., is to keep the ann…</description>
-<link>https://www.nytimes.com/2026/10/29/business/economy/pce-inflation-economy.html</link>
-<pubDate>Thu, 29 Oct 2026 12:38:45 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/business/economy/pce-inflation-economy.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
-</item>
-<item>
-<title>有媒体称多架空警-3000疑现身制造厂附近 国防部回应</title>
-<description>2026年10月国防部例行记者会文字实录 国防部网 2026-10-29 20:38 ·北京 0 原标题：2026年10月国防部例行记者会文字实录2026年10月国防部例行记者会文字实录时间：2026年10月29日15:00—16:40地点：中央军委国际军事合作办公室发布人：国防部新闻发言人张晓刚大校 打开网易新闻 查看精彩图片 10月29日下午，国防部举行例行记者会，国防部新闻发言人张晓刚大校答记者问。张智程 摄张晓刚：大家下午好！欢迎参加国防部例行记者会。首先，我有四条信息需要发布。第一条信息。11月2日至8日，第五届中国—东盟中青年军官友好交流活动将在南京、杭州、上海、昆山举行，以“互信·责任·担当：共建亚洲和平家园——纪念中国—东盟全面战略伙伴关系5周…</description>
-<link>https://m.163.com/news/article/LAEF31Q30001899O.html</link>
-<pubDate>Thu, 29 Oct 2026 12:38:34 GMT</pubDate>
-<guid isPermaLink="false">https://m.163.com/news/article/LAEF31Q30001899O.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
-</item>
-<item>
-<title>美国9月核心PCE同比上涨3.1%，美联储12月或加息25个基点</title>
-<description>10月29日消息，美国商务部公布的数据显示，9月美国个人消费支出价格指数同比上涨3.6%，剔除食品和能源价格后的核心个人消费支出价格指数同比上涨3.1%。分析认为，受中东地缘冲突推升国际油价影响，能源价格上涨带动9月整体通胀反弹，市场关注企业是否将燃油成本转嫁给消费者。核心PCE是美联储最看重的通胀指标，其服务业分项反映国内价格压力是否顽固，一旦该细分项数据进一步走高，金融市场将更多押注美联储在今年12月举行的议息会议上加息25个基点。</description>
-<link>https://www.mycaijing.com/article/detail/586542?source_id=40</link>
-<pubDate>Thu, 29 Oct 2026 20:37:48 +0800</pubDate>
-<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586542?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
-</item>
-<item>
-<title>13城现售制落地，“金九银十”楼市回温了吗?</title>
-<description>这个国庆假期，苗倩并未像往年一样出游，而是奔波在看房的路上。 她在北京市大兴区枣园附近租住了三年，眼看着房租从每月4500元涨到了5200元，而房东最近又提出了续租要涨价的要求。“与其给房东打工，不如趁着政策好，给自己安个家。”她说。 她的目标是近期大兴、亦庄、朝阳新开盘的几个项目。在她看来，这些项目得房率更高、品质更好也更保值，再加上现售制新政的保障，趁着今年“金九银十”正好出手。 “金九银十”是指每年9月、10月的房地产销售旺季。今年国庆假期，像苗倩这样选择集中看房的购房者并非少数。自8月28日楼市现房销售制度落地，截至10月29日，这两个月来已有13个重点城市各自出台相关细则。受利好政策影响，叠加9月下旬一批…</description>
-<link>https://www.mycaijing.com/article/detail/586541?source_id=40</link>
-<pubDate>Thu, 29 Oct 2026 20:30:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586541?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
-</item>
-<item>
-<title>砸10亿美元在美建厂，TP-Link也没换来美国放行</title>
-<description>本文来自微信公众号： 大橘财经 ，作者：赖家琪砸钱投资、承诺在美国建厂，甚至连下一代Wi-Fi 8路由器的组装计划都安排上了，TP-Link最终可能还是敲不开美国市场的大门。据科技媒体Tom&#x27;s Hardware当地时间10月28日报道，美国联邦通信委员会（FCC）日前向总部设在美国加利福尼亚州的路由器制造商TP-Link Systems发出警告，称其四款产品的认证申请可能存在虚假或错误信息，其中三款在测试中超过了规定的功率限值。涉事产品覆盖不同价格区间，既包括Archer系列中一款售价约600美元的游戏路由器，也包括一款售价约140美元的入门级旅行路由器。FCC要求TP-Link在10月30日前就此提交详细答复和相关证明文件，还特别要求该公司在沟通中纳入FCC负责国家…</description>
-<link>https://m.huxiu.com/article/4901508.html?type=text</link>
-<pubDate>Thu, 29 Oct 2026 20:27:24 +0800</pubDate>
-<guid isPermaLink="false">https://m.huxiu.com/article/4901508.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
-</item>
-<item>
 <title>日本今年前10月外泄信息超3亿条 或系AI无差别攻击</title>
 <description>【共同社10月29日电】29日获悉的日本网络安全公司调查显示，因企业遭非法访问而外泄的信息在今年1至10月累计已达3.3亿条，激增至2024年全年370万条的近100倍。主要原因可能是随着人工智能（AI）不断进化，对系统漏洞的无差别攻击成为可能。专家们发出警示称：“直到年底如果放松监控，（外泄）数量将进一步增加。”对于企业方面而言，构建客户信息保护体系成为当务之急。 据网络安全公司Macnica（横滨市）调查，今年1月至10月27日，姓名、密码等信息外泄数量达到3.29亿条。与2025年的3300万条相比，一年期间增至10倍。自8月以来增势尤其明显。本月23日，佐川急便公司宣布最多可能有累计约5323万条大量客户信息外泄。其中包含重复的部分，外泄数…</description>
 <link>https://china.kyodonews.net/articles/-/17623</link>
@@ -526,68 +646,12 @@
 <source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
 </item>
 <item>
-<title>天水圍醋男疑前女友結新歡 怒斬情散狂毆舊愛被捕</title>
-<description>本周一(26日)下午，一名男子在天水圍街頭因感情糾紛，截停其前女友男性友人。其後更從附近肉檔奪取切肉刀攻擊對方，並徒手襲擊前女友後逃去。執法部門迅速鎖定目標，並於昨日(28日)涉嫌「意圖造成身體嚴重傷害而傷人」，拘捕該名涉案男子。 被捕男子姓呂(43歲)，懷疑其姓梁(34歲)前女友，與捱斬的姓布(38歲)男子有染。周一下午4時許，呂男在俊宏軒地下一肉檔外截停布男理論，期間二人爆發肢體衝突。呂男情緒失控衝入肉檔奪走一把切肉刀狂斬，布男閃避不及致左耳、左頸及左背中刀浴血，並負傷逃命。 呂男施襲後，跑到附近一超市向正在購物的梁女聲稱斬了其新歡，梁女獲悉大怒出聲斥責他。呂男見狀出手毆打梁女，致其後腦和腰部受傷，呂男即棄刀…</description>
-<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029190303653-1029_00822_001.html</link>
-<pubDate>Thu, 29 Oct 2026 12:21:26 GMT</pubDate>
-<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029190303653-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
-<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
-</item>
-<item>
-<title>三位百亿基金经理，“悄悄”买入宇树科技</title>
-<description>28日晚，宇树科技公布了上市后的首份业绩报告。根据这份2026年三季报，宇树科技的前十大无限售条件股东中，出现了由百亿基金经理刘慧影、胡中原、张璐管理的数只公募基金。 结合这些基金的三季报看，它们对宇树科技的持仓相对不高，多为“隐形”持股。 多只基金“隐形”持有宇树科技 据披露，截至今年三季度末，宇树科技普通股股东总数为48007户。对比上市招股书，由于宇树科技前十大股东仍处在股票限售期，前十大股东名单未发生变化。 其中，宇树科技控股股东、实控人王兴兴直接持有约8671.50万股股份，持股比例为21.44%，为第一大股东。同时，王兴兴和公司第二大股东上海宇翼(持股比例为9.85%)为一致行动人。 宇树科技披露的三季报末前十大无…</description>
-<link>https://www.mycaijing.com/article/detail/586540?source_id=40</link>
-<pubDate>Thu, 29 Oct 2026 20:13:57 +0800</pubDate>
-<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586540?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
-</item>
-<item>
 <title>详讯：德总理请求日本协助为乌克兰提供防空支援</title>
 <description>【共同社柏林10月29日电】德国政府消息称，该国总理默茨28日在东京向媒体透露，已向日本首相高市早苗请求协助为乌克兰提供防空支援。在俄罗斯持续发动弹道导弹袭击的背景下，乌克兰一直反复要求日本提供包括拦截导弹在内的防空武器。 默茨表示：“我请求高市首相重新考虑，能否再进一步强化对乌克兰的防空支援。”他念及“爱国者”地对空导弹，说明称欧美各国“库存快要见底，形势已经变得相当困难”。 日本虽于今年4月修改了防卫装备转移三原则及其运用指针，但仍坚持原则上不向处于冲突中的国家出口武器的立场。（完）</description>
 <link>https://china.kyodonews.net/articles/-/17622</link>
 <pubDate>Thu, 29 Oct 2026 21:13:00 +0900</pubDate>
 <guid isPermaLink="false">https://china.kyodonews.net/articles/-/17622|https://feed.quanwenrss.com/feed/kyodo-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
-</item>
-<item>
-<title>个人购买私召车明起收紧贷款限制 最长贷款期七年</title>
-<description>From October 30, individuals buying cars registered as private hire cars (PHCs) will face the same financing restrictions as other private car buyers. The loan-to-value limit will be 70% of the purchase price for cars with an Open Market Value (OMV) of S$20,000 or below, and 60% for those above S$20,000. Loan tenure will be capped at seven years.The restrictions apply to individual-owned PHCs with sales agreements signed on or after October 30, including purchases by sole proprietors. Commercial vehicles, business-owned PHCs and motorcycles remain exempt. Authorities noted a recent surge in…</description>
-<link>https://www.8world.com/singapore/motor-vehicle-financing-restrictions-3324726</link>
-<pubDate>Thu, 29 Oct 2026 12:00:00 GMT</pubDate>
-<guid isPermaLink="false">https://www.8world.com/singapore/motor-vehicle-financing-restrictions-3324726|https://rsshub.rss.tips/8world/news</guid>
-<source url="https://rsshub.rss.tips/8world/news">8world</source>
-</item>
-<item>
-<title>派阀政治滋生乱象，日本自民党再曝政治资金丑闻</title>
-<description>据日本方面28日消息，日本执政党自由民主党副总裁麻生太郎近期被曝政治资金丑闻，其领导的派阀被指利用政治资金派对筹款约20亿日元，并将部分资金支付给一家与麻生太郎关系密切的私人会所。麻生太郎曾任日本首相、财务大臣等要职，是自民党内现存的唯一派阀“麻生派”领导人。“麻生派”曝出政治资金丑闻，也让日本自民党内的派阀再次受到关注。日本政坛所说的派阀是什么？派阀政治是怎么形成、如何运转的？派阀是自民党内因传统和国情形成的小团体中国社科院日本研究所助理研究员 孟明铭：派阀是日本自民党内非正式的小团体，它以党内特定人物为中心，有着固定成员、资金通道，还有较高约束力的组织管理架构。中国社科院日本研究所助理研究员…</description>
-<link>https://news.ifeng.com/c/8xcid1uHPmP</link>
-<pubDate>Thu, 29 Oct 2026 11:44:30 GMT</pubDate>
-<guid isPermaLink="false">https://news.ifeng.com/c/8xcid1uHPmP|https://rsshub.rss.tips/ifeng/news</guid>
-<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
-</item>
-<item>
-<title>关注：日本各地针对万圣节“扰民活动”纷纷采取措施</title>
-<description>【共同社10月28日电】随着万圣节临近，日本街头节日气氛日益高涨。万圣节以孩子们穿梭于邻里间讨糖果的习俗而闻名，但近年来在日本，它越来越被视为扮装的年轻人们饮酒喧闹的“扰民活动”。今年由于活动当天31日正好是星期六，预计人流将比往年更多，因此繁华街区所在地政府纷纷加强警戒，积极采取对策。 东京都涩谷区的区长长谷部健在9月的记者会上手持海报，上面以很大的字体写着“GOODBYE BAD HALLOWEEN”，长谷部神情严肃。 几年前，涩谷区曝出万圣节活动夜晚的打架、垃圾散落和噪音等问题。自2018年起在涩谷站周边商铺请求暂停酒类销售，2019年通过条例禁止在街头饮酒。此外根据条例，今年6月起若乱扔垃圾则面临2000日元（约合人民币84元…</description>
-<link>https://china.kyodonews.net/articles/-/17621</link>
-<pubDate>Thu, 29 Oct 2026 20:40:05 +0900</pubDate>
-<guid isPermaLink="false">https://china.kyodonews.net/articles/-/17621|https://feed.quanwenrss.com/feed/kyodo-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
-</item>
-<item>
-<title>一年两次重大事故，运营里程全球第二的西班牙高铁究竟怎么了</title>
-<description>当地时间29日上午，据西班牙综合应急协调中心例会后公布的最新统计，发生在马德里以南的托莱多附近的高铁相撞事故已造成至少69人死亡。目前，仍有50名伤者在各大医院接受住院治疗。当地时间2026年10月28日，西班牙工作人员在事故现场操作汽车起重机（图据视觉中国）西班牙铁路基础设施管理机构Adif一名内部人士在事故发生后透露，目前这一线路上基础设施“已经不堪重负、濒临崩溃”，而且人力资源短缺，设备资金投入严重不足，“尤其是在过去八年里，情况尤为严重”。就在今年1月，西班牙高铁已发生了一次严重列车脱轨事故，一列高铁脱轨后侵入相邻线路，与另一辆列车相撞，造成46人死亡、数百人受伤。当地时间2026年1月18日下午，一列高铁在西…</description>
-<link>https://news.ifeng.com/c/8xch0jSxjC2</link>
-<pubDate>Thu, 29 Oct 2026 11:26:10 GMT</pubDate>
-<guid isPermaLink="false">https://news.ifeng.com/c/8xch0jSxjC2|https://rsshub.rss.tips/ifeng/news</guid>
-<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
-</item>
-<item>
-<title>女高管隆胸时身亡，出事前7个月充值108万，涉事整形机构付45万元后跑路</title>
-<description>封面新闻记者 石伟“出事前，她曾向医托抱怨，说再也不想去这家机构，说这里全是坑。”10月28日，江苏南通的丁先生告诉记者，他的女儿丁萍（化名）被李某介绍到整形机构，7个月消费108万元，6月14日做隆胸手术时，疑似麻醉过敏，后经转院抢救无效，宣告脑死亡。家属质疑，整形机构应对不力、私自抢救患者耽误了时间。记者曾多次联系涉事机构，均未获回应。南通市卫健委工作人员表示，正在对事件进行调查。女高管隆胸手术时麻醉过敏死亡出事前7个月曾充值108万丁先生手机里保存着数十张女儿的照片。这些照片中，有丁萍在工作场合身穿职业套装的样子，也有居家生活的样子。在工作场合，丁萍形象干练；生活场景里，则是言笑晏晏，形象柔和。“一开…</description>
-<link>https://news.ifeng.com/c/8xclAUqPtdY</link>
-<pubDate>Thu, 29 Oct 2026 11:22:05 GMT</pubDate>
-<guid isPermaLink="false">https://news.ifeng.com/c/8xclAUqPtdY|https://rsshub.rss.tips/ifeng/news</guid>
-<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
 <title>香港特区政府公布大埔宏福苑火灾报告并推出系统性改革举措</title>
@@ -613,52 +677,28 @@
 <source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
 </item>
 <item>
-<title>季候风交替期开始 本地烟霾情况料改善</title>
-<description>As the southwest monsoon weakens, Singapore and the surrounding region are gradually entering the inter-monsoon season. The shift in wind direction and increase in rainfall are expected to help improve the local haze situation. As of 6pm today (Oct 29), the 24-hour Pollutant Standards Index across the island ranged from 68 to 77, in the moderate range.The Met Service said haze from the surrounding region was blown towards Singapore by southeasterly or southwesterly winds between Oct 16 and 28, causing air quality to reach unhealthy levels on seven days and very unhealthy levels on three othe…</description>
-<link>https://www.8world.com/singapore/haze-watch-and-forecast-3324656</link>
-<pubDate>Thu, 29 Oct 2026 10:52:00 GMT</pubDate>
-<guid isPermaLink="false">https://www.8world.com/singapore/haze-watch-and-forecast-3324656|https://rsshub.rss.tips/8world/news</guid>
-<source url="https://rsshub.rss.tips/8world/news">8world</source>
-</item>
-<item>
-<title>云迹(02670.HK)切换新代码单独交易 短期扰动未改走势</title>
-<description>经济观察网 云迹（02670.HK）发布携手万科泊寓拓展公寓市场的合作消息，属于业务面利好但股价未获提振，当下市场对签约类利好定价能力较弱；10月30日起公司将以拆细后的新代码2670单独交易，此前并行买卖带来的筹码归集波动属短期扰动。 近期事件公司发布携手万科泊寓、打开公寓市场的合作消息，属于业务面利好，但股价没买账——说明当下市场对这类「签约故事」的定价能力已经很弱，情绪不在利好上。10月29日收盘后，旧股票的并行买卖正式终止，10月30日起只剩拆细后的新代码2670单独交易。过渡期两套代码同时挂牌会分散流动性，切换节点前后常出现筹码重新归集带来的额外波动，这会放大跌幅，但它是短期扰动，不改变趋势。 以上内容基于公开…</description>
-<link>https://www.eeo.com.cn/2026/1029/1078964.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:46:27 +0800</pubDate>
-<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078964.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
+<title>亚香股份披露三季报 实控人减持计划剩余额度1.69%</title>
+<description>经济观察网 亚香股份（301220）披露三季报经营数据，同时实控人减持计划仍在推进中。 业绩经营情况前三季度营收8.56亿元、同比+11.08%，但归母净利润4042.58万元、同比-66.59%；拆到单季，Q3营收2.68亿元仅+1.96%，归母净利润1691.27万元、同比+54.33%。这组数字的含义是&quot;跌幅在收窄、但基数太低&quot;，利润端同比降幅主要来自生产成本上行与汇兑损失导致的财务费用大增，而不是收入端崩塌——收入还有两位数增长，说明问题在毛利与费用，不在订单。 股东减持进展表格中减持这一项是目前信息最确定、也最需要跟踪的一条：公告明确&quot;减持计划期限尚未届满&quot;，剩余额度1.69%，减持期间至2026年12月29日。实控人持股已从41.32%降至40.00%，控制权本身稳…</description>
+<link>https://www.eeo.com.cn/2026/1029/1078974.shtml</link>
+<pubDate>Thu, 29 Oct 2026 18:54:22 +0800</pubDate>
+<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078974.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
 </item>
 <item>
-<title>10月28日东宝生物主力资金净流出 估值处历史低位市盈率高于行业中位数</title>
-<description>经济观察网 东宝生物（300239）近5日处于震荡行情中，表现基本持平大盘，持平于行业平均水平。近5日主力资金整体呈现净流出状态，净占比接近市场平均水平。10月28日主力资金整体呈现净流出状态，净占比均衡市场平均水平。 该股市场关注度一般，整体舆情偏中性。机构调研频率较低，整体研报评级变化不大。基金持股比例0.01%，共有1家机构发表了盈利预测。最近一期季报披露主动偏股基金对该股持仓比例变化+0.01%。公司盈利能力一般，成长能力一般，营运能力一般，偿债能力一般。当前估值在历史低位区间，处于行业内适中水平。当前市盈TTM为47.14，高于行业中位数，在过去5年中处于个股60.33%的位置。 以上内容基于公开资料整理，不构成投资建议。</description>
-<link>https://www.eeo.com.cn/2026/1029/1078963.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:46:23 +0800</pubDate>
-<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078963.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
+<title>10月28日格林美主力资金净流出，近5日震荡走弱，估值处历史低位区间</title>
+<description>经济观察网 格林美（002340）近5日处于震荡行情中，表现弱于大盘，弱于行业平均水平。近5日主力资金整体呈现净流出状态，净占比远低于市场平均水平。10月28日主力资金整体呈现净流出状态，净占比远低于市场平均水平。融资融券差额占比6.85%。 该股市场关注度一般，整体舆情偏中性。机构调研频率较低，整体研报评级变化不大。最近一期季报披露主动偏股基金对该股持仓比例变化-0.37%，同期股价变化-16.22%。公司盈利能力一般，成长能力一般，营运能力一般，偿债能力一般。当前估值在历史低位区间，处于行业内适中水平。当前市盈TTM为16.66，低于行业中位数，在过去5年中处于个股1.9%的位置。 以上内容基于公开资料整理，不构成投资建议。</description>
+<link>https://www.eeo.com.cn/2026/1029/1078992.shtml</link>
+<pubDate>Thu, 29 Oct 2026 18:54:07 +0800</pubDate>
+<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078992.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
 </item>
 <item>
-<title>ST南新688189持股5%以上股东广州乾元减持 持股降至15%</title>
-<description>经济观察网 ST南新（688189）持股5%以上股东广州乾元发生权益变动，触及1%刻度，持股比例已降至15%，同期减持约0.8%，媒体归因为&quot;资金需求驱动&quot;。 以上内容基于公开资料整理，不构成投资建议。</description>
-<link>https://www.eeo.com.cn/2026/1029/1078983.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:45:53 +0800</pubDate>
-<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078983.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
+<title>上海钢联近5日震荡跑输大盘 10月28日主力资金净流出 当前估值处历史低位</title>
+<description>经济观察网 上海钢联（300226）近5日处于震荡行情中，表现弱于大盘，弱于行业平均水平。近5日主力资金整体呈现净流出状态，净占比远低于市场平均水平。10月28日主力资金整体呈现净流出状态，净占比接近市场平均水平。融资融券差额占比7.39%。 该股市场关注度一般，整体舆情偏中性。机构调研频率较低，整体研报评级变化不大。基金持股比例0.25%，共有2家机构发表了盈利预测。最近一期季报披露主动偏股基金对该股持仓比例变化+0.25%，同期股价变化+7.49%。公司盈利能力一般，成长能力良好，营运能力良好，偿债能力较弱。当前估值在历史低位区间，处于行业内适中水平。当前市盈TTM为28.5，高于行业中位数，在过去5年中处于个股16.86%的位置。 以上…</description>
+<link>https://www.eeo.com.cn/2026/1029/1078993.shtml</link>
+<pubDate>Thu, 29 Oct 2026 18:53:39 +0800</pubDate>
+<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078993.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
-</item>
-<item>
-<title>分析｜美联储暂停加息、将减少议息会议频次，释放了什么信号？</title>
-<description>北京时间10月29日凌晨，美联储宣布维持联邦基金利率目标区间在3.75%至4.00%不变，符合市场预期。本次决议获得10票赞成、2票反对，两名票委主张加息25个基点。声明对美国经济活动的判断也由“稳健扩张”上调为“强劲扩张”。与此同时，美联储计划调整2027年和2028年的会议安排，减少议息频次。在经济活动表现强劲、通胀仍处高位的背景下，美联储12月的利率决策及未来两年会议安排的调整，成为市场关注的焦点。 两名票委主张加息，经济表述转向“强劲扩张”上海交通大学上海高级金融学院教授、美联储前高级经济学家胡捷对澎湃新闻表示，美联储调整对经济活动的表述意味着因经济走弱而增加降息权重的可能性明显降低。相比此前“稳健”的表述，“强…</description>
-<link>https://m.thepaper.cn/newsDetail_forward_34360152</link>
-<pubDate>Thu, 29 Oct 2026 10:40:33 +0000</pubDate>
-<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34360152|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
-</item>
-<item>
-<title>35岁男子吃凉土豆蘸辣椒减肥2个月减重22斤 医生揭秘</title>
-<description>收起“有天早上照镜子，发现自己的脸又大又圆，肚子上也都是肥肉，就想去去‘登味儿’。”张先生笑着告诉记者减肥的初衷。今年8月中旬，35岁的他看着镜子里那张日渐圆润的脸，再想到体检报告上脂肪肝、痛风等不良指标，终于下定决心减肥。张先生说，自己的方法来自刷到的科普短视频：把蒸熟的土豆放凉了吃，代替主食。就这样吃了两个多月，他从83公斤降到了72公斤，整整掉了22斤。 打开网易新闻 查看更多图片 张先生两个月减了22斤 受访者供图煮熟放凉后的土豆抗性淀粉含量高，让血糖更平稳，减少脂肪储存张先生告诉记者，他的具体做法是：每天早上和晚上各吃六个鸡蛋大小的土豆，蒸熟后放凉冷藏，早上配鸡蛋和牛奶，晚上配大量蔬菜和两百克左…</description>
-<link>https://c.m.163.com/news/a/LAE0BJ9P05561G0D.html</link>
-<pubDate>Thu, 29 Oct 2026 10:33:10 GMT</pubDate>
-<guid isPermaLink="false">https://c.m.163.com/news/a/LAE0BJ9P05561G0D.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>在巴西总统选举中落败的博索纳罗抵美 称遭政治迫害</title>
@@ -734,19 +774,11 @@
 </item>
 <item>
 <title>习近平就西班牙高速列车追尾脱轨事故向西班牙国王费利佩六世致慰问电</title>
-<description>李强向西班牙首相桑切斯致慰问电新华社北京10月29日电 10月29日，国家主席习近平就西班牙高速列车追尾脱轨事故向西班牙国王费利佩六世致慰问电。习近平表示，惊悉西班牙托莱多省不幸发生高速列车追尾脱轨事故，造成重大人员伤亡。我谨代表中国政府和中国人民，对遇难者表示深切哀悼，向遇难者家属致以诚挚慰问。祝愿伤者早日康复。同日，国务院总理李强向西班牙首相桑切斯致慰问电。</description>
-<link>https://app.gmdaily.cn/as/opened/n/262f8579ad2c4f6f997677d4b91b875d</link>
-<pubDate>Thu, 29 Oct 2026 17:55:30 +0800</pubDate>
-<guid isPermaLink="false">https://app.gmdaily.cn/as/opened/n/262f8579ad2c4f6f997677d4b91b875d|https://feed.quanwenrss.com/feed/gmw-hot.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/gmw-hot.xml">光明网·热点</source>
-</item>
-<item>
-<title>苹果采购部门曾强硬逼迫闪存供应商让步 审计频率高到德勤也给出批量折扣</title>
-<description>苹果过去在闪存采购谈判中采取了极为强硬的策略。时任苹果采购负责人托尼·布莱文斯（Tony Blevins）以强势、精于谈判而闻名，供应商甚至给他起了一个带有戏谑意味的绰号。苹果不仅要求供应商提供有竞争力的价格，还会通过审计账目、比较竞争对手报价以及控制采购订单分配等手段，尽可能压低采购成本。苹果的一项重要合同条款，是要求闪存供应商给予其“最惠客户”待遇，即不能以更低价格向其他客户出售同类产品。为了确认供应商是否遵守这一约定，苹果会审查供应商的账簿和交易记录。据知情人士透露，苹果审计供应商的频率非常高，以至于布莱文斯曾与审计机构德勤（Deloitte）协商，拿到了类似批量采购的审计费用折扣。这种审计并不仅仅是为了…</description>
-<link>https://www.cnbeta.com.tw/articles/tech/1584310.htm</link>
-<pubDate>Thu, 29 Oct 2026 17:44:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/tech/1584310.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
+<description>据新华社北京10月29日电 10月29日，国家主席习近平就西班牙高速列车追尾脱轨事故向西班牙国王费利佩六世致慰问电。习近平表示，惊悉西班牙托莱多省不幸发生高速列车追尾脱轨事故，造成重大人员伤亡。我谨代表中国政府和中国人民，对遇难者表示深切哀悼，向遇难者家属致以诚挚慰问。祝愿伤者早日康复。同日，国务院总理李强向西班牙首相桑切斯致慰问电。编辑 毛天宇</description>
+<link>https://m.bjnews.com.cn/detail/1793263233129241.html</link>
+<pubDate>Thu, 29 Oct 2026 17:18:51 +0800</pubDate>
+<guid isPermaLink="false">https://m.bjnews.com.cn/detail/1793263233129241.html|https://feed.quanwenrss.com/feed/bjnews-yaowen.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
 </item>
 <item>
 <title>《令人心动的 offer 8》，造星失败！</title>
@@ -755,22 +787,6 @@
 <pubDate>Thu, 29 Oct 2026 17:15:06 +0800</pubDate>
 <guid isPermaLink="false">https://www.guokr.com/article/470569/|https://feed.quanwenrss.com/feed/guokr-science.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/guokr-science.xml">果壳·科学</source>
-</item>
-<item>
-<title>青沼英二坦言对《塞尔达传说：时之笛 重制版》推出感到紧张</title>
-<description>青沼英二表示，这次重制能够实现，参与项目的年轻开发者发挥了重要作用。他们思考了如何以更合适的方式改编经典，并把玩家实际拿起控制器后是否觉得有趣作为重点，为项目带来了新的想法。开发团队既要面对原作影响力带来的期待，也希望让首次接触本作的玩家获得现代化的游玩体验。《塞尔达传说：时之笛 重制版》将登陆Nintendo Switch 2，定于2026年11月5日发售，时间正值《塞尔达传说》系列40周年。配套主题主机与Pro控制器定于10月29日推出，两款amiibo则计划在2027年上市。西班牙亚马逊曾以59.90欧元开放预购，该价格仅为特定地区零售渠道信息。</description>
-<link>https://www.cnbeta.com.tw/articles/game/1584308.htm</link>
-<pubDate>Thu, 29 Oct 2026 16:50:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/game/1584308.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
-</item>
-<item>
-<title>Rockstar确认《GTA6》主要开发完成 进入最终收尾阶段</title>
-<description>Nelson以“它已经准备好了”概括游戏的当前状态。他表示，多年来持续进行的修改、测试和返工正在逐步停止，团队现在也要学会放下作品，将其交给玩家。艺术总监Aaron Garbut表示，他对本作的满意程度超过自己参与过的任何一款游戏。在《给他爱5》和《荒野大镖客：救赎2》之后，工作室不愿只重复原有水准，因此没有在规模、细节、互动性、叙事和开放世界构造上妥协。多年开发期间，Rockstar持续以约六至八周为一轮开展测试。每轮测试结束后，员工会体验新的构建版本并提交数千条意见，部分内容由此得到完善或重做，也有内容被完全删除。《GTA6》计划于2026年11月19日登陆PlayStation 5和Xbox Series X|S。开发主管所说的“完成”指主要开发已经结…</description>
-<link>https://www.cnbeta.com.tw/articles/game/1584306.htm</link>
-<pubDate>Thu, 29 Oct 2026 16:50:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/game/1584306.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
 </item>
 <item>
 <title>宏福苑｜何永賢一人辭職能否服眾？李家超：呢個係我個人政治決定</title>
@@ -947,21 +963,5 @@
 <pubDate>Wed, 28 Oct 2026 15:43:49 +0000</pubDate>
 <guid isPermaLink="false">https://ici.radio-canada.ca/rci/zh-hans/%E6%96%B0%E9%97%BB/2296493/%E8%A5%BF%E7%8F%AD%E7%89%99-%E9%AB%98%E9%80%9F%E5%88%97%E8%BD%A6-%E8%BF%BD%E5%B0%BE-64%E4%BA%BA%E6%AD%BB%E4%BA%A1|https://feed.quanwenrss.com/feed/rci-zh-hans-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/rci-zh-hans-latest.xml">加拿大国际广播电台 RCI 中文·最新</source>
-</item>
-<item>
-<title>以默茨名字命名：新加坡的兰花外交</title>
-<description>（德国之声中文网）默茨总理在命名兰花的仪式上表示，这对他来说是“莫大的荣幸”。 以兰花为重要外宾命名，是新加坡自1957年开始的独特外交传统，也被称为“兰花外交”。 兰花是新加坡的国花，当地通常会透过杂交培育新品种，再以来访的国家元首、政府领袖或重要国际人士命名，作为友好关系的象征。 在德国政治人物当中，前总理默克尔拥有名为“安格拉·默克尔石斛兰”（Dendrobium Angela Merkel）的兰花，前总理肖尔茨则有“奥拉夫·肖尔茨火焰兰”（Renanthera Olaf Scholz），德国总统施泰因麦尔也曾获得专属命名兰花。如今，默茨也加入这份名单。 除了德国政要之外，新加坡过去也曾以英国黛安娜王妃、前英国首相撒切尔夫人、中国国家主席…</description>
-<link>https://www.dw.com/zh/%E4%BB%A5%E9%BB%98%E8%8C%A8%E5%90%8D%E5%AD%97%E5%91%BD%E5%90%8D%EF%BC%9A%E6%96%B0%E5%8A%A0%E5%9D%A1%E7%9A%84%E5%85%B0%E8%8A%B1%E5%A4%96%E4%BA%A4/a-79789658</link>
-<pubDate>Wed, 28 Oct 2026 15:22:00 +0000</pubDate>
-<guid isPermaLink="false">https://www.dw.com/zh/%E4%BB%A5%E9%BB%98%E8%8C%A8%E5%90%8D%E5%AD%97%E5%91%BD%E5%90%8D%EF%BC%9A%E6%96%B0%E5%8A%A0%E5%9D%A1%E7%9A%84%E5%85%B0%E8%8A%B1%E5%A4%96%E4%BA%A4/a-79789658|https://feed.quanwenrss.com/feed/dw-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/dw-latest.xml">德国之声中文·最新</source>
-</item>
-<item>
-<title>习近平向日本前首相福田康夫遗属致唁电</title>
-<description>据新华社北京10月27日电 10月27日，国家主席习近平向日本前首相福田康夫遗属致唁电，对福田康夫逝世表示哀悼，向其遗属表示慰问。习近平指出，福田先生是日本有信义、有担当的政治家，也是中国人民的老朋友，长期心系中日友好、秉持正确历史观，在任期间同中方签署中日第四个政治文件，为两国关系发展明确了重要原则。福田先生曾担任博鳌亚洲论坛理事长，为促进亚洲地区交流合作发挥了重要作用。中方将铭记福田先生为中日关系和亚洲发展所作的贡献。期待遗属继承福田先生遗志，继续致力于中日友好事业。希望日本当政者珍视老一辈政治家的心血和努力，恪守中日四个政治文件，切实维护双边关系政治基础。编辑 毛天宇</description>
-<link>https://m.bjnews.com.cn/detail/1793094309129874.html</link>
-<pubDate>Tue, 27 Oct 2026 18:03:22 +0800</pubDate>
-<guid isPermaLink="false">https://m.bjnews.com.cn/detail/1793094309129874.html|https://feed.quanwenrss.com/feed/bjnews-yaowen.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
 </item>
 </channel></rss>
