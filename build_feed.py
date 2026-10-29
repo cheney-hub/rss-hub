@@ -305,7 +305,8 @@ def load_prev_items():
 # 标题行收尾用这些标点更自然（只在需要回退时参考）。
 BREAK_CHARS = "，,、；;｜|—）)！!？?·】」』 "
 # 正文开头要剥掉的连接标点（正文另起一段，行首标点是中文排版大忌）。
-HEAD_STRIP = "，,、；;：:。."
+# 只放中文分隔符：半角「.」「:」可能属于 20.15 / 12:30 这类数字，剥掉就把数字弄残了。
+HEAD_STRIP = "，,、；;。"
 
 # 黑白墨水屏上这些字符要么显示成方块要么是透明占位，还白占宽度，直接摘掉。
 _RE_INVISIBLE = re.compile(
@@ -335,8 +336,8 @@ def text_width(s):
 
 
 def _word_char(ch):
-    """半角字母 / 数字 / 词内连符号 —— 这些字符拼成的词不能从中间切开。"""
-    return ch.isascii() and (ch.isalnum() or ch in "'-_")
+    """词内字符：半角字母 / 数字 / 小数点和词内连符号。这些拼成的片段不能从中间切开。"""
+    return ch.isascii() and (ch.isalnum() or ch in "._-")
 
 
 def _cut_index(s, max_w):

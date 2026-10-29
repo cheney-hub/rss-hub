@@ -5,10 +5,18 @@
 <link>https://cheney-hub.github.io/rss-hub/feed-wrap.xml</link>
 <description>多源头条，纯文本；标题只放屏上显示得下的 13 全角字，余下原文接在正文里，源 43 个</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 11:04:51 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 11:05:40 +0000</lastBuildDate>
 <item>
-<title>中国国航：前三季度净亏损20</title>
-<description>15亿元</description>
+<title>玩“剧本杀”前，这些事项要</title>
+<description>弄清</description>
+<link>https://www.chinanews.com.cn/sh/2026/10-29/10722889.shtml</link>
+<pubDate>Thu, 29 Oct 2026 19:02:11 +0800</pubDate>
+<guid isPermaLink="false">f51aae5afc3b</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>中国国航：前三季度净亏损</title>
+<description>20.15亿元</description>
 <link>https://api3.cls.cn/share/article/2519504?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
 <pubDate>Thu, 29 Oct 2026 18:58:43 +0800</pubDate>
 <guid isPermaLink="false">dd41d5ff1d3d</guid>
@@ -21,14 +29,6 @@
 <pubDate>Thu, 29 Oct 2026 18:57:49 +0800</pubDate>
 <guid isPermaLink="false">16c63685c2f4</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>宁夏鲜活大闸蟹首次出口马来</title>
-<description>西亚 盐碱水产闯开东南亚市场</description>
-<link>https://www.chinanews.com.cn/cj/2026/10-29/10722873.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:56:52 +0800</pubDate>
-<guid isPermaLink="false">1eecee1da3ed</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
 <title>据以色列媒体：约96%的议会</title>
@@ -152,7 +152,7 @@
 </item>
 <item>
 <title>刚发布的苹果触屏电脑真烧心</title>
-<description>这是屏坏了，还是故意的？</description>
+<description>：这是屏坏了，还是故意的？</description>
 <link>https://www.guokr.com/article/470571/</link>
 <pubDate>Thu, 29 Oct 2026 18:15:04 +0800</pubDate>
 <guid isPermaLink="false">af103f855671</guid>

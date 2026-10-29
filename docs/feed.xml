@@ -6,9 +6,16 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 11:04:51 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 11:05:40 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
+<item>
+<title>玩“剧本杀”前，这些事项要弄清</title>
+<link>https://www.chinanews.com.cn/sh/2026/10-29/10722889.shtml</link>
+<pubDate>Thu, 29 Oct 2026 19:02:11 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/sh/2026/10-29/10722889.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
 <item>
 <title>中国国航：前三季度净亏损20.15亿元</title>
 <link>https://api3.cls.cn/share/article/2519504?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
@@ -22,13 +29,6 @@
 <pubDate>Thu, 29 Oct 2026 18:57:49 +0800</pubDate>
 <guid isPermaLink="false">https://xueqiu.com/5124430882/414535602|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>宁夏鲜活大闸蟹首次出口马来西亚 盐碱水产闯开东南亚市场</title>
-<link>https://www.chinanews.com.cn/cj/2026/10-29/10722873.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:56:52 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722873.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
 <title>据以色列媒体：约96%的议会选举选票已统计完毕，结果未发生变化。</title>
