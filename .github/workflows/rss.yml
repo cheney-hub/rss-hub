@@ -12,6 +12,7 @@ on:
       - "feeds.txt"
       - "build_feed.py"
       - "render.py"          # 改排版规则也要立刻重建，否则要等下一个整点
+      - "rotate.py"          # 改轮播规则同理：不重建就还是旧规则在发设备版
       - "version.py"
       - ".github/workflows/rss.yml"
 

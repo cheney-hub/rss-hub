@@ -6,6 +6,64 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.5.0] - 2026-10-30
+
+一次全量代码审查（正确性 / 可读性 / 架构 / 安全 / 性能五轴），修 4 个真缺陷、补 6 个用例、
+清掉一批会误导人的过期文档。渲染层的行为基线 `tests/golden.txt` **逐字节未变**——
+唯一会改变输出的修复（`clean_text` 的段落边界）刻意只作用在「两个半角词之间」，
+中文排版一个字都没动。
+
+### 修复
+
+- **段落边界把英文单词粘成一个词**（`render.py::clean_text`）：旧实现把 `<[^>]+>` 一律删掉，
+  `<p>Hello world</p><p>Second</p>` 会变成 `worldSecond`、`jumped<br>Apple` 变成 `jumpedApple`。
+  现在段落/换行标签先打标记，再判断边界两侧是不是半角词字符：是就换成空格，不是就照旧删掉。
+  为什么只认半角：汉字之间本来就挨着排，无条件补空格会给中文正文塞进排版噪音；
+  `&nbsp;`（源站主动要的空格）也不受影响。基线逐字节未变即此项只修了缺陷、没动既有排版。
+- **说明页存在 XSS**（`docs/index.html`）：条目标题 / 链接 / 源名来自第三方 RSS，
+  旧代码用 `innerHTML` 拼模板，任一家源在标题里写 `<img onerror=…>` 就能在本页执行脚本。
+  改成逐条创建 DOM 节点 + `textContent`，链接只接受 `http(s)`（挡掉 `javascript:` 伪协议）。
+- **`feed.xml` 写出空 `<link>`**（`render.py::_item_lines`）：源里没有链接时旧代码会输出
+  `<link></link>`，阅读器把它当死链。RSS 2.0 里 `<link>` 本就可选，改为缺字段就不发。
+  同一处把 `it["link"]` / `it["title"]` 的直接取键换成 `.get`，回退条目少字段时不再 KeyError。
+- **抓取没有响应体上限**（`build_feed.py::http_get`）：源地址被改成巨型文件时一次 `read()`
+  就能吃光 runner 内存、整轮采集跟着崩。加 12 MB 上限，压缩前后各查一次（解压后的体积才是真占内存的量），
+  超限只让这一个源失败并走回退。
+
+### 清理
+
+- 删掉 `_channel_lines()` 里从未被使用的 `total` 形参；`build_feed.py` 用 `__all__` 声明
+  兼容再导出的名字（去掉没人用的 `_bucketize`），静态检查不再有「导入了却没使用」的噪音。
+- `tests/test_core.py` 修掉未关闭的文件句柄（`open().read()` 触发 `ResourceWarning`）
+  与模块级重复导入的 `re`。
+- `.github/workflows/rss.yml` 的 `push.paths` 补 `rotate.py`：改轮播规则原本不会触发即时重建，
+  要等下一个整点。
+- `review.yml` 的语法检查从 `build_feed.py` 扩到根目录全部 `.py`（`rotate.py` / `render.py`
+  之前不在这道检查里）。
+
+### 新增
+
+- **`TestCleanText`（5 例）**：英文段落边界必须留空格、汉字之间必须不留、`</p>\n<p>` 不叠成两个空格、
+  `&nbsp;` 保留、CDATA 与实体。
+- **`test_handwritten_workflows_carry_all_tuned_params`**：把「workflow 参数扫到就比」升级成
+  「生成器模板里的每个参数，`rss.yml` / `nightly.yml` 都必须写出来且值相同」。
+  少写一项不会报错，只会悄悄落回代码默认值，等默认值一改那条路径就与主线不一致了。
+  已用「删掉 nightly.yml 的 `ROTATE_POOL_MAX`」证伪过，用例确实会红。
+- 用例总数 88 → 94。
+
+### 文档
+
+- 修掉一批与代码对不上的描述，都是会直接把排障带偏的那类：
+  - README 两处仍写「默认不限条数，全部进 feed」（1.4.0 已改回 120 条）；
+  - README 的链接去重规则仍写「去掉 `#` 与 `?` 参数再比」（1.3.0 已改成只剥追踪参数）；
+  - OPERATIONS §15 仍说「完整版通常 220+ 条，`items=120` 是正常的」（现在两边都是 120）；
+  - OPERATIONS §13 说「三个工作流」却只列了两个；
+  - OPERATIONS §8 的编码顺序、§7 的阈值所在模块（`build_feed.py` → `render.py`）；
+  - `feeds.txt` 文件头仍写「每分钟一次」（实际是每 5 分钟）；
+  - CODE_REVIEW 的架构轴仍写「排版逻辑只能在 `build_feed.py`」，与三层拆分直接冲突。
+- README / OPERATIONS / CODE_REVIEW 里的用例数、行数、cron 表达式、单轮耗时改成就地准确的说法；
+  容易漂移的数字（如生成文件行数）改成不写死。
+
 ## [1.4.0] - 2026-10-30
 
 用户明确要求：**总条数 120 不变，按时间排序后截取最新 120 条**。1.3.0 把 `ITEM_LIMIT` 放开成 0

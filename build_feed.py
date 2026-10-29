@@ -32,9 +32,9 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
                 改「上屏顺序 / 该播哪条」去这里（规则只有一条，别再拆台阶，见 _pick_bucket）
   本文件        抓取、失败回退、写文件、编排。轮播相关只留「状态文件与线上地址在哪」这一层配置。
 
-本文件从 rotate 里 re-export 了轮播入口（rotate_pick / _pick_bucket / _bucketize /
-ROTATE_SECONDS / ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tests/ 与 tools/
-继续按 `build_feed.xxx` 调用，不必跟着搬家 —— 别把它们当成本模块的实现。
+本文件从 rotate 里 re-export 了轮播入口（rotate_pick / _pick_bucket / ROTATE_SECONDS /
+ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tests/ 与 tools/ 继续按
+`build_feed.xxx` 调用，不必跟着搬家 —— 别把它们当成本模块的实现（新代码请直接 `from rotate`）。
 
 版本号在 version.py（唯一真源），`python3 build_feed.py --version` 可直接打印。
 
@@ -84,14 +84,20 @@ from datetime import datetime, timedelta, timezone
 # 显示规则住在 render.py，build_feed 只负责抓取与编排。
 from render import (BODY_MAX, ENTITY_FIX, LINE_WIDTH, build_rss, clean_text,
                     dedupe, item_guid)
-# 轮播住在 rotate.py。这里 re-export 六个名字，让 tests/、tools/ 继续用 build_feed.xxx：
-#   rotate_pick、_pick_bucket、_bucketize  —— 行为入口
+# 轮播住在 rotate.py。这里 re-export 几个名字，让 tests/、tools/ 继续用 build_feed.xxx：
+#   rotate_pick、_pick_bucket  —— 行为入口
 #   ROTATE_SECONDS、ROTATE_STATE_VERSION、CLOCK_SKEW_WINDOWS —— 测试要把窗口号算成秒
+# `__all__` 同时起两个作用：声明「本模块对外承诺的名字」，以及告诉 pyflakes
+# 这几个 import 不是死代码（它认 __all__，不认没有 flake8 的 # noqa）。
 # load_rotate_state / save_rotate_state 只在本文件的 main() 里用，路径由这里给。
 from rotate import (CLOCK_SKEW_WINDOWS, ROTATE_POOL_MAX, ROTATE_SECONDS,
-                    ROTATE_STATE_VERSION, _bucketize, _pick_bucket,
-                    load_rotate_state, rotate_pick, save_rotate_state)
+                    ROTATE_STATE_VERSION, _pick_bucket, load_rotate_state,
+                    rotate_pick, save_rotate_state)
 from version import __version__
+
+__all__ = ["__version__", "read_feed_entries", "parse_items", "run_once", "write_feed",
+           "main", "rotate_pick", "_pick_bucket", "ROTATE_SECONDS",
+           "ROTATE_STATE_VERSION", "CLOCK_SKEW_WINDOWS"]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FEEDS_FILE = os.environ.get("FEEDS_FILE", os.path.join(BASE_DIR, "feeds.txt"))
@@ -117,6 +123,18 @@ SOURCE_TZ = timezone(timedelta(hours=float(os.environ.get("SOURCE_TZ_OFFSET", "8
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 RETRY_DELAY = 1.0
+# 单源响应体上限。正常 RSS 连 1 MB 都到不了（最大的源约 2~3 MB），
+# 设这个上限只为一种情况：源地址被改成一个巨大的文件（视频、整站导出），
+# 一次 read() 就把 runner 的内存吃光，整轮采集跟着崩。宁可丢这一个源。
+MAX_BODY_BYTES = 12 * 1024 * 1024
+
+
+def _cap(body):
+    """超过上限就抛错（由 worker 转成「该源本轮失败」，走回退或跳过）。"""
+    if len(body) > MAX_BODY_BYTES:
+        raise RuntimeError("响应体 %d MB 超过 %d MB 上限"
+                           % (len(body) >> 20, MAX_BODY_BYTES >> 20))
+    return body
 
 PER_SOURCE = max(1, int(os.environ.get("PER_SOURCE", "5")))   # 每源取几条
 ITEM_LIMIT = max(0, int(os.environ.get("ITEM_LIMIT", "120")))   # 去重后上限，默认 120（0 = 不限）
@@ -166,6 +184,9 @@ def http_get(url):
     源站大多按 Accept-Encoding 压缩，但各家回的算法不一样：gzip 最常见，
     少数（尤其老 nginx）回 deflate。以前只解 gzip，碰上 deflate 就把压缩流当
     正文去解码，解析必然失败、该源整轮走回退——所以这里两种都解。
+
+    读取有上限（MAX_BODY_BYTES），压缩前后各查一次：解压后的体积才是真正占内存的量，
+    一个 12 MB 的 gzip 能炸出几百 MB。
     """
     req = urllib.request.Request(url, headers={
         "User-Agent": UA,
@@ -173,16 +194,17 @@ def http_get(url):
         "Accept-Encoding": "gzip, deflate",
     })
     with urllib.request.urlopen(req, timeout=FETCH_TIMEOUT) as resp:
-        body = resp.read()
+        body = _cap(resp.read(MAX_BODY_BYTES + 1))
         enc = (resp.headers.get("Content-Encoding") or "").lower()
         if "gzip" in enc:
-            body = gzip.decompress(body)
+            body = _cap(gzip.decompress(body))
         elif "deflate" in enc:
             # 规范里的 deflate 是 zlib 包装；有实现直接发裸 deflate，两种都试
             try:
                 body = zlib.decompress(body)
             except zlib.error:
                 body = zlib.decompress(body, -zlib.MAX_WBITS)
+            body = _cap(body)
         return resp.status, body, resp.headers.get_content_charset()
 
 

@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.4.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.5.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -133,7 +133,7 @@ git commit -m "revert feed" && git push
 
 | 目标节奏 | 怎么改 | 屏上内容的典型延迟 |
 |---|---|---|
-| **5 分钟（现状）** | `gen_minute_workflow.py 13`，周期 300 秒，cron `7 * * * *` | 0~1 片 ≈ 5 分钟（`lag` 正常就是 0~1） |
+| **5 分钟（现状）** | `gen_minute_workflow.py 13`，周期 300 秒，cron `7 22,23,0-15 * * *`（夜间另由 `7 16-21` 接管） | 0~1 片 ≈ 5 分钟（`lag` 正常就是 0~1） |
 | 10 分钟（CDN 缓存吃条时改这个） | `tools/gen_minute_workflow.py` 里 `PERIOD=600`、轮数 6；yml 里 `ROTATE_SECONDS: "600"` | 0~1 片 ≈ 10 分钟 |
 | 2 分钟 | `PERIOD=120`、轮数 30；不要动 `ROTATE_SECONDS`（否则设备跟不上） | 0~1 片 ≈ 5 分钟（受 `ROTATE_SECONDS` 限制） |
 | 省 runner | `gen_minute_workflow.py 1`（每小时只跑一轮），轮播自然变成 1 小时一条 | 约 1 小时 |
@@ -285,13 +285,15 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"     # �
 
 ### 7. 条目重复
 
-去重规则见 [README #工作方式](README.md#工作方式)。检查点：链接去掉 `#?` 后是否相同；
+去重规则见 [README #工作方式](README.md#工作方式)。检查点：链接去掉 `#` 锚点与追踪参数后是否相同
+（有意义的查询参数会保留并排序，所以 `?id=1` 和 `?id=2` 不会被当成同一条）；
 标题去标点后是否 ≥ 8 字且前 20 字相同。短标题不参与标题去重是故意的（否则「港股收盘」会被误杀），
-真要更严格就改 `build_feed.py` 里 `len(tt) >= 8` 的阈值，代价是误杀变多。
+真要更严格就改 `render.py` 里 `dedupe()` 的 `len(tt) >= 8` 阈值，代价是误杀变多。
 
 ### 8. 标题乱码
 
-源站声明与实际编码不一致。现处理是「UTF-8 失败退 GB18030」，仍乱码说明是别的编码（如 Big5）：
+源站声明与实际编码不一致。现处理顺序是「HTTP 头声明的编码 → UTF-8 → GB18030 →
+带替换的 UTF-8」，仍乱码说明是别的编码（如 Big5），或者声明了 A 实际发的是 B：
 
 ```bash
 curl -sI "源地址" | grep -i content-type
@@ -377,9 +379,11 @@ python3 tools/check_secrets.py --all    # 连未跟踪文件一起扫
 
 ### 13. `Deployment request failed ... due to in progress deployment`
 
-Pages 同一时刻只允许一个部署，撞上就报这个 400。三个工作流的处理不同：
+Pages 同一时刻只允许一个部署，撞上就报这个 400。三份工作流的处理各不同：
 
-- `minute.yml` 独占 `rss-pages` 组，撞上时后触发的一方**接管**（保证整点重新对齐）；
+- `minute.yml` 与 `nightly.yml` 同属 `rss-pages` 组：前者 `cancel-in-progress: true`，整点触发时
+  若上一轮还没跑完就**接管**（保证每次触发都从 :07 重新对齐）；后者 `false`，撞上时排队等前一个部署结束。
+  两者时段互补（UTC 22,23,0-15 与 16-21），正常不会相遇；
 - `rss.yml` 独立成组（改源要立刻生效，不能排一小时），失败时等 35 秒重新打包再部署一次。
 
 仍出现说明两次部署间隔小于约 25 秒，把 `rss.yml` 里的 `sleep 35` 调大。
@@ -412,8 +416,9 @@ curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | pyth
 `lag` = **落后当前窗几片**（`window - bucket`，乘 `ROTATE_SECONDS` 就是「屏上是几分钟前的消息」），
 `shown` = 最近播过的时间片号（**不是 guid**，只保留池子里还在的片），
 `pool` = 池子**可播片数**（不含发布时间在未来的片）、`items` = **进入轮播池的条数**
-（= 按 `ROTATE_POOL_MAX` 截断后的池子，**不是** `feed.xml` 的条数 —— 完整版通常更多，
-看到 `items=120` 而完整版 220+ 条是正常的，不是「完整版被截断了」），`cycle` = 第几轮（1 起）。
+（= 按 `ROTATE_POOL_MAX` 截断后的池子；1.4.0 起完整版也是 120 条，两边同值，
+所以 `items=120` 与 `feed.xml` 的条数一致 —— 两个数字对不上时先查
+`ITEM_LIMIT` / `ROTATE_POOL_MAX` 是不是被哪份 workflow 单独改过），`cycle` = 第几轮（1 起）。
 
 排障时先看 `lag`：稳态中位在 1 片上下；一旦明显变大，说明最近两窗都没有可播的新内容，
 正在吃池子里的存货（低产能时段的正常现象 —— 选片**没有年龄上限**，极端停更时 `lag`

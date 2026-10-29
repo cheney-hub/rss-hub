@@ -45,7 +45,7 @@
 <body>
 <div class="wrap">
   <h1>RSS 聚合头条</h1>
-  <div class="sub">多源头条合并 · 每源 5 条去重后全文收录（设备轮播池取最新 120 条） · 白天每 5 分钟重建一版（夜间每小时）· 设备版每版换一条、走完全部才回头</div>
+  <div class="sub">多源头条合并 · 每源 5 条、去重后按发布时间取最新 120 条（正文全文不截断） · 白天每 5 分钟重建一版（夜间每小时）· 设备版每版换一条、优先播最新</div>
   <div class="sub">本项目专为 <a href="https://dot.mindreset.tech/docs/quote_0">Dot (Quote/0) 墨水屏设备</a>开发，标题已按墨水屏显示优化；完整版同样兼容任意 RSS 阅读器。</div>
 
   <div class="card">
@@ -87,7 +87,7 @@
     <a href="./feed-wrap.xml">feed-wrap.xml</a> ·
     <a href="./screen.html">屏幕效果</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
-    <div style="margin-top:6px">rss-hub v1.4.0 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
+    <div style="margin-top:6px">rss-hub v1.5.0 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
   </div>
 </div>
 
@@ -142,20 +142,50 @@ fetch('./feed.xml?t=' + Date.now(), {cache:'no-store'})
     const lbd = lb ? new Date(lb) : null;
     document.getElementById('t').textContent = lbd && !isNaN(lbd) ? fmt(lbd) : '—';
     const list = document.getElementById('list');
-    if(!items.length){ list.innerHTML = '<li class="meta">暂无条目</li>'; return; }
-    list.innerHTML = items.map(it => {
-      const title = it.querySelector('title')?.textContent || '(无标题)';
-      const link  = it.querySelector('link')?.textContent || '#';
-      const src   = it.querySelector('source')?.textContent || '';
-      const date  = it.querySelector('pubDate')?.textContent;
+    if(!items.length){ list.replaceChildren(note('暂无条目')); return; }
+
+    // 逐条建 DOM 节点，不拼 HTML 字符串：标题、链接、源名都来自第三方 RSS，
+    // 拼进 innerHTML 等于让任何一家源站都能在本页执行脚本（`<img onerror=…>` 就够）。
+    // 链接只认 http(s)：`javascript:` 这类伪协议即使只是被点开也一样危险。
+    const frag = document.createDocumentFragment();
+    for(const it of items){
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.textContent = it.querySelector('title')?.textContent || '(无标题)';
+      const link = (it.querySelector('link')?.textContent || '').trim();
+      if(/^https?:\/\//i.test(link)){
+        a.href = link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      }
+      li.appendChild(a);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const src = (it.querySelector('source')?.textContent || '').trim();
+      if(src){
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = src;
+        meta.appendChild(tag);
+      }
+      const date = it.querySelector('pubDate')?.textContent;
       const d = date ? new Date(date) : null;
-      return `<li><a href="${link}" target="_blank" rel="noopener">${title}</a>
-        <div class="meta">${src ? `<span class="tag">${src}</span>` : ''}${d && !isNaN(d) ? fmt(d) : ''}</div></li>`;
-    }).join('');
+      if(d && !isNaN(d)) meta.appendChild(document.createTextNode(fmt(d)));
+      li.appendChild(meta);
+      frag.appendChild(li);
+    }
+    list.replaceChildren(frag);
   })
   .catch(e => {
-    document.getElementById('list').innerHTML = '<li class="meta">feed 载入失败：' + e.message + '</li>';
+    document.getElementById('list').replaceChildren(note('feed 载入失败：' + e.message));
   });
+
+// 一条纯文字提示（同样走 textContent，异常信息里也可能带上游内容）
+function note(text){
+  const li = document.createElement('li');
+  li.className = 'meta';
+  li.textContent = text;
+  return li;
+}
 </script>
 </body>
 </html>

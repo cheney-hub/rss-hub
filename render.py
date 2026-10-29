@@ -45,14 +45,36 @@ ENTITY_FIX = {
     "&bull;": "•", "&deg;": "°", "&permil;": "‰", "&times;": "×",
 }
 
+# 段落 / 换行边界。这些标签本身不带文字，但删掉之后两侧的文字会贴在一起：
+# `<p>Hello world</p><p>Second</p>` 会变成 `worldSecond`，英文整句读不出词界。
+# 中文没有这个问题（汉字本来就挨着排），所以只在**两侧都是半角词字符**时才补空格，
+# 其余边界照旧直接删 —— 口径与历史输出完全一致，不会给汉字中间塞进空格。
+_BLOCK_TAG = re.compile(r"</?(?:p|div|li|td|tr|br|h[1-6]|section|article|blockquote)\b[^>]*>",
+                        re.I)
+_GAP = "\x00"          # 占位符：先标出边界，等两侧字符都确定了再决定删还是换成空格
+
 
 def clean_text(s):
+    """把 RSS 里的一小段 HTML 洗成「纯文本 + 单空格」。
+
+    顺序不能换：CDATA 先去壳 → 段落边界打标记 → 剥标签 → 解实体 → 收敛空白 →
+    决定标记处留不留空格。先解实体会让 `&lt;p&gt;` 这类转义标签也被当成标签剥掉。
+    """
     if not s:
         return ""
     s = re.sub(r"<!\[CDATA\[(.*?)\]\]>", r"\1", s, flags=re.S)
+    s = _BLOCK_TAG.sub(_GAP, s)
     s = re.sub(r"<[^>]+>", "", s)
     s = html.unescape(s)
-    return re.sub(r"\s+", " ", s).strip()
+    s = re.sub(r"\s+", " ", s)
+    # 夹在两个半角词字符之间的边界换成空格（`worldSecond` → `world Second`），
+    # 其余一律删掉：`段落。</p><p>下段` 保持「段落下段」，与旧行为逐字节相同。
+    # 一个段落边界常常留下两个标记（`</p>` 和 `<p>` 各一个），中间可能还夹着换行空白，
+    # 所以要把「标记 + 空白 + 标记」整段认成一个边界，否则 lookahead 撞上的是下一个标记、
+    # 匹配失败，英文照样粘在一起。
+    s = re.sub(r"([A-Za-z0-9])[ \t]*%s(?:[ \t]*%s)*[ \t]*(?=[A-Za-z0-9])" % (_GAP, _GAP),
+               r"\1 ", s)
+    return re.sub(r"\s+", " ", s.replace(_GAP, "")).strip()
 
 
 # ---------------- 去重 ----------------
@@ -316,7 +338,7 @@ def esc(s):
     return html.escape(s or "", quote=True)
 
 
-def _channel_lines(feed_url, channel_title, description, total, screen):
+def _channel_lines(feed_url, channel_title, description, screen):
     """<channel> 头部：设备版砍掉 atom:link / generator / ttl 三项省体积。"""
     now = email.utils.format_datetime(datetime.now(timezone.utc))
     lines = [
@@ -341,21 +363,30 @@ def _channel_lines(feed_url, channel_title, description, total, screen):
 
 
 def _item_lines(it, screen):
-    """一个 <item> 的字段。两种版本的差别集中在这里，一眼能对照。"""
+    """一个 <item> 的字段。两种版本的差别集中在这里，一眼能对照。
+
+    标题 / 链接都用 .get 取：轮播回退路径上的条目来自上一份 feed，
+    字段集与抓取路径不完全一致，缺一个键不该让整份 feed 生成失败。
+    """
+    title = it.get("title") or ""
+    link = it.get("link") or ""
     if screen:
-        head, tail = split_title(it["title"])
-        body = compose_body(tail, it.get("summary"), it["title"])
+        head, tail = split_title(title)
+        body = compose_body(tail, it.get("summary"), title)
     else:
         # 完整版不丢摘要：以前这里正文恒为空，阅读器里只剩标题，原 feed 的导语一段都读不到。
         # 标题保持原样（不截断），摘要单独截到 FEED_BODY_MAX。
-        head = it["title"]
-        body = compose_body("", it.get("summary"), it["title"], body_max=FEED_BODY_MAX)
+        head = title
+        body = compose_body("", it.get("summary"), title, body_max=FEED_BODY_MAX)
 
     lines = ["<item>", "<title>%s</title>" % esc(head)]
     # 设备版：标题装不下的余文 + 原 feed 摘要；完整版：原 feed 摘要
     if body:
         lines.append("<description>%s</description>" % esc(body))
-    lines.append("<link>%s</link>" % esc(it["link"]))
+    # 没有链接就不发 <link>：空的 <link></link> 会被阅读器当成一条死链，
+    # 而 RSS 2.0 里 <link> 本来就是可选的，缺字段比给个空值干净。
+    if link:
+        lines.append("<link>%s</link>" % esc(link))
     if it.get("date_raw"):
         lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
     elif it.get("ts"):
@@ -368,7 +399,7 @@ def _item_lines(it, screen):
     else:
         # 完整版仍用「链接|源地址」：同一篇文章被两个源收录时 guid 不同，阅读器不会吞条目
         lines.append('<guid isPermaLink="false">%s</guid>'
-                     % esc((it["link"] or it["title"]) + "|" + str(it["src"])))
+                     % esc((link or title) + "|" + str(it.get("src") or "")))
     if it.get("src_name"):
         lines.append('<source url="%s">%s</source>'
                      % (esc(it["src"]), esc(plain_text(it["src_name"]))))
@@ -392,7 +423,7 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
     total = stats.get("total", 0)
     if description is None:
         description = "多源 RSS 头条聚合，按发布时间倒序（源 %d 个）" % total
-    lines = _channel_lines(feed_url, channel_title, description, total, screen)
+    lines = _channel_lines(feed_url, channel_title, description, screen)
     for it in items:
         lines.extend(_item_lines(it, screen))
     lines.append("</channel></rss>")

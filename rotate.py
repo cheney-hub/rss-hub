@@ -37,8 +37,9 @@ from render import item_guid
 # Pages CDN 缓存 600 秒，若真机上出现「同一条连显两次」，把它改成 600。
 ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))
 # 轮播池上限：设备端只消费「最新 120 条」。最差滞后 = 池条数 ÷ 每窗新增，
-# 池子涨到 245 条会把最差滞后从 4.3 小时推到 8 小时以上 —— 所以完整版条数放开
-# （ITEM_LIMIT=0）之后，设备池子仍显式钉在 120（0 = 不限，1.2.x 时代的默认值）。
+# 池子涨到 245 条会把最差滞后从 4.3 小时推到 8 小时以上 —— 所以设备池与完整版
+# 分开管：完整版条数看 ITEM_LIMIT（现也默认 120），设备池这里显式钉在 120
+# （0 = 不限，1.2.x 时代的默认值）。两个参数要一起调，只放大 ITEM_LIMIT 不会改变上屏节奏。
 ROTATE_POOL_MAX = max(0, int(os.environ.get("ROTATE_POOL_MAX", "120")))
 
 ROTATE_STATE_VERSION = 3      # 状态结构版本，改了就自动丢弃旧状态（宁可重复一条，不能乱序）
@@ -258,7 +259,10 @@ def _build_state(w, pick_b, pick, shown, cycle, dwell, n_buckets, n_items):
         "dwell": dwell,
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "title": (pick.get("title") or "")[:40],
-        "at": datetime.fromtimestamp(pick_b * dwell, timezone.utc).strftime("%m-%d %H:%M"),
+        # 显式带 UTC：这个字段是排障时跟日志对时间用的，不带时区会被当成北京时间
+        # （本地 +08、runner UTC，差 8 小时足以让人误判「这条怎么是 8 小时前发的」）。
+        "at": datetime.fromtimestamp(pick_b * dwell, timezone.utc).strftime("%m-%d %H:%M")
+              + " UTC",
     }
 
 
@@ -330,7 +334,7 @@ def _advance_note(st, shown, live, items, late):
     不打出来就没人发现源的时间戳坏了。这一句是那件事唯一的出口（`_pickable` 是纯函数，
     不该自己打印）。`main()` 已经把它和标题打在同一行，追加长一点不影响排版。
     """
-    note = ("新窗推进（%s 片 · 落后 %d 片 · 已播 %d 片 · 池 %d 片/%d 条 · 第 %d 轮）"
+    note = ("新窗推进（上屏片 %s · 落后 %d 片 · 已播 %d 片 · 池 %d 片/%d 条 · 第 %d 轮）"
             % (st["at"], st["lag"], len(shown), len(live), len(items), st["cycle"]))
     if late:
         note += " · 另有 %d 条时间戳晚于当前，已排除出设备版轮播" % late

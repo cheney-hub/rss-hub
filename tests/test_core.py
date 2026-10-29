@@ -6,6 +6,7 @@
 跑法：
     python -m unittest discover -s tests -v
 """
+import glob
 import os
 import re
 import sys
@@ -163,6 +164,37 @@ class TestDedupe(unittest.TestCase):
         b = mk("标题乙乙乙乙乙乙", link="http://x/1?b=2&a=1")
         out, _ = R.dedupe([a, b])
         self.assertEqual(len(out), 1)
+
+
+class TestCleanText(unittest.TestCase):
+    """HTML → 纯文本：段落边界的处理是这里最容易出错的一处。
+
+    旧实现把 `<[^>]+>` 一律删掉，于是 `</p><p>` 两侧的英文单词粘成一个词
+    （`worldSecond`），整句读不出词界。修法必须**只**在半角词字符之间补空格，
+    汉字之间照旧直接相接 —— 否则中文正文会被塞进一堆排版噪音。
+    """
+
+    def test_paragraph_boundary_keeps_english_word_gap(self):
+        self.assertEqual(R.clean_text("<p>Hello world</p><p>Second paragraph</p>"),
+                         "Hello world Second paragraph")
+        self.assertEqual(R.clean_text("jumped<br>Apple rose"), "jumped Apple rose")
+
+    def test_paragraph_boundary_does_not_add_space_between_cjk(self):
+        self.assertEqual(R.clean_text("<p>第一段。</p><p>第二段。</p>"), "第一段。第二段。")
+
+    def test_paragraph_boundary_with_newline_keeps_single_space(self):
+        # 源里写成 `</p>\n<p>` 的时候，换行本来就变成了一个空格，别叠加成两个
+        self.assertEqual(R.clean_text("<p>a</p>\n<p>b</p>"), "a b")
+        self.assertEqual(R.clean_text("<p>第一段。</p>\n<p>第二段。</p>"), "第一段。 第二段。")
+
+    def test_nbsp_space_is_preserved(self):
+        # `&nbsp;` 是源站主动要求的空格，不属于「段落边界」，不能被吃掉
+        self.assertEqual(R.clean_text("摘要&nbsp;内容"), "摘要 内容")
+
+    def test_tags_entities_and_cdata(self):
+        self.assertEqual(R.clean_text("<![CDATA[<b>粗体</b> &amp; <i>斜体</i>]]>"),
+                         "粗体 & 斜体")
+        self.assertEqual(R.clean_text("  \n\t "), "")
 
 
 class TestBody(unittest.TestCase):
@@ -601,11 +633,17 @@ class TestParseItems(unittest.TestCase):
 
 
 class TestWorkflowParams(unittest.TestCase):
-    """workflow 里显式写的调参必须与代码默认值一致。
+    """workflow 里显式写的调参必须与代码默认值一致，且三份 workflow 之间必须一致。
 
     minute.yml 是 gen_minute_workflow.py 的产物，rss.yml / nightly.yml 是手写的；
     参数改默认值时只改其中一处，另一处就会把线上产物悄悄改回旧口径
     （2026-10-29 实测：完整版 228 条被「改源即时发布」盖回 120 条）。
+
+    两个方向都要盯：
+      * **值**：写了就必须等于代码默认值（test_workflow_env_matches_code_defaults）；
+      * **全**：生成器模板里的每个参数，另两份手写工作流也得写出来
+        （test_handwritten_workflows_carry_all_tuned_params）—— 少写一项不会报错，
+        只会悄悄落回代码默认值，等默认值一改，那一条路径就与主线不一致了。
     """
 
     KEYS = {
@@ -614,12 +652,32 @@ class TestWorkflowParams(unittest.TestCase):
         "FEED_BODY_MAX": lambda: __import__("render").FEED_BODY_MAX,
         "ROTATE_POOL_MAX": lambda: __import__("rotate").ROTATE_POOL_MAX,
     }
+    # 生成器模板是「参数全集」的权威副本；轮次号每轮自增，不参与比对
+    GENERATED = "minute.yml"
+    HANDWRITTEN = ("rss.yml", "nightly.yml")
+    PER_CYCLE = {"CYCLE"}
+
+    @staticmethod
+    def _wf_dir():
+        return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            ".github", "workflows")
+
+    @staticmethod
+    def _read(name):
+        with open(os.path.join(TestWorkflowParams._wf_dir(), name), encoding="utf-8") as f:
+            return f.read()
+
+    @staticmethod
+    def _env_values(src):
+        """抓 env 段里的 `KEY: "value"`，返回 {KEY: value}（同名取最后一次）。"""
+        return {m.group(1): m.group(2)
+                for m in re.finditer(r'^\s*([A-Z][A-Z0-9_]*):\s*"?([^"\n]*?)"?\s*$',
+                                     src, re.M)}
 
     def test_workflow_env_matches_code_defaults(self):
-        import glob, os, re
-        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        for path in glob.glob(os.path.join(root, ".github", "workflows", "*.yml")):
-            src = open(path, encoding="utf-8").read()
+        for path in glob.glob(os.path.join(self._wf_dir(), "*.yml")):
+            with open(path, encoding="utf-8") as f:
+                src = f.read()
             for key, getter in self.KEYS.items():
                 # 「扫到就比、扫不到不报」：刻意只在某个 workflow 覆盖参数不算错，
                 # 但只要写了，就必须与代码默认值一致。
@@ -628,6 +686,18 @@ class TestWorkflowParams(unittest.TestCase):
                         float(m.group(1)), float(getter()),
                         "%s 里的 %s=%s 与代码默认值 %s 不一致"
                         % (os.path.basename(path), key, m.group(1), getter()))
+
+    def test_handwritten_workflows_carry_all_tuned_params(self):
+        tuned = {k: v for k, v in self._env_values(self._read(self.GENERATED)).items()
+                 if k not in self.PER_CYCLE}
+        self.assertTrue(tuned, "生成器模板里一个参数都没解析到，正则或模板变了")
+        for name in self.HANDWRITTEN:
+            got = self._env_values(self._read(name))
+            for key, want in sorted(tuned.items()):
+                self.assertIn(key, got, "%s 少了参数 %s，会悄悄落回代码默认值" % (name, key))
+                self.assertEqual(got[key], want,
+                                 "%s 的 %s=%s 与 %s 的 %s 不一致"
+                                 % (name, key, got[key], self.GENERATED, want))
 
 
 if __name__ == "__main__":
