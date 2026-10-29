@@ -70,6 +70,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 01 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-01
@@ -109,6 +117,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 02 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -150,6 +166,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 03 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-03
@@ -189,6 +213,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 04 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -230,6 +262,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 05 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-05
@@ -269,6 +309,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 06 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -310,6 +358,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 07 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-07
@@ -349,6 +405,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 08 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -390,6 +454,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 09 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-09
@@ -429,6 +501,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 10 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -470,6 +550,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 11 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-11
@@ -509,6 +597,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 12 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -550,6 +646,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 13 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-13
@@ -589,6 +693,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 14 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -630,6 +742,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 15 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-15
@@ -669,6 +789,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 16 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -710,6 +838,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 17 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-17
@@ -749,6 +885,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 18 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -790,6 +934,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 19 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-19
@@ -829,6 +981,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 20 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -870,6 +1030,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 21 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-21
@@ -909,6 +1077,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 22 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -950,6 +1126,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 23 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-23
@@ -989,6 +1173,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 24 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1030,6 +1222,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 25 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-25
@@ -1069,6 +1269,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 26 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1110,6 +1318,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 27 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-27
@@ -1149,6 +1365,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 28 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1190,6 +1414,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 29 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-29
@@ -1229,6 +1461,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 30 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1270,6 +1510,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 31 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-31
@@ -1309,6 +1557,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 32 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1350,6 +1606,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 33 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-33
@@ -1389,6 +1653,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 34 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1430,6 +1702,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 35 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-35
@@ -1469,6 +1749,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 36 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1510,6 +1798,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 37 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-37
@@ -1549,6 +1845,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 38 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1590,6 +1894,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 39 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-39
@@ -1629,6 +1941,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 40 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1670,6 +1990,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 41 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-41
@@ -1709,6 +2037,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 42 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1750,6 +2086,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 43 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-43
@@ -1789,6 +2133,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 44 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1830,6 +2182,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 45 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-45
@@ -1869,6 +2229,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 46 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1910,6 +2278,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 47 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-47
@@ -1949,6 +2325,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 48 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -1990,6 +2374,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 49 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-49
@@ -2029,6 +2421,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 50 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -2070,6 +2470,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 51 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-51
@@ -2109,6 +2517,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 52 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -2150,6 +2566,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 53 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-53
@@ -2190,6 +2614,14 @@ jobs:
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 54 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-54
@@ -2229,6 +2661,14 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
+
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 55 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:

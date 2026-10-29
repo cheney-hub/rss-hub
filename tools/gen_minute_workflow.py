@@ -96,6 +96,14 @@ CYCLE_TPL = """
             fi
           fi
 
+      # 静态页（index.html / screen.html）始终取远端最新版本：
+      # 作业是整点 checkout 的，这期间推送的新页面进不来，
+      # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
+      - name: 轮 {n:02d} 同步静态页
+        run: |
+          git fetch -q origin main || true
+          git checkout -q origin/main -- docs/index.html docs/screen.html 2>/dev/null || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           name: site-{n:02d}
