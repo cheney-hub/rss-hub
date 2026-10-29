@@ -117,8 +117,8 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | `CONCURRENCY` | `12` | 并发抓取数 |
 | `MAX_ITEMS`（代码常量） | `60` | 完整版输出条目上限 |
 | `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-screen.xml` | 墨水屏版输出路径 |
-| `SCREEN_TITLE_WIDTH` | `24` | 墨水屏标题宽度上限（全角字符数，24 × 11 px ≈ 264 px < 280 px 内容宽） |
-| `SCREEN_ITEMS` | `12` | 墨水屏版条目数（4 条/页 × 3 页） |
+| `SCREEN_TITLE_WIDTH` | `24` | 墨水屏标题宽度上限（全角字符数）。设备渲染由 Dot 云端模板决定，此值只是「一行放得下」的保守截断，防超长标题被云端硬切 |
+| `SCREEN_ITEMS` | `60` | 墨水屏版条目数。Dot 云端取「最新 N 条」且 N 由它决定，给满随它挑 |
 
 ### `aggregate_rss.py`（通道 B）
 

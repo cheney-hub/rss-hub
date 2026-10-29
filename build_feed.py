@@ -14,7 +14,7 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
 
 同时输出两份 feed：
   docs/feed.xml         完整版，标题原样，给电脑/手机上的阅读器
-  docs/feed-screen.xml  墨水屏版，标题裁到 296×152 屏幕一行放得下，条目也少
+  docs/feed-screen.xml  墨水屏版（Dot Quote/0）：纯文本标题、字段极简，供 Dot 云端渲染
 
 环境变量：
   FEEDS_FILE       订阅源列表，默认 ./feeds.txt
@@ -26,7 +26,7 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
   CONCURRENCY      并发数，默认 12
   SCREEN_OUT       墨水屏版输出路径，默认与 OUT_FILE 同目录的 feed-screen.xml
   SCREEN_TITLE_WIDTH 墨水屏标题宽度上限（全角字符数），默认 24
-  SCREEN_ITEMS     墨水屏版条目数上限，默认 12
+  SCREEN_ITEMS     墨水屏版条目数上限，默认 60
 """
 import os
 import re
@@ -52,11 +52,11 @@ REFRESH_SECONDS = int(os.environ.get("REFRESH_SECONDS", "0"))
 FETCH_TIMEOUT = int(os.environ.get("FETCH_TIMEOUT", "20"))
 CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
 
-# 墨水屏版（Dot Quote/0：296×152 px、125 PPI、黑白）
+# 墨水屏版（Dot Quote/0，走 Dot 云端渲染，非设备直接解析）
 SCREEN_OUT = os.environ.get(
     "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-screen.xml"))
 SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "24"))
-SCREEN_ITEMS = max(1, int(os.environ.get("SCREEN_ITEMS", "12")))
+SCREEN_ITEMS = max(1, int(os.environ.get("SCREEN_ITEMS", "60")))
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -279,10 +279,17 @@ def load_prev_items():
     return prev
 
 
-# ---------------- 墨水屏排版 ----------------
-# 屏幕 296×152 px。标题按一行排：内容区宽 280 px、字号约 11 px = 25 个全角字，
-# 一屏放 4 条（标题 1 行 + 来源/时间 1 行），标题取 24 个全角字符，
-# 留出字体差异与右侧留白的余量。
+# ---------------- 墨水屏版 ----------------
+# Dot Quote/0 的显示链路：App 里把 RSS 地址加入「循环内容」→ Dot 云端抓取解析 →
+# 云端模板渲染成位图 → 设备按刷新间隔拉图显示。设备端（ESP32-C3，400KB 内存）不解析 XML，
+# 显示几条、字号多大都由云端模板决定，订阅方控制不了。
+#
+# 所以这份小屏版不做「猜测排版」，只做云端渲染做不到的事：
+#   1. 标题纯文本 —— 摘掉 emoji、箭头、几何图形、零宽字符等（黑白墨水屏上它们是豆腐块或占位）；
+#   2. 标题限长 —— 超长标题由我们这边在标点处优雅截断，而不是被云端硬切成一串省略号；
+#   3. 条目给足 —— 云端每次取「最新 N 条」，N 由 Dot 决定，我们给满 60 条随它挑；
+#   4. 字段极简 —— guid 用短哈希、去掉 atom:link/generator/ttl，云端抓取解析更轻。
+# 未经限长的完整版照旧输出 feed.xml，普通 RSS 阅读器用它。
 BREAK_CHARS = "，,、；;：:｜|—）)！!？?·】」』 "
 
 # 黑白墨水屏上这些字符要么显示成方块要么是透明占位，还白占宽度，直接摘掉。
@@ -467,12 +474,12 @@ def write_feed(items, stats):
     xml_text = build_rss(items, FEED_URL, stats)
     _write(OUT_FILE, xml_text)
 
-    # 墨水屏版：极简字段 + 标题裁到一行、条数收紧，给 296×152 的小屏用
+    # 墨水屏版：纯文本标题 + 适度限长 + 条目给足，交给 Dot 云端渲染
     screen_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
     screen_text = build_rss(
         items, screen_url, stats,
         channel_title="RSS 头条 · 墨水屏",
-        description="多源头条，标题已按 296×152 屏幕一行排好（源 %d 个）" % stats["total"],
+        description="多源头条，纯文本标题，已为小屏墨水屏精简（源 %d 个）" % stats["total"],
         title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS, minimal=True)
     _write(SCREEN_OUT, screen_text)
     return xml_text, screen_text

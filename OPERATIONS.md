@@ -38,17 +38,22 @@ python3 build_feed.py
 | `CONCURRENCY` | `12` | 源增多到 60+ 可提到 16；被源站限流时降到 8 |
 | `FETCH_TIMEOUT` | `20` | 慢源多可提到 `25`；注意 `timeout-minutes: 12` 是总闸 |
 
-### 调墨水屏排版
+### 调墨水屏版
 
-`docs/feed-screen.xml` 的规则由两个环境变量控制，改 `.github/workflows/` 下三处 `env:`（`minute.yml` 的模板在
-`tools/gen_minute_workflow.py` 的 `CYCLE_TPL` 里，改完重新生成）：
+先明确：Dot Quote/0 的设备端不解析 RSS，显示由 **Dot 云端**抓取 `feed-screen.xml` 后按自家模板渲染，
+屏幕上显示几条、字号多大都由 Dot 决定，订阅方控制不了（见 [官方文档](https://dot.mindreset.tech/docs/service/studio/rss_feed)）。
+我们控制的是「喂给云端的原料」——`docs/feed-screen.xml`，由两个环境变量控制
+（改 `.github/workflows/` 下三处 `env:`，`minute.yml` 的模板在 `tools/gen_minute_workflow.py` 里，改完重新生成）：
 
 | 变量 | 现值 | 说明 |
 |---|---|---|
-| `SCREEN_TITLE_WIDTH` | `24` | 标题上限（全角字符数）。内容宽 280 px、字号约 11 px，24 字 ≈ 264 px，留 16 px 余量；换成更窄的屏（如 250 px）就调到 20 |
-| `SCREEN_ITEMS` | `12` | 条数。一屏 4 条，`12` = 3 页；只想给一屏就设 `4` |
+| `SCREEN_TITLE_WIDTH` | `24` | 标题上限（全角字符数）。用途是在我们这边优雅截断（标点断句、不切书名号），而不是被云端硬切成省略号串。嫌截得狠可放宽到 30～40 |
+| `SCREEN_ITEMS` | `60` | 条数给满，云端要多少挑多少；想瘦身可降到 40 |
 
-调完打开 <https://cheney-hub.github.io/rss-hub/screen.html> 看效果（1:1 模拟 296×152，可翻页、放大 2×）。
+另外小屏版自动做了两件事：标题转纯文本（emoji/箭头/零宽字符全部摘除，黑白墨水屏显示不了）、
+字段极简（guid 短哈希、去掉 atom:link/generator/ttl）。
+
+调完打开 <https://cheney-hub.github.io/rss-hub/screen.html> 看内容效果（「一次一条」示意，Dot 实际渲染样式以设备为准）。
 
 ### 墨水屏版为什么字段更少
 

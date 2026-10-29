@@ -78,7 +78,7 @@ CYCLE_TPL = """
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "{n}"
 
         run: |

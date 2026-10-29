@@ -52,7 +52,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "1"
 
         run: |
@@ -100,7 +100,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "2"
 
         run: |
@@ -148,7 +148,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "3"
 
         run: |
@@ -196,7 +196,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "4"
 
         run: |
@@ -244,7 +244,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "5"
 
         run: |
@@ -292,7 +292,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "6"
 
         run: |
@@ -340,7 +340,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "7"
 
         run: |
@@ -388,7 +388,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "8"
 
         run: |
@@ -436,7 +436,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "9"
 
         run: |
@@ -484,7 +484,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "10"
 
         run: |
@@ -532,7 +532,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "11"
 
         run: |
@@ -580,7 +580,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "12"
 
         run: |
@@ -628,7 +628,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "13"
 
         run: |
@@ -676,7 +676,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "14"
 
         run: |
@@ -724,7 +724,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "15"
 
         run: |
@@ -772,7 +772,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "16"
 
         run: |
@@ -820,7 +820,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "17"
 
         run: |
@@ -868,7 +868,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "18"
 
         run: |
@@ -916,7 +916,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "19"
 
         run: |
@@ -964,7 +964,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "20"
 
         run: |
@@ -1012,7 +1012,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "21"
 
         run: |
@@ -1060,7 +1060,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "22"
 
         run: |
@@ -1108,7 +1108,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "23"
 
         run: |
@@ -1156,7 +1156,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "24"
 
         run: |
@@ -1204,7 +1204,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "25"
 
         run: |
@@ -1252,7 +1252,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "26"
 
         run: |
@@ -1300,7 +1300,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "27"
 
         run: |
@@ -1348,7 +1348,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "28"
 
         run: |
@@ -1396,7 +1396,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "29"
 
         run: |
@@ -1444,7 +1444,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "30"
 
         run: |
@@ -1492,7 +1492,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "31"
 
         run: |
@@ -1540,7 +1540,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "32"
 
         run: |
@@ -1588,7 +1588,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "33"
 
         run: |
@@ -1636,7 +1636,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "34"
 
         run: |
@@ -1684,7 +1684,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "35"
 
         run: |
@@ -1732,7 +1732,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "36"
 
         run: |
@@ -1780,7 +1780,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "37"
 
         run: |
@@ -1828,7 +1828,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "38"
 
         run: |
@@ -1876,7 +1876,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "39"
 
         run: |
@@ -1924,7 +1924,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "40"
 
         run: |
@@ -1972,7 +1972,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "41"
 
         run: |
@@ -2020,7 +2020,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "42"
 
         run: |
@@ -2068,7 +2068,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "43"
 
         run: |
@@ -2116,7 +2116,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "44"
 
         run: |
@@ -2164,7 +2164,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "45"
 
         run: |
@@ -2212,7 +2212,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "46"
 
         run: |
@@ -2260,7 +2260,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "47"
 
         run: |
@@ -2308,7 +2308,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "48"
 
         run: |
@@ -2356,7 +2356,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "49"
 
         run: |
@@ -2404,7 +2404,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "50"
 
         run: |
@@ -2452,7 +2452,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "51"
 
         run: |
@@ -2500,7 +2500,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "52"
 
         run: |
@@ -2548,7 +2548,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "53"
 
         run: |
@@ -2596,7 +2596,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "54"
 
         run: |
@@ -2644,7 +2644,7 @@ jobs:
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_TITLE_WIDTH: "24"
-          SCREEN_ITEMS: "12"
+          SCREEN_ITEMS: "60"
           CYCLE: "55"
 
         run: |

@@ -209,13 +209,16 @@ Pages 同一时刻只允许一个部署，撞上就会报这个 400。三个工�
 https://cheney-hub.github.io/rss-hub/feed-screen.xml
 ```
 
-**b. 用了墨水屏版还放不下** —— 说明设备实际字号比预估大，按比例调小宽度：
+**b. 用了墨水屏版还是被截得难看** —— Dot 云端渲染时会按它自家模板截断，我们控制不了它的字号和行数，
+只能在喂料端把标题提前截到合适长度：
 
 ```bash
-# 当前按 280 px 内容宽 / 24 字 ≈ 11 px 字号算；若设备实际用 14 px，理论值 280/14 = 20，
-# 这里取 18 更保险（黑白墨水屏字体渲染常比预期宽一点）
+# 默认 24 全角；若设备上仍被云端二次截断，就再调小
 SCREEN_TITLE_WIDTH=18 python3 build_feed.py
 ```
+
+注意：屏幕上「显示几条、字号多大」由 Dot 云端模板决定，订阅方无法控制（设备端连 RSS 都不解析，
+是云端渲染成位图后下发）。我们只能保证喂过去的标题是纯文本、不超长。
 
 **c. 标题里出现方块、空白、半截符号** —— 源站标题带了 emoji 或装饰字符，设备字库没有对应字形。
 墨水屏版已用 `plain_text()` 统一摘除（emoji、箭头、几何图形、零宽字符、变体选择符），
@@ -225,7 +228,7 @@ SCREEN_TITLE_WIDTH=18 python3 build_feed.py
 curl -s https://cheney-hub.github.io/rss-hub/feed-screen.xml | grep "<title>" | head -3
 ```
 
-改工作流的 `env:` 才能长期生效（见 [OPERATIONS.md](OPERATIONS.md#调墨水屏排版)）。先看预览确认：
+改工作流的 `env:` 才能长期生效（见 [OPERATIONS.md](OPERATIONS.md#调墨水屏版)）。先看内容示意：
 <https://cheney-hub.github.io/rss-hub/screen.html>。
 
 另外几个已知的排版细节：标题优先在 `，。：｜` 处断句；`《》“”（）` 没闭合会退到符号前，不会切成半截；

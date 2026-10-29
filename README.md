@@ -8,8 +8,8 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 （源清单）      （Actions 里跑）      docs/feed-screen.xml                        ──►  墨水屏设备
 ```
 
-同一份数据出两个版本：**完整版**标题原样；**墨水屏版**标题裁到 24 个全角字符、只留 12 条，
-专门给 296×152 这类小屏（如 Dot Quote/0）用。
+同一份数据出两个版本：**完整版**标题原样，给电脑/手机上的 RSS 阅读器；**墨水屏版**标题转纯文本并优雅截断
+（24 个全角字符内）、条目给足 60 条，填进 Dot Quote/0 的循环内容列表（显示样式由 Dot 云端渲染）。
 
 ## 订阅地址
 
@@ -35,7 +35,7 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 | 发布频率 | 白天每分钟一版，深夜整点一版（自定义 Actions 部署，不受 Pages 10 次/小时限制） |
 | 单轮耗时 | 3～5 秒（43 源并发 12 路） |
 | 单次作业 | 白天 55 分钟 / 55 轮；单轮约 5 秒抓取 + 约 20 秒部署 |
-| 墨水屏版 | 标题 ≤ 24 全角字符（约一行 24 字），只保留最新 12 条，一屏 4 条分 3 页 |
+| 墨水屏版 | 标题纯文本 ≤ 24 全角字符，60 条给足，供 Dot Quote/0 云端渲染取用 |
 
 ## 快速开始
 
@@ -56,9 +56,9 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 ├── build_feed.py              # 【主链路】采集 + 去重 + 生成 RSS，Actions 调用
 ├── docs/                      # ← GitHub Pages 发布的目录（站点根）
 │   ├── feed.xml               #   完整版订阅文件（每 10 轮备份提交一次）
-│   ├── feed-screen.xml        #   墨水屏版：标题裁到一行、只留 12 条
+│   ├── feed-screen.xml        #   墨水屏版：纯文本标题 + 优雅截断 + 字段极简
 │   ├── index.html             #   订阅说明页（前端读取 feed.xml 渲染）
-│   └── screen.html            #   墨水屏预览：按 296×152 像素 1:1 模拟
+│   └── screen.html            #   小屏内容示意：一次一条，Dot 实际渲染以其云端模板为准
 ├── .github/workflows/
 │   ├── minute.yml             #   分钟级发布：白天每小时 55 轮循环，每分钟部署一次
 │   ├── nightly.yml            #   夜间整点发布：北京 00:00–06:00 每小时一次
@@ -90,29 +90,38 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 
 细节规则见 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
-## 小屏 / 墨水屏适配
+## 小屏 / 墨水屏适配（Dot Quote/0）
 
-参考 [Dot Quote/0](https://dot.mindreset.tech/docs/quote_0) 的规格（296 × 152 px、2.66 英寸、125 PPI、黑白），
-同一轮采集顺带生成 `docs/feed-screen.xml`，规则：
+**先说清机制**（官方文档：[内容模式](https://dot.mindreset.tech/docs/quote_0/start/content_mode)、[时间机制](https://dot.mindreset.tech/docs/quote_0/faq/refresh_timing)、[RSS](https://dot.mindreset.tech/docs/service/studio/rss_feed)）：
+Dot Quote/0 的设备端（ESP32-C3，400 KB 内存）**不解析 RSS XML**。在 Dot App 里把 RSS 地址加进
+「循环内容」列表后，由 **Dot 云端**抓取解析、按自家模板渲染成位图，设备按刷新间隔（App 里 1 分钟～12 小时可调）
+从云端拉图显示。**屏幕上显示几条、字号多大、怎么排版，都由 Dot 云端决定**，订阅方控制不了；
+云端多久抓一次本源也由 Dot 调度，但本源每分钟都是新鲜的，它随时来抓都是最新数据。
 
-| 项目 | 完整版 | 墨水屏版 |
+因此小屏版不做「猜测排版」，只做云端渲染照顾不到的事：
+
+| 项目 | 完整版 feed.xml | 墨水屏版 feed-screen.xml |
 |---|---|---|
-| 标题长度 | 原样 | 最多 **24 个全角字符**（280 px 内容宽 @ 11 px 字号 = 24 × 11 = 264 px，留 16 px 余量） |
-| 标题字符 | 原样（可含 emoji） | **纯文本**：emoji、箭头、几何图形、零宽字符、变体选择符全部摘除，全角空格归一 |
-| 条目数 | 最多 60 条 | 最新 **12 条**（一屏 4 条 × 3 页） |
-| 截断方式 | — | 优先在 `，。：｜` 等标点断句；书名号/引号没闭合就退到其前面；补 `…` 收尾 |
+| 标题字符 | 原样（可含 emoji） | **纯文本**：emoji、箭头、几何图形、零宽字符、变体选择符全部摘除（黑白墨水屏上它们是豆腐块或占位） |
+| 标题长度 | 原样 | 最多 **24 个全角字符**，优先在 `，。：｜` 等标点断句、书名号/引号不切开、补 `…`——由我们优雅截断，而不是被云端硬切 |
+| 条目数 | 最多 60 条 | **60 条**（云端取「最新 N 条」，N 由 Dot 决定，给满随它挑） |
 | 每条字段 | title / link / pubDate / guid / source | 同左，但 **guid 用 12 位短哈希**（原来是「链接\|源地址」整串），channel 去掉 `atom:link`、`generator`、`ttl` |
-| 文件体积 | 约 20 KB | 约 4.6 KB（同条数下比未精简少 22%） |
-| 直接可看 | 任意阅读器 | 打开 <https://cheney-hub.github.io/rss-hub/screen.html> 看 1:1 版面 |
+| 用途 | 电脑/手机上的 RSS 阅读器 | 填进 Dot App 的循环内容列表 |
 
-想调宽度或条数，改运行参数即可（不用改代码）：
+在 Dot App 里订阅时填这个地址：
 
-```bash
-SCREEN_TITLE_WIDTH=18 SCREEN_ITEMS=8 python3 build_feed.py
+```
+https://cheney-hub.github.io/rss-hub/feed-screen.xml
 ```
 
-对应环境变量：`SCREEN_TITLE_WIDTH`（全角字符数）、`SCREEN_ITEMS`（条数）、`SCREEN_OUT`（输出路径）。
-`docs/screen.html` 是纯前端模拟，读取 `feed-screen.xml` 后按 4 条一页渲染，可翻页/放大/暂停轮播。
+设备端建议：插电场景把刷新间隔设 1 分钟效果最好；电池模式间隔越长续航越长，且睡眠期间不刷新。
+<https://cheney-hub.github.io/rss-hub/screen.html> 是「一次一条」的内容示意页（Dot 渲染样式以设备实际显示为准）。
+
+调参（不用改代码）：
+
+```bash
+SCREEN_TITLE_WIDTH=30 SCREEN_ITEMS=40 python3 build_feed.py
+```
 
 ## 加一个源
 
