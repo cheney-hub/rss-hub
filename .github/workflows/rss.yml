@@ -50,10 +50,11 @@ jobs:
           FETCH_TIMEOUT: "20"
           SCREEN_LINE_WIDTH: "13"
           SCREEN_BODY_MAX: "90"
-          FEED_BODY_MAX: "300"
-          PER_SOURCE: "3"
-          ITEM_LIMIT: "120"
+          FEED_BODY_MAX: "0"
+          PER_SOURCE: "5"
+          ITEM_LIMIT: "0"
           ROTATE_SECONDS: "300"
+          ROTATE_POOL_MAX: "120"
         run: python build_feed.py
 
       - uses: actions/upload-pages-artifact@v3

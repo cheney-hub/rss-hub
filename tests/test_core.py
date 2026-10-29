@@ -600,5 +600,35 @@ class TestParseItems(unittest.TestCase):
         self.assertEqual([g["title"] for g in a], [g["title"] for g in b])
 
 
+class TestWorkflowParams(unittest.TestCase):
+    """workflow 里显式写的调参必须与代码默认值一致。
+
+    minute.yml 是 gen_minute_workflow.py 的产物，rss.yml / nightly.yml 是手写的；
+    参数改默认值时只改其中一处，另一处就会把线上产物悄悄改回旧口径
+    （2026-10-29 实测：完整版 228 条被「改源即时发布」盖回 120 条）。
+    """
+
+    KEYS = {
+        "PER_SOURCE": lambda: __import__("build_feed").PER_SOURCE,
+        "ITEM_LIMIT": lambda: __import__("build_feed").ITEM_LIMIT,
+        "FEED_BODY_MAX": lambda: __import__("render").FEED_BODY_MAX,
+        "ROTATE_POOL_MAX": lambda: __import__("rotate").ROTATE_POOL_MAX,
+    }
+
+    def test_workflow_env_matches_code_defaults(self):
+        import glob, os, re
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for path in glob.glob(os.path.join(root, ".github", "workflows", "*.yml")):
+            src = open(path, encoding="utf-8").read()
+            for key, getter in self.KEYS.items():
+                # 「扫到就比、扫不到不报」：刻意只在某个 workflow 覆盖参数不算错，
+                # 但只要写了，就必须与代码默认值一致。
+                for m in re.finditer(r'^\s*%s:\s*"?([0-9.]+)"?\s*$' % key, src, re.M):
+                    self.assertEqual(
+                        float(m.group(1)), float(getter()),
+                        "%s 里的 %s=%s 与代码默认值 %s 不一致"
+                        % (os.path.basename(path), key, m.group(1), getter()))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
