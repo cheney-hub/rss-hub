@@ -6,36 +6,57 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 08:52:05 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 09:02:03 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>路透调查：印尼卢比空仓升至近四个月高点；菲律宾比索信心恶化。</title>
-<link>https://flash.jin10.com/detail/20261029164938156800</link>
-<pubDate>Thu, 29 Oct 2026 16:49:38 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029164938156800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>印度10月经济报告：财政部即时预测模型估计增长率为7.3%。</title>
+<link>https://flash.jin10.com/detail/20261029165950138800</link>
+<pubDate>Thu, 29 Oct 2026 16:59:50 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029165950138800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
-<title>纪念孙中山诞辰160周年研讨会暨主题展在澳门举行</title>
-<link>https://www.chinanews.com.cn/dwq/2026/10-29/10722821.shtml</link>
-<pubDate>Thu, 29 Oct 2026 16:49:31 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/dwq/2026/10-29/10722821.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<title>一图解读1-9月工业企业利润保持两位数增长</title>
+<link>https://www.chinanews.com.cn/cj/2026/10-29/10722835.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:59:34 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722835.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
-<title>美股AI算力租赁商盘前普跌，CoreWeave盘前跌6%，Nebius跌6.6%，IREN跌5%。</title>
-<link>https://xueqiu.com/5124430882/414501165</link>
-<pubDate>Thu, 29 Oct 2026 16:44:02 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414501165|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>财联社10月29日电，纽约期银日内跌2%，现报52.58美元/盎司。</title>
+<link>https://api3.cls.cn/share/article/2519272?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 16:54:30 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519272?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+</item>
+<item>
+<title>纽约期银日内跌2%，现报52.58美元/盎司。</title>
+<link>https://xueqiu.com/5124430882/414503939</link>
+<pubDate>Thu, 29 Oct 2026 16:54:30 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414503939|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
-<title>财联社10月29日电，美股AI算力租赁商盘前普跌，CoreWeave盘前跌6%，Nebius跌6.6%，IREN跌5%。</title>
-<link>https://api3.cls.cn/share/article/2519259?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 16:44:02 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519259?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+<title>俄总统新闻秘书：欧洲弃用俄天然气难称明智</title>
+<link>https://sputniknews.cn/20261029/1073857433.html</link>
+<pubDate>Thu, 29 Oct 2026 16:53:13 +0800</pubDate>
+<guid isPermaLink="false">https://sputniknews.cn/20261029/1073857433.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
+</item>
+<item>
+<title>Meet Meghan Markle’s niece, Noelle Rasmussen, who spoke out on Thomas Markle Snr’s child porn scandal</title>
+<link>https://www.scmp.com/magazines/style/people/celebrities/article/3372555/meet-meghan-markles-niece-noelle-rasmussen-who-spoke-out-thomas-markle-snrs-child-porn-scandal</link>
+<pubDate>Thu, 29 Oct 2026 08:49:34 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/magazines/style/people/celebrities/article/3372555/meet-meghan-markles-niece-noelle-rasmussen-who-spoke-out-thomas-markle-snrs-child-porn-scandal|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>中国防长未出席在菲举行的东盟防长扩大会 国防部回应</title>
+<link>https://c.m.163.com/news/a/LAE0K6CL051482MP.html</link>
+<pubDate>Thu, 29 Oct 2026 08:42:59 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LAE0K6CL051482MP.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>兴业银行：第三季度归母净利润195.6亿元，同比下降1.92%</title>
@@ -57,13 +78,6 @@
 <pubDate>Thu, 29 Oct 2026 16:31:57 +0800</pubDate>
 <guid isPermaLink="false">https://www.36kr.com/p/4046523820004489|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
-</item>
-<item>
-<title>Spain begins 3 days of mourning after high-speed train disaster</title>
-<link>https://www.scmp.com/news/world/europe/article/3372573/spain-begins-3-days-mourning-after-high-speed-train-disaster</link>
-<pubDate>Thu, 29 Oct 2026 08:31:55 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/news/world/europe/article/3372573/spain-begins-3-days-mourning-after-high-speed-train-disaster|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
 <title>国防部介绍那曲抗震救灾一线情况</title>
@@ -92,13 +106,6 @@
 <pubDate>Thu, 29 Oct 2026 16:23:00 +0800</pubDate>
 <guid isPermaLink="false">https://www.cna.com.tw/news/amov/202610290231.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
-</item>
-<item>
-<title>17岁男生被人冒充警察骗出家门殴打 三被告人当庭认罪</title>
-<link>https://c.m.163.com/news/a/LADNAAL30512D3VJ.html</link>
-<pubDate>Thu, 29 Oct 2026 08:20:21 GMT</pubDate>
-<guid isPermaLink="false">https://c.m.163.com/news/a/LADNAAL30512D3VJ.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>穆迪：私募信贷对接AI融资，哪些风险点值得关注</title>
@@ -183,13 +190,6 @@
 <pubDate>Thu, 29 Oct 2026 07:53:00 GMT</pubDate>
 <guid isPermaLink="false">https://news.ifeng.com/c/8xcSKSON0Zv|https://rsshub.rss.tips/ifeng/news</guid>
 <source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
-</item>
-<item>
-<title>卢甘斯克遭乌军大规模袭击，民居及民用基础设施受损</title>
-<link>https://sputniknews.cn/20261029/1073855292.html</link>
-<pubDate>Thu, 29 Oct 2026 15:50:14 +0800</pubDate>
-<guid isPermaLink="false">https://sputniknews.cn/20261029/1073855292.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
 </item>
 <item>
 <title>美军被迫复活高超导弹，弹头装药仅70公斤却想打航母</title>
