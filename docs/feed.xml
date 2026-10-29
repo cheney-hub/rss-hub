@@ -6,14 +6,35 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 08:42:30 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 08:52:05 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>东方金诚：美联储2027年仍有继续加息的可能性</title>
-<link>https://api3.cls.cn/share/article/2519256?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 16:40:04 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519256?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<title>路透调查：印尼卢比空仓升至近四个月高点；菲律宾比索信心恶化。</title>
+<link>https://flash.jin10.com/detail/20261029164938156800</link>
+<pubDate>Thu, 29 Oct 2026 16:49:38 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029164938156800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>纪念孙中山诞辰160周年研讨会暨主题展在澳门举行</title>
+<link>https://www.chinanews.com.cn/dwq/2026/10-29/10722821.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:49:31 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/dwq/2026/10-29/10722821.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>美股AI算力租赁商盘前普跌，CoreWeave盘前跌6%，Nebius跌6.6%，IREN跌5%。</title>
+<link>https://xueqiu.com/5124430882/414501165</link>
+<pubDate>Thu, 29 Oct 2026 16:44:02 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414501165|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>财联社10月29日电，美股AI算力租赁商盘前普跌，CoreWeave盘前跌6%，Nebius跌6.6%，IREN跌5%。</title>
+<link>https://api3.cls.cn/share/article/2519259?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 16:44:02 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519259?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
@@ -24,32 +45,11 @@
 <source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
 </item>
 <item>
-<title>美股存储板块盘前走弱，闪迪、西部数据、美光科技均跌超3%，海力士跌近3%。</title>
-<link>https://xueqiu.com/5124430882/414499521</link>
-<pubDate>Thu, 29 Oct 2026 16:37:32 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414499521|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
 <title>AI投资回报存疑，美股盘前谷歌跌超10%，存储板块普跌，油价下跌，金价走软</title>
 <link>https://wallstreetcn.com/articles/3784748</link>
 <pubDate>Thu, 29 Oct 2026 16:37:27 +0800</pubDate>
 <guid isPermaLink="false">https://wallstreetcn.com/articles/3784748|https://dedicated.wallstreetcn.com/rss.xml</guid>
 <source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
-</item>
-<item>
-<title>金十图示：2026年10月29日（周四）上海黄金交易所市场行情</title>
-<link>https://flash.jin10.com/detail/20261029163724471800</link>
-<pubDate>Thu, 29 Oct 2026 16:37:24 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029163724471800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>《华侨青年》暨南大学预科教育百年纪念特刊发布</title>
-<link>https://www.chinanews.com.cn/txy/2026/10-29/10722795.shtml</link>
-<pubDate>Thu, 29 Oct 2026 16:32:43 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/txy/2026/10-29/10722795.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
 <title>南昌80后小伙做脑机接口：又融资7亿</title>
@@ -178,6 +178,13 @@
 <source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
 </item>
 <item>
+<title>“东盟防长扩大会举办以来，这是中方参会官员级别最低的一次”</title>
+<link>https://news.ifeng.com/c/8xcSKSON0Zv</link>
+<pubDate>Thu, 29 Oct 2026 07:53:00 GMT</pubDate>
+<guid isPermaLink="false">https://news.ifeng.com/c/8xcSKSON0Zv|https://rsshub.rss.tips/ifeng/news</guid>
+<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
+</item>
+<item>
 <title>卢甘斯克遭乌军大规模袭击，民居及民用基础设施受损</title>
 <link>https://sputniknews.cn/20261029/1073855292.html</link>
 <pubDate>Thu, 29 Oct 2026 15:50:14 +0800</pubDate>
@@ -204,13 +211,6 @@
 <pubDate>Thu, 29 Oct 2026 07:16:00 GMT</pubDate>
 <guid isPermaLink="false">https://www.8world.com/greater-china/hong-kong-tai-po-fire-report-3324476|https://rsshub.rss.tips/8world/news</guid>
 <source url="https://rsshub.rss.tips/8world/news">8world</source>
-</item>
-<item>
-<title>外交部：再次敦促美方，立即停止对古巴的封锁制裁</title>
-<link>https://news.ifeng.com/c/8xcP3MkNLWf</link>
-<pubDate>Thu, 29 Oct 2026 07:15:39 GMT</pubDate>
-<guid isPermaLink="false">https://news.ifeng.com/c/8xcP3MkNLWf|https://rsshub.rss.tips/ifeng/news</guid>
-<source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
 <title>特斯拉Model 3停车状态车内起火 三星手机成怀疑对象</title>
