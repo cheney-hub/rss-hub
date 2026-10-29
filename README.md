@@ -56,7 +56,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ```
 .
 ├── feeds.txt                # 订阅源清单：注释行 = 中文源名，下一行 = 地址
-├── build_feed.py            # 主程序：采集 + 去重 + 生成两份 RSS
+├── build_feed.py            # 抓取与编排：拉源、解析、失败回退、轮播游标、写文件
+├── render.py                # 渲染层（纯函数）：纯文本化、宽度折算、标题切分、正文合成、去重键、RSS 生成
 ├── docs/                    # ← GitHub Pages 发布的目录（站点根）
 │   ├── feed.xml             #   完整版（每 10 轮备份提交一次）
 │   ├── feed-wrap.xml        #   设备版：只发轮播到的那一条（纯文本标题 + 截到屏宽 + 余文进正文）
@@ -71,7 +72,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ├── tools/gen_minute_workflow.py  # 生成 minute.yml（改轮数就是改这里）
 ├── tools/check_secrets.py        # 凭据扫描（本地与 CI 共用）
 ├── tools/review_check.py         # 审查门禁：把 CODE_REVIEW.md 的硬规则做成可执行检查
-├── tests/test_core.py            # 核心纯函数单测（20 例，零依赖、不联网）
+├── tests/test_core.py            # 核心纯函数单测（22 例，零依赖、不联网）
+├── tools/golden_snapshot.py      # 行为快照：重构前后各跑一次，diff 为空才算没改行为
 ├── CODE_REVIEW.md           # 代码审查标准与流程（提交前必读）
 └── OPERATIONS.md            # 运维手册 + 故障排查
 ```
@@ -207,7 +209,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：20 个核心纯函数用例
+python3 -m unittest discover -s tests -v    # 单测：22 个用例（含分层契约）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节
 python3 tools/check_secrets.py              # 凭据扫描
 ```

@@ -13,63 +13,84 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import build_feed as B  # noqa: E402
+import render as R      # noqa: E402  （纯函数住在渲染层）
 
 
 def mk(title, link=None, src="s", ts=1000):
     return {"title": title, "link": link or "http://x/" + title, "src": src, "ts": ts}
 
 
+class TestLayering(unittest.TestCase):
+    """分层契约：抓取层必须用渲染层那一个 build_rss，不能各带一份实现。"""
+
+    def test_pipeline_uses_render(self):
+        self.assertIs(B.build_rss, R.build_rss)
+
+    def test_render_has_no_network(self):
+        """渲染层不许 import 网络模块（看 AST，不看注释里的字眼）。"""
+        import ast
+        src = open(R.__file__, encoding="utf-8").read()
+        mods = set()
+        for n in ast.walk(ast.parse(src)):
+            if isinstance(n, ast.Import):
+                mods.update(a.name.split(".")[0] for a in n.names)
+            elif isinstance(n, ast.ImportFrom) and n.module:
+                mods.add(n.module.split(".")[0])
+        for bad in ("urllib", "requests", "socket", "http"):
+            self.assertNotIn(bad, mods, "渲染层不该碰网络：%s" % bad)
+
+
 class TestWidth(unittest.TestCase):
     def test_fullwidth(self):
         # 真机实测：13 个全角字顶格，第 14 个字被云端切掉
-        self.assertEqual(B.text_width("卡特彼勒第三季度电力与能源"), 13.0)
+        self.assertEqual(R.text_width("卡特彼勒第三季度电力与能源"), 13.0)
 
     def test_halfwidth(self):
-        self.assertEqual(B.text_width("abcd"), 2.0)
-        self.assertEqual(B.text_width("20.15"), 2.5)
+        self.assertEqual(R.text_width("abcd"), 2.0)
+        self.assertEqual(R.text_width("20.15"), 2.5)
 
 
 class TestSplitTitle(unittest.TestCase):
     def test_head_never_exceeds_screen(self):
         t = "微软启动2017年以来首次美国高评级债券发行，规模预计超过百亿美元"
-        head, tail = B.split_title(t)
-        self.assertLessEqual(B.text_width(head), 13.0)
+        head, tail = R.split_title(t)
+        self.assertLessEqual(R.text_width(head), 13.0)
         self.assertTrue(head)
         self.assertTrue(tail)
 
     def test_does_not_cut_number(self):
         # 曾经把「20|15亿元」切成两半，小数点被剥掉后只剩「15亿元」
-        head, tail = B.split_title("净亏损20.15亿元，同比由盈转亏")
+        head, tail = R.split_title("净亏损20.15亿元，同比由盈转亏")
         for s in (head, tail):
             self.assertNotRegex(s, r"\d\.$|^\.\d")
 
     def test_head_has_no_trailing_comma(self):
-        head, _ = B.split_title("万事达(MA.N)盘前上涨1.8%，第三季度业绩超出预期。")
+        head, _ = R.split_title("万事达(MA.N)盘前上涨1.8%，第三季度业绩超出预期。")
         self.assertFalse(head.endswith(("，", "、", "；")))
 
     def test_tail_has_no_leading_punctuation(self):
-        _, tail = B.split_title("瑞士政府已作出评估，即如果瑞银将总部迁走会怎样")
+        _, tail = R.split_title("瑞士政府已作出评估，即如果瑞银将总部迁走会怎样")
         self.assertFalse(tail.startswith(("，", "、", "；", "。")))
 
     def test_short_title_kept_whole(self):
-        head, tail = B.split_title("港股收盘")
+        head, tail = R.split_title("港股收盘")
         self.assertEqual(head, "港股收盘")
         self.assertEqual(tail, "")
 
 
 class TestDateline(unittest.TestCase):
     def test_strip(self):
-        self.assertEqual(B.strip_dateline("财联社10月29日电，瑞银迁址影响已评估"),
+        self.assertEqual(R.strip_dateline("财联社10月29日电，瑞银迁址影响已评估"),
                          "瑞银迁址影响已评估")
-        self.assertEqual(B.strip_dateline("金十数据10月29日讯，微软发行债券"),
+        self.assertEqual(R.strip_dateline("金十数据10月29日讯，微软发行债券"),
                          "微软发行债券")
 
     def test_tag_with_dateline(self):
-        self.assertEqual(B.strip_dateline("【独家】财联社10月29日电，某公司获订单"),
+        self.assertEqual(R.strip_dateline("【独家】财联社10月29日电，某公司获订单"),
                          "某公司获订单")
 
     def test_plain_title_untouched(self):
-        self.assertEqual(B.strip_dateline("【公告】某某公司三季度业绩预增"),
+        self.assertEqual(R.strip_dateline("【公告】某某公司三季度业绩预增"),
                          "【公告】某某公司三季度业绩预增")
 
 
@@ -78,14 +99,14 @@ class TestDedupe(unittest.TestCase):
         # 同一件事被两家快讯发出来，只应留一条
         a = mk("财联社10月29日电，瑞士政府已评估瑞银迁址影响，称若无总部将面临更严监管", src="a")
         b = mk("瑞士政府已评估瑞银迁址影响 称若无总部将面临更严监管", src="b")
-        out, dropped = B.dedupe([a, b])
+        out, dropped = R.dedupe([a, b])
         self.assertEqual(len(out), 1)
         self.assertEqual(dropped, 1)
 
     def test_utm_params_ignored(self):
         a = mk("标题甲甲甲甲甲甲", link="http://x/1?utm_source=a")
         b = mk("标题乙乙乙乙乙乙", link="http://x/1")
-        out, _ = B.dedupe([a, b])
+        out, _ = R.dedupe([a, b])
         self.assertEqual(len(out), 1)
 
 
@@ -93,16 +114,16 @@ class TestBody(unittest.TestCase):
     def test_title_echo_removed(self):
         # 「【标题】导语」格式，正文不该再从标题复述一遍开始
         t = "微软启动2017年以来首次美国高评级债券发行"
-        body = B.compose_body("", "【%s】金十数据10月29日讯，规模预计超过百亿美元" % t, t)
+        body = R.compose_body("", "【%s】金十数据10月29日讯，规模预计超过百亿美元" % t, t)
         self.assertNotIn("微软启动", body)
         self.assertIn("规模预计", body)
 
     def test_body_within_limit(self):
-        body = B.compose_body("", "字" * 500, "标题")
-        self.assertLessEqual(B.text_width(body), B.BODY_MAX)
+        body = R.compose_body("", "字" * 500, "标题")
+        self.assertLessEqual(R.text_width(body), R.BODY_MAX)
 
     def test_body_strips_leading_punct(self):
-        body = B.compose_body("，同比由盈转亏", "", "标题")
+        body = R.compose_body("，同比由盈转亏", "", "标题")
         self.assertFalse(body.startswith("，"))
 
 
