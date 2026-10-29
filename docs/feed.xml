@@ -6,43 +6,78 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 08:35:15 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 08:42:30 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>A股双创指数均跌超4%，算力硬件集体调整，四大行总市值突破10万亿元，恒科指跌近3%，科网股普跌</title>
-<link>https://wallstreetcn.com/articles/3784738</link>
-<pubDate>Thu, 29 Oct 2026 16:32:12 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784738|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
-</item>
-<item>
-<title>60多年前曾卷入也门冲突，埃及出兵沙特强调只做“护盾”</title>
-<link>https://www.chinanews.com.cn/gj/2026/10-29/10722760.shtml</link>
-<pubDate>Thu, 29 Oct 2026 16:29:12 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/gj/2026/10-29/10722760.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>甲骨文(ORCL.N)盘前下跌2.2%。</title>
-<link>https://flash.jin10.com/detail/20261029162737296800</link>
-<pubDate>Thu, 29 Oct 2026 16:27:37 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029162737296800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>中联重科：第三季度净利润同比下降25.66%</title>
-<link>https://api3.cls.cn/share/article/2519238?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 16:27:11 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519238?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<title>东方金诚：美联储2027年仍有继续加息的可能性</title>
+<link>https://api3.cls.cn/share/article/2519256?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 16:40:04 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519256?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
-<title>9月我国核发绿色电力证书3.26亿个</title>
-<link>https://xueqiu.com/5124430882/414496442</link>
-<pubDate>Thu, 29 Oct 2026 16:25:09 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414496442|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>兴业银行：第三季度归母净利润195.6亿元，同比下降1.92%</title>
+<link>https://www.jiemian.com/article/15264519.html</link>
+<pubDate>Thu, 29 Oct 2026 16:39:04 +0800</pubDate>
+<guid isPermaLink="false">https://www.jiemian.com/article/15264519.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
+</item>
+<item>
+<title>美股存储板块盘前走弱，闪迪、西部数据、美光科技均跌超3%，海力士跌近3%。</title>
+<link>https://xueqiu.com/5124430882/414499521</link>
+<pubDate>Thu, 29 Oct 2026 16:37:32 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414499521|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>AI投资回报存疑，美股盘前谷歌跌超10%，存储板块普跌，油价下跌，金价走软</title>
+<link>https://wallstreetcn.com/articles/3784748</link>
+<pubDate>Thu, 29 Oct 2026 16:37:27 +0800</pubDate>
+<guid isPermaLink="false">https://wallstreetcn.com/articles/3784748|https://dedicated.wallstreetcn.com/rss.xml</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
+</item>
+<item>
+<title>金十图示：2026年10月29日（周四）上海黄金交易所市场行情</title>
+<link>https://flash.jin10.com/detail/20261029163724471800</link>
+<pubDate>Thu, 29 Oct 2026 16:37:24 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029163724471800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>《华侨青年》暨南大学预科教育百年纪念特刊发布</title>
+<link>https://www.chinanews.com.cn/txy/2026/10-29/10722795.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:32:43 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/txy/2026/10-29/10722795.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>南昌80后小伙做脑机接口：又融资7亿</title>
+<link>https://www.36kr.com/p/4046523820004489</link>
+<pubDate>Thu, 29 Oct 2026 16:31:57 +0800</pubDate>
+<guid isPermaLink="false">https://www.36kr.com/p/4046523820004489|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
+</item>
+<item>
+<title>Spain begins 3 days of mourning after high-speed train disaster</title>
+<link>https://www.scmp.com/news/world/europe/article/3372573/spain-begins-3-days-mourning-after-high-speed-train-disaster</link>
+<pubDate>Thu, 29 Oct 2026 08:31:55 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/news/world/europe/article/3372573/spain-begins-3-days-mourning-after-high-speed-train-disaster|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>国防部介绍那曲抗震救灾一线情况</title>
+<link>https://h.xinhuaxmt.com/vh512/app/13350421</link>
+<pubDate>Thu, 29 Oct 2026 16:30:34 +0800</pubDate>
+<guid isPermaLink="false">https://h.xinhuaxmt.com/vh512/app/13350421|https://feed.quanwenrss.com/feed/xinhua-yw.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xinhua-yw.xml">新华社·要闻</source>
+</item>
+<item>
+<title>日化产品“食品化”？不能为“卖相”丢安全</title>
+<link>https://www.peopleapp.com/column/30053440339-500007761566</link>
+<pubDate>Thu, 29 Oct 2026 16:29:16 +0800</pubDate>
+<guid isPermaLink="false">https://www.peopleapp.com/column/30053440339-500007761566|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
 </item>
 <item>
 <title>宏福苑火災獨立報告 政府啟動部門首長調查 3個月內完成</title>
@@ -52,6 +87,13 @@
 <source url="https://rsshub.rss.tips/oncc/hk">东网</source>
 </item>
 <item>
+<title>胡瓜節目赴花蓮送暖 談選舉稱繳很多稅會投票</title>
+<link>https://www.cna.com.tw/news/amov/202610290231.aspx</link>
+<pubDate>Thu, 29 Oct 2026 16:23:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cna.com.tw/news/amov/202610290231.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
+</item>
+<item>
 <title>17岁男生被人冒充警察骗出家门殴打 三被告人当庭认罪</title>
 <link>https://c.m.163.com/news/a/LADNAAL30512D3VJ.html</link>
 <pubDate>Thu, 29 Oct 2026 08:20:21 GMT</pubDate>
@@ -59,18 +101,18 @@
 <source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
+<title>穆迪：私募信贷对接AI融资，哪些风险点值得关注</title>
+<link>https://international.caixin.com/2026-10-29/102498562.html</link>
+<pubDate>Thu, 29 Oct 2026 16:17:53 +0800</pubDate>
+<guid isPermaLink="false">https://international.caixin.com/2026-10-29/102498562.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
+</item>
+<item>
 <title>涉用电单车贩运124枚丧尸烟弹 38岁快递员被控</title>
 <link>https://www.zaobao.com.sg/news/singapore/story20261029-9914786</link>
 <pubDate>Thu, 29 Oct 2026 08:17:33 GMT</pubDate>
 <guid isPermaLink="false">https://www.zaobao.com.sg/news/singapore/story20261029-9914786|https://rsshub.rss.tips/zaobao/realtime/singapore</guid>
 <source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
-</item>
-<item>
-<title>5 of the best things to do in Hong Kong this Halloween weekend, October 30 to November 1</title>
-<link>https://www.scmp.com/lifestyle/article/3372501/5-best-things-do-hong-kong-halloween-weekend-october-30-november-1</link>
-<pubDate>Thu, 29 Oct 2026 08:15:06 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/lifestyle/article/3372501/5-best-things-do-hong-kong-halloween-weekend-october-30-november-1|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
 <title>嘉士伯第三季度啤酒销量下降3.5%，软饮料业务增长抵消部分压力</title>
@@ -85,6 +127,13 @@
 <pubDate>Thu, 29 Oct 2026 16:10:03 +0800</pubDate>
 <guid isPermaLink="false">https://h.xinhuaxmt.com/vh512/app/13350318|https://feed.quanwenrss.com/feed/xinhua-gj.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xinhua-gj.xml">新华社·国际</source>
+</item>
+<item>
+<title>美国中期选举倒计时：经济牌难打，共和党却将重金砸向性别议题｜907编辑部</title>
+<link>https://m.thepaper.cn/newsDetail_forward_34359080</link>
+<pubDate>Thu, 29 Oct 2026 08:07:59 +0000</pubDate>
+<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34359080|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
 </item>
 <item>
 <title>多所高校“砍学分”</title>
@@ -143,48 +192,6 @@
 <source url="https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml">凤凰网军事·最新</source>
 </item>
 <item>
-<title>大晓机器人推出具身空间智能API，七项评测均分超GPT-6 Astra</title>
-<link>https://www.jiemian.com/article/15263908.html</link>
-<pubDate>Thu, 29 Oct 2026 15:39:34 +0800</pubDate>
-<guid isPermaLink="false">https://www.jiemian.com/article/15263908.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
-</item>
-<item>
-<title>【大盘脉搏】市场缩量大跌 双创指数均跌超4%</title>
-<link>https://cxdata.caixin.com/AandH/?id=1d1a1a08a15b43b598da3de6f5a6fdc5</link>
-<pubDate>Thu, 29 Oct 2026 15:39:04 +0800</pubDate>
-<guid isPermaLink="false">https://cxdata.caixin.com/AandH/?id=1d1a1a08a15b43b598da3de6f5a6fdc5|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
-</item>
-<item>
-<title>外交部：再次敦促美方认真倾听国际社会的正义呼声，立即停止对古巴的封锁制裁</title>
-<link>https://www.peopleapp.com/column/30053446033-500007762715</link>
-<pubDate>Thu, 29 Oct 2026 15:28:41 +0800</pubDate>
-<guid isPermaLink="false">https://www.peopleapp.com/column/30053446033-500007762715|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
-</item>
-<item>
-<title>外交部：敦促美方停止以人权为幌子干涉中国内政</title>
-<link>https://h.xinhuaxmt.com/vh512/app/13350175</link>
-<pubDate>Thu, 29 Oct 2026 15:23:11 +0800</pubDate>
-<guid isPermaLink="false">https://h.xinhuaxmt.com/vh512/app/13350175|https://feed.quanwenrss.com/feed/xinhua-yw.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xinhua-yw.xml">新华社·要闻</source>
-</item>
-<item>
-<title>“资源诅咒”：腾讯为何没压住字节？</title>
-<link>https://www.36kr.com/p/4046410139293317</link>
-<pubDate>Thu, 29 Oct 2026 15:23:03 +0800</pubDate>
-<guid isPermaLink="false">https://www.36kr.com/p/4046410139293317|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
-</item>
-<item>
-<title>張芳麗賄選判刑確定 爭參選提假處分遭駁回</title>
-<link>https://www.cna.com.tw/news/asoc/202610290195.aspx</link>
-<pubDate>Thu, 29 Oct 2026 15:23:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cna.com.tw/news/asoc/202610290195.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
-</item>
-<item>
 <title>商务部：如欧方对中国产品采取歧视性限制措施，中方必将采取一切必要措施</title>
 <link>https://www.mycaijing.com/article/detail/586522?source_id=40</link>
 <pubDate>Thu, 29 Oct 2026 15:16:47 +0800</pubDate>
@@ -232,13 +239,6 @@
 <pubDate>Thu, 29 Oct 2026 14:36:14 +0800</pubDate>
 <guid isPermaLink="false">https://www.infzm.com/contents/343606|https://feed.quanwenrss.com/feed/nfzm-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
-</item>
-<item>
-<title>三丽鸥日本官网发文致歉：终止与日剧《VIVANT》联名</title>
-<link>https://m.thepaper.cn/newsDetail_forward_34359007</link>
-<pubDate>Thu, 29 Oct 2026 06:25:04 +0000</pubDate>
-<guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34359007|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
 </item>
 <item>
 <title>成田机场26年度上半年国际航班减少4%</title>
