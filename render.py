@@ -35,6 +35,10 @@ BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "90")))
 # 正数才是「防止单条摘要把整份文件撑大」的保险丝。
 FEED_BODY_MAX = max(0.0, float(os.environ.get("FEED_BODY_MAX", "0")))
 
+# channel 一级的版权声明。条目里的 <source> 只标「这条来自哪家」，说明不了整份聚合的归属；
+# 聚合别人标题与摘要时这句是必须的，也顺带把「看全文点 link」讲清楚。
+COPYRIGHT = "内容版权归各来源媒体，本站仅聚合标题与摘要，原文以各条 link 为准"
+
 # ---------------- 文本清洗 ----------------
 # RSS 里的 description 常带 HTML 标签、命名实体、连续空白。这里统一洗成
 # 「纯文本 + 单空格」，后面所有宽度计算和截断才有意义。
@@ -354,6 +358,10 @@ def _channel_lines(feed_url, channel_title, description, screen):
     lines += [
         "<description>%s</description>" % esc(description),
         "<language>zh-CN</language>",
+        # 版权声明放在 channel 一级：条目本身已经有 <source>（源名 + 源地址）和指向原文的
+        # <link>，但「整份聚合的版权归谁」原来一句没写。聚合别人的标题与摘要，这句话是必须的，
+        # 也说明白了「要看全文点 link」。设备版同样带 —— 一版只发一条，这几十字节无所谓。
+        "<copyright>%s</copyright>" % esc(COPYRIGHT),
         "<lastBuildDate>%s</lastBuildDate>" % now,
     ]
     if not screen:

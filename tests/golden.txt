@@ -122,6 +122,7 @@ dcf1bda235e8  '卡特彼勒第三季度电力与能'
 <link>http://x/feed.xml</link>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 3 个）</description>
 <language>zh-CN</language>
+<copyright>内容版权归各来源媒体，本站仅聚合标题与摘要，原文以各条 link 为准</copyright>
 <lastBuildDate><DATE></lastBuildDate>
 <item>
 <title>卡特彼勒第三季度电力与能源</title>
@@ -246,6 +247,7 @@ dcf1bda235e8  '卡特彼勒第三季度电力与能'
 <atom:link href="http://x/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 3 个）</description>
 <language>zh-CN</language>
+<copyright>内容版权归各来源媒体，本站仅聚合标题与摘要，原文以各条 link 为准</copyright>
 <lastBuildDate><DATE></lastBuildDate>
 <generator>rss-hub <VER></generator>
 <ttl>5</ttl>

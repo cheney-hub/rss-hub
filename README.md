@@ -1,6 +1,6 @@
 # rss-hub · RSS 聚合头条
 
-> 当前版本 **v1.5.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+> 当前版本 **v1.6.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
 >
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
@@ -223,7 +223,7 @@ w = now // 300  同一时间窗内重复构建不推进（幂等，多跑几轮�
 | 标题长度 | 原样 | **只放屏上显示得下的 13 全角**，超出的字一个不丢，全部移入正文 |
 | 正文 | 原 feed 的 `description` / `content:encoded` 摘要（默认不限，全文照发；设 `FEED_BODY_MAX` 可截断，尾端补 `…`） | `<description>` = 标题余文 + 原 feed 摘要（最多 90 全角，再长尾端补 `…`） |
 | 条目数 | **最新 120 条**（按发布时间倒序后截取，`ITEM_LIMIT`=120；设 0 = 不限） | **只发 1 条**：轮播到的那条（云端只会渲染第一条，多给也用不上） |
-| 字段 | title / link / pubDate / guid / source，含 `atom:link`、`generator`、`ttl` | 同上 + description；guid 用 12 位短哈希，channel 去掉上述三项 |
+| 字段 | title / link / pubDate / guid / source，channel 含 `atom:link`、`copyright`、`generator`、`ttl` | 同上 + description；guid 用 12 位短哈希，channel 去掉 `atom:link` / `generator` / `ttl` 三项，`copyright` 保留 |
 
 **实测依据（2026-10-29，296×152 屏，真机截图）**
 
@@ -247,6 +247,12 @@ w = now // 300  同一时间窗内重复构建不推进（幂等，多跑几轮�
 - 正文（标题余文 + 摘要原文）超过 `SCREEN_BODY_MAX`（默认 90 全角）才在尾端补 `…`。
 
 **如果云端不渲染 `<description>`**，屏上仍然只有那 13 字标题，和改之前完全一样，不会更差。
+
+**来源与版权**：每条都带 `<source url="源地址">源名</source>`（RSS 2.0 标准字段，Inoreader /
+Feedly / NetNewsWire 都会读，多数还会在标题旁显示源名），`<link>` 直通原文，完整版的 `<guid>`
+里另存「原文链接 | 源地址」。channel 一级还有一条 `<copyright>`：「内容版权归各来源媒体，
+本站仅聚合标题与摘要，原文以各条 link 为准」——聚合别人的标题与摘要，这句得写明白。
+设备屏上不显示源名（152 px 高、正文只有 4 行，挤不出位置），要看来源点开条目即可。
 判断是否生效很简单：看标题后面有没有接着出现正文那句。
 `SCREEN_LINE_WIDTH` / `SCREEN_BODY_MAX` 改工作流 `env:` 才能长期生效，参数说明见 [OPERATIONS.md#调参](OPERATIONS.md#调参)。
 
@@ -341,7 +347,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.5.0` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.6.0` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 
