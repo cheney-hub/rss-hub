@@ -80,8 +80,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 │   ├── check_secrets.py         # 凭据扫描（本地与 CI 共用）
 │   ├── golden_snapshot.py       # 生成/更新行为基线
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 84 个用例，零依赖、不联网
-│   ├── test_core.py         #   54 例：核心纯函数（宽度、切分、去重、解析、轮播稳态）
+├── tests/                   # 87 个用例，零依赖、不联网
+│   ├── test_core.py         #   57 例：核心纯函数（宽度、切分、去重、解析、轮播稳态）
 │   ├── test_rotate_edge.py  #   29 例：轮播边界（时钟错乱、池子挤兑、参数极值）
 │   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 逐字节比对
 │   └── golden.txt           #   行为基线（脚本生成，不手改）
@@ -291,7 +291,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：84 个用例（含分层契约、行为基线、轮播边界）
+python3 -m unittest discover -s tests -v    # 单测：87 个用例（含分层契约、行为基线、轮播边界）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```

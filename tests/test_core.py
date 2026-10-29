@@ -143,6 +143,27 @@ class TestDedupe(unittest.TestCase):
         out, _ = R.dedupe([a, b])
         self.assertEqual(len(out), 1)
 
+    def test_meaningful_query_params_kept(self):
+        """id 写在查询串里的站点（RTI: /news?uid=3&pid=N）不能被折叠成一条。"""
+        a = mk("标题甲甲甲甲甲甲", link="http://x/news?uid=3&pid=1")
+        b = mk("标题乙乙乙乙乙乙", link="http://x/news?uid=3&pid=2")
+        out, _ = R.dedupe([a, b])
+        self.assertEqual(len(out), 2)
+
+    def test_tracking_param_not_identity(self):
+        """追踪参数不构成身份：?utm_source=rss&id=9 与 ?id=9 是同一条。"""
+        a = mk("标题甲甲甲甲甲甲", link="http://x/1?utm_source=rss&id=9")
+        b = mk("标题乙乙乙乙乙乙", link="http://x/1?id=9")
+        out, _ = R.dedupe([a, b])
+        self.assertEqual(len(out), 1)
+
+    def test_query_param_order_insensitive(self):
+        """参数顺序不影响链接身份：?a=1&b=2 与 ?b=2&a=1 是同一条。"""
+        a = mk("标题甲甲甲甲甲甲", link="http://x/1?a=1&b=2")
+        b = mk("标题乙乙乙乙乙乙", link="http://x/1?b=2&a=1")
+        out, _ = R.dedupe([a, b])
+        self.assertEqual(len(out), 1)
+
 
 class TestBody(unittest.TestCase):
     def test_title_echo_removed(self):

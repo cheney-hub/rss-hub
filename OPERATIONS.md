@@ -406,7 +406,9 @@ curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | pyth
 `window` = 当前时间窗（`now // ROTATE_SECONDS`），`bucket` = 当前上屏的时间片号，
 `lag` = **落后当前窗几片**（`window - bucket`，乘 `ROTATE_SECONDS` 就是「屏上是几分钟前的消息」），
 `shown` = 最近播过的时间片号（**不是 guid**，只保留池子里还在的片），
-`pool` = 池子**可播片数**（不含发布时间在未来的片）、`items` = 池子**条数**，`cycle` = 第几轮（1 起）。
+`pool` = 池子**可播片数**（不含发布时间在未来的片）、`items` = **进入轮播池的条数**
+（= 按 `ROTATE_POOL_MAX` 截断后的池子，**不是** `feed.xml` 的条数 —— 完整版通常更多，
+看到 `items=120` 而完整版 220+ 条是正常的，不是「完整版被截断了」），`cycle` = 第几轮（1 起）。
 
 排障时先看 `lag`：稳态中位在 1 片上下；一旦明显变大，说明最近两窗都没有可播的新内容，
 正在吃池子里的存货（低产能时段的正常现象 —— 选片**没有年龄上限**，极端停更时 `lag`

@@ -87,11 +87,31 @@ def norm_title(t):
     return re.sub(r"[a-zA-Z0-9]", "", t)[:20]
 
 
+# 链接里真正无意义的只有追踪参数；有些站的 id 就写在查询串里（RTI 的 ?uid=3&pid=240741），
+# 以前把整个 query 一刀砍掉，会把整站条目折叠成同一个键、只剩最新 1 条。
+_TRACKING = re.compile(
+    r"^(utm_[a-z]+|from|fromid|spm|share|sharesource|ref|refer|referrer|channel"
+    r"|src|source|isappinstalled|scene|subscene|clicktime|wxshare|tt_from|tt_medium|fr)$",
+    re.I)
+
+
+def _link_key(link):
+    """链接身份：去掉 # 锚点与追踪参数，保留有意义的查询参数；参数顺序不影响身份。"""
+    if not link:
+        return ""
+    link = link.split("#", 1)[0]
+    base, _, q = link.partition("?")
+    if not q:
+        return base
+    keep = [p for p in q.split("&") if p and not _TRACKING.match(p.split("=", 1)[0])]
+    return base + ("?" + "&".join(sorted(keep)) if keep else "")
+
+
 def dedupe(items):
     seen_link, seen_title, out = set(), set(), []
     dropped = 0
     for it in items:
-        lk = re.sub(r"[#?].*$", "", it.get("link") or "")
+        lk = _link_key(it.get("link"))
         tt = norm_title(it.get("title"))
         if lk and lk in seen_link:
             dropped += 1
