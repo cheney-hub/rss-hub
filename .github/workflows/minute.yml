@@ -1,0 +1,2074 @@
+name: RSS 分钟级发布
+
+# 本文件由 tools/gen_minute_workflow.py 生成，改结构请改脚本后重新生成。
+#
+# 节奏：每小时 :07 触发一次，作业内连续跑 55 分钟，每分钟一轮
+#   每轮 = 采集 43 源 → 打包 docs/ → 部署到 Pages → 对齐到下一整分
+# 为什么这么绕：GitHub 的 cron 最短 5 分钟且会丢档，只有「小时级 cron + 作业内循环」
+#   才能做到稳定的 1 分钟。Pages 传统构建有 10 次/小时限制，改用 artifact 部署后不受限。
+# 备份：每 10 轮把 docs/feed.xml 提交一次（每天约 130 条），历史不会爆掉。
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: rss-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    environment:
+      name: github-pages
+      url: ${{ steps.d01.outputs.page_url }}
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ------------------------- 第 01 轮 -------------------------
+      - name: 轮 01 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "1"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-01
+          path: docs
+          retention-days: 1
+
+      - id: d01
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-01
+
+      - name: 轮 01 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 02 轮 -------------------------
+      - name: 轮 02 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "2"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-02
+          path: docs
+          retention-days: 1
+
+      - id: d02
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-02
+
+      - name: 轮 02 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 03 轮 -------------------------
+      - name: 轮 03 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "3"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-03
+          path: docs
+          retention-days: 1
+
+      - id: d03
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-03
+
+      - name: 轮 03 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 04 轮 -------------------------
+      - name: 轮 04 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "4"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-04
+          path: docs
+          retention-days: 1
+
+      - id: d04
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-04
+
+      - name: 轮 04 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 05 轮 -------------------------
+      - name: 轮 05 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "5"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-05
+          path: docs
+          retention-days: 1
+
+      - id: d05
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-05
+
+      - name: 轮 05 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 06 轮 -------------------------
+      - name: 轮 06 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "6"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-06
+          path: docs
+          retention-days: 1
+
+      - id: d06
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-06
+
+      - name: 轮 06 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 07 轮 -------------------------
+      - name: 轮 07 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "7"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-07
+          path: docs
+          retention-days: 1
+
+      - id: d07
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-07
+
+      - name: 轮 07 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 08 轮 -------------------------
+      - name: 轮 08 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "8"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-08
+          path: docs
+          retention-days: 1
+
+      - id: d08
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-08
+
+      - name: 轮 08 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 09 轮 -------------------------
+      - name: 轮 09 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "9"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-09
+          path: docs
+          retention-days: 1
+
+      - id: d09
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-09
+
+      - name: 轮 09 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 10 轮 -------------------------
+      - name: 轮 10 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "10"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-10
+          path: docs
+          retention-days: 1
+
+      - id: d10
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-10
+
+      - name: 轮 10 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 11 轮 -------------------------
+      - name: 轮 11 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "11"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-11
+          path: docs
+          retention-days: 1
+
+      - id: d11
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-11
+
+      - name: 轮 11 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 12 轮 -------------------------
+      - name: 轮 12 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "12"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-12
+          path: docs
+          retention-days: 1
+
+      - id: d12
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-12
+
+      - name: 轮 12 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 13 轮 -------------------------
+      - name: 轮 13 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "13"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-13
+          path: docs
+          retention-days: 1
+
+      - id: d13
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-13
+
+      - name: 轮 13 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 14 轮 -------------------------
+      - name: 轮 14 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "14"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-14
+          path: docs
+          retention-days: 1
+
+      - id: d14
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-14
+
+      - name: 轮 14 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 15 轮 -------------------------
+      - name: 轮 15 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "15"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-15
+          path: docs
+          retention-days: 1
+
+      - id: d15
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-15
+
+      - name: 轮 15 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 16 轮 -------------------------
+      - name: 轮 16 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "16"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-16
+          path: docs
+          retention-days: 1
+
+      - id: d16
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-16
+
+      - name: 轮 16 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 17 轮 -------------------------
+      - name: 轮 17 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "17"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-17
+          path: docs
+          retention-days: 1
+
+      - id: d17
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-17
+
+      - name: 轮 17 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 18 轮 -------------------------
+      - name: 轮 18 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "18"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-18
+          path: docs
+          retention-days: 1
+
+      - id: d18
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-18
+
+      - name: 轮 18 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 19 轮 -------------------------
+      - name: 轮 19 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "19"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-19
+          path: docs
+          retention-days: 1
+
+      - id: d19
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-19
+
+      - name: 轮 19 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 20 轮 -------------------------
+      - name: 轮 20 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "20"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-20
+          path: docs
+          retention-days: 1
+
+      - id: d20
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-20
+
+      - name: 轮 20 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 21 轮 -------------------------
+      - name: 轮 21 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "21"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-21
+          path: docs
+          retention-days: 1
+
+      - id: d21
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-21
+
+      - name: 轮 21 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 22 轮 -------------------------
+      - name: 轮 22 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "22"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-22
+          path: docs
+          retention-days: 1
+
+      - id: d22
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-22
+
+      - name: 轮 22 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 23 轮 -------------------------
+      - name: 轮 23 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "23"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-23
+          path: docs
+          retention-days: 1
+
+      - id: d23
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-23
+
+      - name: 轮 23 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 24 轮 -------------------------
+      - name: 轮 24 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "24"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-24
+          path: docs
+          retention-days: 1
+
+      - id: d24
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-24
+
+      - name: 轮 24 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 25 轮 -------------------------
+      - name: 轮 25 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "25"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-25
+          path: docs
+          retention-days: 1
+
+      - id: d25
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-25
+
+      - name: 轮 25 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 26 轮 -------------------------
+      - name: 轮 26 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "26"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-26
+          path: docs
+          retention-days: 1
+
+      - id: d26
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-26
+
+      - name: 轮 26 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 27 轮 -------------------------
+      - name: 轮 27 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "27"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-27
+          path: docs
+          retention-days: 1
+
+      - id: d27
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-27
+
+      - name: 轮 27 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 28 轮 -------------------------
+      - name: 轮 28 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "28"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-28
+          path: docs
+          retention-days: 1
+
+      - id: d28
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-28
+
+      - name: 轮 28 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 29 轮 -------------------------
+      - name: 轮 29 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "29"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-29
+          path: docs
+          retention-days: 1
+
+      - id: d29
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-29
+
+      - name: 轮 29 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 30 轮 -------------------------
+      - name: 轮 30 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "30"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-30
+          path: docs
+          retention-days: 1
+
+      - id: d30
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-30
+
+      - name: 轮 30 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 31 轮 -------------------------
+      - name: 轮 31 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "31"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-31
+          path: docs
+          retention-days: 1
+
+      - id: d31
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-31
+
+      - name: 轮 31 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 32 轮 -------------------------
+      - name: 轮 32 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "32"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-32
+          path: docs
+          retention-days: 1
+
+      - id: d32
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-32
+
+      - name: 轮 32 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 33 轮 -------------------------
+      - name: 轮 33 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "33"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-33
+          path: docs
+          retention-days: 1
+
+      - id: d33
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-33
+
+      - name: 轮 33 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 34 轮 -------------------------
+      - name: 轮 34 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "34"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-34
+          path: docs
+          retention-days: 1
+
+      - id: d34
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-34
+
+      - name: 轮 34 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 35 轮 -------------------------
+      - name: 轮 35 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "35"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-35
+          path: docs
+          retention-days: 1
+
+      - id: d35
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-35
+
+      - name: 轮 35 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 36 轮 -------------------------
+      - name: 轮 36 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "36"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-36
+          path: docs
+          retention-days: 1
+
+      - id: d36
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-36
+
+      - name: 轮 36 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 37 轮 -------------------------
+      - name: 轮 37 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "37"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-37
+          path: docs
+          retention-days: 1
+
+      - id: d37
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-37
+
+      - name: 轮 37 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 38 轮 -------------------------
+      - name: 轮 38 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "38"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-38
+          path: docs
+          retention-days: 1
+
+      - id: d38
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-38
+
+      - name: 轮 38 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 39 轮 -------------------------
+      - name: 轮 39 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "39"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-39
+          path: docs
+          retention-days: 1
+
+      - id: d39
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-39
+
+      - name: 轮 39 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 40 轮 -------------------------
+      - name: 轮 40 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "40"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-40
+          path: docs
+          retention-days: 1
+
+      - id: d40
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-40
+
+      - name: 轮 40 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 41 轮 -------------------------
+      - name: 轮 41 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "41"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-41
+          path: docs
+          retention-days: 1
+
+      - id: d41
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-41
+
+      - name: 轮 41 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 42 轮 -------------------------
+      - name: 轮 42 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "42"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-42
+          path: docs
+          retention-days: 1
+
+      - id: d42
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-42
+
+      - name: 轮 42 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 43 轮 -------------------------
+      - name: 轮 43 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "43"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-43
+          path: docs
+          retention-days: 1
+
+      - id: d43
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-43
+
+      - name: 轮 43 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 44 轮 -------------------------
+      - name: 轮 44 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "44"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-44
+          path: docs
+          retention-days: 1
+
+      - id: d44
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-44
+
+      - name: 轮 44 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 45 轮 -------------------------
+      - name: 轮 45 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "45"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-45
+          path: docs
+          retention-days: 1
+
+      - id: d45
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-45
+
+      - name: 轮 45 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 46 轮 -------------------------
+      - name: 轮 46 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "46"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-46
+          path: docs
+          retention-days: 1
+
+      - id: d46
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-46
+
+      - name: 轮 46 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 47 轮 -------------------------
+      - name: 轮 47 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "47"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-47
+          path: docs
+          retention-days: 1
+
+      - id: d47
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-47
+
+      - name: 轮 47 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 48 轮 -------------------------
+      - name: 轮 48 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "48"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-48
+          path: docs
+          retention-days: 1
+
+      - id: d48
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-48
+
+      - name: 轮 48 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 49 轮 -------------------------
+      - name: 轮 49 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "49"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-49
+          path: docs
+          retention-days: 1
+
+      - id: d49
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-49
+
+      - name: 轮 49 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 50 轮 -------------------------
+      - name: 轮 50 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "50"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-50
+          path: docs
+          retention-days: 1
+
+      - id: d50
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-50
+
+      - name: 轮 50 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 51 轮 -------------------------
+      - name: 轮 51 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "51"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-51
+          path: docs
+          retention-days: 1
+
+      - id: d51
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-51
+
+      - name: 轮 51 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 52 轮 -------------------------
+      - name: 轮 52 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "52"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-52
+          path: docs
+          retention-days: 1
+
+      - id: d52
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-52
+
+      - name: 轮 52 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 53 轮 -------------------------
+      - name: 轮 53 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "53"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-53
+          path: docs
+          retention-days: 1
+
+      - id: d53
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-53
+
+      - name: 轮 53 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 54 轮 -------------------------
+      - name: 轮 54 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "54"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-54
+          path: docs
+          retention-days: 1
+
+      - id: d54
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-54
+
+      - name: 轮 54 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ------------------------- 第 55 轮 -------------------------
+      - name: 轮 55 采集
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+          CYCLE: "55"
+        run: |
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+            git config user.name  "rss-hub-bot"
+            git config user.email "rss-hub-bot@users.noreply.github.com"
+            git add docs/feed.xml
+            if git diff --cached --quiet; then
+              echo "内容无变化，跳过备份提交"
+            else
+              git commit -q -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 备份"
+              git pull --rebase --autostash -q origin main || true
+              git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
+            fi
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-55
+          path: docs
+          retention-days: 1
+
+      - id: d55
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-55
+
+      - name: 轮 55 对齐到下一整分
+        run: sleep $(( 60 - $(date +%s) % 60 ))

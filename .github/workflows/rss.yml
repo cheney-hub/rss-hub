@@ -1,30 +1,34 @@
-name: RSS 聚合
+name: RSS 聚合（改源即时发布）
+
+# 日常节奏由 minute.yml 负责（每小时连续跑 55 分钟，每分钟一轮）。
+# 本工作流只处理一类场景：feeds.txt / build_feed.py 被改动后，立刻重建并发布一次，
+# 免得等下一个整点。不做定时任务，避免和 minute.yml 抢 Pages 部署。
 
 on:
-  schedule:
-    # 每 10 分钟一档；避开整点/5 分整的高峰槽位，减少被延迟
-    - cron: "3,13,23,33,43,53 * * * *"
-    # 兜底：每 6 小时的密集档，主槽位被丢时也能补上一次
-    - cron: "37 */6 * * *"
-  workflow_dispatch:          # 手动触发
+  workflow_dispatch:
   push:
     branches: [main]
-    paths:                    # 改订阅源/脚本立即重建，改 feed.xml 不会触发（防死循环）
+    paths:
       - "feeds.txt"
       - "build_feed.py"
       - ".github/workflows/rss.yml"
 
 concurrency:
-  group: rss-aggregate
+  group: rss-oneshot
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - name: 检出仓库
         uses: actions/checkout@v4
@@ -34,23 +38,21 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: 抓取并生成 feed（作业内每 60 秒刷一轮，持续约 4 分钟）
+      - name: 抓取并生成 feed（单轮）
         env:
-          REFRESH_SECONDS: "240"
+          REFRESH_SECONDS: "0"
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
         run: python build_feed.py
 
-      - name: 提交更新
-        run: |
-          git config user.name  "rss-hub-bot"
-          git config user.email "rss-hub-bot@users.noreply.github.com"
-          git add docs/feed.xml
-          if git diff --cached --quiet; then
-            echo "内容无变化，跳过提交"
-          else
-            git commit -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 更新"
-            git pull --rebase --autostash origin main || true
-            git push origin HEAD:main
-          fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-oneshot
+          path: docs
+          retention-days: 1
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-oneshot
