@@ -1,6 +1,6 @@
 # rss-hub · RSS 聚合头条
 
-> 当前版本 **v1.3.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+> 当前版本 **v1.3.1**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
 >
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
@@ -64,7 +64,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ├── rotate.py                # 轮播：池子切片、这一窗该播哪一条、游标状态（选条是纯函数）
 ├── render.py                # 渲染层（纯函数）：纯文本化、宽度折算、标题切分、正文合成、去重键、RSS 生成
 ├── docs/                    # ← GitHub Pages 发布的目录（站点根）
-│   ├── feed.xml             #   完整版（每 10 轮备份提交一次）
+│   ├── feed.xml             #   完整版（每天备份提交一次）
 │   ├── feed-wrap.xml        #   设备版：只发轮播到的那一条（纯文本标题 + 截到屏宽 + 余文进正文）
 │   ├── rotate.json          #   轮播状态：哪条已展示、当前第几窗（每次发布自动更新）
 │   ├── index.html           #   订阅说明页
@@ -102,7 +102,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
    - **标题**：去标点空白、只留汉字取前 20 字，且**须 ≥ 8 字**才参与比较（否则「港股收盘」这类短标题会被误杀）。
 5. 某源这轮抓不到：立即重试一次 → 仍失败就用上一份 `feed.xml` 里该源的条目顶上（保留原 `pubDate`，
    排序位置不变），单源抖动不会让整份 feed 少一条。
-6. 每 10 轮把 `docs/feed.xml` 备份提交一次，仓库历史不会因高频发布而膨胀。
+6. 每天把 `docs/feed.xml` 备份提交一次（UTC 00 点那一轮 = 北京 08:00）：仓库里的 feed 只是镜像，
+   权威副本是 Pages 上那份，备份只为 Pages 挂了还能从 git 取回；一天一条，历史不会被高频发布刷屏。
 
 `guid` 用「文章链接|源地址」：同一篇文章被两个源同时收录时 guid 仍不同，阅读器不会吞条目。
 设备版则把 guid 换成该串的 12 位 md5——它同时是轮播判断「这条是否已展示」的键。
@@ -283,7 +284,7 @@ python3 build_feed.py
 - **runner 占用**：白天 18 小时近乎连续（每小时 13 轮 ≈ 58 分钟）+ 夜间 6 次：公开仓库分钟数不计量，但属高频用法；
   想降载就改轮数（见 [OPERATIONS.md#刷新节奏](OPERATIONS.md#刷新节奏)）；
 - 5 分钟档期间，每小时最后约 2 分钟是收尾空档；深夜则是整点之间的一小时空档；
-- `github.io` 在部分网络环境访问偏慢，可用上面两个镜像（跟随仓库备份，约 10 分钟一次）；
+- `github.io` 在部分网络环境访问偏慢，可用上面两个镜像（跟随仓库备份，每天更新一次）；
 - 正文能否显示取决于 Dot 云端是否渲染 `<description>`，不受本项目控制；不渲染时退化为 13 字标题。
 
 ## 开发与审查
@@ -309,8 +310,8 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 1. **不手改生成文件**：`minute.yml` 由脚本生成、`tests/golden.txt` 由快照脚本生成，
    改结构请改脚本后重新生成（门禁会比对，手改必红）；
 2. **改了 `build_feed.py` / `rotate.py` / `render.py` 要先取消正在跑的 `minute.yml` 作业**，
-   再重新 dispatch——作业里的代码只在「备份轮」（`CYCLE % 10 == 1`，每 10 轮一次）`git pull`
-   时才更新，其余每轮都拿那份旧代码重新构建并覆盖 Pages（线上版本串被写回旧值就是这么来的）；
+   再重新 dispatch——作业只在每小时首轮 `git pull` 一次，所以整点内推送的代码最长要等 60 分钟
+   才被它用上，这期间每一轮都拿旧代码重新构建并覆盖 Pages（线上版本串被写回旧值就是这么来的）；
    取消方式（网页按钮 / `gh run cancel` / 一次 API 调用）见 `OPERATIONS.md` §16；
 3. **改参数必须同步 `OPERATIONS.md` 的参数表**，门禁会检查代码里的每个环境变量是否在文档中出现过；
 4. **发版必须三件套**：`version.py` 加版本号 → `CHANGELOG.md` 记一条 → 页面页脚跟上，
@@ -338,7 +339,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.3.0` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.3.1` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.3.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.3.1**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -205,6 +205,11 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"
 
 仓库本身即完整备份：源清单、脚本、工作流、生成物、历史全在里面，恢复只需 `git clone` 再重开一次 Pages。
 `feeds.txt` 建议另存一份——它是唯一无法自动重建的资产。
+
+`docs/feed.xml` 的 git 备份**每天一次**（UTC 00 点首轮，北京 08:00），一天一条提交。
+不在发布轮里频繁提交的理由：Pages 是 artifact 部署，线上那份才是权威副本，仓库副本只用于灾难回取；
+每 5 分钟提交一次只会把 `git log` 刷满几乎相同的快照（实测每轮增量仅约 1.3 KB，省的不是空间而是噪音）。
+代价是仓库里的 `feed.xml` 最多落后 24 小时 —— **判断线上是否最新一律看 Pages，不要拿仓库里的文件当证据**。
 
 ## 故障排查
 
@@ -429,8 +434,8 @@ curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | pyth
 ### 16. 正在跑的节拍作业怎么取消（改代码前必做）
 
 `minute.yml` 一次跑 13 轮、约 65 分钟，期间**每轮都重新构建并部署 Pages**。而作业里的 `.py`
-只在上一次「备份轮」（`CYCLE % 10 == 1`，即第 1、11、21… 轮）执行 `git pull --rebase` 时才更新
-—— 所以你在作业运行中推送的新代码，最长要等 50 分钟才被它用上；这期间每一轮都会用旧代码
+只在**每小时首轮**（`CYCLE -eq 1`）执行 `git pull --rebase` 时才更新
+—— 所以你在作业运行中推送的新代码，最长要等 60 分钟才被它用上；这期间每一轮都会用旧代码
 的产物覆盖 Pages，表现是线上 `<generator>` 的版本串被写回旧值（**内容通常一致，只有版本号在骗人**）。
 
 **判断有没有在跑**（不需要 gh，取本机 git 已存的凭据即可）：

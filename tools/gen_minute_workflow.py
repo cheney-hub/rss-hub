@@ -39,7 +39,9 @@ HEAD = """name: RSS 五分钟节拍发布
 #   才能稳定。5 分钟节拍也让 Pages 部署降到 216 次/天（原来 1 分钟节拍是 990 次）。
 # 轮播：设备版 feed-wrap.xml 每轮只发布「当前该显示的那一条」，游标记在 docs/rotate.json，
 #   随 Pages 一起发布；同一时间窗内重复构建不推进，所以多跑几轮也不会跳条。
-# 备份：每 10 轮把 docs/feed.xml 提交一次（每天约 26 条），历史不会爆掉。
+# 备份：每天只把 docs/feed.xml 提交一次（UTC 00 点首轮 = 北京 08:00），一天一条。
+#   仓库里的 feed 只是镜像，权威副本是 Pages 上那份；备份只为「Pages 挂了还能从 git 取回」。
+# 拉代码：每小时首轮 git pull 一次（不是每天），推送的代码最长 60 分钟生效。
 
 on:
   schedule:
@@ -95,10 +97,20 @@ CYCLE_TPL = """
           CYCLE: "{n}"
 
         run: |
-          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
-          if [ $(( CYCLE % 10 )) -eq 1 ]; then
+          # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
+            git checkout -q -- docs 2>/dev/null || true
+            git pull --rebase -q origin main || true
+          fi
+
+          python build_feed.py || echo "本轮采集异常，沿用上一轮 feed"
+
+          # 备份：每天一次，只在 UTC 00 点（北京 08:00）的首轮提交，一天一条。
+          # 这一轮若被 GitHub 拖过整点就当天不补，次日恢复——仓库副本允许缺口，权威副本在 Pages。
+          if [ "$CYCLE" -eq 1 ] && [ "$(date -u +%H)" = "00" ]; then
             git add docs/feed.xml
             if git diff --cached --quiet; then
               echo "内容无变化，跳过备份提交"
