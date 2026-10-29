@@ -48,8 +48,9 @@ TITLES = [
     "AAAA BBBB CCCC DDDD 这是一段中英混排的标题 with spaces and 1234 numbers",
     "  前后有空格和全角空格　的标题  ",
     "短",
-    # 数字 + 量词被切开：「…超3」+「亿条」——_avoid_orphan_number() 的回归样本
+    # 数量被切开的两条回归样本（_avoid_orphan_number）：数字孤零零收尾 / 单位与数字拆散
     "日本今年前10月外泄信息超3亿条 或系AI无差别攻击",
+    "大家养老前三季度亏损2.59亿元，累计净资产收益率-8.30%",
 ]
 
 SUMMARIES = [

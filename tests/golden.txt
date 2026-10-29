@@ -16,6 +16,7 @@ AAAA BBBB CCCC DDDD 这是一段中英混排的标 35.5 0.50.50.50.50.50.5
   前后有空格和全角空格　的标题               16.0 0.50.51.01.01.01.0
 短                              1.0 1.0
 日本今年前10月外泄信息超3亿条 或系AI无差别攻击     23.0 1.01.01.01.01.00.5
+大家养老前三季度亏损2.59亿元，累计净资产收益率-8.30 26.0 1.01.01.01.01.01.0
 
 == split_title ==
 IN  '卡特彼勒第三季度电力与能源业务营收增长12%'
@@ -57,6 +58,9 @@ IN  '短'
 IN  '日本今年前10月外泄信息超3亿条 或系AI无差别攻击'
   HEAD '日本今年前10月外泄信息超'  12.0
   TAIL '3亿条 或系AI无差别攻击' 11.0
+IN  '大家养老前三季度亏损2.59亿元，累计净资产收益率-8.30%'
+  HEAD '大家养老前三季度亏损'     10.0
+  TAIL '2.59亿元，累计净资产收益率' 13.0
 
 == split_title 不同屏宽 ==
 lw=10 -> ('卡特彼勒第三季度电力', '与能源业务营收增长12%')
@@ -78,6 +82,7 @@ lw=14 -> ('卡特彼勒第三季度电力与能源业', '务营收增长12%')
 '  前后有空格和全角空格\u3000的标题  ' -> '  前后有空格和全角空格\u3000的标题  ' | key='前后有空格和全角空格的标题'
 '短'                      -> '短' | key='短'
 '日本今年前10月外泄信息超3亿条 或系AI无差别' -> '日本今年前10月外泄信息超3亿条 或系AI无差别攻击' | key='日本今年前月外泄信息超亿条或系无差别攻击'
+'大家养老前三季度亏损2.59亿元，累计净资产收益' -> '大家养老前三季度亏损2.59亿元，累计净资产收益率-8.30%' | key='大家养老前三季度亏损亿元累计净资产收益率'
 
 == compose_body ==
 T '卡特彼勒第三季度电力与能源业务营收增长12%'
@@ -222,6 +227,14 @@ dcf1bda235e8  '卡特彼勒第三季度电力与能'
 <guid isPermaLink="false">78d73dc86aaa</guid>
 <source url="s0">源0</source>
 </item>
+<item>
+<title>大家养老前三季度亏损</title>
+<description>2.59亿元，累计净资产收益率 国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/13</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">95ffbaca3aa7</guid>
+<source url="s1">源1</source>
+</item>
 </channel></rss>
 
 == build_rss（完整版）==
@@ -335,6 +348,14 @@ dcf1bda235e8  '卡特彼勒第三季度电力与能'
 <pubDate><DATE></pubDate>
 <guid isPermaLink="false">http://x/12|s0</guid>
 <source url="s0">源0</source>
+</item>
+<item>
+<title>大家养老前三季度亏损2.59亿元，累计净资产收益率-8.30%</title>
+<description>国机精工第二大股东国新投资有限公司三季度增仓346.71万股，持股比例升至5.2%。</description>
+<link>http://x/13</link>
+<pubDate><DATE></pubDate>
+<guid isPermaLink="false">http://x/13|s1</guid>
+<source url="s1">源1</source>
 </item>
 </channel></rss>
 

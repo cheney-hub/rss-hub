@@ -164,22 +164,33 @@ def _word_char(ch):
 
 
 # 数字后面紧跟这些字时，数字属于「数量」，不能留在上一行末尾
-# （「信息超3」+「亿条」在屏上读起来像断了）。只列单位 / 量词，不含普通名词字。
+# （「…超3」+「亿条」、「…亏损2.59亿」+「元」在屏上都读起来像断了）。
+# 只列单位 / 量词，不含普通名词字。
 _UNIT_AFTER_NUMBER = "亿万千百元%％个条人年月日号吨台辆架艘份项家只张片次倍成点分秒克斤升米里度"
+_NUMBER_CHARS = set("0123456789.．")
 
 
 def _avoid_orphan_number(t, cut, line_w):
-    """切点落在「数字|量词」之间时，退到数字前面。
+    """切点落在「数量」中间时，退到这个数量前面。
 
-    「日本今年前10月外泄信息超3|亿条」屏上是「…超3」，正文从「亿条」开始，
-    一眼看去是断的。退半个到一个字宽换整句通顺；退得太狠（不足行宽一半）就硬切。
+    「…外泄信息超3|亿条」「…亏损2.59亿|元」这类切法，屏上第一行断在半个数量上，
+    正文从「亿条」「元」开始，读起来是残句。退到数量之前，宁可少显示三四个字，
+    换整句通顺；退得太狠（不足行宽一半）或数量正好在行首，就保持硬切。
+
+    数量的判定：切点左侧连续的【数字 / 小数点 / 单位】里必须含数字，
+    且切点右侧仍是单位或数字 —— 只是「…亿元」结尾（前面没有数字）不算。
     """
     if cut <= 0 or cut >= len(t):
         return cut
-    if not (t[cut - 1].isdigit() and t[cut] in _UNIT_AFTER_NUMBER):
+    right = t[cut] in _UNIT_AFTER_NUMBER or t[cut] in _NUMBER_CHARS
+    if not right:
         return cut
     i = cut
-    while i > 0 and (t[i - 1].isdigit() or t[i - 1] in ".．"):
+    while i > 0 and (t[i - 1] in _UNIT_AFTER_NUMBER or t[i - 1] in _NUMBER_CHARS):
+        i -= 1
+    if i == cut or not any(c in _NUMBER_CHARS for c in t[i:cut]):
+        return cut
+    while i > 0 and t[i - 1] in "+-−":        # 减号跟数字一起走，别留在行尾
         i -= 1
     return i if text_width(t[:i]) >= line_w * 0.5 else cut
 

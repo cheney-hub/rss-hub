@@ -99,6 +99,13 @@ class TestSplitTitle(unittest.TestCase):
         self.assertFalse(head.endswith(("3", "1", "2")))
         self.assertTrue(tail.startswith("3亿条"), tail)
 
+    def test_does_not_split_unit_from_number(self):
+        """「…亏损2.59亿」+「元」同样要退：「亿元」是一个整体。"""
+        head, tail = R.split_title("大家养老前三季度亏损2.59亿元，累计净资产收益率-8.30%")
+        self.assertFalse(head.endswith(("亿", "万")))
+        self.assertTrue(tail.startswith("2.59亿元"), tail)
+        self.assertFalse(head.endswith("-"), "减号不该留在行尾")
+
     def test_short_title_kept_whole(self):
         head, tail = R.split_title("港股收盘")
         self.assertEqual(head, "港股收盘")
