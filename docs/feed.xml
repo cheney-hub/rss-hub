@@ -6,9 +6,37 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 12:09:46 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 12:12:15 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
+<item>
+<title>万事达(MA.N)盘前上涨1.8%，第三季度业绩超出预期。</title>
+<link>https://flash.jin10.com/detail/20261029200952919800</link>
+<pubDate>Thu, 29 Oct 2026 20:09:52 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029200952919800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>据塔斯社：（就未来与欧盟对话）俄罗斯总统普京助理乌沙科夫表示，迟早会与我们不喜欢的人对话。</title>
+<link>https://flash.jin10.com/detail/20261029200937059800</link>
+<pubDate>Thu, 29 Oct 2026 20:09:37 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029200937059800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>生益电子：第三季度净利润同比增长37.10% 环比增长20%</title>
+<link>https://xueqiu.com/5124430882/414552900</link>
+<pubDate>Thu, 29 Oct 2026 20:09:17 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414552900|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>英特尔财报迎来关键考验：市场关注服务器CPU增长、毛利率与代工进展</title>
+<link>https://flash.jin10.com/detail/20261029200814586800</link>
+<pubDate>Thu, 29 Oct 2026 20:08:14 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029200814586800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
 <item>
 <title>比亚迪Q3净利润同比增长28.08%至100.19亿元，海外扩张推动营收回升至13.59% | 财报见闻</title>
 <link>https://wallstreetcn.com/articles/3784767</link>
@@ -17,18 +45,39 @@
 <source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
-<title>万科A：前三季度净亏损239.44亿元</title>
-<link>https://api3.cls.cn/share/article/2519593?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 20:05:07 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519593?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<title>俄证实与美磋商解除对俄主权基金制裁</title>
+<link>https://api3.cls.cn/share/article/2519598?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 20:06:55 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519598?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
-<title>俄总统助理：俄罗斯不拒绝与欧洲方面接触</title>
-<link>https://xueqiu.com/5124430882/414551731</link>
-<pubDate>Thu, 29 Oct 2026 20:04:32 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414551731|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>第三十三届中国杨凌农高会闭幕 签约项目投资总额329.3亿元</title>
+<link>https://www.chinanews.com.cn/cj/2026/10-29/10722961.shtml</link>
+<pubDate>Thu, 29 Oct 2026 20:06:20 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722961.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>万事达卡第三季度跨境交易额增长11% 股票回购支出30亿美元</title>
+<link>https://xueqiu.com/5124430882/414552213</link>
+<pubDate>Thu, 29 Oct 2026 20:06:05 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414552213|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>万事达卡第三季度营收增长14%至98亿美元 调整后每股收益5.31美元</title>
+<link>https://xueqiu.com/5124430882/414552149</link>
+<pubDate>Thu, 29 Oct 2026 20:05:45 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414552149|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>云南省第十三届少数民族传统体育运动会：凝神屏息 箭指靶心</title>
+<link>https://www.chinanews.com.cn/tp/2026/10-29/10722840.shtml</link>
+<pubDate>Thu, 29 Oct 2026 20:05:32 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/tp/2026/10-29/10722840.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
 <title>“字节时间”争论 抖音副总裁持续发文矛头指向腾讯</title>
@@ -45,20 +94,6 @@
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
-<title>山壁下、临江边，重庆彭水谋划为风险防控添三道“锁”</title>
-<link>https://www.chinanews.com.cn/sh/2026/10-29/10722954.shtml</link>
-<pubDate>Thu, 29 Oct 2026 20:02:38 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/sh/2026/10-29/10722954.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>10月29日周四《新闻联播》要闻17条</title>
-<link>https://api3.cls.cn/share/article/2519587?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 20:02:23 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519587?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
-</item>
-<item>
 <title>China accuses Philippines of setting up ‘obstacles’ to attending Asean defence meeting</title>
 <link>https://www.scmp.com/news/china/military/article/3372607/china-accuses-philippines-setting-obstacles-attending-asean-defence-meeting</link>
 <pubDate>Thu, 29 Oct 2026 12:02:16 +0000</pubDate>
@@ -71,48 +106,6 @@
 <pubDate>Thu, 29 Oct 2026 12:02:14 +0000</pubDate>
 <guid isPermaLink="false">https://www.zaobao.com/news/world/story20261029-9915773|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
-</item>
-<item>
-<title>万科A：2026年第三季度净利润亏损89.93亿元</title>
-<link>https://flash.jin10.com/detail/20261029200145727800</link>
-<pubDate>Thu, 29 Oct 2026 20:01:45 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029200145727800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>2026年山西省食品安全宣传周启动 全链条监管守护“舌尖上的安全”</title>
-<link>https://www.chinanews.com.cn/gn/2026/10-29/10722952.shtml</link>
-<pubDate>Thu, 29 Oct 2026 20:01:40 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/gn/2026/10-29/10722952.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>三星SDS拟于明年3月推出英伟达Vera Rubin GPU云服务</title>
-<link>https://flash.jin10.com/detail/20261029200128544800</link>
-<pubDate>Thu, 29 Oct 2026 20:01:28 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029200128544800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>乌克兰央行：俄罗斯的袭击导致商业活动急剧下滑，经济潜力的丧失将制约乌克兰的复苏。</title>
-<link>https://flash.jin10.com/detail/20261029200126356800</link>
-<pubDate>Thu, 29 Oct 2026 20:01:26 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029200126356800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>乌克兰央行将关键利率上调至16.5%；预计为16.25%。</title>
-<link>https://xueqiu.com/5124430882/414551049</link>
-<pubDate>Thu, 29 Oct 2026 20:00:58 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414551049|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>中电联：到2026年底全国发电装机容量将达到43亿千瓦左右</title>
-<link>https://xueqiu.com/5124430882/414550902</link>
-<pubDate>Thu, 29 Oct 2026 20:00:21 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414550902|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
 <title>Can Lula’s re-election unlock Mercosur markets for Southeast Asia?</title>
@@ -183,6 +176,13 @@
 <pubDate>Thu, 29 Oct 2026 11:43:26 +0000</pubDate>
 <guid isPermaLink="false">https://www.zaobao.com/news/singapore/story20261029-9916111|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
+</item>
+<item>
+<title>女子开粉店捧出博士儿子走红：丈夫患癌症 我负责赚钱</title>
+<link>https://c.m.163.com/news/a/LAE74AIP0534P59R.html</link>
+<pubDate>Thu, 29 Oct 2026 11:42:33 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LAE74AIP0534P59R.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>克宫 ：梅拉尼娅人道主义工作经验丰富 有助于阿廖什基行动</title>
@@ -633,13 +633,6 @@
 <source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
 </item>
 <item>
-<title>27岁医学生患乳腺癌去世 称起初以为是纤维瘤没有重视</title>
-<link>https://c.m.163.com/news/a/LAE227H405149N8T.html</link>
-<pubDate>Thu, 29 Oct 2026 09:30:11 GMT</pubDate>
-<guid isPermaLink="false">https://c.m.163.com/news/a/LAE227H405149N8T.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
-</item>
-<item>
 <title>2026年诺贝尔经济学奖与中国现实</title>
 <link>https://www.mycaijing.com/article/detail/586526?source_id=40</link>
 <pubDate>Thu, 29 Oct 2026 17:27:20 +0800</pubDate>
@@ -847,6 +840,13 @@
 <link>https://m.bjnews.com.cn/detail/1793094309129874.html</link>
 <pubDate>Tue, 27 Oct 2026 18:03:22 +0800</pubDate>
 <guid isPermaLink="false">https://m.bjnews.com.cn/detail/1793094309129874.html|https://feed.quanwenrss.com/feed/bjnews-yaowen.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
+</item>
+<item>
+<title>习近平致电祝贺卢拉当选连任巴西总统</title>
+<link>https://m.bjnews.com.cn/detail/1793093636129861.html</link>
+<pubDate>Tue, 27 Oct 2026 18:03:02 +0800</pubDate>
+<guid isPermaLink="false">https://m.bjnews.com.cn/detail/1793093636129861.html|https://feed.quanwenrss.com/feed/bjnews-yaowen.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
 </item>
 </channel></rss>
