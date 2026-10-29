@@ -22,6 +22,13 @@
     每窗必然恰好 mint 出一个新片，低产能的真相（一窗一片都凑不齐）就被抹掉了。
   * 池子上限 ITEM_LIMIT 条，超出按时间砍最旧
 
+怎么读结果（踩过的坑，别再踩）：
+  * 单跑一次得不出结论 —— 延迟分布在 6~60 分之间几乎是空的（约 3%），p90 正好落在这条缝上，
+    尾部多几个窗就从 5 分跳到 60 分。所以默认报 6 个种子均值，`--seed=N` 才能固定对表。
+  * 尾部不是夜间效应：`--verbose` 打出的延迟最大 10 个窗全是「本窗新增 0 条」的时刻
+    （5 分钟里各源都没发东西 → 只能吃池子存货），夜里反而最健康（一小时一抓，总有新的）。
+  * 最差那一端由池底决定：`ITEM_LIMIT ÷ 每窗新增 ≈ 120 ÷ 2.35 ≈ 51 片 ≈ 4.3 小时`。
+
 输出四张表：
   1. 新鲜度：上屏时距发布多久（中位数 / p90 / 最大值）
   2. 覆盖率：进过池子的条目里，有多少最终播到过屏上
@@ -152,6 +159,11 @@ def _stats(onscreen, rank_hist, lags, seen, minted, cycles):
     # 也就是低产能时段在吃池子里的存货。这个比例直接决定尾巴有多长。
     stale = sum(1 for x in lags if x > 1)
 
+    # 两个「稳」的指标：p90 落在 6~60 分的空档上，多几个尾部窗就从 5 分跳到 60 分，
+    # 跨种子不可比；「≤6 分的占比」「>30 分的占比及其分位」在 20 个种子上是平的。
+    fast = sum(1 for x in onscreen if x <= 360)
+    slow = [x for x in onscreen if x > 1800]
+
     # 覆盖率只统计还活着或曾上屏的；被池子挤掉且没播过的 = 白抓
     return {
         "minted": minted,
@@ -161,6 +173,9 @@ def _stats(onscreen, rank_hist, lags, seen, minted, cycles):
         "delay_med": _pct(onscreen, 0.5) / 60,
         "delay_p90": _pct(onscreen, 0.9) / 60,
         "delay_max": (onscreen[-1] if onscreen else 0) / 60,
+        "fast": fast / max(1, len(onscreen)),
+        "slow": len(slow) / max(1, len(onscreen)),
+        "slow_med": _pct(slow, 0.5) / 60,
         "lag_med": _pct(lags, 0.5),
         "lag_max": lags[-1] if lags else 0,
         "stale": stale / max(1, len(lags)),
@@ -194,14 +209,26 @@ def show(tag, r):
           % (r["rank_med"], r["rank_p90"], r["rank_zero"] * 100))
     print("  落后片数（window-bucket）：中位 %d 片 · 最大 %d 片 · 播的是旧片（落后 ≥2 片）占 %.0f%%"
           % (r["lag_med"], r["lag_max"], r["stale"] * 100))
+    print("  分布（跨种子稳定）：%.0f%% 在 6 分内 · %.0f%% 超过 30 分（这批中位 %.0f 分）"
+          % (r["fast"] * 100, r["slow"] * 100, r["slow_med"]))
+
+
+def _arg_seed(default=7):
+    """`--seed=N`：换一条随机序列复现别人的数（对表时固定种子用）。"""
+    for arg in sys.argv:
+        if arg.startswith("--seed="):
+            return int(arg.split("=", 1)[1])
+    return default
 
 
 def main():
     print("参数：节拍 %d 秒 · 池上限 %d 条 · 白天每窗新增 %.2f 条（泊松）"
           % (DWELL, LIMIT, 2.35))
     if "--verbose" in sys.argv:
-        show("单跑 seed=7（单次结果方差很大，结论看默认的多种子均值）", simulate())
-        simulate(verbose=True)          # 跑满 24 小时，只打延迟最大的 10 个窗
+        seed = _arg_seed()
+        show("单跑 seed=%d（单次结果方差很大，结论看默认的多种子均值）" % seed,
+             simulate(seed=seed))
+        simulate(seed=seed, verbose=True)   # 跑满 24 小时，只打延迟最大的 10 个窗
         return
     # 单种子方差很大（p90 能在个位数和几十分钟之间跳），只报一次容易得出错误结论，
     # 所以默认跑 6 个种子并报均值；质疑某个数时用 --verbose 逐窗看。
