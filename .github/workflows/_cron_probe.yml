@@ -1,0 +1,15 @@
+name: cron-probe
+# 临时诊断用：验证本仓库的 schedule 到底会不会触发。验完即删。
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "cron fired at $(date -u +%FT%TZ)"
