@@ -47,7 +47,6 @@ jobs:
           SCREEN_LINE_WIDTH: "13"
           SCREEN_BODY_MAX: "60"
           ROTATE_SECONDS: "300"
-          ROTATE_COOLDOWN: "6"
         run: python build_feed.py
 
       - uses: actions/upload-pages-artifact@v3

@@ -66,7 +66,7 @@ import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 # 显示规则住在 render.py，build_feed 只负责抓取与编排。
 from render import (BODY_MAX, ENTITY_FIX, LINE_WIDTH, build_rss, clean_text,
@@ -87,8 +87,13 @@ SCREEN_OUT = os.environ.get(
 # 轮播：设备版一次只发布一条，按时间窗前进，走完一轮才回头
 ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))   # 每条驻留 = 设备刷新周期
 ROTATE_POOL_MAX = max(0, int(os.environ.get("ROTATE_POOL_MAX", "0")))    # 0 = 池子不限
+ROTATE_BUCKETS = max(0, int(os.environ.get("ROTATE_BUCKETS", "0")))      # 一轮最多几片，0 = 池子里有多少片就走多少
 ROTATE_STATE = os.environ.get(
     "ROTATE_STATE", os.path.join(os.path.dirname(OUT_FILE) or ".", "rotate.json"))
+
+# 源没写时区时按这个时区解释（默认北京 +08）。写死时区而不是用运行机本地时区，
+# 否则本地（+08）与 GitHub runner（UTC）会把同一份数据排出两套顺序。
+SOURCE_TZ = timezone(timedelta(hours=float(os.environ.get("SOURCE_TZ_OFFSET", "8"))))
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -163,17 +168,28 @@ def _first_text(el, names):
 
 
 def _parse_date(s):
+    """把源里的时间字符串转成 epoch 秒。
+
+    源没写时区时必须自己补：naive 时间默认按北京时间解释（中文媒体惯例），
+    不能用运行机器的本地时区 —— 本地是 +08、GitHub runner 是 UTC，
+    同一份数据会排出两套顺序，本地测通了线上却是乱的。
+    """
     if not s:
         return None
     s = s.strip()
+    dt = None
     try:
-        return email.utils.parsedate_to_datetime(s).timestamp()
+        dt = email.utils.parsedate_to_datetime(s)
     except Exception:
-        pass
-    try:
-        return datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp()
-    except Exception:
-        return None
+        dt = None
+    if dt is None:
+        try:
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except Exception:
+            return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=SOURCE_TZ)
+    return dt.timestamp()
 
 
 def _sanitize(xml_text):
@@ -339,52 +355,119 @@ def save_rotate_state(state):
     os.replace(tmp, ROTATE_STATE)
 
 
-def rotate_pick(items, state, now=None):
-    """取「这一窗该上屏的那一条」，返回 (条目, 新状态, 说明)。
+ROTATE_STATE_VERSION = 2      # 状态结构版本，改了就自动丢弃旧状态（宁可重复一条，不能乱序）
 
-    items 必须已按发布时间倒序（run_once 保证）。规则只有三条：
-      1. 取「未标注已显示」里发布时间最新的一条上屏，并给它打上已显示标记；
-      2. 全部条目都已显示 → 清空所有标记，下一窗从最新一条重新开始；
-      3. 同一个时间窗内重复调用不推进，后台多跑几轮也不会跳条。
+
+def _bucketize(items, dwell):
+    """把池子按 dwell 秒切成时间片，每片取最新一条当代表。
+
+    返回 (片号 → 条目, 片号倒序表)。items 必须已按时间倒序，
+    所以 setdefault 拿到的第一条就是片内最新的那条。
+    """
+    buckets = {}
+    for it in items:
+        buckets.setdefault(int((it.get("ts") or 0) // dwell), it)
+    return buckets, sorted(buckets, reverse=True)
+
+
+def _next_in_queue(state, keys):
+    """从本轮清单里取下一条没播过的片；清单播完就按当前池子重开一轮。
+
+    清单是开轮时拍的快照。池子一直在滚动（每窗新增十几条，最旧的被上限挤掉），
+    不快照的话游标往下走两格就发现底下几片已经没了，只能回到顶部 ——
+    看起来就是「明明没走完就从头开始」。快照之后一轮就是确定的 N 条。
+    """
+    live = set(keys)
+    shown = set(state.get("shown") or [])
+    cycle = int(state.get("cycle") or 0)
+    queue = [b for b in (state.get("queue") or []) if b in live]
+    cand = [b for b in queue if b not in shown]
+    if cand:
+        return cand[0], queue, shown, cycle
+
+    queue = keys[:ROTATE_BUCKETS] if ROTATE_BUCKETS > 0 else list(keys)
+    if not queue:
+        return None, [], set(), cycle
+    return queue[0], queue, set(), cycle + 1
+
+
+def _hold_current(state, buckets, w, prev_w):
+    """同一个时间窗内重复构建：屏幕锁死在这一条，不推进。
+
+    这是「后台多跑几轮也不会跳条」的唯一保证。找不到原条目时宁可返回 None
+    （调用方保留上一版 feed-wrap 不动），也不要在 5 分钟内换两条。
+    """
+    if w > prev_w:
+        return "go", None
+    by_guid = {item_guid(it): it for it in buckets.values()}
+    cur = by_guid.get(state.get("current"))
+    if cur is not None:
+        return "hold", cur
+    b = int(state.get("bucket") or 0)
+    if b in buckets:
+        return "hold", buckets[b]
+    return "skip", None
+
+
+def rotate_pick(items, state, now=None):
+    """取「这一窗该上屏的那一条」，返回 (条目 或 None, 新状态, 说明)。
+
+    items 必须已按发布时间倒序（run_once 保证）。
+
+    为什么按「时间片」而不是「条目」轮：
+      每 5 分钟各源新产出十几条，而屏幕 5 分钟只放得下 1 条（产能是消费的十几倍）。
+      若按条目「取未显示里最新的一条」，新条目永远比旧的新 —— 每一窗都在追新，
+      池子里剩的上百条还没轮到就被 120 条上限挤出去，等于从来没上过屏。
+      按时间片轮就没有这个问题：一个片只出一条代表，产出和消费对齐，
+      队列一定走得完，走完才回头。
+
+    规则（对应「按时间排序 → 打标记 → 下一窗取未标记的最新一条 → 全部标完重来」）：
+      1. 把池子按 dwell 切成时间片，片内取最新一条作为该片代表；
+      2. 每个片只上屏一次，记在 shown 里（存片号不存 guid，池子滚动也不丢标记）；
+      3. 一个片一个窗，沿清单往下走；清单走完才拿当前池子开新一轮；
+      4. 同一时间窗内重复调用不推进。
     """
     dwell = ROTATE_SECONDS
     w = int((now if now is not None else time.time()) // dwell)
-    # 节拍改过（比如从 60 秒调成 300 秒）：窗口编号的基数变了，不可比，重新起轮
-    if int(state.get("dwell") or dwell) != dwell:
+    # 节拍改过（60 秒 ↔ 300 秒）或状态结构升级：片号基数变了，重新起轮
+    if (state.get("version") != ROTATE_STATE_VERSION
+            or int(state.get("dwell") or dwell) != dwell):
         state = {}
     prev_w = int(state.get("window") or 0)
 
-    index = {}
-    for it in items:
-        index.setdefault(item_guid(it), it)          # 同 guid 只留第一条
+    buckets, keys = _bucketize(items, dwell)
+    if not buckets:
+        return None, state, "池子为空"
 
-    # 同一窗：内容可以刷新，但展示的条目锁死，这就是幂等
-    if w <= prev_w and state.get("current") in index:
-        return index[state["current"]], state, "同窗保持"
+    action, held = _hold_current(state, buckets, w, prev_w)
+    if action == "hold":
+        return held, state, "同窗保持"
+    if action == "skip":
+        return None, state, "同窗内该条离开池子，保持上一版"
 
-    shown = [g for g in (state.get("shown") or []) if g in index]   # 顺手清掉已消失的条目
-    cycle = int(state.get("cycle") or 1)
-    if len(shown) >= len(index):
-        shown = []                                   # 全部都显示过 → 清空标记，新一轮
-        cycle += 1
+    pick_b, queue, shown, cycle = _next_in_queue(state, keys)
+    if pick_b is None:
+        return None, state, "池子为空"
+    pick = buckets[pick_b]
 
-    shown_set = set(shown)
-    cands = [it for it in items if item_guid(it) not in shown_set]
-
-    pick = cands[0]
-    guid = item_guid(pick)
-    shown.append(guid)
     new_state = {
+        "version": ROTATE_STATE_VERSION,
         "window": w,
-        "current": guid,
-        "shown": shown,
+        "bucket": pick_b,
+        "current": item_guid(pick),
+        "queue": queue,
+        "shown": sorted(shown | {pick_b}),
         "cycle": cycle,
-        "pool": len(index),
+        "pool": len(buckets),           # 池子里有多少个时间片
+        "items": len(items),            # 池子里有多少条原始条目
         "dwell": dwell,
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "title": (pick.get("title") or "")[:40],
+        "at": datetime.fromtimestamp(pick_b * dwell, timezone.utc).strftime("%m-%d %H:%M"),
     }
-    note = "新窗推进（池 %d / 本轮已展示 %d / 第 %d 轮）" % (len(index), len(shown), cycle)
+    note = ("新窗推进（%s 片 · 本轮 %d/%d · 池 %d 片/%d 条 · 第 %d 轮）"
+            % (new_state["at"], len(new_state["shown"]), len(queue),
+               len(buckets), len(items), cycle))
     return pick, new_state, note
 
 
@@ -446,8 +529,14 @@ def _write(path, xml_text):
 
 
 def write_feed(items, stats, pick=None):
-    """写两份：完整版 feed.xml（全部条目）+ 设备版 feed-wrap.xml（只有轮播到的那一条）。"""
+    """写两份：完整版 feed.xml（全部条目）+ 设备版 feed-wrap.xml（只有轮播到的那一条）。
+
+    pick 为 None 表示这一窗不推进（同窗重跑，且原条目已离开池子）：
+    此时只刷新完整版，设备版保留上一版不动 —— 5 分钟内换两条比晚一条更糟。
+    """
     _write(OUT_FILE, build_rss(items, FEED_URL, stats))
+    if pick is None:
+        return
 
     wrap_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
     screen_items = [pick] if pick else items
@@ -481,12 +570,14 @@ def main():
         state = load_rotate_state()
         pick, state, note = rotate_pick(pool, state)
         write_feed(items, stats, pick)
-        save_rotate_state(state)
+        if pick is not None:
+            save_rotate_state(state)
         rounds += 1
         print("[第 %d 轮] 成功 %d / 回退 %d / 失败 %d → 条目 %d（去重 %d）耗时 %.1fs"
               % (rounds, stats["ok"], stats["stale"], stats["fail"],
                  stats["items"], stats["dropped"], time.time() - t0))
-        print("        上屏：%s ｜ %s" % (note, (pick.get("title") or "")[:36]))
+        print("        上屏：%s ｜ %s"
+              % (note, (pick.get("title") or "")[:36] if pick else "（设备版保持上一版）"))
 
         left = deadline - time.time()
         if left < 45:                      # 剩余时间不够一轮就收工

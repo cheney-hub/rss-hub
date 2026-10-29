@@ -132,13 +132,21 @@ class TestRotate(unittest.TestCase):
 
     信息按时间倒序排 → 第一条上屏并标注已显示 → 下一轮只显示没有标注的最新一条
     → 全部都有标注则清空所有标注，重新开始。同一时间窗内重复构建不推进。
+
+    标记的单位是「时间片」（dwell 秒一片），不是单条：
+    每 5 分钟各源会产出十几条，屏幕只放得下 1 条，按条轮永远追不上，
+    老条目还没轮到就被池子上限挤出去 —— 所以一个片只出一条代表。
     """
 
     def setUp(self):
-        self.items = [mk("T%d" % i, src="s%d" % i, ts=1000 - i) for i in range(4)]
+        # 每条落在不同的时间片（间隔 = dwell），模拟「每 5 分钟一条」
+        self.dwell = B.ROTATE_SECONDS
+        self.items = [mk("T%d" % i, src="s%d" % i, ts=1000 - i * self.dwell)
+                      for i in range(4)]
 
-    def pick(self, state, w):
-        return B.rotate_pick(self.items, state, now=w * B.ROTATE_SECONDS)
+    def pick(self, state, w, items=None):
+        return B.rotate_pick(items if items is not None else self.items,
+                             state, now=w * self.dwell)
 
     def test_advances_one_per_window(self):
         st, seq = {}, []
@@ -162,16 +170,47 @@ class TestRotate(unittest.TestCase):
         self.assertEqual(len(st["shown"]), 1)
         self.assertEqual(it["title"], "T0")
 
-    def test_new_item_jumps_queue(self):
+    def test_same_bucket_takes_latest(self):
+        """同一个 5 分钟片里的多条只出一条（取最新的），且只占队列一格。"""
+        items = [
+            mk("B0-old", src="a", ts=1000 + 10),
+            mk("B0-new", src="b", ts=1000 + 90),   # 同片、更新
+            mk("B1", src="c", ts=1000 - 300 + 5),
+        ]
+        items.sort(key=lambda x: x["ts"], reverse=True)
+        st, seq = {}, []
+        for w in range(1, 4):
+            it, st, _ = self.pick(st, w, items)
+            seq.append(it["title"])
+        self.assertEqual(seq[:2], ["B0-new", "B1"])
+        self.assertEqual(len(st["queue"]), 2)      # 两片，不是三条
+
+    def test_new_item_waits_next_cycle(self):
+        """新条目不在本轮插队：本轮清单是开轮时拍好的快照，播完才重排。"""
+        st = {}
+        _, st, _ = self.pick(st, 1)                        # 本轮从 T0 开始
+        items = [mk("NEW", src="n", ts=9999)] + self.items  # 来了一条更新的
+        it, st, _ = self.pick(st, 2, items)
+        self.assertEqual(it["title"], "T1")                # 不插队，继续走清单
+        for w in range(3, 5):
+            _, st, _ = self.pick(st, w, items)
+        it, st, _ = self.pick(st, 5, items)                # 一轮播完，重排
+        self.assertEqual(it["title"], "NEW")
+
+    def test_queue_survives_pool_rollover(self):
+        """池子在滚动（老条目被上限挤掉）也不该让本轮清单中途重排。"""
         st = {}
         _, st, _ = self.pick(st, 1)
-        self.items = [mk("NEW", src="n", ts=9999)] + self.items
-        it, _, _ = self.pick(st, 2)
-        self.assertEqual(it["title"], "NEW")
+        queue = list(st["queue"])
+        # 模拟新条目涌入，但清单里的片都还在
+        more = [mk("N%d" % k, src="z%d" % k, ts=9000 + k) for k in range(5)]
+        items = sorted(more + self.items, key=lambda x: x["ts"], reverse=True)
+        _, st, _ = self.pick(st, 2, items)
+        self.assertEqual(st["queue"], queue)               # 清单没被改写
 
     def test_no_repeat_within_cycle(self):
         st, seen = {}, []
-        for w in range(1, 6):
+        for w in range(1, 7):
             it, st, _ = self.pick(st, w)
             seen.append(it["title"])
         self.assertEqual(len(seen[:4]), len(set(seen[:4])))

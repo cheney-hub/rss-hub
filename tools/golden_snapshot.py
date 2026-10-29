@@ -116,8 +116,10 @@ w("\n== build_rss（完整版）==")
 w(norm(R.build_rss([dict(r) for r in rich], "http://x/feed.xml", stats)))
 
 w("\n== rotate_pick 序列 ==")
-pool = [{"title": "T%d" % i, "link": "http://x/r%d" % i, "src": "s%d" % (i % 4), "ts": 1000 - i}
-        for i in range(9)]
+# 每条间隔一个时间片（= 设备刷新周期），这样才有「逐片推进」可看。
+# 若都塞在同一个片里，按片轮播只会出一条代表，等于什么都没测到。
+pool = [{"title": "T%d" % i, "link": "http://x/r%d" % i, "src": "s%d" % (i % 4),
+         "ts": 1000 - i * B.ROTATE_SECONDS} for i in range(9)]
 st, seq = {}, []
 for win in range(1, 13):
     pick, st, note = B.rotate_pick([dict(p) for p in pool], st, now=win * B.ROTATE_SECONDS)
