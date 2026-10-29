@@ -6,9 +6,37 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 09:12:17 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 09:22:04 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
+<item>
+<title>宏昌电子：第三季度净利润同比增长2545% 环比增长455%</title>
+<link>https://flash.jin10.com/detail/20261029171818025800</link>
+<pubDate>Thu, 29 Oct 2026 17:18:18 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029171818025800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>中泰证券首席宏观分析师张德礼：科技产业趋势未发生逆转 产业基本面中长期向好</title>
+<link>https://api3.cls.cn/share/article/2519328?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 17:15:06 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519328?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+</item>
+<item>
+<title>云南：边疆村寨绘就团结新画卷</title>
+<link>https://www.chinanews.com.cn/txy/2026/10-29/10722846.shtml</link>
+<pubDate>Thu, 29 Oct 2026 17:14:17 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/txy/2026/10-29/10722846.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>伦敦金属交易所（LME）数据显示，铜库存272200吨，增加750吨。铝库存231675吨，减少225吨。锌库存162675吨，减少1950吨。镍库存27879…</title>
+<link>https://xueqiu.com/5124430882/414508949</link>
+<pubDate>Thu, 29 Oct 2026 17:13:34 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414508949|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
 <item>
 <title>蔡司杨晓光：通过AI技术，让传统光学服务更专业、更高效</title>
 <link>https://finance.sina.com.cn/hy/hyjz/2026-10-29/doc-iniwwtux5265042.shtml</link>
@@ -17,32 +45,11 @@
 <source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
 </item>
 <item>
-<title>伊朗9月物价同比上涨近九成 官员致歉</title>
-<link>https://flash.jin10.com/detail/20261029170932332800</link>
-<pubDate>Thu, 29 Oct 2026 17:09:32 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029170932332800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>香港交易所信息显示，贝莱德在中国铝业H股的持股比例于10月26日从9.82%降至8.96%。</title>
-<link>https://xueqiu.com/5124430882/414506824</link>
-<pubDate>Thu, 29 Oct 2026 17:04:44 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414506824|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>财联社10月29日电，香港交易所信息显示，贝莱德在中国铝业H股的持股比例于10月26日从9.82%降至8.96%。</title>
-<link>https://api3.cls.cn/share/article/2519301?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 17:04:44 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519301?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
-</item>
-<item>
-<title>2026苏州国际友城嘉年华启动</title>
-<link>https://www.chinanews.com.cn/sh/2026/10-29/10722836.shtml</link>
-<pubDate>Thu, 29 Oct 2026 17:03:32 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/sh/2026/10-29/10722836.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+<title>欧盟11月起对小包加征2欧元处理费 称用于弥补海关检查和监管成本｜出海·消费</title>
+<link>https://www.caixin.com/2026-10-29/102498498.html</link>
+<pubDate>Thu, 29 Oct 2026 17:09:11 +0800</pubDate>
+<guid isPermaLink="false">https://www.caixin.com/2026-10-29/102498498.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
 </item>
 <item>
 <title>Suddenly, Empathy Isn’t So Toxic</title>
@@ -59,18 +66,18 @@
 <source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
+<title>国防部：菲方军舰非法坐滩仁爱礁早该被拖走</title>
+<link>https://c.m.163.com/news/a/LAE1V00L0514R9P4.html</link>
+<pubDate>Thu, 29 Oct 2026 09:00:15 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LAE1V00L0514R9P4.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
+</item>
+<item>
 <title>美国中期选举：特朗普不参选 政治命运却受考验？| 世界大解说</title>
 <link>https://www.zaobao.com/news/world/story20261029-9910257</link>
 <pubDate>Thu, 29 Oct 2026 09:00:00 +0000</pubDate>
 <guid isPermaLink="false">https://www.zaobao.com/news/world/story20261029-9910257|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
-</item>
-<item>
-<title>“养老贷”再惹议 贷款缴社保划算吗？｜社保算账(含视频)</title>
-<link>https://www.caixin.com/2026-10-29/102498240.html</link>
-<pubDate>Thu, 29 Oct 2026 16:58:33 +0800</pubDate>
-<guid isPermaLink="false">https://www.caixin.com/2026-10-29/102498240.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
 </item>
 <item>
 <title>2026全球数商大会10月30日开幕！以“数智共生 链接世界”打造国际数据要素交流平台</title>
@@ -85,6 +92,20 @@
 <pubDate>Thu, 29 Oct 2026 16:53:13 +0800</pubDate>
 <guid isPermaLink="false">https://sputniknews.cn/20261029/1073857433.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
+</item>
+<item>
+<title>青沼英二坦言对《塞尔达传说：时之笛 重制版》推出感到紧张</title>
+<link>https://www.cnbeta.com.tw/articles/game/1584308.htm</link>
+<pubDate>Thu, 29 Oct 2026 16:50:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/game/1584308.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
+</item>
+<item>
+<title>华能国际近5日震荡持平大盘 10月28日主力资金净流入估值处历史低位</title>
+<link>https://www.eeo.com.cn/2026/1029/1078800.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:49:50 +0800</pubDate>
+<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078800.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
 </item>
 <item>
 <title>兴业银行：第三季度归母净利润195.6亿元，同比下降1.92%</title>
@@ -136,18 +157,18 @@
 <source url="https://rsshub.rss.tips/oncc/hk">东网</source>
 </item>
 <item>
+<title>AI巨头面临全新评价体系：现金流才是当前最关键指标</title>
+<link>https://www.mycaijing.com/article/detail/586523?source_id=40</link>
+<pubDate>Thu, 29 Oct 2026 16:23:19 +0800</pubDate>
+<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586523?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
+</item>
+<item>
 <title>胡瓜節目赴花蓮送暖 談選舉稱繳很多稅會投票</title>
 <link>https://www.cna.com.tw/news/amov/202610290231.aspx</link>
 <pubDate>Thu, 29 Oct 2026 16:23:00 +0800</pubDate>
 <guid isPermaLink="false">https://www.cna.com.tw/news/amov/202610290231.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
-</item>
-<item>
-<title>17岁男生被人冒充警察骗出家门殴打 三被告人当庭认罪</title>
-<link>https://c.m.163.com/news/a/LADNAAL30512D3VJ.html</link>
-<pubDate>Thu, 29 Oct 2026 08:20:21 GMT</pubDate>
-<guid isPermaLink="false">https://c.m.163.com/news/a/LADNAAL30512D3VJ.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>涉用电单车贩运124枚丧尸烟弹 38岁快递员被控</title>
@@ -185,13 +206,6 @@
 <source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
-<title>中远海能近5日震荡持平大盘 10月28日主力净流出 当前估值处历史高位区间</title>
-<link>https://www.eeo.com.cn/2026/1029/1078690.shtml</link>
-<pubDate>Thu, 29 Oct 2026 15:53:47 +0800</pubDate>
-<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078690.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
-</item>
-<item>
 <title>“东盟防长扩大会举办以来，这是中方参会官员级别最低的一次”</title>
 <link>https://news.ifeng.com/c/8xcSKSON0Zv</link>
 <pubDate>Thu, 29 Oct 2026 07:53:00 GMT</pubDate>
@@ -206,25 +220,11 @@
 <source url="https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml">凤凰网军事·最新</source>
 </item>
 <item>
-<title>商务部：如欧方对中国产品采取歧视性限制措施，中方必将采取一切必要措施</title>
-<link>https://www.mycaijing.com/article/detail/586522?source_id=40</link>
-<pubDate>Thu, 29 Oct 2026 15:16:47 +0800</pubDate>
-<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586522?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
-</item>
-<item>
 <title>香港大埔宏福苑大火调查报告出炉 房屋局长何永贤辞职担责</title>
 <link>https://www.8world.com/greater-china/hong-kong-tai-po-fire-report-3324476</link>
 <pubDate>Thu, 29 Oct 2026 07:16:00 GMT</pubDate>
 <guid isPermaLink="false">https://www.8world.com/greater-china/hong-kong-tai-po-fire-report-3324476|https://rsshub.rss.tips/8world/news</guid>
 <source url="https://rsshub.rss.tips/8world/news">8world</source>
-</item>
-<item>
-<title>特斯拉Model 3停车状态车内起火 三星手机成怀疑对象</title>
-<link>https://www.cnbeta.com.tw/articles/tech/1584300.htm</link>
-<pubDate>Thu, 29 Oct 2026 15:14:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/tech/1584300.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
 </item>
 <item>
 <title>先问AI再看医生：患者“信”了，医生愁了</title>
