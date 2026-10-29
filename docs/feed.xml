@@ -6,15 +6,36 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 12:53:29 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 12:56:19 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>美最新通胀数据基本符合预期 美国股指期货跌幅收窄</title>
-<link>https://flash.jin10.com/detail/20261029204903952800</link>
-<pubDate>Thu, 29 Oct 2026 20:49:03 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029204903952800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>邦吉能源：即使全球能源价格下跌，可再生柴油对植物油的需求仍将保持强劲。</title>
+<link>https://flash.jin10.com/detail/20261029205435716800</link>
+<pubDate>Thu, 29 Oct 2026 20:54:35 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029205435716800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>机构：中期选举对美元的影响可能有限</title>
+<link>https://flash.jin10.com/detail/20261029205421254800</link>
+<pubDate>Thu, 29 Oct 2026 20:54:21 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029205421254800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>美国三季度GDP增速意外超预期，通胀压力并存</title>
+<link>https://flash.jin10.com/detail/20261029205419377800</link>
+<pubDate>Thu, 29 Oct 2026 20:54:19 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029205419377800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>亚马逊推出五款新一代Alexa设备 涵盖智能音箱、闹钟及智能显示屏</title>
+<link>https://xueqiu.com/5124430882/414562138</link>
+<pubDate>Thu, 29 Oct 2026 20:53:26 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414562138|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
 <title>中国科学家揭示日冕纳耀斑磁重联加热机制</title>
@@ -24,18 +45,11 @@
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
-<title>卡塔尔外交部：以色列的指控传播者应当处理其灾难性政策对地区的影响。</title>
-<link>https://flash.jin10.com/detail/20261029204812824800</link>
-<pubDate>Thu, 29 Oct 2026 20:48:12 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029204812824800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>克里姆林宫助手乌沙科夫：三方会谈日期取决于乌方行动。</title>
-<link>https://flash.jin10.com/detail/20261029204755450800</link>
-<pubDate>Thu, 29 Oct 2026 20:47:55 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029204755450800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+<title>China slams EU’s potential new trade safeguards, says they may violate WTO rules</title>
+<link>https://www.scmp.com/economy/china-economy/article/3372612/china-slams-eus-potential-new-trade-safeguards-says-they-may-violate-wto-rules</link>
+<pubDate>Thu, 29 Oct 2026 12:47:50 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/economy/china-economy/article/3372612/china-slams-eus-potential-new-trade-safeguards-says-they-may-violate-wto-rules|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
 <title>【财联社早知道】阿里巴巴入股绳驱柔性太空机器人研发商，分析师称模型端迭代+物理AI赋能，人形机器人产业化1-10发展拐点来临；豆包工作向企业客户开放配置三方模型</title>
@@ -94,6 +108,13 @@
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
+<title>China’s BYD, Geely report profit jump as sales abroad surge, though local market stalls</title>
+<link>https://www.scmp.com/business/china-evs/article/3372611/chinas-byd-geely-report-profit-jump-sales-abroad-surge-though-local-market-stalls</link>
+<pubDate>Thu, 29 Oct 2026 12:41:05 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/business/china-evs/article/3372611/chinas-byd-geely-report-profit-jump-sales-abroad-surge-though-local-market-stalls|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
 <title>北方股份：第三季度归母净利润8403.65万元，同比增长3.19%</title>
 <link>https://www.jiemian.com/article/15266074.html</link>
 <pubDate>Thu, 29 Oct 2026 20:40:11 +0800</pubDate>
@@ -106,6 +127,13 @@
 <pubDate>Thu, 29 Oct 2026 20:39:20 +0800</pubDate>
 <guid isPermaLink="false">https://xueqiu.com/5124430882/414559337|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>Inflation Accelerated in September, Fed’s Preferred Measure Shows</title>
+<link>https://www.nytimes.com/2026/10/29/business/economy/pce-inflation-economy.html</link>
+<pubDate>Thu, 29 Oct 2026 12:38:44 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/business/economy/pce-inflation-economy.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
 </item>
 <item>
 <title>有媒体称多架空警-3000疑现身制造厂附近 国防部回应</title>
@@ -122,11 +150,11 @@
 <source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
 </item>
 <item>
-<title>美国30年期国债收益率下跌1.08个基点，报5.352%；2年期收益率最新下跌2.51个基点，报4.71%。</title>
-<link>https://xueqiu.com/5124430882/414558573</link>
-<pubDate>Thu, 29 Oct 2026 20:35:05 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414558573|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+<title>U.S. Economy Grew More Rapidly Over the Summer</title>
+<link>https://www.nytimes.com/2026/10/29/business/economy/us-economy-gdp.html</link>
+<pubDate>Thu, 29 Oct 2026 12:35:13 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/business/economy/us-economy-gdp.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
 </item>
 <item>
 <title>青鸟智控：第三季度归母净利润6428.56万元，同比下降19.11%</title>
@@ -208,7 +236,7 @@
 <item>
 <title>Microsoft Up, Google Down. A Tale of Two Hyperscalers.</title>
 <link>https://www.nytimes.com/2026/10/29/business/dealbook/microsoft-google-ai-hyperscalers.html</link>
-<pubDate>Thu, 29 Oct 2026 12:20:10 +0000</pubDate>
+<pubDate>Thu, 29 Oct 2026 12:20:11 +0000</pubDate>
 <guid isPermaLink="false">https://www.nytimes.com/2026/10/29/business/dealbook/microsoft-google-ai-hyperscalers.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
 </item>
@@ -262,13 +290,6 @@
 <source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
 </item>
 <item>
-<title>Hong Kong police probe HK$40 million jewellery theft from Southern district flat</title>
-<link>https://www.scmp.com/news/hong-kong/law-and-crime/article/3372610/hong-kong-police-probe-hk40-million-jewellery-theft-southern-district-flat</link>
-<pubDate>Thu, 29 Oct 2026 12:09:45 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/news/hong-kong/law-and-crime/article/3372610/hong-kong-police-probe-hk40-million-jewellery-theft-southern-district-flat|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
-</item>
-<item>
 <title>《给阿嬷的情书》热播带火“侨批”，如何保护利用好这份世界记忆→</title>
 <link>https://www.peopleapp.com/column/30053442181-500007762136</link>
 <pubDate>Thu, 29 Oct 2026 20:09:26 +0800</pubDate>
@@ -290,13 +311,6 @@
 <source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
 </item>
 <item>
-<title>Is It Time to End Daylight Saving Time?</title>
-<link>https://www.nytimes.com/2026/10/29/learning/is-it-time-to-end-daylight-saving-time.html</link>
-<pubDate>Thu, 29 Oct 2026 12:04:27 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/learning/is-it-time-to-end-daylight-saving-time.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
-</item>
-<item>
 <title>新乳业前三季度净利增长13%，低温奶市场份额继续提升</title>
 <link>https://wallstreetcn.com/articles/3784780</link>
 <pubDate>Thu, 29 Oct 2026 20:04:09 +0800</pubDate>
@@ -316,13 +330,6 @@
 <pubDate>Thu, 29 Oct 2026 20:02:19 +0800</pubDate>
 <guid isPermaLink="false">https://www.peopleapp.com/column/30053448679-500007763343|https://feed.quanwenrss.com/feed/people-redian.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
-</item>
-<item>
-<title>China accuses Philippines of setting up ‘obstacles’ to attending Asean defence meeting</title>
-<link>https://www.scmp.com/news/china/military/article/3372607/china-accuses-philippines-setting-obstacles-attending-asean-defence-meeting</link>
-<pubDate>Thu, 29 Oct 2026 12:02:16 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/news/china/military/article/3372607/china-accuses-philippines-setting-obstacles-attending-asean-defence-meeting|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
 <title>【美国中期选举】特朗普指民主党混淆选民视听 吁将阿拉斯加两候选人除名</title>
@@ -388,13 +395,6 @@
 <source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
 </item>
 <item>
-<title>Its Investors Say Kalshi Is Worth $40 Billion. Is an I.P.O. Next?</title>
-<link>https://www.nytimes.com/2026/10/29/business/dealbook/kalshi-fundraising-ipo.html</link>
-<pubDate>Thu, 29 Oct 2026 11:45:05 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/business/dealbook/kalshi-fundraising-ipo.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
-</item>
-<item>
 <title>烟霾津贴计划启动10天以来 受惠患者超10万1000人次</title>
 <link>https://www.zaobao.com/news/singapore/story20261029-9916111</link>
 <pubDate>Thu, 29 Oct 2026 11:43:26 +0000</pubDate>
@@ -434,13 +434,6 @@
 <link>https://www.bbc.com/news/articles/cq5ynw94k7kzo</link>
 <pubDate>Thu, 29 Oct 2026 11:34:03 +0000</pubDate>
 <guid isPermaLink="false">https://www.bbc.com/news/articles/cq5ynw94k7kzo|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
-</item>
-<item>
-<title>Alaska governor orders probe into Democratic campaign&#x27;s alleged links to same-name candidate</title>
-<link>https://www.bbc.com/news/articles/c8vgx0zrpk6no</link>
-<pubDate>Thu, 29 Oct 2026 11:27:05 +0000</pubDate>
-<guid isPermaLink="false">https://www.bbc.com/news/articles/c8vgx0zrpk6no|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
@@ -848,5 +841,12 @@
 <pubDate>Wed, 28 Oct 2026 15:22:00 +0000</pubDate>
 <guid isPermaLink="false">https://www.dw.com/zh/%E4%BB%A5%E9%BB%98%E8%8C%A8%E5%90%8D%E5%AD%97%E5%91%BD%E5%90%8D%EF%BC%9A%E6%96%B0%E5%8A%A0%E5%9D%A1%E7%9A%84%E5%85%B0%E8%8A%B1%E5%A4%96%E4%BA%A4/a-79789658|https://feed.quanwenrss.com/feed/dw-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/dw-latest.xml">德国之声中文·最新</source>
+</item>
+<item>
+<title>习近平向日本前首相福田康夫遗属致唁电</title>
+<link>https://m.bjnews.com.cn/detail/1793094309129874.html</link>
+<pubDate>Tue, 27 Oct 2026 18:03:22 +0800</pubDate>
+<guid isPermaLink="false">https://m.bjnews.com.cn/detail/1793094309129874.html|https://feed.quanwenrss.com/feed/bjnews-yaowen.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bjnews-yaowen.xml">新京报·要闻</source>
 </item>
 </channel></rss>
