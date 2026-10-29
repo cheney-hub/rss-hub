@@ -266,8 +266,33 @@ def clean_text(s):
 
 
 # ---------------- 去重 ----------------
+# 快讯电头：「财联社10月29日电，」「金十数据10月29日讯，」这类前缀白占屏宽，
+# 来源已经由 <source> 显示，屏上只留真正的新闻内容。
+_TAG = r"(?:【[^】]{1,6}】\s*)?"
+_RE_DATELINE = re.compile(
+    "^" + _TAG +
+    r"(?:财联社|金十数据|格隆汇|智通财经|华尔街见闻|新浪财经|新华财经|第一财经|"
+    r"每日经济新闻|界面新闻|澎湃新闻|证券时报|中国证券报)\s*"
+    r"(?:\d{1,2}月\d{1,2}日)?\s*(?:电|讯|消息|报道)?\s*[，,:：]\s*")
+_RE_DATELINE2 = re.compile("^" + _TAG + r"[\u4e00-\u9fa5]{0,10}\d{1,2}月\d{1,2}日\s*(?:电|讯)\s*[，,:：]?\s*")
+
+
+def strip_dateline(t):
+    """去掉标题开头的电头，留下一句真正的新闻。"""
+    if not t:
+        return t
+    for _ in range(2):                       # 「【独家】财联社10月29日电，」要剥两层
+        t2 = _RE_DATELINE.sub("", t) or t
+        t2 = _RE_DATELINE2.sub("", t2) or t2
+        if t2 == t:
+            break
+        t = t2
+    return t
+
+
 def norm_title(t):
-    t = re.sub(r"[「」【】\[\]（）()“”\"'‘’：:，,。.！!？?、\s|·\-—–…~]", "", t or "")
+    t = strip_dateline(t or "")
+    t = re.sub(r"[「」【】\[\]（）()“”\"'‘’：:，,。.！!？?、\s|·\-—–…~]", "", t)
     return re.sub(r"[a-zA-Z0-9]", "", t)[:20]
 
 
@@ -404,7 +429,7 @@ def split_title(title, line_w=None, body_max=None):
     """
     line_w = LINE_WIDTH if line_w is None else line_w
     body_max = BODY_MAX if body_max is None else body_max
-    t = plain_text(title)
+    t = strip_dateline(plain_text(title))          # 先去掉「财联社10月29日电，」占的位置
     # 去掉 “标题 - 来源名” 这类尾巴（来源单独用 <source> 显示，重复占位）
     t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
     if text_width(t) <= line_w:
