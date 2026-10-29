@@ -19,6 +19,8 @@ curl -s https://api.github.com/repos/cheney-hub/rss-hub/actions/runs?per_page=5 
 | feed 打不开 / 404 | Pages 没开或目录选错 | [1](#1-feed-打不开返回-404) |
 | feed 能开但 0 条 | 源全挂，或文件被写成空 | [2](#2-feed-能打开但一条都没有) |
 | `lastBuildDate` 长期不动 | 定时任务没触发，或作业失败 | [3](#3-feed-长时间不更新) [4](#4-actions-作业失败) |
+| 运行记录里有 cancelled | 整点抢占，正常调度 | [14](#14-运行记录里出现-cancelled) |
+| 报 `in progress deployment` | Pages 部署撞锁 | [15](#15-deployment-request-failed--due-to-in-progress-deployment) |
 | 作业成功但仓库没新提交 | 权限不足（只读 token） | [5](#5-作业成功但提交被拒) |
 | 某个源反复失败 | 源站 404 / 反爬 / 已停更 | [6](#6-单个源一直失败) |
 | 同一新闻出现两次 | 去重阈值或链接带参数 | [7](#7-条目重复) |
@@ -178,6 +180,23 @@ sudo systemctl start rss-aggregator.service
 ```
 
 `401` / `404` 都从这个文件里的值查起，别去改 unit 文件——unit 里没有凭证。
+
+---
+
+## 14. 运行记录里出现 cancelled
+
+正常现象，不是故障。`minute.yml` 的 `concurrency` 用了 `cancel-in-progress: true`：整点触发时若上一轮还在跑（比如被排过队、拖过了整点），新的一轮直接接管，保证每次触发都从第 1 轮重新开始、时刻不会逐小时后移累积。
+
+判断有没有问题只看线上：`lastBuildDate` 在 10 分钟内就是正常。
+
+## 15. `Deployment request failed ... due to in progress deployment`
+
+Pages 同一时刻只允许一个部署，撞上就会报这个 400。三个工作流都会部署，处理方式不同：
+
+- `minute.yml` 与 `nightly.yml` 用同一个 `concurrency` 组，撞上时**排队**而不是报错；
+- `rss.yml` 独立成组（改源要立刻生效，不能排 55 分钟），失败时等 35 秒重新打包再部署一次。
+
+如果这个错误还出现，说明两次部署间隔小于约 25 秒，把 `rss.yml` 里的 `sleep 35` 调大。
 
 ---
 
