@@ -6,11 +6,23 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 读 feeds.txt（注释行 = 中文源名，下一行 = 地址）
 → 每源抓最新 1 条 → 跨源去重 → 按发布时间倒序生成 RSS 2.0
 
-输出两份：
-  docs/feed.xml       完整版：标题原样，给电脑 / 手机上的 RSS 阅读器
-  docs/feed-wrap.xml  设备版：标题只放屏上真正显示得下的那部分，
-                      余下的文字接进 <description>（正文），
-                      填进 Dot App 的「循环内容」列表即可
+输出三份：
+  docs/feed.xml       完整版：标题原样、全部条目按时间倒序，给电脑 / 手机上的 RSS 阅读器
+  docs/feed-wrap.xml  设备版：只出「当前该显示的那一条」，标题截到屏宽，
+                      余下文字接进 <description>（正文）；填进 Dot App 的「循环内容」即可
+  docs/rotate.json    轮播状态：哪一条已展示、当前在第几窗，随 Pages 一起发布
+
+轮播规则（为什么设备版只有一条）：
+  Dot 云端只渲染文档里的第一条，按时间倒序排的话屏幕永远停在最新那条，
+  其余条目一辈子轮不到。所以设备版改成一个「排空队列」：
+
+    w = now // ROTATE_SECONDS                  # 当前时间窗
+    w == 上一窗  → 不推进（同一窗内构建多次也只算一次，幂等）
+    w >  上一窗  → 前进一格：取「尚未展示」里发布时间最新的一条，置为第一条并标记已展示
+    候选为空     → 说明全池都展示过了，清空标记，从头开始（一轮结束才循环）
+
+  新条目天然插队：它的 guid 不在已展示集合里、时间又最新，下一个窗就是它。
+  同一来源在冷却窗口内不重复上屏（ROTATE_COOLDOWN），避免快讯源霸屏把别的源饿死。
 
 特性：
   * 零第三方依赖，Python 3.8+
@@ -20,22 +32,30 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
   * 自动识别 UTF-8 / GB18030 编码、修补常见 HTML 实体
 
 环境变量：
-  FEEDS_FILE        订阅源列表，默认 ./feeds.txt
-  OUT_FILE          完整版输出，默认 ./docs/feed.xml
-  FEED_URL          频道 <link>，默认 https://cheney-hub.github.io/rss-hub/feed.xml
-  REFRESH_SECONDS   循环刷新到第几秒结束（0 = 只跑一轮），默认 0
-  FETCH_TIMEOUT     单源超时秒数，默认 20
-  CONCURRENCY       并发数，默认 12
-  SCREEN_OUT        设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml
-  SCREEN_LINE_WIDTH 标题行宽度（全角字符数），默认 13
-                    —— 设备 296×152 屏是大字号单行，实测 13 个全角字满宽，
-                    再多就被 Dot 云端从右边切掉。所以标题只放得下多少给多少。
-  SCREEN_BODY_MAX   正文（description）最多保留多少全角字，默认 60
-                    —— 标题装不下的部分原文接进正文；太长的正文尾端补省略号。
+  FEEDS_FILE         订阅源列表，默认 ./feeds.txt
+  OUT_FILE           完整版输出，默认 ./docs/feed.xml
+  FEED_URL           频道 <link>，默认 https://cheney-hub.github.io/rss-hub/feed.xml
+  REFRESH_SECONDS    循环刷新到第几秒结束（0 = 只跑一轮），默认 0
+  FETCH_TIMEOUT      单源超时秒数，默认 20
+  CONCURRENCY        并发数，默认 12
+  SCREEN_OUT         设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml
+  SCREEN_LINE_WIDTH  标题行宽度（全角字符数），默认 13
+                     —— 设备 296×152 屏是大字号单行，实测 13 个全角字满宽，
+                     再多就被 Dot 云端从右边切掉。所以标题只放得下多少给多少。
+  SCREEN_BODY_MAX    正文（description）最多保留多少全角字，默认 60
+                     —— 标题装不下的部分原文接进正文；太长的正文尾端补省略号。
+  ROTATE_SECONDS     每条在屏上驻留多少秒（= 设备刷新周期），默认 300
+                     —— 调大等于放慢轮播。Pages CDN 缓存 600 秒，
+                     若真机上出现「同一条连显两次」，把它改成 600。
+  ROTATE_COOLDOWN    同一来源多少窗内不再上屏，默认 6（=30 分钟），0 = 关闭冷却
+  ROTATE_POOL_MAX    轮播池上限，默认 0 = 不限（每源 1 条，通常 40 条上下）
+  ROTATE_STATE       轮播状态文件，默认与 OUT_FILE 同目录的 rotate.json
+  ROTATE_STATE_URL   线上状态地址，默认 FEED_URL 同目录的 rotate.json
 """
 import os
 import re
 import sys
+import json
 import time
 import gzip
 import html
@@ -61,6 +81,13 @@ SCREEN_OUT = os.environ.get(
     "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-wrap.xml"))
 LINE_WIDTH = float(os.environ.get("SCREEN_LINE_WIDTH", "13"))
 BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "60")))
+
+# 轮播：设备版一次只发布一条，按时间窗前进，走完一轮才回头
+ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))   # 每条驻留 = 设备刷新周期
+ROTATE_COOLDOWN = max(0, int(os.environ.get("ROTATE_COOLDOWN", "6")))    # 同源冷却窗数，0 = 关
+ROTATE_POOL_MAX = max(0, int(os.environ.get("ROTATE_POOL_MAX", "0")))    # 0 = 池子不限
+ROTATE_STATE = os.environ.get(
+    "ROTATE_STATE", os.path.join(os.path.dirname(OUT_FILE) or ".", "rotate.json"))
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -305,8 +332,8 @@ def load_prev_items():
 # 标题行收尾用这些标点更自然（只在需要回退时参考）。
 BREAK_CHARS = "，,、；;｜|—）)！!？?·】」』 "
 # 正文开头要剥掉的连接标点（正文另起一段，行首标点是中文排版大忌）。
-# 只放中文分隔符：半角「.」「:」可能属于 20.15 / 12:30 这类数字，剥掉就把数字弄残了。
-HEAD_STRIP = "，,、；;。"
+# 只放中文分隔符和句末标点：半角「.」「:」可能属于 20.15 / 12:30 这类数字，剥掉就把数字弄残了。
+HEAD_STRIP = "，,、；;。！!？?"
 
 # 黑白墨水屏上这些字符要么显示成方块要么是透明占位，还白占宽度，直接摘掉。
 _RE_INVISIBLE = re.compile(
@@ -391,6 +418,124 @@ def split_title(title, line_w=None, body_max=None):
     return head, tail
 
 
+# ---------------- 轮播（设备版一条一条轮） ----------------
+# 目标：设备每 5 分钟刷新一次，每次都要换一条；全池走完才回头，不重不漏。
+#
+# 为什么用「时间窗」而不是「跑了第几轮」驱动：
+#   后台一小时内可能构建 12 次，也可能因为重跑、手动触发变成 30 次。
+#   用计数器就会跳条。用 w = now // ROTATE_SECONDS 做幂等键，
+#   同一个 5 分钟窗内构建多少次都只前进一格，节奏只跟墙上时钟走。
+def item_guid(it):
+    """条目的稳定身份：链接 + 源地址的短哈希，与 feed 里的 guid 完全一致。"""
+    seed = (it.get("link") or it.get("title") or "") + "|" + str(it.get("src") or "")
+    return hashlib.md5(seed.encode("utf-8")).hexdigest()[:12]
+
+
+def _rotate_url():
+    return (os.environ.get("ROTATE_STATE_URL")
+            or FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(ROTATE_STATE))
+
+
+def _read_json(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def load_rotate_state():
+    """本地那份和线上那份取 window 更新的一个。
+
+    作业是整点 checkout 的，仓库里的 rotate.json 可能是一小时前的；
+    线上那份才是上一轮真正发布出去的。谁 window 大用谁，一样大就用本地
+    （本轮可能已经推进过，本地更新）。
+    """
+    local = _read_json(ROTATE_STATE)
+    remote = {}
+    try:
+        req = urllib.request.Request(
+            "%s?cb=%d" % (_rotate_url(), time.time()),
+            headers={"User-Agent": UA, "Cache-Control": "no-cache"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        remote = data if isinstance(data, dict) else {}
+    except Exception:
+        remote = {}
+    if int(remote.get("window") or 0) > int(local.get("window") or 0):
+        return remote
+    return local
+
+
+def save_rotate_state(state):
+    os.makedirs(os.path.dirname(ROTATE_STATE) or ".", exist_ok=True)
+    tmp = ROTATE_STATE + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(state, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, ROTATE_STATE)
+
+
+def rotate_pick(items, state, now=None):
+    """按排空队列取「这一窗该上屏的那一条」，返回 (条目, 新状态, 说明)。
+
+    items 必须已按发布时间倒序（run_once 保证）。规则：
+      1. 未展示的条目里，发布时间最新的优先 —— 新资讯天然插队；
+      2. 同一来源在 ROTATE_COOLDOWN 个窗内不重复上屏，防止快讯源霸屏；
+      3. 未展示集合空了 = 全池都展示过 → 清空重来（一轮结束才循环）；
+      4. 同一个时间窗内重复调用不推进，屏幕不会因为后台多跑几轮而跳条。
+    """
+    dwell = ROTATE_SECONDS
+    w = int((now if now is not None else time.time()) // dwell)
+    # 节拍改过（比如从 60 秒调成 300 秒）：窗口编号的基数变了，不可比，重新起轮
+    if int(state.get("dwell") or dwell) != dwell:
+        state = {}
+    prev_w = int(state.get("window") or 0)
+
+    index = {}
+    for it in items:
+        index.setdefault(item_guid(it), it)          # 同 guid 只留第一条
+
+    # 同一窗：内容可以刷新，但展示的条目锁死，这就是幂等
+    if w <= prev_w and state.get("current") in index:
+        return index[state["current"]], state, "同窗保持"
+
+    shown = [g for g in (state.get("shown") or []) if g in index]   # 顺手清掉已消失的条目
+    cycle = int(state.get("cycle") or 1)
+    if len(shown) >= len(index):
+        shown = []                                   # 全池展示完 → 新一轮
+        cycle += 1
+
+    shown_set = set(shown)
+    cands = [it for it in items if item_guid(it) not in shown_set]
+    if not cands:
+        cands = list(items)
+    last_src = dict(state.get("last_src") or {})
+    if ROTATE_COOLDOWN > 0:
+        cooled = [it for it in cands
+                  if w - int(last_src.get(it.get("src") or "", -10 ** 9)) >= ROTATE_COOLDOWN]
+        if cooled:                                   # 全在冷却中就忽略冷却，宁可重复也不能空屏
+            cands = cooled
+
+    pick = cands[0]
+    guid = item_guid(pick)
+    shown.append(guid)
+    last_src[pick.get("src") or ""] = w
+    new_state = {
+        "window": w,
+        "current": guid,
+        "shown": shown,
+        "last_src": last_src,
+        "cycle": cycle,
+        "pool": len(index),
+        "dwell": dwell,
+        "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "title": (pick.get("title") or "")[:40],
+    }
+    note = "新窗推进（池 %d / 本轮已展示 %d / 第 %d 轮）" % (len(index), len(shown), cycle)
+    return pick, new_state, note
+
+
 # ---------------- 生成 RSS ----------------
 def esc(s):
     return html.escape(s or "", quote=True)
@@ -438,10 +583,8 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
                 datetime.fromtimestamp(it["ts"], timezone.utc)))
         if screen:
             # 原来是把「链接|源地址」整串当 guid，动辄上百字节，小屏完全用不上。
-            # 换成链接的短哈希，稳定、唯一，体积降到十几字节。
-            seed = (it["link"] or it["title"]) + "|" + str(it["src"])
-            lines.append('<guid isPermaLink="false">%s</guid>'
-                         % hashlib.md5(seed.encode("utf-8")).hexdigest()[:12])
+            # 换成链接的短哈希，稳定、唯一，体积降到十几字节；也是轮播判断「是否已展示」的键。
+            lines.append('<guid isPermaLink="false">%s</guid>' % item_guid(it))
         else:
             lines.append('<guid isPermaLink="false">%s</guid>'
                          % esc((it["link"] or it["title"]) + "|" + str(it["src"])))
@@ -509,16 +652,18 @@ def _write(path, xml_text):
     os.replace(tmp, path)
 
 
-def write_feed(items, stats):
-    """写两份：完整版 feed.xml + 设备版 feed-wrap.xml。"""
+def write_feed(items, stats, pick=None):
+    """写两份：完整版 feed.xml（全部条目）+ 设备版 feed-wrap.xml（只有轮播到的那一条）。"""
     _write(OUT_FILE, build_rss(items, FEED_URL, stats))
 
     wrap_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
+    screen_items = [pick] if pick else items
     _write(SCREEN_OUT, build_rss(
-        items, wrap_url, stats,
+        screen_items, wrap_url, stats,
         channel_title="RSS 头条 · 小屏",
-        description="多源头条，纯文本；标题只放屏上显示得下的 %g 全角字，"
-                    "余下原文接在正文里，源 %d 个" % (LINE_WIDTH, stats["total"]),
+        description="多源头条，纯文本；每 %d 分钟轮换一条，走完全部再从头开始。"
+                    "标题只放屏上显示得下的 %g 全角字，余下原文接在正文里，源 %d 个"
+                    % (ROTATE_SECONDS // 60, LINE_WIDTH, stats["total"]),
         screen=True))
 
 
@@ -527,8 +672,8 @@ def main():
     if not entries:
         print("feeds.txt 中没有有效地址")
         return 1
-    print("订阅源 %d 个，输出 %s / %s（标题 %g 全角、正文最多 %g 全角）"
-          % (len(entries), OUT_FILE, SCREEN_OUT, LINE_WIDTH, BODY_MAX))
+    print("订阅源 %d 个，输出 %s / %s（标题 %g 全角、正文最多 %g 全角、每 %d 秒轮换一条）"
+          % (len(entries), OUT_FILE, SCREEN_OUT, LINE_WIDTH, BODY_MAX, ROTATE_SECONDS))
 
     deadline = time.time() + REFRESH_SECONDS
     rounds = 0
@@ -539,16 +684,21 @@ def main():
         if not items:
             print("本轮无任何条目，保留旧 feed 不覆盖")
             return 1
-        write_feed(items, stats)
+        pool = items[:ROTATE_POOL_MAX] if ROTATE_POOL_MAX else items
+        state = load_rotate_state()
+        pick, state, note = rotate_pick(pool, state)
+        write_feed(items, stats, pick)
+        save_rotate_state(state)
         rounds += 1
         print("[第 %d 轮] 成功 %d / 回退 %d / 失败 %d → 条目 %d（去重 %d）耗时 %.1fs"
               % (rounds, stats["ok"], stats["stale"], stats["fail"],
                  stats["items"], stats["dropped"], time.time() - t0))
+        print("        上屏：%s ｜ %s" % (note, (pick.get("title") or "")[:36]))
 
         left = deadline - time.time()
         if left < 45:                      # 剩余时间不够一轮就收工
             break
-        time.sleep(min(60, left))
+        time.sleep(min(ROTATE_SECONDS, left))
     return 0
 
 

@@ -44,7 +44,7 @@
 <body>
 <div class="wrap">
   <h1>屏幕效果</h1>
-  <p class="sub">读的是设备版 <code>feed-wrap.xml</code>：标题只放屏上显示得下的 13 全角字，装不下的原文接在正文里。点击屏幕可放大。</p>
+  <p class="sub">读的是设备版 <code>feed-wrap.xml</code>：每 5 分钟换一条，标题只放屏上显示得下的 13 全角字，装不下的原文接在正文里。点击屏幕可放大。</p>
 
   <div class="stage" id="stage">
     <div class="device" onclick="toggleZoom()" title="点击放大 / 缩小">
@@ -55,13 +55,13 @@
   </div>
 
   <div class="note">
-    设备刷新间隔在 Dot App 里设置（1 分钟 ～ 12 小时，电池模式睡眠期间不刷新）；<br>
-    Dot 云端多久抓一次本源由它调度，订阅方无法控制，但本源每分钟都是新鲜的。
+    设备刷新间隔在 Dot App 里设置（1 分钟 ～ 12 小时，电池模式睡眠期间不刷新），建议设成 <b>5 分钟</b>；<br>
+    本源每 5 分钟换一条，全池走完才回头——刷新间隔设得比 5 分钟长会跳条，设得更短会重复看到同一条。
   </div>
 
   <div class="specs">
     标题纯文本（emoji / 装饰符号已摘除）· 标题 <code>SCREEN_LINE_WIDTH</code> 全角 ·
-    正文最多 <code>SCREEN_BODY_MAX</code> 全角 · 条目给满 60 条 · 字段极简 · <b>全程无密钥</b><br>
+    正文最多 <code>SCREEN_BODY_MAX</code> 全角 · 每版只发 1 条（轮播） · 字段极简 · <b>全程无密钥</b><br>
     正文能否显示取决于 Dot 云端是否渲染 <code>&lt;description&gt;</code>，不渲染时屏上就只剩标题那 13 字，见
     <a href="https://github.com/cheney-hub/rss-hub/blob/main/OPERATIONS.md#14-设备上标题被截断或只有一行">运维手册排障</a>。
   </div>
@@ -114,7 +114,6 @@ fetch('./feed-wrap.xml?t=' + Date.now(), {cache:'no-store'})
       date:  (it.querySelector('pubDate')||{}).textContent || ''
     }));
     render();
-    setInterval(() => { idx++; render(); }, 8000);   // 每 8 秒轮播一条，模拟设备切换
   })
   .catch(() => { $('t').textContent = '无法加载 feed-wrap.xml'; });
 </script>

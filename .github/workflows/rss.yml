@@ -1,6 +1,6 @@
 name: RSS 聚合（改源即时发布）
 
-# 日常节奏由 minute.yml 负责（每小时连续跑 55 分钟，每分钟一轮）。
+# 日常节奏由 minute.yml 负责（每小时连续跑 13 轮，每轮 5 分钟）。
 # 本工作流只处理一类场景：feeds.txt / build_feed.py 被改动后，立刻重建并发布一次，
 # 免得等下一个整点。不做定时任务，避免和 minute.yml 抢 Pages 部署。
 
@@ -46,6 +46,8 @@ jobs:
           FETCH_TIMEOUT: "20"
           SCREEN_LINE_WIDTH: "13"
           SCREEN_BODY_MAX: "60"
+          ROTATE_SECONDS: "300"
+          ROTATE_COOLDOWN: "6"
         run: python build_feed.py
 
       - uses: actions/upload-pages-artifact@v3

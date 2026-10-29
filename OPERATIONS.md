@@ -105,22 +105,35 @@ git commit -m "revert feed" && git push
 
 ## 刷新节奏
 
-当前是 **1 分钟一版**，代价是 runner 占用约 17 小时/天。想降载就改轮数：
+当前是 **5 分钟一版**（设备刷新周期也是 5 分钟），全天不间断，runner 占用约 13 轮 × 24 小时。
+节奏与轮播绑定：`ROTATE_SECONDS` 就是「一条在屏上待多久」，改它等于改轮播速度。
 
-| 目标节奏 | 怎么改 | runner 占用 |
+| 目标节奏 | 怎么改 | 一轮走完（43 条） |
 |---|---|---|
-| 白天 1 分钟 + 深夜 1 小时（现状） | `gen_minute_workflow.py 55`；两个 cron 的 UTC 小时互补（`22,23,0-15` / `16-21`） | 约 17 小时/天 |
-| 全天 1 分钟 | `minute.yml` 的 cron 改回 `"7 * * * *"`，删掉 `nightly.yml` | 约 22 小时/天 |
-| 2 分钟 | 生成脚本里每轮 `sleep` 改成对齐 120 秒，再 `gen_minute_workflow.py 29` | 约 11 小时/天 |
-| 5 分钟 | 同上，周期 300 秒、轮数 11 | 约 5 小时/天 |
-| 30 分钟 | 停用 `minute.yml` 与 `nightly.yml`，给 `rss.yml` 加回 cron（如 `3,13,23,33,43,53 * * * *`） | 忽略不计 |
+| **5 分钟（现状）** | `gen_minute_workflow.py 13`，周期 300 秒，cron `7 * * * *` | 约 3.6 小时 |
+| 10 分钟（CDN 缓存吃条时改这个） | `tools/gen_minute_workflow.py` 里 `PERIOD=600`、轮数 6；yml 里 `ROTATE_SECONDS: "600"` | 约 7 小时 |
+| 2 分钟 | `PERIOD=120`、轮数 30；不要动 `ROTATE_SECONDS`（否则设备跟不上） | 约 1.4 小时 |
+| 省 runner | `gen_minute_workflow.py 1`（每小时只跑一轮），轮播自然变成 1 小时一条 | 约 1.8 天 |
 
 两个绕不开的约束，也是这套设计的原因：
 
-- **cron 不能写 `*/1`**：Actions 的 schedule 最短 5 分钟，且官方承认高负载会延迟、丢档；分钟级只能靠
-  「小时级 cron + 作业内循环」；
+- **cron 不能写 `*/1`**：Actions 的 schedule 最短 5 分钟，且官方承认高负载会延迟、丢档；稳定节拍只能靠
+  「小时级 cron + 作业内循环 + 对齐到整点」；
 - **不能靠 commit 发布**：Pages 传统构建有 10 次/小时软限制；改用自定义 Actions 部署后不受限，
   所以流程是「打包 artifact → `deploy-pages`」。
+
+轮播状态（`docs/rotate.json`）随 artifact 一起发布，不提交进仓库（`.gitignore` 已忽略）。
+
+## 轮播调参
+
+| 变量 | 默认 | 作用 |
+|---|---|---|
+| `ROTATE_SECONDS` | 300 | 一条在屏上待多久 = 设备刷新周期。**必须 ≥ 设备刷新间隔**，否则设备会跳过条目 |
+| `ROTATE_COOLDOWN` | 6 | 同一来源多少窗内不再上屏（6 窗 = 30 分钟），防快讯源霸屏；0 = 关闭 |
+| `ROTATE_POOL_MAX` | 0 | 轮播池上限，0 = 全部（每源 1 条，通常 43 条）。设为 12 就是「只轮最近 12 条」，1 小时一轮 |
+| `ROTATE_STATE_URL` | 自动 | 线上状态地址，换仓库时跟随 `FEED_URL` 自动推导 |
+
+调参后**不需要清空状态**：池子变大变小、条目消失，`shown` 里对不上的 guid 会被自动清理。
 
 ## 凭证与安全
 
@@ -292,8 +305,8 @@ python3 tools/check_secrets.py --all    # 连未跟踪文件一起扫
 
 Pages 同一时刻只允许一个部署，撞上就报这个 400。三个工作流的处理不同：
 
-- `minute.yml` 与 `nightly.yml` 共用一个 `concurrency` 组，撞上时**排队**；
-- `rss.yml` 独立成组（改源要立刻生效，不能排 55 分钟），失败时等 35 秒重新打包再部署一次。
+- `minute.yml` 独占 `rss-pages` 组，撞上时后触发的一方**接管**（保证整点重新对齐）；
+- `rss.yml` 独立成组（改源要立刻生效，不能排一小时），失败时等 35 秒重新打包再部署一次。
 
 仍出现说明两次部署间隔小于约 25 秒，把 `rss.yml` 里的 `sleep 35` 调大。
 
@@ -312,3 +325,22 @@ Pages 同一时刻只允许一个部署，撞上就报这个 400。三个工作�
 
 只显示第一条是 RSS 卡片的版面极限（一屏一行大字号），不是 feed 的问题——
 把余下原文搬进正文，是在这个极限里唯一能多塞字的方向。
+
+### 15. 设备上的内容不换 / 重复 / 跳条
+
+设备版每版只发一条，选谁由 `docs/rotate.json` 的游标决定。先看线上状态：
+
+```bash
+curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | python3 -m json.tool
+```
+
+`window` = 当前时间窗（`now // ROTATE_SECONDS`），`shown` = 本轮已展示的 guid，
+`pool` = 池子条数，`cycle` = 第几轮。
+
+| 现象 | 原因 | 处置 |
+|---|---|---|
+| 内容一直不变 | 设备刷新间隔设得比 `ROTATE_SECONDS` 长 | Dot App 里把刷新间隔改成 **5 分钟** |
+| 同一条连显两次、中间那条没看到 | Pages CDN 缓存 `max-age=600`，拿到 10 分钟前的版本 | `ROTATE_SECONDS` 改 `600`（永不漏，但 10 分钟才换） |
+| 每次刷新都是最新新闻，轮不到别的 | `ROTATE_COOLDOWN` 设成 0 了，快讯源每窗都插队 | 恢复成 `6` |
+| 轮播卡死不动 | `rotate.json` 的 `dwell` 和当前 `ROTATE_SECONDS` 不一致（改过节拍） | 代码已自动识别并重新起轮；仍有问题就删掉线上 `rotate.json` |
+| `pool` 比源数少 | 部分源本轮抓取失败用了回退条目，guid 去重后合并 | 看同一轮日志里的 `[回退]` 行 |

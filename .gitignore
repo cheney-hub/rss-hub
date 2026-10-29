@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 state.json
+docs/rotate.json
 /feed.xml
 .DS_Store
 Thumbs.db

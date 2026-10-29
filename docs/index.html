@@ -45,7 +45,7 @@
 <body>
 <div class="wrap">
   <h1>RSS 聚合头条</h1>
-  <div class="sub">多源头条合并 · 按发布时间倒序 · 每分钟刷新（北京时间 00:00–06:00 每小时一次）</div>
+  <div class="sub">多源头条合并 · 按发布时间倒序 · 每 5 分钟重建一版 · 设备版每 5 分钟换一条、走完全部才回头</div>
   <div class="sub">本项目专为 <a href="https://dot.mindreset.tech/docs/quote_0">Dot (Quote/0) 墨水屏设备</a>开发，标题已按墨水屏显示优化；完整版同样兼容任意 RSS 阅读器。</div>
 
   <div class="card">
@@ -65,6 +65,7 @@
     </div>
     <div class="meta" style="margin-top:10px">
       设备版：标题转纯文本、只放屏上显示得下的 13 全角字，装不下的原文接进正文，一个字都不丢；
+      每版只发一条、5 分钟轮换一条，全池走完才从头开始。
       适合填进 <a href="./screen.html">Dot Quote/0</a> 的循环内容列表（显示样式由 Dot 云端渲染）。
     </div>
   </div>
@@ -73,6 +74,7 @@
     <div class="stats" id="stats">
       <div><b id="n">—</b>条目</div>
       <div><b id="t">—</b>最后构建</div>
+      <div><b id="r">—</b>设备版轮播</div>
     </div>
   </div>
 
@@ -106,6 +108,14 @@ function fmt(d){
   if(min < 1440) return Math.round(min/60) + ' 小时前';
   return (d.getMonth()+1) + '/' + d.getDate();
 }
+
+fetch('./rotate.json?t=' + Date.now(), {cache:'no-store'})
+  .then(r => r.json())
+  .then(st => {
+    document.getElementById('r').textContent =
+      (st.shown ? st.shown.length : 0) + '/' + (st.pool || 0) + ' 第' + (st.cycle || 1) + '轮';
+  })
+  .catch(() => {});
 
 fetch('./feed.xml?t=' + Date.now(), {cache:'no-store'})
   .then(r => r.text())
