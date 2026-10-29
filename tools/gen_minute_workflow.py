@@ -77,7 +77,7 @@ CYCLE_TPL = """
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "{n}"
 

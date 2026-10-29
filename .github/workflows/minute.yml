@@ -51,7 +51,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "1"
 
@@ -99,7 +99,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "2"
 
@@ -147,7 +147,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "3"
 
@@ -195,7 +195,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "4"
 
@@ -243,7 +243,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "5"
 
@@ -291,7 +291,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "6"
 
@@ -339,7 +339,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "7"
 
@@ -387,7 +387,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "8"
 
@@ -435,7 +435,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "9"
 
@@ -483,7 +483,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "10"
 
@@ -531,7 +531,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "11"
 
@@ -579,7 +579,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "12"
 
@@ -627,7 +627,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "13"
 
@@ -675,7 +675,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "14"
 
@@ -723,7 +723,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "15"
 
@@ -771,7 +771,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "16"
 
@@ -819,7 +819,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "17"
 
@@ -867,7 +867,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "18"
 
@@ -915,7 +915,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "19"
 
@@ -963,7 +963,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "20"
 
@@ -1011,7 +1011,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "21"
 
@@ -1059,7 +1059,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "22"
 
@@ -1107,7 +1107,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "23"
 
@@ -1155,7 +1155,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "24"
 
@@ -1203,7 +1203,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "25"
 
@@ -1251,7 +1251,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "26"
 
@@ -1299,7 +1299,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "27"
 
@@ -1347,7 +1347,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "28"
 
@@ -1395,7 +1395,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "29"
 
@@ -1443,7 +1443,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "30"
 
@@ -1491,7 +1491,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "31"
 
@@ -1539,7 +1539,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "32"
 
@@ -1587,7 +1587,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "33"
 
@@ -1635,7 +1635,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "34"
 
@@ -1683,7 +1683,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "35"
 
@@ -1731,7 +1731,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "36"
 
@@ -1779,7 +1779,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "37"
 
@@ -1827,7 +1827,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "38"
 
@@ -1875,7 +1875,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "39"
 
@@ -1923,7 +1923,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "40"
 
@@ -1971,7 +1971,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "41"
 
@@ -2019,7 +2019,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "42"
 
@@ -2067,7 +2067,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "43"
 
@@ -2115,7 +2115,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "44"
 
@@ -2163,7 +2163,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "45"
 
@@ -2211,7 +2211,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "46"
 
@@ -2259,7 +2259,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "47"
 
@@ -2307,7 +2307,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "48"
 
@@ -2355,7 +2355,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "49"
 
@@ -2403,7 +2403,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "50"
 
@@ -2451,7 +2451,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "51"
 
@@ -2499,7 +2499,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "52"
 
@@ -2547,7 +2547,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "53"
 
@@ -2595,7 +2595,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "54"
 
@@ -2643,7 +2643,7 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "22"
+          SCREEN_TITLE_WIDTH: "24"
           SCREEN_ITEMS: "12"
           CYCLE: "55"
 

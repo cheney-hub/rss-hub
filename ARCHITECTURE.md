@@ -55,7 +55,8 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | 取最新 | `parse_latest()` 内部 | `pubDate` → `published` → `updated` → `date` 依次尝试；`email.utils.parsedate_to_datetime` 与 ISO8601 双解析；解析不到记 0 分 |
 | 去重 | `dedupe()` / `norm_title()` | 见第四节 |
 | 回退 | `load_prev_items()` | 从上一份 `feed.xml` 抽出「源地址 → 条目」映射 |
-| 生成 | `build_rss()` | RSS 2.0 + `atom:link self`，`ttl=5`，条目上限 60 |
+| 生成 | `build_rss()` | RSS 2.0 + `atom:link self`，`ttl=5`，条目上限 60；`minimal=True` 时省略 `atom:link`/`generator`/`ttl`，guid 改 12 位 md5 |
+| 字符净化 | `plain_text()` | 摘掉 emoji、箭头、几何图形、零宽与方向控制字符、变体选择符，全角空格归一；墨水屏是黑白双色，这些字符不是印成方块就是占位不显形 |
 | 小屏排版 | `fit_title()` / `text_width()` | 按全角/半角折算宽度（`east_asian_width`，`W/F/A` 记 1、其余 0.5），超宽时优先在标点断句、再处理未闭合的 `《》“”（）`，最后补 `…` |
 | 双份输出 | `write_feed()` | 完整版写 `feed.xml`；同一批条目裁标题、限条数后写 `feed-screen.xml` |
 
@@ -116,7 +117,7 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | `CONCURRENCY` | `12` | 并发抓取数 |
 | `MAX_ITEMS`（代码常量） | `60` | 完整版输出条目上限 |
 | `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-screen.xml` | 墨水屏版输出路径 |
-| `SCREEN_TITLE_WIDTH` | `22` | 墨水屏标题宽度上限（全角字符数，22 × 11 px ≈ 242 px < 296 px） |
+| `SCREEN_TITLE_WIDTH` | `24` | 墨水屏标题宽度上限（全角字符数，24 × 11 px ≈ 264 px < 280 px 内容宽） |
 | `SCREEN_ITEMS` | `12` | 墨水屏版条目数（4 条/页 × 3 页） |
 
 ### `aggregate_rss.py`（通道 B）

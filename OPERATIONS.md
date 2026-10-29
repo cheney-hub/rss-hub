@@ -45,10 +45,25 @@ python3 build_feed.py
 
 | 变量 | 现值 | 说明 |
 |---|---|---|
-| `SCREEN_TITLE_WIDTH` | `22` | 标题上限（全角字符数）。屏幕 296 px、字号约 11 px，22 字 ≈ 242 px，留了余量；换成更窄的屏（如 250 px）就调到 18 |
+| `SCREEN_TITLE_WIDTH` | `24` | 标题上限（全角字符数）。内容宽 280 px、字号约 11 px，24 字 ≈ 264 px，留 16 px 余量；换成更窄的屏（如 250 px）就调到 20 |
 | `SCREEN_ITEMS` | `12` | 条数。一屏 4 条，`12` = 3 页；只想给一屏就设 `4` |
 
 调完打开 <https://cheney-hub.github.io/rss-hub/screen.html> 看效果（1:1 模拟 296×152，可翻页、放大 2×）。
+
+### 墨水屏版为什么字段更少
+
+`build_rss(..., minimal=True)` 只保留小屏真正会用到的东西，设备和解析端都省事：
+
+| 项 | 完整版 | 墨水屏版 |
+|---|---|---|
+| item 字段 | title / link / pubDate / guid / source | 同左（字段不变，兼容性一致） |
+| `guid` 内容 | `链接\|源地址` 整串，常上百字节 | 该串的 md5 前 12 位，稳定且唯一 |
+| channel | 含 `atom:link`、`generator`、`ttl` | 去掉这三项，只留 RSS 2.0 必填项 |
+| 标题字符 | 原样 | `plain_text()` 摘掉 emoji、箭头、几何图形、零宽字符、变体选择符 |
+
+同条数下文件体积从 5.9 KB 降到 4.6 KB（约 −22%）。RSS 2.0 只要求 channel 有
+`title`/`link`/`description`、item 有 `title` 或 `description`，上面这些都不违反规范。
+
 
 ### 手动触发一次
 

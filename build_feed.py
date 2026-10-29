@@ -25,7 +25,7 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
   FETCH_TIMEOUT    单源超时秒数，默认 20
   CONCURRENCY      并发数，默认 12
   SCREEN_OUT       墨水屏版输出路径，默认与 OUT_FILE 同目录的 feed-screen.xml
-  SCREEN_TITLE_WIDTH 墨水屏标题宽度上限（全角字符数），默认 22
+  SCREEN_TITLE_WIDTH 墨水屏标题宽度上限（全角字符数），默认 24
   SCREEN_ITEMS     墨水屏版条目数上限，默认 12
 """
 import os
@@ -34,6 +34,7 @@ import sys
 import time
 import gzip
 import html
+import hashlib
 import email.utils
 import unicodedata
 import urllib.request
@@ -54,7 +55,7 @@ CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
 # 墨水屏版（Dot Quote/0：296×152 px、125 PPI、黑白）
 SCREEN_OUT = os.environ.get(
     "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-screen.xml"))
-SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "22"))
+SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "24"))
 SCREEN_ITEMS = max(1, int(os.environ.get("SCREEN_ITEMS", "12")))
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -279,10 +280,27 @@ def load_prev_items():
 
 
 # ---------------- 墨水屏排版 ----------------
-# 屏幕 296×152 px。标题按一行排：正文宽 280 px、字号约 11 px，
-# 一屏放 4 条（标题 1 行 + 来源/时间 1 行），所以标题控制在 22 个全角字符内，
+# 屏幕 296×152 px。标题按一行排：内容区宽 280 px、字号约 11 px = 25 个全角字，
+# 一屏放 4 条（标题 1 行 + 来源/时间 1 行），标题取 24 个全角字符，
 # 留出字体差异与右侧留白的余量。
 BREAK_CHARS = "，,、；;：:｜|—）)！!？?·】」』 "
+
+# 黑白墨水屏上这些字符要么显示成方块要么是透明占位，还白占宽度，直接摘掉。
+_RE_INVISIBLE = re.compile(
+    "[\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff"          # 零宽 / 方向控制 / BOM
+    "\ufe0e\ufe0f\u20e3"                                      # 变体选择符、键帽
+    "\U0001f000-\U0001faff"                                   # emoji、符号、交通、旗帜
+    "\U000e0020-\U000e007f"                                   # 标签字符
+    "\u2190-\u21ff\u2600-\u27bf\u2b00-\u2bff\u25a0-\u25ff"     # 箭头、杂项符号、几何图形
+    "]+")
+
+
+def plain_text(s):
+    """把小屏用不到的字符摘干净，只留能真正印在墨水屏上的文字。"""
+    s = _RE_INVISIBLE.sub("", s or "")
+    s = s.replace("\u3000", " ")                      # 全角空格 → 半角
+    s = re.sub(r"[ \t]+", " ", s)
+    return s.strip(" 　·|、,，")
 
 
 def char_width(ch):
@@ -306,8 +324,8 @@ def _cut_index(s, max_w):
 
 
 def fit_title(title, max_w=SCREEN_TITLE_WIDTH):
-    """把标题裁到一行放得下：优先在标点处断句，去掉残句尾巴，再补省略号。"""
-    t = re.sub(r"\s+", " ", title or "").strip()
+    """把标题裁到一行放得下：先去装饰字符，再在标点处断句，最后补省略号。"""
+    t = plain_text(title)
     # 去掉 “标题 - 来源名” 这类尾巴（来源单独用 <source> 显示，重复占位）
     t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
     if text_width(t) <= max_w:
@@ -334,7 +352,12 @@ def esc(s):
 
 
 def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
-              description=None, title_width=None, limit=None):
+              description=None, title_width=None, limit=None, minimal=False):
+    """minimal=True 时输出极简版：只留小屏真正会用到的东西。
+
+    省略 atom:link / generator / ttl 以及 guid 里的长地址（改为 12 位短哈希），
+    单条体积降到原来的三成左右；设备与解析端拿到的仍然是合法 RSS 2.0。
+    """
     now = email.utils.format_datetime(datetime.now(timezone.utc))
     if description is None:
         description = "多源 RSS 头条聚合，按发布时间倒序（源 %d 个）" % stats["total"]
@@ -346,13 +369,17 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
         "<channel>",
         "<title>%s</title>" % esc(channel_title),
         "<link>%s</link>" % esc(feed_url),
-        '<atom:link href="%s" rel="self" type="application/rss+xml"/>' % esc(feed_url),
+    ]
+    if not minimal:
+        lines.append('<atom:link href="%s" rel="self" type="application/rss+xml"/>'
+                     % esc(feed_url))
+    lines += [
         "<description>%s</description>" % esc(description),
         "<language>zh-CN</language>",
         "<lastBuildDate>%s</lastBuildDate>" % now,
-        "<generator>github-actions/rss-hub</generator>",
-        "<ttl>5</ttl>",
     ]
+    if not minimal:
+        lines += ["<generator>github-actions/rss-hub</generator>", "<ttl>5</ttl>"]
     for it in items:
         title = fit_title(it["title"], title_width) if title_width else it["title"]
         lines.append("<item>")
@@ -363,10 +390,18 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
         elif it.get("ts"):
             lines.append("<pubDate>%s</pubDate>" % email.utils.format_datetime(
                 datetime.fromtimestamp(it["ts"], timezone.utc)))
-        lines.append('<guid isPermaLink="false">%s</guid>'
-                     % esc((it["link"] or it["title"]) + "|" + str(it["src"])))
+        if minimal:
+            # 原来是把「链接|源地址」整串当 guid，动辄上百字节，小屏完全用不上。
+            # 换成链接的短哈希，稳定、唯一，体积降到十几字节。
+            seed = (it["link"] or it["title"]) + "|" + str(it["src"])
+            lines.append('<guid isPermaLink="false">%s</guid>'
+                         % hashlib.md5(seed.encode("utf-8")).hexdigest()[:12])
+        else:
+            lines.append('<guid isPermaLink="false">%s</guid>'
+                         % esc((it["link"] or it["title"]) + "|" + str(it["src"])))
         if it.get("src_name"):
-            lines.append('<source url="%s">%s</source>' % (esc(it["src"]), esc(it["src_name"])))
+            lines.append('<source url="%s">%s</source>'
+                         % (esc(it["src"]), esc(plain_text(it["src_name"]))))
         lines.append("</item>")
     lines.append("</channel></rss>")
     return "\n".join(lines)
@@ -432,13 +467,13 @@ def write_feed(items, stats):
     xml_text = build_rss(items, FEED_URL, stats)
     _write(OUT_FILE, xml_text)
 
-    # 墨水屏版：标题裁到一行、条数收紧，给 296×152 的小屏用
+    # 墨水屏版：极简字段 + 标题裁到一行、条数收紧，给 296×152 的小屏用
     screen_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
     screen_text = build_rss(
         items, screen_url, stats,
         channel_title="RSS 头条 · 墨水屏",
         description="多源头条，标题已按 296×152 屏幕一行排好（源 %d 个）" % stats["total"],
-        title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS)
+        title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS, minimal=True)
     _write(SCREEN_OUT, screen_text)
     return xml_text, screen_text
 

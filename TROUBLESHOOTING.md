@@ -26,7 +26,7 @@ curl -s https://api.github.com/repos/cheney-hub/rss-hub/actions/runs?per_page=5 
 | 同一新闻出现两次 | 去重阈值或链接带参数 | [7](#7-条目重复) |
 | 标题出现乱码 | 站点编码是 GBK 且声明缺失 | [8](#8-标题乱码) |
 | 说明页空白 | 浏览器 CORS 或 feed 内容异常 | [9](#9-说明页空白或载入失败) |
-| 墨水屏上标题被截断 / 放不下 | 用了完整版，或宽度阈值偏大 | [16](#16-墨水屏上标题被截断难看--一行放不下) |
+| 墨水屏上标题被截断 / 放不下 / 出现方块 | 用了完整版，或宽度阈值偏大，或标题带 emoji | [16](#16-墨水屏上标题被截断难看--一行放不下) |
 | 推送后「凭据扫描」失败 | 文件里混进了 token / 口令 | [12](#12-凭据扫描失败) |
 | 树莓派服务状态 `condition failed` | 凭证文件缺失或为空 | [13](#13-树莓派服务不执行) |
 
@@ -212,8 +212,17 @@ https://cheney-hub.github.io/rss-hub/feed-screen.xml
 **b. 用了墨水屏版还放不下** —— 说明设备实际字号比预估大，按比例调小宽度：
 
 ```bash
-# 296 px / 22 字 ≈ 11 px 字号；若设备用 14 px，就调到 296/14 ≈ 20
-SCREEN_TITLE_WIDTH=20 python3 build_feed.py
+# 当前按 280 px 内容宽 / 24 字 ≈ 11 px 字号算；若设备实际用 14 px，理论值 280/14 = 20，
+# 这里取 18 更保险（黑白墨水屏字体渲染常比预期宽一点）
+SCREEN_TITLE_WIDTH=18 python3 build_feed.py
+```
+
+**c. 标题里出现方块、空白、半截符号** —— 源站标题带了 emoji 或装饰字符，设备字库没有对应字形。
+墨水屏版已用 `plain_text()` 统一摘除（emoji、箭头、几何图形、零宽字符、变体选择符），
+若还有残留，先确认用的确实是 `feed-screen.xml` 而不是 `feed.xml`：
+
+```bash
+curl -s https://cheney-hub.github.io/rss-hub/feed-screen.xml | grep "<title>" | head -3
 ```
 
 改工作流的 `env:` 才能长期生效（见 [OPERATIONS.md](OPERATIONS.md#调墨水屏排版)）。先看预览确认：
