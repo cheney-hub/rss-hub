@@ -4,3 +4,16 @@ state.json
 /feed.xml
 .DS_Store
 Thumbs.db
+
+# ---- 凭证与密钥：一律不入库 ----
+.env
+.env.*
+*.env
+rss-hub.env
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+credentials.json
+secrets.json

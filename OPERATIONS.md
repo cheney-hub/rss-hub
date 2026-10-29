@@ -95,20 +95,25 @@ git checkout <commit> -- docs/feed.xml && git commit -m "revert feed" && git pus
 
 ## 凭证管理
 
-| 场景 | 用什么 | 是否需要你保管 |
+**这个仓库的硬约定：任何文件里都不出现 token、口令、私钥。** 三条保护：
+
+| 保护 | 位置 | 作用 |
 |---|---|---|
-| Actions 定时提交 feed | 仓库内置 `GITHUB_TOKEN`（`permissions: contents: write`） | 不需要，GitHub 自动签发、作业结束即失效 |
-| 手动/外部触发工作流 | PAT（classic 勾 `repo` + `workflow`，或 fine-grained 勾 Actions: write） | 需要，只放本地环境变量 |
-| 通道 B（树莓派推送） | PAT 写进 systemd unit 或环境文件 | 需要 |
+| `.gitignore` 屏蔽 | `*.env` / `.env*` / `*.pem` / `*.key` / `id_rsa*` 等 | 凭证文件即使放在项目里也不会被 add 进来 |
+| 提交前扫描 | `tools/check_secrets.py` | `python3 tools/check_secrets.py`，命中即退出码 1 |
+| CI 强制扫描 | `.github/workflows/guard.yml` | 每次推送自动跑，混进真 token 直接失败 |
 
-**当前仓库里没有任何 token**，`origin` 也是无凭证的普通地址。若日后启用「自调度链」或把 PAT 交给外部定时器，才需要写进仓库 Secret：
+凭证该放哪：
 
-```bash
-# Settings → Secrets and variables → Actions → New repository secret
-# 名称建议 GH_PAT；工作流里用 ${{ secrets.GH_PAT }} 引用
-```
+| 场景 | 存放位置 | 说明 |
+|---|---|---|
+| Actions 定时提交 feed | 无需你提供 | 仓库内置 `GITHUB_TOKEN`（`permissions: contents: write`），GitHub 签发、作业结束即失效 |
+| 手动 / 外部触发工作流 | GitHub 仓库 Secret（`GH_PAT`）或本地 shell 环境变量 | 需要 `workflow` 权限；Secret 只在工作流运行时可见 |
+| 通道 B（树莓派推送） | `/etc/rss-hub/rss-hub.env`（`600`）+ unit 的 `EnvironmentFile=` | 见 [pi/README.md](pi/README.md#2-生成凭证文件留在仓库之外) |
 
-轮换 token 时：GitHub → Settings → Developer settings → Personal access tokens → 删除旧的、生成新的，然后更新 Secret / 树莓派 unit，重启对应任务。
+当前仓库与 `origin` 都是无凭证状态，历史里也没有提交过任何真实 token。
+
+轮换顺序：GitHub → Settings → Developer settings → Personal access tokens → 吊销旧的、生成新的 → 更新 Secret / `/etc/rss-hub/rss-hub.env` → `sudo systemctl restart rss-aggregator.timer`。
 
 ## 监控
 
@@ -151,12 +156,17 @@ GitHub cron 是「尽力而为」调度，实测新仓库首次触发可延迟�
 ## 迁移到树莓派或 VPS
 
 1. 把整个目录拷到目标机（或 `git clone`），装好 `python3`；
-2. 生成 PAT（classic，勾 `repo`），只写进 systemd unit，不要提交；
-3. 填 `pi/rss-aggregator.service` 里的 `GITHUB_TOKEN` / `GITHUB_REPO`；
-4. 执行 `bash pi/install.sh`，注册为开机自启 + 每 10 分钟一轮的 systemd 定时任务；
-5. 验证：`sudo systemctl start rss-aggregator.service && journalctl -u rss-aggregator.service -f`。
+2. 生成 PAT（classic，勾 `repo`）；
+3. 执行 `bash pi/install.sh` —— 它会创建 `/etc/rss-hub/rss-hub.env`（`600`）并按实际路径/用户改写 unit；凭证只填进那个文件，不进仓库：
 
-详细步骤与排障见 [pi/README.md](pi/README.md)。VPS 同理，只是路径与用户不同（记得同步改 unit 里的 `User` 与 `WorkingDirectory`）。
+```bash
+GITHUB_TOKEN=你的PAT GITHUB_REPO=你的用户名/rss-hub bash pi/install.sh
+# 或先安装、再编辑：sudo nano /etc/rss-hub/rss-hub.env
+```
+
+4. 验证：`sudo systemctl start rss-aggregator.service && journalctl -u rss-aggregator.service -f`。
+
+详细步骤与排障见 [pi/README.md](pi/README.md)。VPS 同理，路径与用户由 `install.sh` 自动适配（也可用 `RUN_USER=` / `PYTHON_BIN=` 指定）。
 
 迁移后建议**保留** GitHub Actions（两条独立通道，谁挂了都不至于断更）；若确认只用自托管，把 workflow 里的 `schedule` 段删掉即可。
 

@@ -24,6 +24,8 @@ curl -s https://api.github.com/repos/cheney-hub/rss-hub/actions/runs?per_page=5 
 | 同一新闻出现两次 | 去重阈值或链接带参数 | [7](#7-条目重复) |
 | 标题出现乱码 | 站点编码是 GBK 且声明缺失 | [8](#8-标题乱码) |
 | 说明页空白 | 浏览器 CORS 或 feed 内容异常 | [9](#9-说明页空白或载入失败) |
+| 推送后「凭据扫描」失败 | 文件里混进了 token / 口令 | [12](#12-凭据扫描失败) |
+| 树莓派服务状态 `condition failed` | 凭证文件缺失或为空 | [13](#13-树莓派服务不执行) |
 
 ---
 
@@ -141,6 +143,41 @@ curl -s "源地址" | grep -E "<pubDate>|<updated>" | head -5
 ```
 
 对比当前时间，最近条目在 1 小时内 → 实时；只有几天前的 → 慢源，适合放但别指望它带节奏。
+
+## 12. 凭据扫描失败
+
+推送后 `凭据扫描 / scan` 变红，说明被 `tools/check_secrets.py` 命中。本地复现并定位：
+
+```bash
+python3 tools/check_secrets.py          # 只看 tracked 文件
+python3 tools/check_secrets.py --all    # 连未跟踪文件一起扫
+```
+
+输出会给出 `文件:行号 [类型] 片段`。处置：
+
+1. 把真实值移到仓库之外（GitHub Secret 或 `/etc/rss-hub/rss-hub.env`），文件里只留变量名；
+2. 若该值**已经推送上去**，光删文件没用——历史里仍在：
+   - 先把那个 token **吊销重发**（这是唯一可靠的止血）；
+   - 再决定是否清理历史（`git filter-repo` 后强推，会改写所有 SHA，协作仓库慎用）。
+3. 文档里要举例时用明显假的占位（如 `你的PAT`），不要写成「平台前缀 + 一长串字符」的形态，规则会当成真凭据。
+
+## 13. 树莓派服务不执行
+
+```bash
+systemctl status rss-aggregator.service      # 看 Active 与 Condition
+sudo systemctl show -p ConditionResult rss-aggregator.service
+```
+
+出现 `condition failed` 或日志一片空，基本是 `ConditionFileNotEmpty=/etc/rss-hub/rss-hub.env` 没过：
+
+```bash
+sudo install -d -m 700 /etc/rss-hub
+sudo install -m 600 pi/rss-hub.env.example /etc/rss-hub/rss-hub.env
+sudo nano /etc/rss-hub/rss-hub.env          # 填 GITHUB_TOKEN / GITHUB_REPO
+sudo systemctl start rss-aggregator.service
+```
+
+`401` / `404` 都从这个文件里的值查起，别去改 unit 文件——unit 里没有凭证。
 
 ---
 

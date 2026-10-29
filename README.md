@@ -50,9 +50,14 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml  ──►  GitHub
 ├── docs/                      # ← GitHub Pages 发布的目录（站点根）
 │   ├── feed.xml               #   生成的订阅文件（Actions 自动提交）
 │   └── index.html             #   订阅说明页（前端读取 feed.xml 渲染）
-├── .github/workflows/rss.yml  # 定时任务：cron + 手动触发 + 改源码即重建
+├── .github/workflows/
+│   ├── rss.yml                #   定时任务：cron + 手动触发 + 改源码即重建
+│   └── guard.yml              #   凭据扫描：推送时检查有无混入 token
 ├── aggregate_rss.py           # 【备选】本地/树莓派版：抓完直接用 Contents API 推仓库
 ├── pi/                        # 【备选】树莓派 systemd 自启 + 定时 + 自恢复
+│   ├── rss-hub.env.example    #   凭证模板（值为空，真实文件放 /etc/rss-hub/）
+│   └── README.md              #   树莓派部署与排障
+├── tools/check_secrets.py     # 仓库凭据扫描脚本（本地与 CI 共用）
 ├── server.js                  # 【归档】早期自托管版：Node 常驻服务，自带状态页
 ├── package.json               # server.js 的启动脚本
 ├── ARCHITECTURE.md            # 架构、算法规则、参数与取舍
@@ -94,6 +99,15 @@ python3 build_feed.py
 - 公开仓库连续 60 天无提交时 GitHub 会暂停定时任务（本仓库每次刷新都会提交，不会触发）。
 
 想让刷新更接近实时，见 [OPERATIONS.md 的四档方案](OPERATIONS.md#四档刷新方案)：外部调度器、VPS 自托管、树莓派常驻，各有成本与风险说明。
+
+## 凭证与安全
+
+**仓库里不含任何 token、口令或私钥**，克隆下来即可直接跑，不需要填任何东西（`python3 build_feed.py` 只要网络）。
+
+- `.gitignore` 屏蔽 `*.env` / `.env*` / `*.pem` / `*.key` / `id_rsa*` 等；
+- `tools/check_secrets.py` 可随时自查：`python3 tools/check_secrets.py`；
+- `.github/workflows/guard.yml` 在每次推送时自动跑同一套规则，混进真 token 会让这次构建失败；
+- 需要凭证的场景（树莓派推送、外部触发器）一律放在**仓库之外**：本机 `/etc/rss-hub/rss-hub.env`（`600`）或 GitHub 仓库 Secret。详见 [OPERATIONS.md#凭证管理](OPERATIONS.md#凭证管理)。
 
 ## 监控
 
