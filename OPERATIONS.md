@@ -314,8 +314,18 @@ curl -s "源地址" | head -c 200      # 看 XML 声明里的 encoding=
 
 都正常就只能等，或手动 Run workflow 补水。
 
-**本仓库实测（2026-10-29 建库当天）**：`event=schedule` 计数为 0，即建库 5 小时内一次都没触发过。
-建库当天靠 cron 不可靠，先用下面的命令手动起一轮（跑满 1 小时，覆盖 13 个 5 分钟窗）：
+**本仓库两次实测（2026-10-29 建库当天）**：
+
+- 建库 5 小时：`event=schedule` = 0；
+- 建库 **8 小时 50 分**（23:30 北京）：仍是 0 —— 当天 97 条运行记录全是 `push` / `workflow_dispatch`。
+  为排除「只有老工作流不触发」，另推了一个最小探针 `_cron_probe.yml`（`*/5 * * * *`），
+  上线后 10 分钟内 0 次触发（GitHub 允许十几分钟延迟，但结合全天 9 个整点全落空可判定：
+  这台仓库的 cron 队列基本不给配额）。探针已删。
+  社区同现象（github/community#209964）的结论一致：新仓库的高频 cron 会被降到「几小时一次」，
+  **5 分钟节拍不可能靠 GitHub cron 兑现**。
+
+结论：**发布必须由外部定时器驱动**，GitHub 的 cron 只能当「有则更好」。
+每次手动 dispatch 覆盖 13 轮 ≈ 65 分钟，所以补水频率不到 5 分钟就够（1 小时 1 次即可）。
 
 ```bash
 TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill | sed -n 's/^password=//p')
