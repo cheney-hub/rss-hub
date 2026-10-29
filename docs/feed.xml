@@ -6,15 +6,50 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 11:39:36 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 11:50:17 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>APEC经济体客商占广交会入境客流超六成</title>
-<link>https://www.chinanews.com.cn/cj/2026/10-29/10722916.shtml</link>
-<pubDate>Thu, 29 Oct 2026 19:37:14 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722916.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<title>《中国与欧亚经济联盟经贸合作协定》联委会第六次会议在青岛召开</title>
+<link>https://www.chinanews.com.cn/ydyl/2026/10-29/10722926.shtml</link>
+<pubDate>Thu, 29 Oct 2026 19:46:43 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/ydyl/2026/10-29/10722926.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>机构：预计2026年全球智能手机出货量将降12%</title>
+<link>https://xueqiu.com/5124430882/414546861</link>
+<pubDate>Thu, 29 Oct 2026 19:44:34 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414546861|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>江波龙：2026年第三季度净利润37.45亿元，同比增长436.60%</title>
+<link>https://flash.jin10.com/detail/20261029194325941800</link>
+<pubDate>Thu, 29 Oct 2026 19:43:25 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029194325941800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>穆迪：私募信贷对接AI融资，哪些风险点值得关注</title>
+<link>https://international.caixin.com/2026-10-29/102498562.html</link>
+<pubDate>Thu, 29 Oct 2026 19:41:52 +0800</pubDate>
+<guid isPermaLink="false">https://international.caixin.com/2026-10-29/102498562.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
+</item>
+<item>
+<title>中国诚通控股集团有限公司新进成为华大九天第八大股东</title>
+<link>https://www.jiemian.com/article/15265734.html</link>
+<pubDate>Thu, 29 Oct 2026 19:40:11 +0800</pubDate>
+<guid isPermaLink="false">https://www.jiemian.com/article/15265734.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
+</item>
+<item>
+<title>Astra冲击波与具身行业的50天</title>
+<link>https://m.huxiu.com/article/4901457.html?type=text</link>
+<pubDate>Thu, 29 Oct 2026 19:36:23 +0800</pubDate>
+<guid isPermaLink="false">https://m.huxiu.com/article/4901457.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
 </item>
 <item>
 <title>赤柱獨立屋女戶主外遊返港 近4000萬元珠寶首飾失蹤</title>
@@ -24,32 +59,11 @@
 <source url="https://rsshub.rss.tips/oncc/hk">东网</source>
 </item>
 <item>
-<title>微软(MSFT.O)回吐盘前涨幅，现涨1.3%。</title>
-<link>https://flash.jin10.com/detail/20261029193412763800</link>
-<pubDate>Thu, 29 Oct 2026 19:34:12 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029193412763800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
 <title>DoorDash to Buy Instacart for $17 Billion, Uniting 2 Delivery Giants</title>
 <link>https://www.nytimes.com/2026/10/29/technology/doordash-instacart-acquisition-delivery.html</link>
 <pubDate>Thu, 29 Oct 2026 11:32:42 +0000</pubDate>
 <guid isPermaLink="false">https://www.nytimes.com/2026/10/29/technology/doordash-instacart-acquisition-delivery.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
-</item>
-<item>
-<title>微软启动10批次美元高等级债券发行。</title>
-<link>https://xueqiu.com/5124430882/414543817</link>
-<pubDate>Thu, 29 Oct 2026 19:31:38 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414543817|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>财联社10月29日电，微软启动10批次美元高等级债券发行，为2017年以来首次。</title>
-<link>https://api3.cls.cn/share/article/2519557?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 19:31:38 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519557?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
 <title>超20家机器人军团集体“下海”捞金</title>
@@ -73,6 +87,13 @@
 <source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
 </item>
 <item>
+<title>台灣週11/3開幕 45場活動深化台灣與國際資本市場連結</title>
+<link>https://www.cna.com.tw/news/afe/202610290336.aspx</link>
+<pubDate>Thu, 29 Oct 2026 19:20:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cna.com.tw/news/afe/202610290336.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
+</item>
+<item>
 <title>人民日报看广东 | 鹏城万里</title>
 <link>https://www.peopleapp.com/column/30053443869-500007762369</link>
 <pubDate>Thu, 29 Oct 2026 19:18:49 +0800</pubDate>
@@ -94,11 +115,11 @@
 <source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
-<title>中共二十届五中全会公报 确定二十一大明年下半年召开</title>
-<link>https://china.caixin.com/2026-10-29/102498590.html</link>
-<pubDate>Thu, 29 Oct 2026 19:14:29 +0800</pubDate>
-<guid isPermaLink="false">https://china.caixin.com/2026-10-29/102498590.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
+<title>香港特区政府公布大埔宏福苑火灾报告并推出系统性改革举措</title>
+<link>https://h.xinhuaxmt.com/vh512/app/13350749</link>
+<pubDate>Thu, 29 Oct 2026 19:12:36 +0800</pubDate>
+<guid isPermaLink="false">https://h.xinhuaxmt.com/vh512/app/13350749|https://feed.quanwenrss.com/feed/xinhua-yw.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xinhua-yw.xml">新华社·要闻</source>
 </item>
 <item>
 <title>党的二十届五中全会审议通过《中共中央关于持之以恒推进全面从严治党若干重大问题的决定》</title>
@@ -106,6 +127,13 @@
 <pubDate>Thu, 29 Oct 2026 19:03:27 +0800</pubDate>
 <guid isPermaLink="false">https://app.gmdaily.cn/as/opened/n/45fdd9af9103412abbd018b4a096b9bc|https://feed.quanwenrss.com/feed/gmw-hot.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/gmw-hot.xml">光明网·热点</source>
+</item>
+<item>
+<title>带乡下小猫去做绝育</title>
+<link>https://www.infzm.com/contents/343461</link>
+<pubDate>Thu, 29 Oct 2026 19:00:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.infzm.com/contents/343461|https://feed.quanwenrss.com/feed/nfzm-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
 </item>
 <item>
 <title>印尼央行行长：MSCI降级警告仅属短期冲击</title>
@@ -150,13 +178,6 @@
 <source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
-<title>古井贡酒：第三季度归母净利润9544.93万元，同比下降68.04%</title>
-<link>https://www.jiemian.com/article/15265336.html</link>
-<pubDate>Thu, 29 Oct 2026 18:39:20 +0800</pubDate>
-<guid isPermaLink="false">https://www.jiemian.com/article/15265336.html|https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
-</item>
-<item>
 <title>新加坡将提呈亚细安粮食安全长期合作框架 加强扶持东南亚小农户</title>
 <link>https://www.zaobao.com.sg/news/singapore/story20261029-9913262</link>
 <pubDate>Thu, 29 Oct 2026 10:36:29 GMT</pubDate>
@@ -164,25 +185,11 @@
 <source url="https://rsshub.rss.tips/zaobao/realtime/singapore">联合早报·新加坡即时新闻</source>
 </item>
 <item>
-<title>字节猫箱火爆背后：有人为爱充值，有人嫌AI恋人太假</title>
-<link>https://m.huxiu.com/article/4901472.html?type=text</link>
-<pubDate>Thu, 29 Oct 2026 18:36:02 +0800</pubDate>
-<guid isPermaLink="false">https://m.huxiu.com/article/4901472.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
-</item>
-<item>
 <title>日央行举行货币政策会议 或判断2%通胀目标已达成</title>
 <link>https://china.kyodonews.net/articles/-/17618</link>
 <pubDate>Thu, 29 Oct 2026 19:29:00 +0900</pubDate>
 <guid isPermaLink="false">https://china.kyodonews.net/articles/-/17618|https://feed.quanwenrss.com/feed/kyodo-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
-</item>
-<item>
-<title>屏南快速公路進度 公路局：總期程可望縮短1至2年</title>
-<link>https://www.cna.com.tw/news/aloc/202610290309.aspx</link>
-<pubDate>Thu, 29 Oct 2026 18:22:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cna.com.tw/news/aloc/202610290309.aspx|https://feed.quanwenrss.com/feed/cna-aall.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cna-aall.xml">中央社 CNA</source>
 </item>
 <item>
 <title>在巴西总统选举中落败的博索纳罗抵美 称遭政治迫害</title>
@@ -206,13 +213,6 @@
 <source url="https://feed.quanwenrss.com/feed/dw-latest.xml">德国之声中文·最新</source>
 </item>
 <item>
-<title>“9分钟降低皮质醇、改善失眠”，真有用还是心理安慰？</title>
-<link>https://www.infzm.com/contents/343663</link>
-<pubDate>Thu, 29 Oct 2026 18:00:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.infzm.com/contents/343663|https://feed.quanwenrss.com/feed/nfzm-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
-</item>
-<item>
 <title>受权发布丨张升民同志简历</title>
 <link>https://news.ifeng.com/c/8xcatVHVYai</link>
 <pubDate>Thu, 29 Oct 2026 09:59:41 GMT</pubDate>
@@ -225,13 +225,6 @@
 <pubDate>Thu, 29 Oct 2026 09:49:12 +0000</pubDate>
 <guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34360497|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
-</item>
-<item>
-<title>受权发布｜张升民同志简历</title>
-<link>https://h.xinhuaxmt.com/vh512/app/13350596</link>
-<pubDate>Thu, 29 Oct 2026 17:48:05 +0800</pubDate>
-<guid isPermaLink="false">https://h.xinhuaxmt.com/vh512/app/13350596|https://feed.quanwenrss.com/feed/xinhua-yw.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xinhua-yw.xml">新华社·要闻</source>
 </item>
 <item>
 <title>中共中央将于30日上午举行新闻发布会，介绍和解读党的二十届五中全会精神</title>
