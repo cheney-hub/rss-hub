@@ -70,20 +70,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 01 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -131,20 +117,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 02 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -194,20 +166,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 03 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -255,20 +213,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 04 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -318,20 +262,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 05 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -379,20 +309,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 06 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -442,20 +358,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 07 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -503,20 +405,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 08 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -566,20 +454,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 09 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -627,20 +501,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 10 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -690,20 +550,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 11 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -751,20 +597,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 12 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -814,20 +646,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 13 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -875,20 +693,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 14 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -938,20 +742,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 15 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -999,20 +789,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 16 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1062,20 +838,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 17 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1123,20 +885,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 18 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1186,20 +934,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 19 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1247,20 +981,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 20 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1310,20 +1030,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 21 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1371,20 +1077,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 22 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1434,20 +1126,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 23 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1495,20 +1173,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 24 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1558,20 +1222,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 25 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1619,20 +1269,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 26 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1682,20 +1318,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 27 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1743,20 +1365,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 28 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1806,20 +1414,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 29 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1867,20 +1461,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 30 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -1930,20 +1510,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 31 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -1991,20 +1557,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 32 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2054,20 +1606,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 33 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2115,20 +1653,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 34 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2178,20 +1702,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 35 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2239,20 +1749,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 36 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2302,20 +1798,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 37 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2363,20 +1845,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 38 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2426,20 +1894,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 39 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2487,20 +1941,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 40 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2550,20 +1990,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 41 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2611,20 +2037,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 42 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2674,20 +2086,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 43 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2735,20 +2133,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 44 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2798,20 +2182,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 45 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2859,20 +2229,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 46 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -2922,20 +2278,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 47 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -2983,20 +2325,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 48 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -3046,20 +2374,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 49 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -3107,20 +2421,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 50 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -3170,20 +2470,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 51 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -3231,20 +2517,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 52 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
@@ -3294,20 +2566,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 53 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -3356,20 +2614,6 @@ jobs:
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 54 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。
@@ -3417,20 +2661,6 @@ jobs:
               git push -q origin HEAD:main || echo "备份推送失败，不影响发布"
             fi
           fi
-
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 55 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{ secrets.DOT_API_KEY }}
-          DOT_DEVICE_ID: ${{ secrets.DOT_DEVICE_ID }}
-          DOT_TASK_KEY: ${{ secrets.DOT_TASK_KEY }}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
 
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，

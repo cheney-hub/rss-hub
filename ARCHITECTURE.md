@@ -16,16 +16,19 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
               │   ├─ 失败源 → 用上一份 feed 的同源条目顶上 │
               │   ├─ 跨源去重 + 按时间倒序                │
               │   ├─ 生成 docs/feed.xml（完整版）          │
-              │   ├─ 生成 docs/feed-screen.xml（小屏版）    │
-              │   └─ push_text.py → Dot 文本 API（一屏 4 条）│
+              │   ├─ 生成 docs/feed-screen.xml（单行小屏版）│
+              │   └─ 生成 docs/feed-wrap.xml（折行小屏版）  │
               │           ↓ 打包为 artifact               │
               │           ↓ deploy-pages 部署             │
               └───────────────────┬──────────────────────┘
                                   ↓
                     Pages（自定义 Actions 部署产物）
                                   ↓
-        feed.xml（完整）/ feed-screen.xml（墨水屏）/ screen.html（预览）
+        feed.xml（完整）/ feed-screen.xml / feed-wrap.xml / screen.html（预览）
 ```
+
+> 只读通路：整条链路只抓 RSS、只读网页，不向任何设备或第三方接口发起写请求，因此不需要任何密钥。
+> Dot 的文本 API 能一屏 4 条，但需要在 App 里建密钥并交出设备号，权衡后**不采用**（见 README 对应章节）。
 
 一次作业的大致时序：
 

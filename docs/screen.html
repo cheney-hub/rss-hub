@@ -35,18 +35,13 @@
   .m{font-size:9px;margin-top:10px;opacity:.55;white-space:nowrap;overflow:hidden;
      text-overflow:ellipsis}
 
-  /* 折行版：同一块屏，标题折成 3 行（字号自然小一档）。
-     能否真折行取决于 Dot 云端是否保留标题里的换行符，本页只是「假设生效」的样子 */
+  /* 折行版：同一块屏，第一行是标题主体，放不下的自动续到下一行（最多 3 行）。
+     能否真折行取决于 Dot 云端是否保留标题里的换行符，本页是「折行生效」时的样子 */
   .device.wrapv .wl{font-size:12px;line-height:1.5;font-weight:600;overflow:hidden}
   .device.wrapv .wl div{white-space:nowrap;overflow:hidden}
+  .device.wrapv .wl div:not(:first-child){font-weight:400;opacity:.92}
   .device.wrapv .m{margin-top:8px}
 
-  /* 文本 API 版面：标题 1 行 + 正文 3 行 + 右下角落款（Dot 官方固定布局） */
-  .device.api{justify-content:flex-start;padding:13px 14px}
-  .device.api .t1{font-size:15px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden}
-  .device.api .b{margin-top:6px;font-size:10px;line-height:1.5;overflow:hidden}
-  .device.api .b div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .device.api .sig{position:relative;margin-top:auto;text-align:right;font-size:8px;opacity:.6}
   .cap{color:var(--sub);font-size:12px;text-align:center;margin:10px 0 16px}
 
   .note{color:var(--sub);font-size:12px;text-align:center;margin-top:14px;line-height:1.9}
@@ -59,9 +54,9 @@
 <body>
 <div class="wrap">
   <h1>小屏效果示意</h1>
-  <p class="sub">Dot Quote/0 的显示由 Dot 云端渲染，本页只示意三种喂法的效果差异，实际样式以设备为准。</p>
+  <p class="sub">Dot Quote/0 的显示由 Dot 云端渲染，本页只示意两种喂法的效果差异，实际样式以设备为准。</p>
 
-  <div class="cap">① RSS 卡片 · 单行（<code>feed-screen.xml</code>）：约 13 个汉字满宽，超出即被云端硬切</div>
+  <div class="cap">① 单行版（<code>feed-screen.xml</code>）：约 13 个汉字满宽，超出即被云端硬切</div>
   <div class="stage" id="stage">
     <div class="device" onclick="toggleZoom()" title="点击放大 / 缩小">
       <div class="q" id="q">—</div>
@@ -69,20 +64,11 @@
     </div>
   </div>
 
-  <div class="cap">② RSS 卡片 · 折行（<code>feed-wrap.xml</code>）：同一块屏塞 3 行 —— <b>前提是云端保留换行符</b></div>
+  <div class="cap">② 折行版（<code>feed-wrap.xml</code>）：<b>第一行作标题，放不下自动续行</b>（加粗行是标题主体）</div>
   <div class="stage">
     <div class="device wrapv">
       <div class="wl" id="wl">—</div>
       <div class="m" id="wm">—</div>
-    </div>
-  </div>
-
-  <div class="cap">③ 文本 API：标题 1 行 + 正文 3 行 + 右下角落款 —— 一屏四条</div>
-  <div class="stage">
-    <div class="device api">
-      <div class="t1" id="t1">—</div>
-      <div class="b" id="b"></div>
-      <div class="sig" id="sig">—</div>
     </div>
   </div>
 
@@ -94,14 +80,14 @@
   <div class="specs">
     三份 feed 都来自同一批数据，区别只在标题怎么处理：<br>
     <code>feed-screen.xml</code> 单行截断 13 全角（<code>SCREEN_TITLE_WIDTH</code>）·
-    <code>feed-wrap.xml</code> 折 3 行（<code>SCREEN_WRAP_LINES</code>）<br>
-    纯文本标题（emoji / 装饰符号已摘除）、条目给足 60 条、字段极简
+    <code>feed-wrap.xml</code> 第一行标题 + 超出续行（<code>SCREEN_WRAP_LINES</code>）<br>
+    纯文本标题（emoji / 装饰符号已摘除）、条目给足 60 条、字段极简、<b>全程无密钥</b>
   </div>
 
   <div class="note">
-    <b>折行能不能生效，得设备说了算</b>：RSS 卡片是云端单行渲染，
+    <b>折行能不能生效，得设备说了算</b>：RSS 卡片由云端单行渲染，
     <a href="./wrap/">这里的 4 个探针源</a>用同一句话分别试「真实换行 / &lt;br&gt; / U+2028 / 分段多条」，
-    加进 Dot App 看屏上是 3 行还是 1 行即可判断。
+    加进 Dot App 看屏上是多行还是 1 行即可判断。
   </div>
 
   <div class="foot">
@@ -143,16 +129,6 @@ function render(){
     .filter(Boolean)
     .map(p => '<div>' + esc1(p) + '</div>').join('');
   $('wm').textContent = [wt.src || it.src, ago(wt.date || it.date)].filter(Boolean).join(' · ');
-
-  // ③ 文本 API：标题 1 行 + 正文 3 行
-  const next = [1,2,3].map(k => items[(idx + k) % items.length]).filter(Boolean);
-  $('t1').textContent = it.title;
-  $('b').innerHTML = next.map(x => '<div>' + esc1(x.title) + '</div>').join('');
-  const now = new Date();
-  $('sig').textContent = String(now.getMonth()+1).padStart(2,'0') + '-' +
-                         String(now.getDate()).padStart(2,'0') + ' ' +
-                         String(now.getHours()).padStart(2,'0') + ':' +
-                         String(now.getMinutes()).padStart(2,'0');
 }
 
 function toggleZoom(){

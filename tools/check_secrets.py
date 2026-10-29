@@ -15,6 +15,7 @@ import sys
 RULES = [
     (r"\bgh[pousr]_[A-Za-z0-9]{20,}\b", "GitHub token"),
     (r"\bgithub_pat_[A-Za-z0-9_]{20,}\b", "GitHub fine-grained token"),
+    (r"\bdot_app_[A-Za-z0-9_-]{12,}\b", "Dot API 密钥"),
     (r"\bAKIA[0-9A-Z]{16}\b", "AWS access key"),
     (r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b", "Slack token"),
     (r"-----BEGIN [A-Z ]*PRIVATE KEY-----", "私钥"),

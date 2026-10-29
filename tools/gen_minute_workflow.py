@@ -96,20 +96,6 @@ CYCLE_TPL = """
             fi
           fi
 
-      # 文本 API：一屏 4 条（标题 1 行 + 正文 3 行）。没配密钥时自动跳过，
-      # 仓库本身不含任何凭证；密钥走仓库 Secret。
-      - name: 轮 {n:02d} 推送墨水屏卡片
-        env:
-          DOT_API_KEY: ${{{{ secrets.DOT_API_KEY }}}}
-          DOT_DEVICE_ID: ${{{{ secrets.DOT_DEVICE_ID }}}}
-          DOT_TASK_KEY: ${{{{ secrets.DOT_TASK_KEY }}}}
-        run: |
-          if [ -z "$DOT_API_KEY" ] || [ -z "$DOT_DEVICE_ID" ]; then
-            echo "未配置 DOT_API_KEY / DOT_DEVICE_ID，跳过文本卡片（RSS 卡片照常）"
-            exit 0
-          fi
-          python push_text.py || echo "文本卡片推送失败，不影响 feed 发布"
-
       # 静态页（index.html / screen.html）始终取远端最新版本：
       # 作业是整点 checkout 的，这期间推送的新页面进不来，
       # 不拉一下就会被这份旧产物覆盖，表现为新页面 404。

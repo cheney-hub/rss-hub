@@ -306,7 +306,9 @@ def load_prev_items():
 #   3. 条目给足 —— 云端每次取「最新 N 条」，N 由 Dot 决定，我们给满 60 条随它挑；
 #   4. 字段极简 —— guid 用短哈希、去掉 atom:link/generator/ttl，云端抓取解析更轻。
 # 未经限长的完整版照旧输出 feed.xml，普通 RSS 阅读器用它。
-# 想一屏看多条，走 push_text.py（文本 API：标题 1 行 + 正文 3 行），那才是真正能塞 4 条的路。
+# 想要一屏读到更多字，靠 wrap_title() 把标题折成多行（feed-wrap.xml）：
+# 第一行是标题主体，放不下的部分自动续到下一行，最多 SCREEN_WRAP_LINES 行。
+# 不依赖任何 API 密钥——这也是不走 Dot 文本 API 的原因。
 # 允许在这些字符处收尾（反向找最近的一个）。冒号「：」故意不在里面：
 # 「雷普索尔首席执行官：展望未来…」在冒号处断开只剩主体、谓语全丢，反而不如多留几字。
 BREAK_CHARS = "，,、；;｜|—）)！!？?·】」』 "
@@ -415,6 +417,21 @@ def wrap_title(title, line_w=SCREEN_TITLE_WIDTH, max_lines=3):
             head = rest[:1]
         lines.append(head)
         rest = rest[len(head):].lstrip(" 　" + BREAK_CHARS + "-—…")
+
+    # 末行只剩一两个字（「8%」「元。」这种孤行）很难看：从上一行尾部挪字过来，
+    # 让末行至少占一半宽度。上一行本来就是满载的，让出几个字不影响可读性。
+    # 关键约束：挪到上一行末尾是标点就停——标点必须留在行尾，
+    # 跟着挪下去就变成「，同比增长…」这种行首标点，中文排版的大忌。
+    if len(lines) >= 2 and text_width(lines[-1]) < line_w * 0.35:
+        prev, last = lines[-2], lines[-1]
+        while (text_width(last) < line_w * 0.55 and len(prev) > 2
+               and prev[-1] not in BREAK_CHARS and last[:1] not in BREAK_CHARS):
+            last = prev[-1] + last
+            prev = prev[:-1]
+        if prev.strip(" 　"):
+            lines[-2], lines[-1] = prev, last
+        else:
+            lines.pop(-2)
     return lines
 
 
