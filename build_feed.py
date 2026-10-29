@@ -1,38 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-RSS 聚合器（GitHub Actions / 任意机器通用版）
+RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 
 读 feeds.txt（注释行 = 中文源名，下一行 = 地址）
-→ 每源抓最新 1 条 → 跨源去重 → 按时间倒序生成 RSS 2.0 → 写入 docs/feed.xml
+→ 每源抓最新 1 条 → 跨源去重 → 按发布时间倒序生成 RSS 2.0
+
+输出两份：
+  docs/feed.xml       完整版：标题原样，给电脑 / 手机上的 RSS 阅读器
+  docs/feed-wrap.xml  设备版：纯文本标题、字段极简、标题按行宽折行
+                      （第一行作标题主体，放不下的续到下一行）
+                      填进 Dot App 的「循环内容」列表即可
 
 特性：
   * 零第三方依赖，Python 3.8+
-  * 单源失败时回退到上一份 feed.xml 中该源的条目（不会凭空丢源）
-  * 单次运行内可循环多轮（REFRESH_SECONDS），让 feed 更接近实时
+  * 只读通路：只抓 RSS、只写静态文件，不向任何设备/第三方接口发起写请求，不需要任何密钥
+  * 单源失败时回退到上一份 feed 中该源的条目（不会凭空丢源）
+  * 单次运行内可循环多轮（REFRESH_SECONDS）
   * 自动识别 UTF-8 / GB18030 编码、修补常见 HTML 实体
 
-同时输出两份 feed：
-  docs/feed.xml         完整版，标题原样，给电脑/手机上的阅读器
-  docs/feed-screen.xml  墨水屏版（Dot Quote/0）：纯文本标题、字段极简，供 Dot 云端渲染
-  docs/feed-wrap.xml    折行版：同墨水屏版，但标题折成多行（取决于渲染端是否保留换行符）
-
 环境变量：
-  FEEDS_FILE       订阅源列表，默认 ./feeds.txt
-  OUT_FILE         输出文件，默认 ./docs/feed.xml
-  PREV_FILE        上一份 feed（失败回退用），默认同 OUT_FILE
-  FEED_URL         频道 <link>，默认 https://cheney-hub.github.io/rss-hub/feed.xml
-  REFRESH_SECONDS  循环刷新到第几秒结束（0 = 只跑一轮），默认 0
-  FETCH_TIMEOUT    单源超时秒数，默认 20
-  CONCURRENCY      并发数，默认 12
-  SCREEN_OUT       墨水屏版输出路径，默认与 OUT_FILE 同目录的 feed-screen.xml
-  SCREEN_TITLE_WIDTH 墨水屏标题每行宽度上限（全角字符数），默认 13
-                    —— RSS 卡片在设备上是大字号单行，296px 宽实测只放得下 13～14 个全角字，
-                    超过就被云端从右边硬切（还会补自己的省略号）。这里按 13 让我们的截断先发生。
-  SCREEN_ITEMS     墨水屏版条目数上限，默认 60
-  WRAP_OUT         折行版输出路径，默认同目录的 feed-wrap.xml
-  SCREEN_WRAP_LINES  折行版最多折几行，默认 3
-  SCREEN_WRAP_SEP    折行分隔符：lf（换行）/ br（<br> 标签）/ u2028，默认 lf
+  FEEDS_FILE        订阅源列表，默认 ./feeds.txt
+  OUT_FILE          完整版输出，默认 ./docs/feed.xml
+  FEED_URL          频道 <link>，默认 https://cheney-hub.github.io/rss-hub/feed.xml
+  REFRESH_SECONDS   循环刷新到第几秒结束（0 = 只跑一轮），默认 0
+  FETCH_TIMEOUT     单源超时秒数，默认 20
+  CONCURRENCY       并发数，默认 12
+  SCREEN_OUT        设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml
+  SCREEN_LINE_WIDTH 设备版每行宽度（全角字符数），默认 13
+                    —— RSS 卡片在设备上是 296×152 的一行大字号，实测 13～14 个全角字满宽，
+                    超过就被 Dot 云端从右边硬切（还会补它自己的省略号）。按 13 折行，
+                    让换行发生在我们能控制的地方。
+  SCREEN_WRAP_LINES 最多折几行，默认 3
+  SCREEN_WRAP_SEP   折行分隔符：lf（换行）/ br（<br>）/ u2028，默认 lf
 """
 import os
 import re
@@ -52,29 +52,23 @@ from datetime import datetime, timezone
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FEEDS_FILE = os.environ.get("FEEDS_FILE", os.path.join(BASE_DIR, "feeds.txt"))
 OUT_FILE = os.environ.get("OUT_FILE", os.path.join(BASE_DIR, "docs", "feed.xml"))
-PREV_FILE = os.environ.get("PREV_FILE", OUT_FILE)
 FEED_URL = os.environ.get("FEED_URL", "https://cheney-hub.github.io/rss-hub/feed.xml")
 REFRESH_SECONDS = int(os.environ.get("REFRESH_SECONDS", "0"))
 FETCH_TIMEOUT = int(os.environ.get("FETCH_TIMEOUT", "20"))
 CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
 
-# 墨水屏版（Dot Quote/0，走 Dot 云端渲染，非设备直接解析）
+# 设备版（Dot Quote/0）：纯文本标题 + 按行宽折行，交给 Dot 云端渲染成位图
 SCREEN_OUT = os.environ.get(
-    "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-screen.xml"))
-SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "13"))
-SCREEN_ITEMS = max(1, int(os.environ.get("SCREEN_ITEMS", "60")))
-
-# 折行版（标题折成多行，而不是一行截断）。和墨水屏版并列输出，便于对比订阅。
-WRAP_OUT = os.environ.get(
-    "WRAP_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-wrap.xml"))
-SCREEN_WRAP_LINES = max(1, int(os.environ.get("SCREEN_WRAP_LINES", "3")))
-SCREEN_WRAP_SEP = os.environ.get("SCREEN_WRAP_SEP", "lf")      # lf | br | u2028
+    "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-wrap.xml"))
+LINE_WIDTH = float(os.environ.get("SCREEN_LINE_WIDTH", "13"))
+WRAP_LINES = max(1, int(os.environ.get("SCREEN_WRAP_LINES", "3")))
+WRAP_SEP = os.environ.get("SCREEN_WRAP_SEP", "lf")      # lf | br | u2028
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 RETRY_DELAY = 1.0
 
-MAX_ITEMS = 60          # 输出条目上限，避免无限膨胀
+ITEM_LIMIT = 60         # 输出条目上限，避免无限膨胀
 ENTITY_FIX = {
     "&nbsp;": " ", "&mdash;": "—", "&ndash;": "–", "&hellip;": "…",
     "&ldquo;": "“", "&rdquo;": "”", "&lsquo;": "‘", "&rsquo;": "’",
@@ -265,10 +259,10 @@ def dedupe(items):
 def load_prev_items():
     """读上一份 feed.xml，取 源地址 → 条目 的映射，用于失败回退。"""
     prev = {}
-    if not os.path.exists(PREV_FILE):
+    if not os.path.exists(OUT_FILE):
         return prev
     try:
-        with open(PREV_FILE, "r", encoding="utf-8") as f:
+        with open(OUT_FILE, "r", encoding="utf-8") as f:
             root = ET.fromstring(f.read())
     except Exception:
         return prev
@@ -291,24 +285,22 @@ def load_prev_items():
     return prev
 
 
-# ---------------- 墨水屏版 ----------------
-# Dot Quote/0 的显示链路：App 里把 RSS 地址加入「循环内容」→ Dot 云端抓取解析 →
-# 云端模板渲染成位图 → 设备按刷新间隔拉图显示。设备端（ESP32-C3，400KB 内存）不解析 XML，
-# 显示几条、字号多大都由云端模板决定，订阅方控制不了。
+# ---------------- 设备版（Dot Quote/0） ----------------
+# 显示链路：App 把 RSS 地址加进「循环内容」→ Dot 云端抓取解析 → 云端模板渲染成位图 →
+# 设备按刷新间隔拉图显示。设备端（ESP32-C3，400KB 内存）不解析 XML，显示几条、字号多大
+# 都由云端模板决定，订阅方控制不了。
 #
-# 实测（2026-10-29，296×152 屏）：RSS 卡片 = 一行大字号标题，约 13～14 个全角字就满宽，
-# 超出部分被云端从右边硬切并补它自己的省略号。所以要「我们能控制的截断」先发生，
-# 默认按 13 全角预截；云端就不会再动刀。
+# 实测（2026-10-29，296×152 屏）：RSS 卡片 = 一行大字号标题，13～14 个全角字就满宽，
+# 超出部分被云端从右边硬切并补它自己的省略号。宽度抢不回来，就往下要空间：
+# 把标题按 13 全角折成最多 3 行，第一行是标题主体、放不下的续行。
 #
-# 这份小屏版只做云端渲染做不到的事：
-#   1. 标题纯文本 —— 摘掉 emoji、箭头、几何图形、零宽字符等（黑白墨水屏上它们是豆腐块或占位）；
-#   2. 标题限长 —— 超长标题由我们这边在标点处优雅截断，而不是被云端硬切成一串省略号；
-#   3. 条目给足 —— 云端每次取「最新 N 条」，N 由 Dot 决定，我们给满 60 条随它挑；
-#   4. 字段极简 —— guid 用短哈希、去掉 atom:link/generator/ttl，云端抓取解析更轻。
-# 未经限长的完整版照旧输出 feed.xml，普通 RSS 阅读器用它。
-# 想要一屏读到更多字，靠 wrap_title() 把标题折成多行（feed-wrap.xml）：
-# 第一行是标题主体，放不下的部分自动续到下一行，最多 SCREEN_WRAP_LINES 行。
-# 不依赖任何 API 密钥——这也是不走 Dot 文本 API 的原因。
+# 这份设备版只做云端渲染照顾不到的四件事：
+#   1. 标题纯文本 —— 摘掉 emoji、箭头、几何图形、零宽字符（黑白墨水屏上它们是豆腐块或占位）；
+#   2. 标题折行 —— 在我们能控制的地方换行，而不是被云端硬切成一串省略号；
+#   3. 条目给满 60 条 —— 云端取「最新 N 条」，N 由它决定，给满随它挑；
+#   4. 字段极简 —— guid 用短哈希、去掉 atom:link/generator/ttl，云端解析更轻。
+# 全程只走 RSS 只读通路，不调用任何需要密钥的 API。
+#
 # 允许在这些字符处收尾（反向找最近的一个）。冒号「：」故意不在里面：
 # 「雷普索尔首席执行官：展望未来…」在冒号处断开只剩主体、谓语全丢，反而不如多留几字。
 BREAK_CHARS = "，,、；;｜|—）)！!？?·】」』 "
@@ -351,46 +343,15 @@ def _cut_index(s, max_w):
     return len(s)
 
 
-def fit_title(title, max_w=SCREEN_TITLE_WIDTH):
-    """把标题裁到一行放得下：先去装饰字符，再在标点处断句，最后补省略号。"""
-    t = plain_text(title)
-    # 去掉 “标题 - 来源名” 这类尾巴（来源单独用 <source> 显示，重复占位）
-    t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
-    if text_width(t) <= max_w:
-        return t
-    cut = _cut_index(t, max_w - 1)          # 留 1 个全角位给省略号
-    head = t[:cut]
-    # 书名号 / 引号没闭合时，从它前面断开，别把《今宵酒…》切成半截
-    for opener, closer in (("《", "》"), ("“", "”"), ("「", "」"), ("（", "）"), ("(", ")")):
-        if head.count(opener) > head.count(closer):
-            pos = head.rfind(opener)
-            if pos >= int(len(head) * 0.5):     # 只在后半段出现才回退，否则会砍太狠
-                head = head[:pos]
-    # 在标点处收尾更好读，但不能丢太多字：断点必须保留 80% 以上宽度，
-    # 否则宁可硬切（比如「商务部：若欧方一意孤…」不要变成「商务部…」）。
-    for i in range(len(head) - 1, max(0, int(len(head) * 0.8)) - 1, -1):
-        if head[i] in BREAK_CHARS:
-            head = head[:i]
-            break
-    head = head.rstrip(BREAK_CHARS + "-—…")
-    return (head + "…") if head else t[:cut] + "…"
-
-
-# 折行用的分隔符：不同渲染端对「标题里的换行」处理方式不同，
-#     lf      真实换行（XML 里写成 &#10;）—— 多数渲染端会保留
-#     br      <br> 标签（不转义）—— 少数把标题当 HTML 解析的渲染端认它
-#     u2028   U+2028 LINE SEPARATOR —— 老派排版分隔符
-WRAP_SEPS = ("lf", "br", "u2028")
-
-
-def wrap_title(title, line_w=SCREEN_TITLE_WIDTH, max_lines=3):
-    """把标题折成 ≤max_lines 行、每行 ≤line_w 全角宽，尽量在标点处换行。
+def wrap_title(title, line_w=None, max_lines=None):
+    """把标题折成 ≤max_lines 行、每行 ≤line_w 全角宽，尽量在标点处收尾。
 
     返回行列表（不是带换行符的整串），由调用方按目标渲染端自己拼分隔符。
-    与 fit_title 的区别：fit_title 是「一行内截断」，本函数是「多行折行」。
-    RSS 卡片本身按单行渲染（字号行数由云端模板决定），能否真正显示多行
-    取决于渲染端是否保留标题里的换行符——所以这里只负责给出分行结果。
+    RSS 卡片能否真显示成多行，取决于云端是否保留标题里的换行符；
+    折行不生效时渲染端只会显示第一行，与单行版内容一致，不会更差。
     """
+    line_w = LINE_WIDTH if line_w is None else line_w
+    max_lines = WRAP_LINES if max_lines is None else max_lines
     t = plain_text(title)
     t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
     if text_width(t) <= line_w:
@@ -455,21 +416,15 @@ def esc(s):
 
 
 def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
-              description=None, title_width=None, limit=None, minimal=False,
-              wrap_lines=0, wrap_sep="lf"):
-    """minimal=True 时输出极简版：只留小屏真正会用到的东西。
+              description=None, minimal=False, wrap=False):
+    """wrap=True 出设备版：标题折行、字段极简；否则出完整版，标题原样。
 
-    省略 atom:link / generator / ttl 以及 guid 里的长地址（改为 12 位短哈希），
-    单条体积降到原来的三成左右；设备与解析端拿到的仍然是合法 RSS 2.0。
-
-    wrap_lines>0 时标题按 title_width 折成多行（而不是一行截断），
-    分隔符由 wrap_sep 指定——用于实测哪种换行方式在设备渲染端生效。
+    minimal=True 省略 atom:link / generator / ttl，guid 改成 12 位短哈希，
+    单条体积降到原来的三成左右；对解析端来说仍是合法 RSS 2.0。
     """
     now = email.utils.format_datetime(datetime.now(timezone.utc))
     if description is None:
         description = "多源 RSS 头条聚合，按发布时间倒序（源 %d 个）" % stats["total"]
-    if limit:
-        items = items[:limit]
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
@@ -488,14 +443,8 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
     if not minimal:
         lines += ["<generator>github-actions/rss-hub</generator>", "<ttl>5</ttl>"]
     for it in items:
-        if wrap_lines:
-            title_xml = join_title_xml(
-                wrap_title(it["title"], title_width or SCREEN_TITLE_WIDTH, wrap_lines),
-                wrap_sep)
-        elif title_width:
-            title_xml = esc(fit_title(it["title"], title_width))
-        else:
-            title_xml = esc(it["title"])
+        title_xml = (join_title_xml(wrap_title(it["title"]), WRAP_SEP) if wrap
+                     else esc(it["title"]))
         lines.append("<item>")
         lines.append("<title>%s</title>" % title_xml)
         lines.append("<link>%s</link>" % esc(it["link"]))
@@ -560,9 +509,9 @@ def run_once(entries, prev_items):
 
     items.sort(key=lambda x: x.get("ts") or 0, reverse=True)
     items, dropped = dedupe(items)
-    if len(items) > MAX_ITEMS:
-        dropped += len(items) - MAX_ITEMS
-        items = items[:MAX_ITEMS]
+    if len(items) > ITEM_LIMIT:
+        dropped += len(items) - ITEM_LIMIT
+        items = items[:ITEM_LIMIT]
     stats = {"total": len(entries), "ok": ok, "fail": fail, "stale": stale,
              "items": len(items), "dropped": dropped}
     return items, stats
@@ -578,29 +527,16 @@ def _write(path, xml_text):
 
 
 def write_feed(items, stats):
-    xml_text = build_rss(items, FEED_URL, stats)
-    _write(OUT_FILE, xml_text)
+    """写两份：完整版 feed.xml + 设备版 feed-wrap.xml。"""
+    _write(OUT_FILE, build_rss(items, FEED_URL, stats))
 
-    # 墨水屏版：纯文本标题 + 适度限长 + 条目给足，交给 Dot 云端渲染
-    screen_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
-    screen_text = build_rss(
-        items, screen_url, stats,
-        channel_title="RSS 头条 · 墨水屏",
-        description="多源头条，纯文本标题，已为小屏墨水屏精简（源 %d 个）" % stats["total"],
-        title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS, minimal=True)
-    _write(SCREEN_OUT, screen_text)
-
-    # 折行版：同样纯文本，但标题按行宽折成多行而不是一行截断。
-    # 只有当渲染端保留标题里的换行符时才有意义，所以单独成文件，方便和上面那份对比着订阅。
-    wrap_text = build_rss(
-        items, FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(WRAP_OUT), stats,
+    wrap_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
+    _write(SCREEN_OUT, build_rss(
+        items, wrap_url, stats,
         channel_title="RSS 头条 · 折行",
-        description="多源头条，标题折成 %d 行，供支持换行的渲染端使用（源 %d 个）"
-                    % (SCREEN_WRAP_LINES, stats["total"]),
-        title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS, minimal=True,
-        wrap_lines=SCREEN_WRAP_LINES, wrap_sep=SCREEN_WRAP_SEP)
-    _write(WRAP_OUT, wrap_text)
-    return xml_text, screen_text, wrap_text
+        description="多源头条，纯文本标题，第一行作标题、超出续行（每行 %g 全角，"
+                    "最多 %d 行），源 %d 个" % (LINE_WIDTH, WRAP_LINES, stats["total"]),
+        minimal=True, wrap=True))
 
 
 def main():
@@ -608,7 +544,8 @@ def main():
     if not entries:
         print("feeds.txt 中没有有效地址")
         return 1
-    print("订阅源 %d 个，输出 %s / %s" % (len(entries), OUT_FILE, SCREEN_OUT))
+    print("订阅源 %d 个，输出 %s / %s（每行 %g 全角、最多 %d 行、分隔符 %s）"
+          % (len(entries), OUT_FILE, SCREEN_OUT, LINE_WIDTH, WRAP_LINES, WRAP_SEP))
 
     deadline = time.time() + REFRESH_SECONDS
     rounds = 0

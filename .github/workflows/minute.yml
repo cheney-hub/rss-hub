@@ -51,8 +51,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "1"
 
         run: |
@@ -99,8 +100,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "2"
 
         run: |
@@ -147,8 +149,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "3"
 
         run: |
@@ -195,8 +198,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "4"
 
         run: |
@@ -243,8 +247,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "5"
 
         run: |
@@ -291,8 +296,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "6"
 
         run: |
@@ -339,8 +345,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "7"
 
         run: |
@@ -387,8 +394,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "8"
 
         run: |
@@ -435,8 +443,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "9"
 
         run: |
@@ -483,8 +492,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "10"
 
         run: |
@@ -531,8 +541,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "11"
 
         run: |
@@ -579,8 +590,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "12"
 
         run: |
@@ -627,8 +639,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "13"
 
         run: |
@@ -675,8 +688,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "14"
 
         run: |
@@ -723,8 +737,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "15"
 
         run: |
@@ -771,8 +786,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "16"
 
         run: |
@@ -819,8 +835,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "17"
 
         run: |
@@ -867,8 +884,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "18"
 
         run: |
@@ -915,8 +933,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "19"
 
         run: |
@@ -963,8 +982,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "20"
 
         run: |
@@ -1011,8 +1031,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "21"
 
         run: |
@@ -1059,8 +1080,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "22"
 
         run: |
@@ -1107,8 +1129,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "23"
 
         run: |
@@ -1155,8 +1178,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "24"
 
         run: |
@@ -1203,8 +1227,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "25"
 
         run: |
@@ -1251,8 +1276,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "26"
 
         run: |
@@ -1299,8 +1325,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "27"
 
         run: |
@@ -1347,8 +1374,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "28"
 
         run: |
@@ -1395,8 +1423,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "29"
 
         run: |
@@ -1443,8 +1472,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "30"
 
         run: |
@@ -1491,8 +1521,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "31"
 
         run: |
@@ -1539,8 +1570,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "32"
 
         run: |
@@ -1587,8 +1619,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "33"
 
         run: |
@@ -1635,8 +1668,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "34"
 
         run: |
@@ -1683,8 +1717,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "35"
 
         run: |
@@ -1731,8 +1766,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "36"
 
         run: |
@@ -1779,8 +1815,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "37"
 
         run: |
@@ -1827,8 +1864,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "38"
 
         run: |
@@ -1875,8 +1913,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "39"
 
         run: |
@@ -1923,8 +1962,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "40"
 
         run: |
@@ -1971,8 +2011,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "41"
 
         run: |
@@ -2019,8 +2060,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "42"
 
         run: |
@@ -2067,8 +2109,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "43"
 
         run: |
@@ -2115,8 +2158,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "44"
 
         run: |
@@ -2163,8 +2207,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "45"
 
         run: |
@@ -2211,8 +2256,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "46"
 
         run: |
@@ -2259,8 +2305,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "47"
 
         run: |
@@ -2307,8 +2354,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "48"
 
         run: |
@@ -2355,8 +2403,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "49"
 
         run: |
@@ -2403,8 +2452,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "50"
 
         run: |
@@ -2451,8 +2501,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "51"
 
         run: |
@@ -2499,8 +2550,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "52"
 
         run: |
@@ -2547,8 +2599,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "53"
 
         run: |
@@ -2595,8 +2648,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "54"
 
         run: |
@@ -2643,8 +2697,9 @@ jobs:
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
-          SCREEN_TITLE_WIDTH: "13"
-          SCREEN_ITEMS: "60"
+          SCREEN_LINE_WIDTH: "13"
+          SCREEN_WRAP_LINES: "3"
+          SCREEN_WRAP_SEP: "lf"
           CYCLE: "55"
 
         run: |

@@ -2,7 +2,7 @@
 
 ## 日常操作
 
-### 加/删订阅源
+### 加减订阅源
 
 编辑 `feeds.txt`：注释行（源中文名）在上，地址行在下，空行随便加。
 
@@ -13,64 +13,41 @@
 https://feed.quanwenrss.com/feed/cailianshe-roll.xml
 ```
 
-删源直接删掉那两行；想临时停用就在地址行前加 `#`（整行注释掉，不会被解析）。
-改完 `git push` 到 `main`，`rss.yml` 会立刻重建并发布一次（约 30 秒出结果），无需等下一个整点。
+删源直接删那两行；想临时停用就在地址行前加 `#`。
+改完 `git push` 到 `main`，`rss.yml` 会立刻重建并发布一次（约 30 秒），不用等整点。
 
-**先验证再提交**（避免把 404 源带上线）：本地跑一遍，只关心 `[失败]` 与 `[回退]` 行。
+**先验证再提交**，避免把 404 源带上线：
 
 ```bash
-python3 build_feed.py
-# [失败] 某某源  https://...  (HTTP 404)
-# [第 1 轮] 成功 42 / 回退 0 / 失败 1 → 条目 42（去重 1）耗时 4.2s
+python3 build_feed.py 2>&1 | grep -E "^\[(失败|回退)\]"
 ```
 
 ### 改源名
 
 改地址上方那行注释即可。注释会写成 `<source>`，括号里的备注会被自动剥掉，别把重要信息放括号里。
 
-### 改抓取参数
+### 调参
 
-在 `.github/workflows/rss.yml` 的 `env:` 段里改：
+抓取与产出参数都在工作流的 `env:` 段里（`minute.yml` 是脚本生成的，改完要重新生成）：
+
+```bash
+# 改 tools/gen_minute_workflow.py 的模板 → 重新生成
+python3 tools/gen_minute_workflow.py 55
+```
 
 | 变量 | 现值 | 调整建议 |
 |---|---|---|
-| 轮数（`minute.yml` 里的 55 组 step） | `55` | 由 `tools/gen_minute_workflow.py 55` 生成；改小可降 runner 占用（如 29 轮 = 每 2 分钟一版、每小时跑半小时） |
-| `CONCURRENCY` | `12` | 源增多到 60+ 可提到 16；被源站限流时降到 8 |
-| `FETCH_TIMEOUT` | `20` | 慢源多可提到 `25`；注意 `timeout-minutes: 12` 是总闸 |
+| 轮数 | `55` | `gen_minute_workflow.py 55` 的最后那个数字；改小可降 runner 占用（29 轮 = 每 2 分钟一版） |
+| `CONCURRENCY` | `12` | 源增到 60+ 可提到 16；被源站限流时降到 8 |
+| `FETCH_TIMEOUT` | `20` | 慢源多可提到 25；注意 `timeout-minutes` 是总闸 |
+| `SCREEN_LINE_WIDTH` | `13` | 设备版每行宽度（全角字符数）。296×152 屏实测 13～14 字满宽，超了会被云端硬切；调到 24 以上会重新出现双截断 |
+| `SCREEN_WRAP_LINES` | `3` | 最多折几行。行数多了字号变小、反而更难读，一般 2～4 |
+| `SCREEN_WRAP_SEP` | `lf` | 折行分隔符 `lf` / `br` / `u2028`。屏上只显示一行时逐个换（见[故障排查](#14-设备上标题被截断或只有一行)） |
 
-### 调墨水屏版
+设备版还自动做了两件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、
+字段极简（guid 短哈希、去掉 `atom:link`/`generator`/`ttl`，同条数下体积约 −22%，仍完全合法）。
 
-先明确：Dot Quote/0 的设备端不解析 RSS，显示由 **Dot 云端**抓取 `feed-screen.xml` 后按自家模板渲染，
-屏幕上显示几条、字号多大都由 Dot 决定，订阅方控制不了（见 [官方文档](https://dot.mindreset.tech/docs/service/studio/rss_feed)）。
-我们控制的是「喂给云端的原料」——`docs/feed-screen.xml`，由两个环境变量控制
-（改 `.github/workflows/` 下三处 `env:`，`minute.yml` 的模板在 `tools/gen_minute_workflow.py` 里，改完重新生成）：
-
-| 变量 | 现值 | 说明 |
-|---|---|---|
-| `SCREEN_TITLE_WIDTH` | `13` | 标题上限（全角字符数）。设备 RSS 卡片一行约 13～14 全角字就满宽，超了被云端硬切；此值让我们的优雅截断（标点断句、不切书名号）先发生。调到 24 以上会重新出现双截断 |
-| `SCREEN_ITEMS` | `60` | 条数给满，云端要多少挑多少；想瘦身可降到 40 |
-| `SCREEN_WRAP_LINES` | `3` | 折行版（`feed-wrap.xml`）折几行。前提是设备认换行，先用 `docs/wrap/` 的探针确认 |
-| `SCREEN_WRAP_SEP` | `lf` | 折行分隔符 `lf` / `br` / `u2028`。探针里哪种在设备上真折行，就用哪种 |
-
-另外小屏版自动做了两件事：标题转纯文本（emoji/箭头/零宽字符全部摘除，黑白墨水屏显示不了）、
-字段极简（guid 短哈希、去掉 atom:link/generator/ttl）。
-
-调完打开 <https://cheney-hub.github.io/rss-hub/screen.html> 看内容效果（「一次一条」示意，Dot 实际渲染样式以设备为准）。
-
-### 墨水屏版为什么字段更少
-
-`build_rss(..., minimal=True)` 只保留小屏真正会用到的东西，设备和解析端都省事：
-
-| 项 | 完整版 | 墨水屏版 |
-|---|---|---|
-| item 字段 | title / link / pubDate / guid / source | 同左（字段不变，兼容性一致） |
-| `guid` 内容 | `链接\|源地址` 整串，常上百字节 | 该串的 md5 前 12 位，稳定且唯一 |
-| channel | 含 `atom:link`、`generator`、`ttl` | 去掉这三项，只留 RSS 2.0 必填项 |
-| 标题字符 | 原样 | `plain_text()` 摘掉 emoji、箭头、几何图形、零宽字符、变体选择符 |
-
-同条数下文件体积从 5.9 KB 降到 4.6 KB（约 −22%）。RSS 2.0 只要求 channel 有
-`title`/`link`/`description`、item 有 `title` 或 `description`，上面这些都不违反规范。
-
+调完看 <https://cheney-hub.github.io/rss-hub/screen.html> 预览效果，以设备实际显示为准。
 
 ### 手动触发一次
 
@@ -88,22 +65,23 @@ curl -X POST \
 ### 本地调试
 
 ```bash
-python3 build_feed.py                       # 输出到 docs/feed.xml（默认）
-OUT_FILE=/tmp/t.xml REFRESH_SECONDS=0 python3 build_feed.py   # 换个路径、只跑一轮
+python3 build_feed.py                                        # 生成 docs/feed.xml + docs/feed-wrap.xml
+OUT_FILE=/tmp/t.xml REFRESH_SECONDS=0 python3 build_feed.py   # 换路径、只跑一轮
 ```
 
-无第三方依赖，Python 3.8+ 即可。Windows、macOS、Linux 都一样。
+零第三方依赖，Python 3.8+，Windows / macOS / Linux 都一样。
 
 ### 回滚某次发布
 
-`docs/feed.xml` 是生成物，直接回退那一次提交即可：
+`docs/` 下都是生成物，直接回退那一次提交即可：
 
 ```bash
 git log --oneline -- docs/feed.xml | head
-git checkout <commit> -- docs/feed.xml && git commit -m "revert feed" && git push
+git checkout <commit> -- docs/feed.xml docs/feed-wrap.xml
+git commit -m "revert feed" && git push
 ```
 
-下一次定时任务会基于回退后的内容重新生成（回退只影响「失败回退」的素材，不影响正常抓取）。
+下一轮定时任务会重新生成（回退只影响「失败回退」的素材，不影响正常抓取）。
 
 ## 仓库与 Pages 设置
 
@@ -119,98 +97,217 @@ git checkout <commit> -- docs/feed.xml && git commit -m "revert feed" && git pus
 ### 换到自己的仓库
 
 1. Fork 或新建空仓库，把代码推上去；
-2. 改三处地址：
-   - `.github/workflows/rss.yml` 里 `FEED_URL`；
-   - `build_feed.py` 里 `FEED_URL` 默认值；
-   - `docs/index.html` 里输入框的 `value` 与「源码仓库」链接；
-3. 仓库 **Settings → Pages** → Source 选 **GitHub Actions**（不是 Deploy from a branch），保存；
-4. 等 1～2 分钟，访问 `https://<用户名>.github.io/<仓库名>/feed.xml`；
-5. 仓库 **Settings → Actions → General** → Workflow permissions 选 **Read and write permissions**（否则作业无法提交 feed）。
+2. 改地址（三处）：`.github/workflows/*.yml` 里的 `FEED_URL`、`build_feed.py` 的 `FEED_URL` 默认值、
+   `docs/index.html` 里输入框的 `value` 与「源码仓库」链接；
+3. **Settings → Pages** → Source 选 **GitHub Actions**（不是 Deploy from a branch）；
+4. **Settings → Actions → General → Workflow permissions** 选 **Read and write permissions**（否则作业无法提交 feed）；
+5. 等 1～2 分钟，访问 `https://<用户名>.github.io/<仓库名>/feed.xml`。
 
-## 凭证管理
+## 刷新节奏
 
-**这个仓库的硬约定：任何文件里都不出现 token、口令、私钥。** 三条保护：
+当前是 **1 分钟一版**，代价是 runner 占用约 17 小时/天。想降载就改轮数：
+
+| 目标节奏 | 怎么改 | runner 占用 |
+|---|---|---|
+| 白天 1 分钟 + 深夜 1 小时（现状） | `gen_minute_workflow.py 55`；两个 cron 的 UTC 小时互补（`22,23,0-15` / `16-21`） | 约 17 小时/天 |
+| 全天 1 分钟 | `minute.yml` 的 cron 改回 `"7 * * * *"`，删掉 `nightly.yml` | 约 22 小时/天 |
+| 2 分钟 | 生成脚本里每轮 `sleep` 改成对齐 120 秒，再 `gen_minute_workflow.py 29` | 约 11 小时/天 |
+| 5 分钟 | 同上，周期 300 秒、轮数 11 | 约 5 小时/天 |
+| 30 分钟 | 停用 `minute.yml` 与 `nightly.yml`，给 `rss.yml` 加回 cron（如 `3,13,23,33,43,53 * * * *`） | 忽略不计 |
+
+两个绕不开的约束，也是这套设计的原因：
+
+- **cron 不能写 `*/1`**：Actions 的 schedule 最短 5 分钟，且官方承认高负载会延迟、丢档；分钟级只能靠
+  「小时级 cron + 作业内循环」；
+- **不能靠 commit 发布**：Pages 传统构建有 10 次/小时软限制；改用自定义 Actions 部署后不受限，
+  所以流程是「打包 artifact → `deploy-pages`」。
+
+## 凭证与安全
+
+**硬约定：任何文件里都不出现 token、口令、私钥。** 三条保护：
 
 | 保护 | 位置 | 作用 |
 |---|---|---|
-| `.gitignore` 屏蔽 | `*.env` / `.env*` / `*.pem` / `*.key` / `id_rsa*` 等 | 凭证文件即使放在项目里也不会被 add 进来 |
+| `.gitignore` 屏蔽 | `*.env` / `.env*` / `*.pem` / `*.key` / `id_rsa*` | 凭证文件即使放项目里也不会被 add |
 | 提交前扫描 | `tools/check_secrets.py` | `python3 tools/check_secrets.py`，命中即退出码 1 |
 | CI 强制扫描 | `.github/workflows/guard.yml` | 每次推送自动跑，混进真 token 直接失败 |
 
-凭证该放哪：
-
 | 场景 | 存放位置 | 说明 |
 |---|---|---|
-| Actions 定时提交 feed | 无需你提供 | 仓库内置 `GITHUB_TOKEN`（`permissions: contents: write`），GitHub 签发、作业结束即失效 |
-| 手动 / 外部触发工作流 | GitHub 仓库 Secret（`GH_PAT`）或本地 shell 环境变量 | 需要 `workflow` 权限；Secret 只在工作流运行时可见 |
+| Actions 定时提交 feed | 无需你提供 | 仓库内置 `GITHUB_TOKEN`（`permissions: contents: write`），作业结束即失效 |
+| 手动 / 外部触发工作流 | 仓库 Secret（`GH_PAT`）或本地环境变量 | 需要 `workflow` 权限 |
 
-当前仓库与 `origin` 都是无凭证状态，历史里也没有提交过任何真实 token。
-
-轮换顺序：GitHub → Settings → Developer settings → Personal access tokens → 吊销旧的、生成新的 → 更新仓库 Secret。
+轮换：GitHub → Settings → Developer settings → Personal access tokens → 吊销旧的、生成新的 → 更新 Secret。
 
 ## 监控
 
-- **Actions 页面**：https://github.com/cheney-hub/rss-hub/actions —— 每次运行的耗时、日志、失败轮次都在这里；
-- **线上自检**（无需鉴权）：
+- **Actions**：https://github.com/cheney-hub/rss-hub/actions —— 耗时、日志、失败轮次都在这里；
+- **线上自检**：
 
 ```bash
 curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -E "lastBuildDate"
 curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"
 ```
 
-- **WorkBuddy 侧巡检**：每 3 小时跑一次，判据是「条目 ≥ 30 且 `lastBuildDate` 距今 ≤ 45 分钟」，异常才汇报，正常不打扰；
-- 想接第三方监控（UptimeRobot / 自建 Cronitor）：监控 `feed.xml` 的 200 状态即可，注意别用「内容关键字」判据（新闻标题天天变）。
+- 接第三方监控（UptimeRobot / Cronitor）只监控 200 状态，别用「内容关键字」判据（标题天天变）。
 
-## 四档刷新方案
-
-## 刷新节奏怎么调
-
-当前是 **1 分钟一版**，代价是 runner 占用约 22 小时/天。想降载就改轮数，改完重新生成工作流即可：
-
-| 目标节奏 | 怎么改 | runner 占用 |
-|---|---|---|
-| 白天 1 分钟 + 深夜 1 小时（现状） | `python tools/gen_minute_workflow.py 55`；两个工作流的 cron 按 UTC 小时互补（`22,23,0-15` / `16-21`） | 约 17 小时/天 |
-| 全天 1 分钟 | 把 `minute.yml` 的 cron 改回 `"7 * * * *"`，删掉 `nightly.yml` | 约 22 小时/天 |
-| 2 分钟 | 生成脚本里把每轮 step 的 `sleep` 改成对齐 120 秒，再 `gen_minute_workflow.py 29` | 约 11 小时/天 |
-| 5 分钟 | 同上，周期 300 秒、轮数 11 | 约 5 小时/天 |
-| 30 分钟 | 停用 `minute.yml` 与 `nightly.yml`，给 `rss.yml` 加回 cron（如 `3,13,23,33,43,53 * * * *`） | 忽略不计 |
-
-两个绕不开的约束，也是这套设计的原因：
-
-- **cron 不能写 `*/1`**：Actions 的 schedule 最短 5 分钟，且官方承认高负载会延迟、丢档，实测新仓库 50 分钟内 0 次触发。分钟级只能靠「小时级 cron + 作业内循环」；
-- **不能靠 commit 发布**：Pages 传统构建有 10 次/小时软限制，每分钟一次会被限流；改用自定义 Actions 部署后不受该限制（官方文档明示），所以流程是「打包 artifact → `deploy-pages`」。
-
-其他可选通道：
-
-| 通道 | 实际刷新 | 成本 | 何时选它 |
-|---|---|---|---|
-| GitHub Actions（现状） | 1 分钟 | 0 | 默认 |
-| 外部定时器打 `workflow_dispatch` | 5～10 分钟 | 0 | 只补 cron 丢档，不想长跑作业 |
-
-外部定时器补档（备用，未启用）：
-
-```yaml
-# 在任意工作流末尾追加一步，用仓库 Secret 里的 PAT 拉起下一轮
-      - name: 预约下一次
-        env:
-          PAT: ${{ secrets.GH_PAT }}
-        run: |
-          curl -s -X POST -H "Authorization: Bearer $PAT" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/minute.yml/dispatches \
-            -d '{"ref":"main"}'
-```
-
-## 成本
+## 成本与备份
 
 | 项目 | 费用 |
 |---|---|
 | 仓库 + Actions（public repo） | 0 |
 | Pages 托管与流量 | 0 |
-| PAT | 0 |
 
-## 备份与恢复
+仓库本身即完整备份：源清单、脚本、工作流、生成物、历史全在里面，恢复只需 `git clone` 再重开一次 Pages。
+`feeds.txt` 建议另存一份——它是唯一无法自动重建的资产。
 
-仓库本身就是完整备份：源清单、脚本、工作流、生成物、历史全在里面。恢复只需 `git clone`，然后在 Settings → Pages 里重开一次发布。
+## 故障排查
 
-建议额外留一份：`feeds.txt` 单独存一份到笔记或另一个仓库——它是唯一无法自动重建的资产。
+先做三步定位，90% 的问题能当场分清是「抓取」「提交」还是「发布」：
+
+```bash
+curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep lastBuildDate   # 线上构建时间
+curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"     # 条目数
+```
+
+| 现象 | 多半是 | 去哪一节 |
+|---|---|---|
+| feed 打不开 / 404 | Pages 没开或目录选错 | [1](#1-feed-打不开返回-404) |
+| feed 能开但 0 条 | 源全挂，或文件被写成空 | [2](#2-feed-能打开但一条都没有) |
+| `lastBuildDate` 长期不动 | 定时任务没触发，或作业失败 | [3](#3-feed-长时间不更新) [4](#4-actions-作业失败) |
+| 运行记录里 cancelled | 整点抢占，正常调度 | [12](#12-运行记录里出现-cancelled) |
+| 报 `in progress deployment` | Pages 部署撞锁 | [13](#13-deployment-request-failed--due-to-in-progress-deployment) |
+| 作业成功但仓库没新提交 | 权限只有只读 | [5](#5-作业成功但提交被拒) |
+| 某个源反复失败 | 源站 404 / 反爬 / 已停更 | [6](#6-单个源一直失败) |
+| 同一新闻出现两次 | 去重阈值或链接带参数 | [7](#7-条目重复) |
+| 标题乱码 | 站点编码是 GBK 且声明缺失 | [8](#8-标题乱码) |
+| 说明页空白 | 浏览器 CORS 或 feed 异常 | [9](#9-说明页空白或载入失败) |
+| 设备上标题被切 / 只有一行 / 出现方块 | 用了完整版，或折行没生效 | [14](#14-设备上标题被截断或只有一行) |
+| 推送后「凭据扫描」失败 | 文件里混进了 token | [11](#11-凭据扫描失败) |
+
+### 1. feed 打不开、返回 404
+
+1. **Settings → Pages** 是否显示 “Your site is live at …”，Source 是否为 GitHub Actions；
+2. `docs/feed.xml` 是否在 `main` 上（`git ls-tree main docs/`）；
+3. 路径大小写必须是 `docs/feed.xml`；
+4. Actions 里 `pages build and deployment` 有没有红色 ✗；
+5. 刚开启 Pages 时需 1～2 分钟生效。
+
+### 2. feed 能打开但一条都没有
+
+`build_feed.py` 有硬保护：**本轮一条都没抓到就不覆盖旧文件**，所以「空 feed」通常只出现在首次部署。
+
+- 本地跑一次看 `[失败]` 行的错误码；
+- 全部 `HTTP 403` → 换 UA 或改用镜像源（`feed.quanwenrss.com` 系列）；
+- 全部超时 → 网络出口问题，换执行环境试。
+
+### 3. feed 长时间不更新
+
+1. **作业有没有在跑**：Actions 最近运行时间，长时间空白见[第 10 节](#10-定时任务完全不触发)；
+2. **跑了但没部署**：看日志里 deploy 那步是否报错，见[第 13 节](#13-deployment-request-failed--due-to-in-progress-deployment)；
+3. **缓存**：`github.io` 有 CDN 缓存，加时间戳绕开 `curl -s "…/feed.xml?t=$(date +%s)"`。
+
+### 4. Actions 作业失败
+
+| 失败步骤 | 常见原因 | 处置 |
+|---|---|---|
+| 采集 | 某源把作业拖到超时（`timeout-minutes`） | 调小 `CONCURRENCY` / `FETCH_TIMEOUT`，或把慢源从 `feeds.txt` 拿掉 |
+| 备份提交 | `git push` 被拒（远端有新提交） | 已带 `git pull --rebase --autostash`；仍失败就手动 Run workflow 重跑 |
+| 备份提交 | `Resource not accessible by integration` | Workflow permissions 改成 **Read and write** |
+
+重跑：Actions → 选那次运行 → 右上 **Re-run jobs**。
+
+### 5. 作业成功但提交被拒
+
+99% 是权限问题。`permissions: contents: write` 已在 workflow 里声明，但仓库级设置若为只读，声明再高也没用：
+**Settings → Actions → General → Workflow permissions → Read and write permissions → Save**。
+
+### 6. 单个源一直失败
+
+日志形如 `[失败] 某某源 https://... (HTTP 404)`：
+
+- `404` → 地址失效，删掉或换镜像；
+- `403` → 反爬，先试镜像，不行就删；
+- `超时` → 源站慢或墙外不可达；
+- `未解析到条目` / `XML 解析失败` → 返回的是 HTML 拦截页；
+- `[回退]` 频繁出现 → 该源长期不稳定，建议替换。
+
+### 7. 条目重复
+
+去重规则见 [README #工作方式](README.md#工作方式)。检查点：链接去掉 `#?` 后是否相同；
+标题去标点后是否 ≥ 8 字且前 20 字相同。短标题不参与标题去重是故意的（否则「港股收盘」会被误杀），
+真要更严格就改 `build_feed.py` 里 `len(tt) >= 8` 的阈值，代价是误杀变多。
+
+### 8. 标题乱码
+
+源站声明与实际编码不一致。现处理是「UTF-8 失败退 GB18030」，仍乱码说明是别的编码（如 Big5）：
+
+```bash
+curl -sI "源地址" | grep -i content-type
+curl -s "源地址" | head -c 200      # 看 XML 声明里的 encoding=
+```
+
+在 `decode_body()` 的候选列表里加上对应编码即可。
+
+### 9. 说明页空白或载入失败
+
+`docs/index.html` 用 `fetch('./feed.xml')` 渲染，失败时页面底部会提示。
+
+- 直接访问 `.../feed.xml` 是否正常？不正常回到第 1、2 节；
+- 刚提交完 → Pages 还没重建好，等 1 分钟；
+- 浏览器插件 / 反向代理拦截 → 换无痕窗口试。
+
+### 10. 定时任务完全不触发
+
+症状：Actions 里只有 `push` / `workflow_dispatch` 记录，`event=schedule` 一条都没有。
+这是 GitHub 的已知特性——定时任务跑在共享队列上，**新仓库 + 高频 cron 优先级最低**。自查三件事：
+
+1. workflow 在**默认分支** `main` 上（`schedule` 只在默认分支生效）；
+2. 该工作流是 Enabled（不是灰色 Disabled）；
+3. 仓库 60 天内有过提交（长期无活动会被自动停用）。
+
+都正常就只能等，或手动 Run workflow 补水。
+
+### 11. 凭据扫描失败
+
+`凭据扫描 / scan` 变红，说明被 `tools/check_secrets.py` 命中。本地复现：
+
+```bash
+python3 tools/check_secrets.py          # 只看 tracked 文件
+python3 tools/check_secrets.py --all    # 连未跟踪文件一起扫
+```
+
+按 `文件:行号 [类型] 片段` 定位后：① 把真实值移到仓库之外，文件里只留变量名；
+② 若已推送上去，光删文件没用——先**吊销重发**那个 token，再决定是否清理历史
+（`git filter-repo` 后强推会改写所有 SHA，协作仓库慎用）；
+③ 文档举例用明显假的占位（如 `你的PAT`），别写成「平台前缀 + 一长串字符」，规则会当成真凭据。
+
+### 12. 运行记录里出现 cancelled
+
+正常现象。`minute.yml` 用了 `concurrency: cancel-in-progress: true`：整点触发时若上一轮还在跑，
+新一轮直接接管，保证每次触发都从第 1 轮开始、时刻不会逐小时后移累积。
+判断有没有问题只看线上：`lastBuildDate` 在 10 分钟内就是正常。
+
+### 13. `Deployment request failed ... due to in progress deployment`
+
+Pages 同一时刻只允许一个部署，撞上就报这个 400。三个工作流的处理不同：
+
+- `minute.yml` 与 `nightly.yml` 共用一个 `concurrency` 组，撞上时**排队**；
+- `rss.yml` 独立成组（改源要立刻生效，不能排 55 分钟），失败时等 35 秒重新打包再部署一次。
+
+仍出现说明两次部署间隔小于约 25 秒，把 `rss.yml` 里的 `sleep 35` 调大。
+
+### 14. 设备上标题被截断或只有一行
+
+先在设备页首确认订阅的是哪个源：**「RSS 头条 · 折行」** = 设备版，
+**「RSS 聚合头条」** = 完整版（标题没做任何预处理，必然被切得最难看）。
+
+| 现象 | 原因 | 处置 |
+|---|---|---|
+| 只有一行、后面被切 | 云端吃掉了换行符 | 依次试 `SCREEN_WRAP_SEP=br` / `u2028`，都不行就是云端不支持折行 |
+| 每行不到 13 字就被切 | `SCREEN_LINE_WIDTH` 大于设备实际容量 | 调到 12 试，或直接按 13 保持 |
+| 出现方块、空白、半截符号 | 标题里有 emoji 或装饰字符 | 确认用的是设备版（`plain_text()` 已统一摘除）；用 `curl …/feed-wrap.xml \| grep "<title>" \| head -3` 核对 |
+| 行首出现「，」 | 末行补字时越过了标点 | 已在 `wrap_title()` 里修（撞到标点即停），若仍有请反馈具体标题 |
+
+只显示第一条是 RSS 卡片的版面极限（一屏一行大字号），不是 feed 的问题——
+折行是在这个极限里唯一能多塞字的方向。

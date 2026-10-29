@@ -6,22 +6,36 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 10:47:05 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 10:53:19 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>卡特彼勒第三季度电力与能源业务营收增长18% 发电业务销售额增长30%</title>
-<link>https://xueqiu.com/5124430882/414532323</link>
-<pubDate>Thu, 29 Oct 2026 18:44:36 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414532323|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>礼来上调全年营收指引至最高920亿美元 调整后每股收益指引下调</title>
+<link>https://xueqiu.com/5124430882/414533529</link>
+<pubDate>Thu, 29 Oct 2026 18:49:14 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414533529|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
-<title>西安银行：2026年第三季度净利润7.12亿元，同比增长22.38%</title>
-<link>https://flash.jin10.com/detail/20261029184415362800</link>
-<pubDate>Thu, 29 Oct 2026 18:44:15 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029184415362800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>《尚公主》海外同步播出 多平台登顶热播榜</title>
+<link>https://www.chinanews.com.cn/cul/2026/10-29/10722871.shtml</link>
+<pubDate>Thu, 29 Oct 2026 18:48:34 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/cul/2026/10-29/10722871.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>国新宏盛投资(北京)有限公司新进成为中国联通第九大股东</title>
+<link>https://flash.jin10.com/detail/20261029184826410800</link>
+<pubDate>Thu, 29 Oct 2026 18:48:26 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029184826410800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>百合网创始人在朋友圈&quot;化缘&quot;1天收款近6千 本人发声</title>
+<link>https://c.m.163.com/news/a/LAE834HG05345ARG.html</link>
+<pubDate>Thu, 29 Oct 2026 10:42:53 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LAE834HG05345ARG.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>古井贡酒：第三季度归母净利润9544.93万元，同比下降68.04%</title>
@@ -31,6 +45,13 @@
 <source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
 </item>
 <item>
+<title>看了财报后，高盛、摩根大通双双下调谷歌目标价</title>
+<link>https://wallstreetcn.com/articles/3784771</link>
+<pubDate>Thu, 29 Oct 2026 18:37:49 +0800</pubDate>
+<guid isPermaLink="false">https://wallstreetcn.com/articles/3784771|https://dedicated.wallstreetcn.com/rss.xml</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
+</item>
+<item>
 <title>字节猫箱火爆背后：有人为爱充值，有人嫌AI恋人太假</title>
 <link>https://m.huxiu.com/article/4901472.html?type=text</link>
 <pubDate>Thu, 29 Oct 2026 18:36:02 +0800</pubDate>
@@ -38,11 +59,11 @@
 <source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
 </item>
 <item>
-<title>徐晓兰赴毕节开展乡村振兴帮扶工作调研</title>
-<link>https://www.chinanews.com.cn/txy/2026/10-29/10722868.shtml</link>
-<pubDate>Thu, 29 Oct 2026 18:35:41 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/txy/2026/10-29/10722868.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+<title>财新闻｜辽宁康平高中在结核病筛查中违反“一人一针”操作规范 涉及78名学生</title>
+<link>https://mini.caixin.com/2026-10-29/102498349.html</link>
+<pubDate>Thu, 29 Oct 2026 18:34:37 +0800</pubDate>
+<guid isPermaLink="false">https://mini.caixin.com/2026-10-29/102498349.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
 </item>
 <item>
 <title>登临科技港股IPO：经营承压处，正是突围起笔时</title>
@@ -50,13 +71,6 @@
 <pubDate>Thu, 29 Oct 2026 18:33:45 +0800</pubDate>
 <guid isPermaLink="false">https://www.36kr.com/p/4046687285794696|https://feed.quanwenrss.com/feed/36kr-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/36kr-latest.xml">36氪·最新</source>
-</item>
-<item>
-<title>35岁男子吃凉土豆蘸辣椒减肥2个月减重22斤 医生揭秘</title>
-<link>https://c.m.163.com/news/a/LAE0BJ9P05561G0D.html</link>
-<pubDate>Thu, 29 Oct 2026 10:33:10 GMT</pubDate>
-<guid isPermaLink="false">https://c.m.163.com/news/a/LAE0BJ9P05561G0D.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>Spain Crash Investigators Focus on Train Traffic Controllers’ Role</title>
@@ -87,13 +101,6 @@
 <source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
 </item>
 <item>
-<title>西班牙年内同线路再现列车碰撞惨案 新事故至少68人死亡</title>
-<link>https://companies.caixin.com/2026-10-29/102498416.html</link>
-<pubDate>Thu, 29 Oct 2026 18:25:41 +0800</pubDate>
-<guid isPermaLink="false">https://companies.caixin.com/2026-10-29/102498416.html|https://feed.quanwenrss.com/feed/caixin-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
-</item>
-<item>
 <title>屏南快速公路進度 公路局：總期程可望縮短1至2年</title>
 <link>https://www.cna.com.tw/news/aloc/202610290309.aspx</link>
 <pubDate>Thu, 29 Oct 2026 18:22:00 +0800</pubDate>
@@ -106,13 +113,6 @@
 <pubDate>Thu, 29 Oct 2026 10:20:48 GMT</pubDate>
 <guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029145311202-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
 <source url="https://rsshub.rss.tips/oncc/hk">东网</source>
-</item>
-<item>
-<title>被AI炒高的铜价，正遭遇现实供需检验</title>
-<link>https://wallstreetcn.com/articles/3784749</link>
-<pubDate>Thu, 29 Oct 2026 18:20:12 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784749|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
 <title>刚发布的苹果触屏电脑真烧心：这是屏坏了，还是故意的？</title>
@@ -141,6 +141,13 @@
 <pubDate>Thu, 29 Oct 2026 10:04:04 +0000</pubDate>
 <guid isPermaLink="false">https://www.zaobao.com/news/sea/story20261029-9914415|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
+</item>
+<item>
+<title>“9分钟降低皮质醇、改善失眠”，真有用还是心理安慰？</title>
+<link>https://www.infzm.com/contents/343663</link>
+<pubDate>Thu, 29 Oct 2026 18:00:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.infzm.com/contents/343663|https://feed.quanwenrss.com/feed/nfzm-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
 </item>
 <item>
 <title>家暴求助通报增近五成 儿童受虐案件最多</title>
@@ -218,13 +225,6 @@
 <pubDate>Thu, 29 Oct 2026 09:02:43 GMT</pubDate>
 <guid isPermaLink="false">https://news.ifeng.com/c/8xcXbrDDzek|https://rsshub.rss.tips/ifeng/news</guid>
 <source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
-</item>
-<item>
-<title>俞汝捷 | 忆作家吴越</title>
-<link>https://www.infzm.com/contents/343592</link>
-<pubDate>Thu, 29 Oct 2026 17:00:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.infzm.com/contents/343592|https://feed.quanwenrss.com/feed/nfzm-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nfzm-latest.xml">南方周末·最新</source>
 </item>
 <item>
 <title>弗拉维奥·博索纳罗称将在海外反对卢拉政府</title>
