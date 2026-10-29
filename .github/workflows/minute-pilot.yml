@@ -1,0 +1,155 @@
+name: RSS 分钟级发布（试点）
+
+# 目的：验证「每分钟采集 + 每分钟通过 artifact 部署到 Pages」是否可行。
+# 传统 Pages 构建有 10 次/小时软限制，自定义 Actions 部署不受该限制。
+# 试点 6 轮，跑完再决定是否扩到整小时连续循环。
+
+on:
+  workflow_dispatch:
+    inputs:
+      cycles:
+        description: "部署轮数（脚本里已固定，改这里无效，仅作记录）"
+        default: "6"
+
+concurrency:
+  group: rss-pages-minute
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.d1.outputs.page_url }}
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ---------------- 轮 1 ----------------
+      - name: 采集 1
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+        run: python build_feed.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-r1
+          path: docs
+          retention-days: 1
+      - id: d1
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-r1
+      - name: 对齐到下一整分 1
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ---------------- 轮 2 ----------------
+      - name: 采集 2
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+        run: python build_feed.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-r2
+          path: docs
+          retention-days: 1
+      - id: d2
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-r2
+      - name: 对齐到下一整分 2
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ---------------- 轮 3 ----------------
+      - name: 采集 3
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+        run: python build_feed.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-r3
+          path: docs
+          retention-days: 1
+      - id: d3
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-r3
+      - name: 对齐到下一整分 3
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ---------------- 轮 4 ----------------
+      - name: 采集 4
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+        run: python build_feed.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-r4
+          path: docs
+          retention-days: 1
+      - id: d4
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-r4
+      - name: 对齐到下一整分 4
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ---------------- 轮 5 ----------------
+      - name: 采集 5
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+        run: python build_feed.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-r5
+          path: docs
+          retention-days: 1
+      - id: d5
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-r5
+      - name: 对齐到下一整分 5
+        run: sleep $(( 60 - $(date +%s) % 60 ))
+
+      # ---------------- 轮 6 ----------------
+      - name: 采集 6
+        env:
+          REFRESH_SECONDS: "0"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+        run: python build_feed.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-r6
+          path: docs
+          retention-days: 1
+      - id: d6
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-r6
