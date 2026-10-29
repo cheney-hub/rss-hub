@@ -136,10 +136,11 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"
 
 | 目标节奏 | 怎么改 | runner 占用 |
 |---|---|---|
-| 1 分钟（现状） | `python tools/gen_minute_workflow.py 55` | 约 22 小时/天 |
+| 白天 1 分钟 + 深夜 1 小时（现状） | `python tools/gen_minute_workflow.py 55`；两个工作流的 cron 按 UTC 小时互补（`22,23,0-15` / `16-21`） | 约 17 小时/天 |
+| 全天 1 分钟 | 把 `minute.yml` 的 cron 改回 `"7 * * * *"`，删掉 `nightly.yml` | 约 22 小时/天 |
 | 2 分钟 | 生成脚本里把每轮 step 的 `sleep` 改成对齐 120 秒，再 `gen_minute_workflow.py 29` | 约 11 小时/天 |
 | 5 分钟 | 同上，周期 300 秒、轮数 11 | 约 5 小时/天 |
-| 30 分钟 | 停用 `minute.yml`，给 `rss.yml` 加回 cron（如 `3,13,23,33,43,53 * * * *`），并让它重新 commit | 忽略不计 |
+| 30 分钟 | 停用 `minute.yml` 与 `nightly.yml`，给 `rss.yml` 加回 cron（如 `3,13,23,33,43,53 * * * *`） | 忽略不计 |
 
 两个绕不开的约束，也是这套设计的原因：
 
