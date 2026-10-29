@@ -6,15 +6,57 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 07:49:36 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 08:06:09 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>也门交通部长：亚丁机场在损坏修复后恢复运营。</title>
-<link>https://flash.jin10.com/detail/20261029154355146800</link>
-<pubDate>Thu, 29 Oct 2026 15:43:55 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029154355146800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>欧盟能源负责人：这场危机更严重，还因为涉及了石油产品。</title>
+<link>https://flash.jin10.com/detail/20261029160451607800</link>
+<pubDate>Thu, 29 Oct 2026 16:04:51 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029160451607800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>两部门联合发布农牧业雪灾风险预警</title>
+<link>https://api3.cls.cn/share/article/2519196?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 16:04:22 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519196?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+</item>
+<item>
+<title>欧股开盘涨跌不一</title>
+<link>https://xueqiu.com/5124430882/414490664</link>
+<pubDate>Thu, 29 Oct 2026 16:03:41 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414490664|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>中国国防部：日方窥视滋扰中方正当行动暴露受迫害妄想症</title>
+<link>https://www.chinanews.com.cn/gn/2026/10-29/10722769.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:02:59 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/gn/2026/10-29/10722769.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+</item>
+<item>
+<title>CK Asset pauses Hong Kong sales launch at Yuen Long’s Montage development</title>
+<link>https://www.scmp.com/business/companies/article/3372560/ck-asset-pauses-hong-kong-sales-launch-yuen-longs-montage-development</link>
+<pubDate>Thu, 29 Oct 2026 08:00:20 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/business/companies/article/3372560/ck-asset-pauses-hong-kong-sales-launch-yuen-longs-montage-development|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>卢甘斯克遭乌军大规模袭击，民居及民用基础设施受损</title>
+<link>https://sputniknews.cn/20261029/1073855292.html</link>
+<pubDate>Thu, 29 Oct 2026 15:50:14 +0800</pubDate>
+<guid isPermaLink="false">https://sputniknews.cn/20261029/1073855292.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
+</item>
+<item>
+<title>美军被迫复活高超导弹，弹头装药仅70公斤却想打航母</title>
+<link>https://mil.ifeng.com/c/8xcQmqvbDmt</link>
+<pubDate>Thu, 29 Oct 2026 15:46:29 +0800</pubDate>
+<guid isPermaLink="false">https://mil.ifeng.com/c/8xcQmqvbDmt|https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml">凤凰网军事·最新</source>
 </item>
 <item>
 <title>大晓机器人推出具身空间智能API，七项评测均分超GPT-6 Astra</title>
@@ -31,25 +73,11 @@
 <source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
 </item>
 <item>
-<title>荷兰国际集团宣布全球裁员约400人 预计每年削减成本7500万欧元</title>
-<link>https://xueqiu.com/5124430882/414484174</link>
-<pubDate>Thu, 29 Oct 2026 15:38:57 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414484174|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
-</item>
-<item>
-<title>商务部公布2027年货物出口配额总量</title>
-<link>https://www.chinanews.com.cn/cj/2026/10-29/10722744.shtml</link>
-<pubDate>Thu, 29 Oct 2026 15:38:32 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722744.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
-</item>
-<item>
-<title>Tencent targets Southeast Asia as launch pad for AI agent WorkBuddy amid tough local market</title>
-<link>https://www.scmp.com/tech/big-tech/article/3372550/tencent-targets-southeast-asia-launch-pad-ai-agent-workbuddy-amid-tough-local-market</link>
-<pubDate>Thu, 29 Oct 2026 07:30:10 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/tech/big-tech/article/3372550/tencent-targets-southeast-asia-launch-pad-ai-agent-workbuddy-amid-tough-local-market|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+<title>媒体：守住不该守住的底盘 77岁的内塔尼亚胡逃出生天</title>
+<link>https://c.m.163.com/news/a/LADEO81O05506O99.html</link>
+<pubDate>Thu, 29 Oct 2026 07:30:06 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LADEO81O05506O99.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>外交部：再次敦促美方认真倾听国际社会的正义呼声，立即停止对古巴的封锁制裁</title>
@@ -171,13 +199,6 @@
 <source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
 </item>
 <item>
-<title>俄国防部：防空部队过去一夜间在多地上空共击落1214架乌克兰无人机</title>
-<link>https://sputniknews.cn/20261029/1073853997.html</link>
-<pubDate>Thu, 29 Oct 2026 14:45:38 +0800</pubDate>
-<guid isPermaLink="false">https://sputniknews.cn/20261029/1073853997.html|https://feed.quanwenrss.com/feed/sputnik-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/sputnik-latest.xml">俄罗斯卫星通讯社中文·最新</source>
-</item>
-<item>
 <title>吴澧 | 安妮·卡森的诗和希腊语法</title>
 <link>https://www.infzm.com/contents/343606</link>
 <pubDate>Thu, 29 Oct 2026 14:36:14 +0800</pubDate>
@@ -213,18 +234,18 @@
 <source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
 </item>
 <item>
+<title>El Salvador sends 2,000 troops to Haiti to rescue four missing soldiers</title>
+<link>https://www.bbc.com/news/articles/ck0e075n79j5o</link>
+<pubDate>Thu, 29 Oct 2026 06:24:56 +0000</pubDate>
+<guid isPermaLink="false">https://www.bbc.com/news/articles/ck0e075n79j5o|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
+</item>
+<item>
 <title>成田机场26年度上半年国际航班减少4%</title>
 <link>https://cn.nikkei.com/industry/tradingretail/64530-2026-10-29-14-13-58.html</link>
 <pubDate>Thu, 29 Oct 2026 14:13:58 +0800</pubDate>
 <guid isPermaLink="false">https://cn.nikkei.com/industry/tradingretail/64530-2026-10-29-14-13-58.html|https://feed.quanwenrss.com/feed/nikkei-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/nikkei-latest.xml">日经中文网·最新</source>
-</item>
-<item>
-<title>39岁女高管隆胸因麻醉过敏死亡 其7个月内消费近108万</title>
-<link>https://m.163.com/news/article/LADO6MD60001899O.html</link>
-<pubDate>Thu, 29 Oct 2026 05:58:36 GMT</pubDate>
-<guid isPermaLink="false">https://m.163.com/news/article/LADO6MD60001899O.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>想让 AI 好好干活，光靠骂能行吗？</title>
@@ -241,25 +262,11 @@
 <source url="https://feed.quanwenrss.com/feed/nhkworld-zh.xml">NHK WORLD</source>
 </item>
 <item>
-<title>核弹头+核动力！“波塞冬”鱼雷将成俄军水下反击王牌</title>
-<link>https://original.ifeng.com/c/8xc8Jw64k7t</link>
-<pubDate>Thu, 29 Oct 2026 11:29:08 +0800</pubDate>
-<guid isPermaLink="false">https://original.ifeng.com/c/8xc8Jw64k7t|https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml">凤凰网军事·最新</source>
-</item>
-<item>
 <title>西班牙高铁事故：调度中心指令失误 红灯仍放行</title>
 <link>https://www.dw.com/zh/%E8%A5%BF%E7%8F%AD%E7%89%99%E9%AB%98%E9%93%81%E4%BA%8B%E6%95%85%EF%BC%9A%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E6%8C%87%E4%BB%A4%E5%A4%B1%E8%AF%AF-%E7%BA%A2%E7%81%AF%E4%BB%8D%E6%94%BE%E8%A1%8C/a-79789821</link>
 <pubDate>Thu, 29 Oct 2026 03:02:00 +0000</pubDate>
 <guid isPermaLink="false">https://www.dw.com/zh/%E8%A5%BF%E7%8F%AD%E7%89%99%E9%AB%98%E9%93%81%E4%BA%8B%E6%95%85%EF%BC%9A%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E6%8C%87%E4%BB%A4%E5%A4%B1%E8%AF%AF-%E7%BA%A2%E7%81%AF%E4%BB%8D%E6%94%BE%E8%A1%8C/a-79789821|https://feed.quanwenrss.com/feed/dw-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/dw-latest.xml">德国之声中文·最新</source>
-</item>
-<item>
-<title>Flávio Bolsonaro denies fleeing Brazil after landing in Miami</title>
-<link>https://www.bbc.com/news/articles/c6kglwe4lxwzo</link>
-<pubDate>Thu, 29 Oct 2026 01:14:01 +0000</pubDate>
-<guid isPermaLink="false">https://www.bbc.com/news/articles/c6kglwe4lxwzo|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
 <title>【抵近观察⑨】叩问：2500多岁大运河的前世今生</title>
