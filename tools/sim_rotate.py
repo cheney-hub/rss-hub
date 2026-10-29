@@ -21,7 +21,7 @@
     夜间摊满**一小时**（0~3600 秒）。这个抖动幅度是模型的关键 —— 若延迟小于一个片，
     每窗必然恰好 mint 出一个新片，低产能的真相（一窗一片都凑不齐）就被抹掉了。
   * 设备池上限 `ROTATE_POOL_MAX` 条，超出按时间砍最旧（仿真只关心进轮播池的部分；
-    完整版条数由 `ITEM_LIMIT` 管，1.3.0 起默认不限，与上屏节奏无关）
+    完整版条数由 `ITEM_LIMIT` 管，与上屏节奏无关 —— 两者现默认为 120）
 
 怎么读结果（踩过的坑，别再踩）：
   * 单跑一次得不出结论 —— 延迟分布在 6~60 分之间几乎是空的（约 3%），p90 正好落在这条缝上，
@@ -50,9 +50,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import build_feed as B  # noqa: E402
 
 DWELL = B.ROTATE_SECONDS
-# 决定上屏节奏的是「设备池」的深度，不是完整版条数：1.3.0 起 ITEM_LIMIT 默认 0（不限），
-# 仿真如果还读它，`del pool[0:]` 会每窗把池子删空、rotate_pick 永远返回 None ——
-# 不报错、退出码 0、打印一张全 0 的表，等于交假结论（ITEM_LIMIT 默认值变更时真实发生过）。
+# 决定上屏节奏的是「设备池」的深度，不是完整版条数：池上限读 ROTATE_POOL_MAX，
+# 绝不能改读 ITEM_LIMIT —— 它一旦被设成 0，`del pool[0:]` 会每窗把池子删空、
+# rotate_pick 永远返回 None，不报错、退出码 0、打印一张全 0 的表，等于交假结论。
 # ROTATE_POOL_MAX 自身语义是 0 = 不限，删除处的 if 守卫同样不能省。
 LIMIT = B.ROTATE_POOL_MAX
 WINDOWS_PER_HOUR = 3600 // DWELL
