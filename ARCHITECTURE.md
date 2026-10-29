@@ -4,7 +4,7 @@
 
 | 通道 | 代码 | 常驻要求 | 刷新下限 | 现状 |
 |---|---|---|---|---|
-| **A. GitHub Actions + Pages** | `build_feed.py` + `.github/workflows/rss.yml` | 无 | 受 GitHub cron 调度限制，实际 10～25 分钟 | **当前线上** |
+| **A. GitHub Actions + Pages** | `build_feed.py` + `.github/workflows/minute.yml` | 无 | **1 分钟**（作业内自循环） | **当前线上** |
 | B. 本地 / 树莓派推送 | `aggregate_rss.py` + `pi/` | 需一台常开的机器 | 取决于 timer 周期（可 1 分钟） | 备选 |
 | C. 自托管服务 | `server.js` | 需常驻进程与公网入口 | 60 秒 | 归档 |
 
@@ -14,17 +14,17 @@
 
 ```
               ┌───────────────── GitHub ─────────────────┐
-feeds.txt ──► │ Actions 作业（每 10 分钟触发，跑 4 轮）    │
+feeds.txt ──► │ Actions 作业（每小时触发，内跑 55 轮）     │
               │   ├─ 并发 12 路抓 43 个源                │
               │   ├─ 每源解析出「最新 1 条」              │
               │   ├─ 失败源 → 用上一份 feed 的同源条目顶上 │
               │   ├─ 跨源去重 + 按时间倒序                │
               │   └─ 生成 docs/feed.xml                  │
-              │           ↓ git commit（有变化才提交）    │
-              │       仓库 main 分支                     │
+              │           ↓ 打包为 artifact               │
+              │           ↓ deploy-pages 部署             │
               └───────────────────┬──────────────────────┘
-                                  ↓ 触发
-                         Pages 构建（main /docs 为站点根）
+                                  ↓
+                    Pages（自定义 Actions 部署产物）
                                   ↓
                    https://cheney-hub.github.io/rss-hub/feed.xml
 ```
@@ -33,14 +33,13 @@ feeds.txt ──► │ Actions 作业（每 10 分钟触发，跑 4 轮）    �
 
 | 时间点 | 动作 |
 |---|---|
-| T+0s | 检出仓库、装 Python 3.12 |
-| T+5s | 第 1 轮：并发抓 43 源（3～5 秒） |
-| T+65s | 第 2 轮 |
-| T+125s | 第 3 轮 |
-| T+185s | 第 4 轮 |
-| T+245s | 提交 `docs/feed.xml`（无变化则跳过）→ 作业结束 |
+| T+0s | 检出仓库、装 Python 3.12（约 15 秒，仅一次） |
+| T+15s | 第 1 轮：并发抓 43 源（3～5 秒）→ 打包 → 部署（约 20 秒） |
+| T+60s | 第 2 轮（sleep 到整分后再抓） |
+| … | 每小时 55 轮，直到 T+55min 作业结束 |
+| 每 10 轮 | 把 `docs/feed.xml` 备份提交一次（每小时 5～6 次） |
 
-作业内多轮的意义不是「让订阅端更快看到」，而是**给失败源重试机会**与**捞到刚更新的条目**；对外可见的更新节奏由提交频率决定。
+每轮都会真实部署一次，所以订阅端看到的节奏就是 1 分钟。作业内循环而不是靠 cron，是因为 GitHub 的 schedule 最短 5 分钟且会丢档；用 artifact 部署而不是 git commit，是因为 Pages 传统构建有 10 次/小时软限制。两个限制叠加起来，只有这套组合能做到稳定的分钟级。
 
 ## 三、`build_feed.py` 模块分解
 

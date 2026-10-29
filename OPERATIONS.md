@@ -14,7 +14,7 @@ https://feed.quanwenrss.com/feed/cailianshe-roll.xml
 ```
 
 删源直接删掉那两行；想临时停用就在地址行前加 `#`（整行注释掉，不会被解析）。
-改完 `git push` 到 `main`，Actions 会自动重建一次（约 5 分钟出结果）。
+改完 `git push` 到 `main`，`rss.yml` 会立刻重建并发布一次（约 30 秒出结果），无需等下一个整点。
 
 **先验证再提交**（避免把 404 源带上线）：本地跑一遍，只关心 `[失败]` 与 `[回退]` 行。
 
@@ -34,7 +34,7 @@ python3 build_feed.py
 
 | 变量 | 现值 | 调整建议 |
 |---|---|---|
-| `REFRESH_SECONDS` | `240` | 想少用 runner 时间就调小（如 `120`）；调大会拉长单次作业 |
+| 轮数（`minute.yml` 里的 55 组 step） | `55` | 由 `tools/gen_minute_workflow.py 55` 生成；改小可降 runner 占用（如 29 轮 = 每 2 分钟一版、每小时跑半小时） |
 | `CONCURRENCY` | `12` | 源增多到 60+ 可提到 16；被源站限流时降到 8 |
 | `FETCH_TIMEOUT` | `20` | 慢源多可提到 `25`；注意 `timeout-minutes: 12` 是总闸 |
 
@@ -79,7 +79,7 @@ git checkout <commit> -- docs/feed.xml && git commit -m "revert feed" && git pus
 |---|---|
 | 仓库 | `cheney-hub/rss-hub`（public） |
 | 默认分支 | `main` |
-| Pages 源 | `main` 分支的 `/docs` 目录（legacy 构建） |
+| Pages 源 | 自定义 Actions 部署（`build_type: workflow`），产物来自 `docs/` |
 | 访问地址 | `https://cheney-hub.github.io/rss-hub/` |
 
 ### 换到自己的仓库
@@ -89,7 +89,7 @@ git checkout <commit> -- docs/feed.xml && git commit -m "revert feed" && git pus
    - `.github/workflows/rss.yml` 里 `FEED_URL`；
    - `build_feed.py` 里 `FEED_URL` 默认值；
    - `docs/index.html` 里输入框的 `value` 与「源码仓库」链接；
-3. 仓库 **Settings → Pages** → Source 选 `Deploy from a branch`，分支 `main`，目录 `/docs`，保存；
+3. 仓库 **Settings → Pages** → Source 选 **GitHub Actions**（不是 Deploy from a branch），保存；
 4. 等 1～2 分钟，访问 `https://<用户名>.github.io/<仓库名>/feed.xml`；
 5. 仓库 **Settings → Actions → General** → Workflow permissions 选 **Read and write permissions**（否则作业无法提交 feed）。
 
@@ -130,26 +130,41 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"
 
 ## 四档刷新方案
 
-GitHub cron 是「尽力而为」调度，实测新仓库首次触发可延迟近一小时。想要更稳更快，四档可选：
+## 刷新节奏怎么调
 
-| 档位 | 做法 | 实际刷新 | 成本 | 风险 |
-|---|---|---|---|---|
-| ① 现状 | 只靠 GitHub cron | 10～25 分钟，偶发丢档 | 0 | 无 |
-| ② 自调度链 | 作业末尾用仓库 Secret 里的 PAT 调 `workflow_dispatch` 拉起下一次 | 稳定 10 分钟 | 0（公开仓库分钟数不限） | runner 用量约 11 小时/天，属高频用法，可能被平台降速 |
-| ③ 外部定时器 | cron-job.org / Cloudflare Worker 定时打 `workflow_dispatch` | 稳定 5～10 分钟 | 0 | token 需交给对方，建议用仅限本仓库的 fine-grained token |
-| ④ 自托管 | 树莓派或 VPS 跑 `aggregate_rss.py` + cron/systemd | 1 分钟 | ¥0（已有设备）～¥38/年 | 需一台常开设备 |
+当前是 **1 分钟一版**，代价是 runner 占用约 22 小时/天。想降载就改轮数，改完重新生成工作流即可：
 
-②的做法（未启用，要用再加）：
+| 目标节奏 | 怎么改 | runner 占用 |
+|---|---|---|
+| 1 分钟（现状） | `python tools/gen_minute_workflow.py 55` | 约 22 小时/天 |
+| 2 分钟 | 生成脚本里把每轮 step 的 `sleep` 改成对齐 120 秒，再 `gen_minute_workflow.py 29` | 约 11 小时/天 |
+| 5 分钟 | 同上，周期 300 秒、轮数 11 | 约 5 小时/天 |
+| 30 分钟 | 停用 `minute.yml`，给 `rss.yml` 加回 cron（如 `3,13,23,33,43,53 * * * *`），并让它重新 commit | 忽略不计 |
+
+两个绕不开的约束，也是这套设计的原因：
+
+- **cron 不能写 `*/1`**：Actions 的 schedule 最短 5 分钟，且官方承认高负载会延迟、丢档，实测新仓库 50 分钟内 0 次触发。分钟级只能靠「小时级 cron + 作业内循环」；
+- **不能靠 commit 发布**：Pages 传统构建有 10 次/小时软限制，每分钟一次会被限流；改用自定义 Actions 部署后不受该限制（官方文档明示），所以流程是「打包 artifact → `deploy-pages`」。
+
+其他可选通道：
+
+| 通道 | 实际刷新 | 成本 | 何时选它 |
+|---|---|---|---|
+| GitHub Actions（现状） | 1 分钟 | 0 | 默认 |
+| 树莓派 / VPS + systemd | 1 分钟，且不占 GitHub runner | ¥0～¥38/年 | 嫌高频占用，或想彻底自主 |
+| 外部定时器打 `workflow_dispatch` | 5～10 分钟 | 0 | 只补 cron 丢档，不想长跑作业 |
+
+外部定时器补档（备用，未启用）：
 
 ```yaml
-# .github/workflows/rss.yml 末尾追加一步
+# 在任意工作流末尾追加一步，用仓库 Secret 里的 PAT 拉起下一轮
       - name: 预约下一次
         env:
           PAT: ${{ secrets.GH_PAT }}
         run: |
           curl -s -X POST -H "Authorization: Bearer $PAT" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/rss.yml/dispatches \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/minute.yml/dispatches \
             -d '{"ref":"main"}'
 ```
 
