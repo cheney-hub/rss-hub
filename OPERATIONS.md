@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.2.1**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.2.2**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -37,7 +37,7 @@ python3 build_feed.py 2>&1 | grep -E "^\[(失败|回退)\]"
 python3 tools/gen_minute_workflow.py 13
 ```
 
-> 下表与 `build_feed.py` 的常量是一份契约，对不上就是错的。改代码必须同步改这里——
+> 下表与 `build_feed.py` / `rotate.py` 的常量是一份契约，对不上就是错的。改代码必须同步改这里——
 > `tools/review_check.py` 会检查代码里每个环境变量是否在文档中出现过。
 
 | 变量 | 现值 | 调整建议 |

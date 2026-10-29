@@ -6,6 +6,37 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.2.2] - 2026-10-29
+
+纯结构重构。**抓取、渲染、轮播选择全部逻辑一行未改，输出逐字节不变**（golden 基线零漂移，
+83 条单测全绿），改的是代码摆放位置与几处措辞。
+
+### 重构
+
+- **把轮播从 `build_feed.py` 拆成 `rotate.py`**（834 行 → 555 行；搬出去的 `rotate.py` 334 行）。
+  拆分动机是职责而非行数：`build_feed.py` 同时装着「抓取/回退/写文件」和「池子怎么切片、
+  这一窗播哪条、游标状态长什么样」两件事，改轮播要在 800 行里找，QA 写用例也要先穿过一堆
+  HTTP 代码才看得到纯函数。现在按 render.py（怎么显示）/ rotate.py（播哪条）/ build_feed.py
+  （抓到什么、写到哪）分。
+  搬到 `rotate.py` 的有：`rotate_pick`、`_pick_bucket`、`_pickable`、`_bucketize`、`_bucket_of`、
+  `_trim_shown`、`_hold_current`、`_build_state`、`_advance_note`、`ROTATE_STATE_VERSION`、
+  `CLOCK_SKEW_WINDOWS`、`ROTATE_SECONDS`、`ROTATE_POOL_MAX`、`load_rotate_state`、`save_rotate_state`；
+  留在 `build_feed.py` 的只有「状态文件在哪、线上地址在哪」（`ROTATE_STATE`、`_rotate_url`）——
+  这两项跟着 `OUT_FILE` / `FEED_URL` 走，属于本文件的配置。
+- `load_rotate_state(state_path, remote_url, user_agent)` / `save_rotate_state(state, state_path)`
+  改成收显式路径。此前它们读模块内的 `ROTATE_STATE`，搬到新模块后若要沿用，就得在 rotate.py
+  里复制一份 `OUT_FILE` 的默认值解析——**默认值复制两份早晚会漂移**，所以改成由调用方给。
+- `build_feed.py` re-export 了 `rotate_pick` / `_pick_bucket` / `_bucketize` / `ROTATE_SECONDS` /
+  `ROTATE_STATE_VERSION` / `CLOCK_SKEW_WINDOWS`，让 `tests/` 与 `tools/`（`sim_rotate.py`、
+  `golden_snapshot.py`）继续按 `build_feed.xxx` 调用，这一轮不需要改任何测试文件。
+  这是**过渡期的兼容层，不是新家**：新代码请直接 `from rotate import ...`。
+
+### 文档
+
+- README 目录结构补上 `rotate.py`；OPERATIONS 顶部「常量契约」的归属改成
+  `build_feed.py` / `rotate.py`（`ROTATE_*` 现在由 rotate.py 读环境变量）。
+- 删掉 `build_feed.py` 里已随代码搬走的 `import json`（`_read_json` 跟着去 rotate.py 了）。
+
 ## [1.2.1] - 2026-10-29
 
 1.2.0 上线后的复核修正。**轮播代码一行未动，行为不变**，改的是文档与仿真工具。

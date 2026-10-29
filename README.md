@@ -59,7 +59,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 .
 ├── feeds.txt                # 订阅源清单：注释行 = 中文源名，下一行 = 地址
 ├── version.py               # 版本号唯一真源（RSS 的 generator、页面页脚都取这里）
-├── build_feed.py            # 抓取与编排：拉源、解析、失败回退、轮播游标、写文件
+├── build_feed.py            # 抓取与编排：拉源、解析、失败回退、写文件
+├── rotate.py                # 轮播：池子切片、这一窗该播哪一条、游标状态（选条是纯函数）
 ├── render.py                # 渲染层（纯函数）：纯文本化、宽度折算、标题切分、正文合成、去重键、RSS 生成
 ├── docs/                    # ← GitHub Pages 发布的目录（站点根）
 │   ├── feed.xml             #   完整版（每 10 轮备份提交一次）
@@ -321,7 +322,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.2.1` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.2.2` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

@@ -20,10 +20,10 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import build_feed as B          # noqa: E402
+import rotate as R              # noqa: E402  ← 被测模块
 from render import item_guid    # noqa: E402
 
-DWELL = B.ROTATE_SECONDS
+DWELL = R.ROTATE_SECONDS
 
 
 def sort_key(it):
@@ -47,7 +47,7 @@ class RotateEdgeBase(unittest.TestCase):
         self.dwell = DWELL
 
     def pick(self, pool, state, w):
-        return B.rotate_pick(pool, state, now=w * self.dwell)
+        return R.rotate_pick(pool, state, now=w * self.dwell)
 
 
 # ---------------------------------------------------------------- 参数极值
@@ -79,7 +79,7 @@ class TestPickRule(RotateEdgeBase):
                 pool.append(mk("T%d" % uid, now - rnd.randint(0, 2 * self.dwell)))
             pool.sort(key=sort_key)
             del pool[120:]
-            buckets, _keys = B._bucketize(pool, self.dwell)
+            buckets, _keys = R._bucketize(pool, self.dwell)
             shown_before = {int(b) for b in (st.get("shown") or [])}
             it, st, _ = self.pick(pool, st, w)
             unshown = [b for b in sorted(buckets, reverse=True)
@@ -107,14 +107,18 @@ class TestMaxLagRemoved(RotateEdgeBase):
     """
 
     def test_max_lag_knob_is_gone(self):
-        self.assertFalse(hasattr(B, "ROTATE_MAX_LAG"),
+        self.assertFalse(hasattr(R, "ROTATE_MAX_LAG"),
                          "ROTATE_MAX_LAG 已被删除（它不影响选片结果），不要加回来")
 
     def test_env_var_does_not_resurrect_the_knob(self):
         """半删更糟：常量删了但还留着 `os.environ.get("ROTATE_MAX_LAG")`，
         下次有人「顺手」接上就复活了一个假旋钮。这里只禁「读取」，不禁文档里提历史。"""
-        with open(B.__file__, encoding="utf-8") as f:
-            src = f.read()
+        # 机制现在住在 rotate.py，抓取/编排在 build_feed.py：两处都要扫，
+        # 只扫一处等于给「在另一个文件里接回来」留后门
+        src = ""
+        for path in (R.__file__, R.__file__.replace("rotate.py", "build_feed.py")):
+            with open(path, encoding="utf-8") as f:
+                src += f.read()
         patterns = ('environ.get("ROTATE_MAX_LAG"',
                     "environ.get('ROTATE_MAX_LAG'",
                     'environ["ROTATE_MAX_LAG"]',
@@ -233,7 +237,7 @@ class TestEmptyPool(RotateEdgeBase):
         main() 靠 pick is None 决定「不写设备版、不落盘状态」，
         这里如果抛异常，整轮构建就红了；如果改了状态，就会凭空推进一窗。
         """
-        before = {"version": B.ROTATE_STATE_VERSION, "window": 500, "bucket": 499,
+        before = {"version": R.ROTATE_STATE_VERSION, "window": 500, "bucket": 499,
                   "lag": 1, "current": "abc", "shown": [499], "cycle": 3,
                   "pool": 1, "items": 1, "dwell": self.dwell}
         it, st, note = self.pick([], dict(before), 501)
@@ -268,7 +272,7 @@ class TestClockRollback(RotateEdgeBase):
         现状：满足 —— 片号命中，直接 hold。
         """
         b96 = at(96)
-        state = {"version": B.ROTATE_STATE_VERSION, "window": 100, "bucket": 96,
+        state = {"version": R.ROTATE_STATE_VERSION, "window": 100, "bucket": 96,
                  "lag": 4, "current": item_guid(b96), "shown": [96], "cycle": 1,
                  "pool": 4, "items": 4, "dwell": self.dwell}
         it, st, note = self.pick(self.pool, state, 98)
@@ -329,8 +333,8 @@ class TestClockRollback(RotateEdgeBase):
         而墙钟往回跳几十秒是正常的，不该触发「整份重来」。
         """
         b96 = at(96)
-        prev_w = 98 + B.CLOCK_SKEW_WINDOWS          # 恰好落在容忍边界上
-        state = {"version": B.ROTATE_STATE_VERSION, "window": prev_w, "bucket": 96,
+        prev_w = 98 + R.CLOCK_SKEW_WINDOWS          # 恰好落在容忍边界上
+        state = {"version": R.ROTATE_STATE_VERSION, "window": prev_w, "bucket": 96,
                  "lag": 1, "current": item_guid(b96), "shown": [96], "cycle": 3,
                  "pool": 4, "items": 4, "dwell": self.dwell}
         it, st, note = self.pick(self.pool, state, 98)
@@ -343,8 +347,8 @@ class TestClockRollback(RotateEdgeBase):
     def test_skew_one_window_beyond_tolerance_discards_state(self):
         """超过容忍边界一窗就认定状态坏掉 —— 别把「长期卡死」当成「NTP 抖动」。"""
         b96 = at(96)
-        state = {"version": B.ROTATE_STATE_VERSION,
-                 "window": 98 + B.CLOCK_SKEW_WINDOWS + 1, "bucket": 96,
+        state = {"version": R.ROTATE_STATE_VERSION,
+                 "window": 98 + R.CLOCK_SKEW_WINDOWS + 1, "bucket": 96,
                  "lag": 1, "current": item_guid(b96), "shown": [96], "cycle": 3,
                  "pool": 4, "items": 4, "dwell": self.dwell}
         it, st, note = self.pick(self.pool, state, 98)
@@ -522,7 +526,7 @@ class TestNoRepeatAcrossWindows(RotateEdgeBase):
         """
         a, b = at(10, "A"), at(11, "B")
         pool = sorted([a, b], key=sort_key)
-        st = {"version": B.ROTATE_STATE_VERSION, "window": 12, "bucket": 10,
+        st = {"version": R.ROTATE_STATE_VERSION, "window": 12, "bucket": 10,
               "lag": 2, "current": item_guid(a), "shown": [10], "cycle": 1,
               "pool": 2, "items": 2, "dwell": self.dwell}
         first, st, _ = self.pick(pool, st, 13)
