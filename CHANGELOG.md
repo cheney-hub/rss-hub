@@ -40,12 +40,11 @@
 —— `ITEM_LIMIT` 管完整版、`ROTATE_POOL_MAX` 管设备池。**从此「最差滞后」由 `ROTATE_POOL_MAX`
 决定而不再由 `ITEM_LIMIT` 决定**，README 已改写对应段落；轮播算法本身一行未动。
 
-### 基线漂移（预期内）
+### 基线漂移（预期内，仅快照表头）
 
-`tests/golden.txt` 因两处原因漂移，用 `tools/golden_snapshot.py --write` 重新生成（未手改）：
-
-1. 快照头包含 `FEED_BODY_MAX` 值（300 → 0）；
-2. 完整版正文上限放开后，固定输入上的正文输出变长。
+`tests/golden.txt` 用 `tools/golden_snapshot.py --write` 重新生成（未手改）。实际漂移只有
+1 行：快照表头跟随默认值，`FEED_BODY_MAX 300` → `0`；**行为基线本身字节一致** ——
+固定输入上的样本正文都不超过旧的 300 全角上限，正文上限放开并不改变它们的输出。
 
 ### 文档与测试
 

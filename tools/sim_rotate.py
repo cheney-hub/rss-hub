@@ -20,14 +20,15 @@
   * 条目发布时间围绕抓取时刻抖动：白天摊满**一个时间片**（0~`DWELL`-1 秒），
     夜间摊满**一小时**（0~3600 秒）。这个抖动幅度是模型的关键 —— 若延迟小于一个片，
     每窗必然恰好 mint 出一个新片，低产能的真相（一窗一片都凑不齐）就被抹掉了。
-  * 池子上限 ITEM_LIMIT 条，超出按时间砍最旧
+  * 设备池上限 `ROTATE_POOL_MAX` 条，超出按时间砍最旧（仿真只关心进轮播池的部分；
+    完整版条数由 `ITEM_LIMIT` 管，1.3.0 起默认不限，与上屏节奏无关）
 
 怎么读结果（踩过的坑，别再踩）：
   * 单跑一次得不出结论 —— 延迟分布在 6~60 分之间几乎是空的（约 3%），p90 正好落在这条缝上，
     尾部多几个窗就从 5 分跳到 60 分。所以默认报 6 个种子均值，`--seed=N` 才能固定对表。
   * 尾部不是夜间效应：`--verbose` 打出的延迟最大 10 个窗全是「本窗新增 0 条」的时刻
     （5 分钟里各源都没发东西 → 只能吃池子存货），夜里反而最健康（一小时一抓，总有新的）。
-  * 最差那一端由池底决定：`ITEM_LIMIT ÷ 每窗新增 ≈ 120 ÷ 2.35 ≈ 51 片 ≈ 4.3 小时`。
+  * 最差那一端由池底决定：`ROTATE_POOL_MAX ÷ 每窗新增 ≈ 120 ÷ 2.35 ≈ 51 片 ≈ 4.3 小时`。
 
 输出四张表：
   1. 新鲜度：上屏时距发布多久（中位数 / p90 / 最大值）
@@ -49,7 +50,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import build_feed as B  # noqa: E402
 
 DWELL = B.ROTATE_SECONDS
-LIMIT = B.ITEM_LIMIT
+# 决定上屏节奏的是「设备池」的深度，不是完整版条数：1.3.0 起 ITEM_LIMIT 默认 0（不限），
+# 仿真如果还读它，`del pool[0:]` 会每窗把池子删空、rotate_pick 永远返回 None ——
+# 不报错、退出码 0、打印一张全 0 的表，等于交假结论（ITEM_LIMIT 默认值变更时真实发生过）。
+# ROTATE_POOL_MAX 自身语义是 0 = 不限，删除处的 if 守卫同样不能省。
+LIMIT = B.ROTATE_POOL_MAX
 WINDOWS_PER_HOUR = 3600 // DWELL
 SEEDS = 6               # 默认跑几个种子取均值：单种子 p90 方差能差一个数量级
 
@@ -92,7 +97,8 @@ def _mint(pool, now, n_new, rnd, uid, spread):
                      "src": "s%d" % (uid % 43), "uid": uid,
                      "ts": now - rnd.randint(0, spread)})
     pool.sort(key=lambda x: x["ts"], reverse=True)
-    del pool[LIMIT:]
+    if LIMIT:                        # 0 = 池子不限（`del pool[0:]` 会删空，守卫必须留）
+        del pool[LIMIT:]
     return uid
 
 

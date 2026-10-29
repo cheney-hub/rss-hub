@@ -76,13 +76,13 @@ https://feed.quanwenrss.com/feed/dw-latest.xml
 # 中央社 CNA（中国台湾）·即时（繁体）
 https://feed.quanwenrss.com/feed/cna-aall.xml
 
-# 自由时报（中国台湾）·即时
+# 自由时报·即时
 https://news.ltn.com.tw/rss/all.xml
 
-# 自由时报（中国台湾）·财经
+# 自由时报·财经
 https://news.ltn.com.tw/rss/business.xml
 
-# 中央广播电台 RTI（中国台湾）·全部（207 条大源）
+# 中央广播电台 RTI·中国台湾（207 条大源）
 https://www.rti.org.tw/rss
 
 # 俄罗斯卫星通讯社中文·最新
