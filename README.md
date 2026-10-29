@@ -67,10 +67,12 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 │   ├── minute.yml           #   白天：每小时 13 轮 × 5 分钟（脚本生成）
 │   ├── nightly.yml          #   夜间 00:00–05:59：每小时一轮
 │   ├── rss.yml              #   改源即时发布
-│   └── guard.yml            #   推送时扫描凭据
+│   └── review.yml           #   质量门禁：凭据 + 语法 + 单测 + 审查规则
 ├── tools/gen_minute_workflow.py  # 生成 minute.yml（改轮数就是改这里）
 ├── tools/check_secrets.py        # 凭据扫描（本地与 CI 共用）
-├── README.md                # 本文
+├── tools/review_check.py         # 审查门禁：把 CODE_REVIEW.md 的硬规则做成可执行检查
+├── tests/test_core.py            # 核心纯函数单测（20 例，零依赖、不联网）
+├── CODE_REVIEW.md           # 代码审查标准与流程（提交前必读）
 └── OPERATIONS.md            # 运维手册 + 故障排查
 ```
 
@@ -194,11 +196,28 @@ python3 build_feed.py
   靠「小时级 cron + 作业内自循环」；
 - **Pages 传统构建有 10 次/小时软限制**，每分钟一次会被限流；本项目改用自定义 Actions 部署
   （`build_type: workflow`），官方文档明确该限制不适用于这种构建方式；
-- **runner 占用约 24 小时/天 × 13 轮**（白天 18 小时 × 55 分钟 + 夜间 6 次）：公开仓库分钟数不计量，但属高频用法；
+- **runner 占用**：白天 18 小时近乎连续（每小时 13 轮 ≈ 58 分钟）+ 夜间 6 次：公开仓库分钟数不计量，但属高频用法；
   想降载就改轮数（见 [OPERATIONS.md#刷新节奏](OPERATIONS.md#刷新节奏)）；
-- 每分钟档期间，每小时最后约 5 分钟是收尾空档；深夜则是整点之间的一小时空档；
+- 5 分钟档期间，每小时最后约 2 分钟是收尾空档；深夜则是整点之间的一小时空档；
 - `github.io` 在部分网络环境访问偏慢，可用上面两个镜像（跟随仓库备份，约 10 分钟一次）；
 - 正文能否显示取决于 Dot 云端是否渲染 `<description>`，不受本项目控制；不渲染时退化为 13 字标题。
+
+## 开发与审查
+
+改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
+
+```bash
+python3 -m unittest discover -s tests -v    # 单测：20 个核心纯函数用例
+python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节
+python3 tools/check_secrets.py              # 凭据扫描
+```
+
+三条铁律（都是踩过坑换来的）：
+
+1. **不手改生成文件**：`minute.yml` 由脚本生成，改结构请改 `tools/gen_minute_workflow.py` 再重新生成；
+2. **改了 `build_feed.py` 要先取消正在跑的 `minute.yml` 作业**，再重新 dispatch——
+   跑着的作业用的是它启动时 checkout 的旧代码，会每 5 分钟用旧逻辑覆盖新发布；
+3. **改参数必须同步 `OPERATIONS.md` 的参数表**，门禁会检查代码里的每个环境变量是否在文档中出现过。
 
 ## 凭证与安全
 
@@ -206,7 +225,8 @@ python3 build_feed.py
 
 - `.gitignore` 屏蔽 `*.env` / `.env*` / `*.pem` / `*.key` / `id_rsa*` 等；
 - `tools/check_secrets.py` 可随时自查：`python3 tools/check_secrets.py`；
-- `.github/workflows/guard.yml` 每次推送自动跑同一套规则，混进真 token 会让构建失败。
+- `.github/workflows/review.yml` 每次推送 / PR 自动跑「凭据 + 语法 + 单测 + 审查规则」四道关卡，
+  混进真 token 或违反 CODE_REVIEW.md 的硬规则都会让构建失败。
 
 ## 监控
 

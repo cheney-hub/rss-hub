@@ -31,17 +31,29 @@ python3 build_feed.py 2>&1 | grep -E "^\[(失败|回退)\]"
 抓取与产出参数都在工作流的 `env:` 段里（`minute.yml` 是脚本生成的，改完要重新生成）：
 
 ```bash
-# 改 tools/gen_minute_workflow.py 的模板 → 重新生成
-python3 tools/gen_minute_workflow.py 55
+# 改 tools/gen_minute_workflow.py 的模板 → 重新生成（不要手改 minute.yml）
+python3 tools/gen_minute_workflow.py 13
 ```
+
+> 下表与 `build_feed.py` 的常量是一份契约，对不上就是错的。改代码必须同步改这里——
+> `tools/review_check.py` 会检查代码里每个环境变量是否在文档中出现过。
 
 | 变量 | 现值 | 调整建议 |
 |---|---|---|
-| 轮数 | `55` | `gen_minute_workflow.py 55` 的最后那个数字；改小可降 runner 占用（29 轮 = 每 2 分钟一版） |
+| 轮数 | `13` | `gen_minute_workflow.py` 的最后一个数字，13 轮 × 300 秒 ≈ 58 分钟；改小可降 runner 占用 |
 | `CONCURRENCY` | `12` | 源增到 60+ 可提到 16；被源站限流时降到 8 |
 | `FETCH_TIMEOUT` | `20` | 慢源多可提到 25；注意 `timeout-minutes` 是总闸 |
+| `PER_SOURCE` | `3` | 每源取几条进池；调大池子更大、一轮更久，单源超时开销也更大 |
+| `ITEM_LIMIT` | `120` | 去重后条目上限，超出按发布时间砍最旧 |
 | `SCREEN_LINE_WIDTH` | `13` | 标题行宽度（全角字符数）。296×152 屏真机实测 13 字顶格，多出来的字云端直接切；调小会让标题更短、正文更长 |
-| `SCREEN_BODY_MAX` | `60` | 正文（`<description>`）最多保留多少全角字，约合 3 行。给 0 表示不限 |
+| `SCREEN_BODY_MAX` | `90` | 正文（`<description>`）最多保留多少全角字，约合 4 行 × 22 字。给 0 表示不限 |
+| `ROTATE_SECONDS` | `300` | 轮播节拍，必须等于设备刷新间隔。设备设 5 分钟这里就 300；改 600 可规避 Pages 10 分钟缓存导致的漏看 |
+| `ROTATE_POOL_MAX` | `0` | 轮播池上限，`0` = 全部（去重后的所有条目）。设 12 就是只轮最近 12 条 |
+| `FEEDS_FILE` | `./feeds.txt` | 订阅源清单，注释行写中文名、下一行写地址 |
+| `OUT_FILE` | `./docs/feed.xml` | 完整版输出路径 |
+| `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-wrap.xml` | 设备版输出路径，Dot App 里订阅它 |
+| `ROTATE_STATE` | 与 `OUT_FILE` 同目录的 `rotate.json` | 轮播游标状态，随 Pages 发布、不进仓库 |
+
 
 设备版还自动做了三件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、
 标题超宽时把余下原文搬进 `<description>`（一个字都不丢）、
@@ -145,7 +157,7 @@ git commit -m "revert feed" && git push
 |---|---|---|
 | `.gitignore` 屏蔽 | `*.env` / `.env*` / `*.pem` / `*.key` / `id_rsa*` | 凭证文件即使放项目里也不会被 add |
 | 提交前扫描 | `tools/check_secrets.py` | `python3 tools/check_secrets.py`，命中即退出码 1 |
-| CI 强制扫描 | `.github/workflows/guard.yml` | 每次推送自动跑，混进真 token 直接失败 |
+| CI 强制扫描 | `.github/workflows/review.yml` | 每次推送 / PR 跑凭据扫描，混进真 token 直接失败 |
 
 | 场景 | 存放位置 | 说明 |
 |---|---|---|

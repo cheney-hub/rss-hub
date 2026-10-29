@@ -217,7 +217,8 @@ def parse_items(xml_text, source_url, limit=PER_SOURCE):
         if isinstance(node, dict):
             raw = node["__raw__"]
             title = _rx(raw, r"<title\b[^>]*>(.*?)</title>")
-            link = _rx(raw, r"<link\b[^>]*href=\"([^\"]+)\"") or _rx(raw, r"<link\b[^>]*>(.*?)</link>")
+            link = (_rx(raw, r"<link\b[^>]*href=\"([^\"]+)\"")
+                    or _rx(raw, r"<link\b[^>]*>(.*?)</link>"))
             date_raw = (_rx(raw, r"<pubDate\b[^>]*>(.*?)</pubDate>")
                         or _rx(raw, r"<published\b[^>]*>(.*?)</published>")
                         or _rx(raw, r"<updated\b[^>]*>(.*?)</updated>"))
@@ -274,7 +275,8 @@ _RE_DATELINE = re.compile(
     r"(?:财联社|金十数据|格隆汇|智通财经|华尔街见闻|新浪财经|新华财经|第一财经|"
     r"每日经济新闻|界面新闻|澎湃新闻|证券时报|中国证券报)\s*"
     r"(?:\d{1,2}月\d{1,2}日)?\s*(?:电|讯|消息|报道)?\s*[，,:：]\s*")
-_RE_DATELINE2 = re.compile("^" + _TAG + r"[\u4e00-\u9fa5]{0,10}\d{1,2}月\d{1,2}日\s*(?:电|讯)\s*[，,:：]?\s*")
+_RE_DATELINE2 = re.compile(
+    "^" + _TAG + r"[\u4e00-\u9fa5]{0,10}\d{1,2}月\d{1,2}日\s*(?:电|讯)\s*[，,:：]?\s*")
 
 
 def strip_dateline(t):

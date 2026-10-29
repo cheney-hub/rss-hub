@@ -1,0 +1,67 @@
+name: 质量门禁
+
+# 每次推送 / 每个 PR 都跑一遍，四道机器关卡：
+#   1. 凭据扫描   —— 仓库里不许出现 token / 口令 / 私钥（原 guard.yml 的职责）
+#   2. 语法检查   —— 所有 .py 都能编译，工作流 YAML 合法
+#   3. 单元测试   —— tests/ 下 20 个核心纯函数用例必须全绿
+#   4. 审查门禁   —— CODE_REVIEW.md 里机器能判的规则（文件/函数超限、裸 except、
+#                    生成物与脚本不一致、模块无测试、硬编码外链）
+# 只改 feed.xml 的自动备份提交不触发，避免刷运行记录。
+on:
+  push:
+    paths-ignore:
+      - "docs/feed.xml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 1/4 凭据扫描
+        run: python tools/check_secrets.py
+
+      - name: 2/4 语法检查
+        run: |
+          python -m compileall -q build_feed.py tools tests
+          python - <<'EOF'
+          import glob, sys, yaml
+          bad = 0
+          for f in glob.glob(".github/workflows/*.yml"):
+              try:
+                  yaml.safe_load(open(f, encoding="utf-8"))
+              except Exception as e:
+                  print("YAML 非法:", f, e)
+                  bad = 1
+          sys.exit(bad)
+          EOF
+
+      - name: 3/4 单元测试
+        run: python -m unittest discover -s tests -v
+
+      - name: 4/4 审查门禁
+        run: python tools/review_check.py
+
+      - name: 附：离线构建烟测
+        # 不联网、不写仓库外的路径：只验证"拿到空数据也不会崩"
+        run: |
+          python - <<'EOF'
+          import build_feed as B
+          items = [{"title": "测试标题" * 6, "link": "http://x/1", "src": "s", "ts": 1}]
+          xml = B.build_rss(items, "http://x/feed.xml", {"total": 1, "ok": 1, "stale": 0, "fail": 0,
+                                                         "items": 1, "dropped": 0}, screen=True)
+          assert "<item>" in xml and "<title>" in xml
+          print("烟测通过，设备版长度", len(xml))
+          EOF
