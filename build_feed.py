@@ -371,18 +371,19 @@ def split_title(title, line_w=None, body_max=None):
     cut = _cut_index(t, line_w)
     if cut <= 0:
         return t, ""
-    # 标题行末尾不留空格：切在字中间就硬切——正文紧跟着，读者能连起来读，
-    # 为了「断在标点上」少显示一个字并不划算。
+    # 切点落在半个词里就往左退到词首：「净亏损20|15亿元」退成「净亏损|2015亿元」，
+    # 「signal patie|nce」退成「signal|patience」。代价是标题少显示几个字，
+    # 换来正文从完整的词/数字开头；退得太狠（不足行宽 60%）就不退，硬切更好。
+    if 0 < cut < len(t) and _word_char(t[cut - 1]) and _word_char(t[cut]):
+        i = cut
+        while i > 0 and _word_char(t[i - 1]):
+            i -= 1
+        if text_width(t[:i]) >= line_w * 0.6:
+            cut = i
     head = t[:cut].rstrip(" 　")
     # 正文不能以标点开头（「，停建124个猪场」）：那是被切断处的连接符，
     # 正文本来就另起一段，读起来不需要它。
     tail = t[cut:].lstrip(" 　" + HEAD_STRIP)
-    # 但半角词不能切一半（Fed officials signal patie|nce）：切点落在词中间就退到上一个空格。
-    # 0.6 的下限是防「一句话只剩半个词」——退得太狠不如直接切。
-    if head and tail and _word_char(head[-1]) and _word_char(tail[0]):
-        sp = head.rfind(" ")
-        if sp >= len(head) * 0.6:
-            head, tail = head[:sp].rstrip(" 　"), (head[sp + 1:] + tail).lstrip(" 　")
     if body_max and text_width(tail) > body_max:
         tc = _cut_index(tail, body_max - 1)         # 留 1 个位给省略号
         tail = tail[:tc].rstrip(BREAK_CHARS + "-—…") + "…"

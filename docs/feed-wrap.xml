@@ -5,7 +5,23 @@
 <link>https://cheney-hub.github.io/rss-hub/feed-wrap.xml</link>
 <description>多源头条，纯文本；标题只放屏上显示得下的 13 全角字，余下原文接在正文里，源 43 个</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 11:01:50 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 11:04:51 +0000</lastBuildDate>
+<item>
+<title>中国国航：前三季度净亏损20</title>
+<description>15亿元</description>
+<link>https://api3.cls.cn/share/article/2519504?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 18:58:43 +0800</pubDate>
+<guid isPermaLink="false">dd41d5ff1d3d</guid>
+<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+</item>
+<item>
+<title>安泽低硫主焦降70至2280 矿</title>
+<description>山原煤日产微降1.6万吨</description>
+<link>https://xueqiu.com/5124430882/414535602</link>
+<pubDate>Thu, 29 Oct 2026 18:57:49 +0800</pubDate>
+<guid isPermaLink="false">16c63685c2f4</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
 <item>
 <title>宁夏鲜活大闸蟹首次出口马来</title>
 <description>西亚 盐碱水产闯开东南亚市场</description>
@@ -21,22 +37,6 @@
 <pubDate>Thu, 29 Oct 2026 18:56:45 +0800</pubDate>
 <guid isPermaLink="false">fc1f7ffe9a82</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>财联社10月29日电，道琼斯指</title>
-<description>数期货瞬时回吐0.6%的涨幅，因卡特彼勒业绩不佳盘前大跌超8%。</description>
-<link>https://api3.cls.cn/share/article/2519500?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 18:54:55 +0800</pubDate>
-<guid isPermaLink="false">7ed7a3d387c9</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
-</item>
-<item>
-<title>瑞穗银行将微软目标价从600</title>
-<description>美元上调至625美元。</description>
-<link>https://xueqiu.com/5124430882/414534710</link>
-<pubDate>Thu, 29 Oct 2026 18:54:05 +0800</pubDate>
-<guid isPermaLink="false">f06ed236450a</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
 <title>牧原前三季度亏损93.19亿元</title>
@@ -206,8 +206,8 @@
 <source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
-<title>Carney to push for</title>
-<description>closerties at Canada-EU summit in Montreal</description>
+<title>Carney to push for closer</title>
+<description>ties at Canada-EU summit in Montreal</description>
 <link>https://www.bbc.com/news/articles/cq8ezj7jylrzo</link>
 <pubDate>Thu, 29 Oct 2026 09:51:06 +0000</pubDate>
 <guid isPermaLink="false">0467365b0d82</guid>
