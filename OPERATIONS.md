@@ -129,8 +129,10 @@ git commit -m "revert feed" && git push
 | 变量 | 默认 | 作用 |
 |---|---|---|
 | `ROTATE_SECONDS` | 300 | 一条在屏上待多久 = 设备刷新周期。**必须 ≥ 设备刷新间隔**，否则设备会跳过条目 |
-| `ROTATE_COOLDOWN` | 6 | 同一来源多少窗内不再上屏（6 窗 = 30 分钟），防快讯源霸屏；0 = 关闭 |
-| `ROTATE_POOL_MAX` | 0 | 轮播池上限，0 = 全部（每源 1 条，通常 43 条）。设为 12 就是「只轮最近 12 条」，1 小时一轮 |
+| `ROTATE_POOL_MAX` | 0 | 轮播池上限，0 = 全部（去重后的所有条目，通常 120 条）。设为 12 就是「只轮最近 12 条」 |
+| `PER_SOURCE` | 3 | 每源取几条进池 |
+| `ITEM_LIMIT` | 120 | 去重后条目上限，超出的按时间砍最旧 |
+| `SCREEN_BODY_MAX` | 90 | 正文最多多少全角 = 屏上正文区约 4 行 × 22 字 |
 | `ROTATE_STATE_URL` | 自动 | 线上状态地址，换仓库时跟随 `FEED_URL` 自动推导 |
 
 调参后**不需要清空状态**：池子变大变小、条目消失，`shown` 里对不上的 guid 会被自动清理。
@@ -367,6 +369,5 @@ curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | pyth
 |---|---|---|
 | 内容一直不变 | 设备刷新间隔设得比 `ROTATE_SECONDS` 长 | Dot App 里把刷新间隔改成 **5 分钟** |
 | 同一条连显两次、中间那条没看到 | Pages CDN 缓存 `max-age=600`，拿到 10 分钟前的版本 | `ROTATE_SECONDS` 改 `600`（永不漏，但 10 分钟才换） |
-| 每次刷新都是最新新闻，轮不到别的 | `ROTATE_COOLDOWN` 设成 0 了，快讯源每窗都插队 | 恢复成 `6` |
 | 轮播卡死不动 | `rotate.json` 的 `dwell` 和当前 `ROTATE_SECONDS` 不一致（改过节拍） | 代码已自动识别并重新起轮；仍有问题就删掉线上 `rotate.json` |
 | `pool` 比源数少 | 部分源本轮抓取失败用了回退条目，guid 去重后合并 | 看同一轮日志里的 `[回退]` 行 |

@@ -4,7 +4,7 @@
 RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 
 读 feeds.txt（注释行 = 中文源名，下一行 = 地址）
-→ 每源抓最新 1 条 → 跨源去重 → 按发布时间倒序生成 RSS 2.0
+→ 每源抓最新 PER_SOURCE 条 → 跨源去重 → 按发布时间倒序、超 ITEM_LIMIT 砍最旧 → 生成 RSS 2.0
 
 输出三份：
   docs/feed.xml       完整版：标题原样、全部条目按时间倒序，给电脑 / 手机上的 RSS 阅读器
@@ -14,15 +14,12 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 
 轮播规则（为什么设备版只有一条）：
   Dot 云端只渲染文档里的第一条，按时间倒序排的话屏幕永远停在最新那条，
-  其余条目一辈子轮不到。所以设备版改成一个「排空队列」：
+  其余条目一辈子轮不到。所以设备版只发一条，选谁由「已显示标记」决定：
 
-    w = now // ROTATE_SECONDS                  # 当前时间窗
-    w == 上一窗  → 不推进（同一窗内构建多次也只算一次，幂等）
-    w >  上一窗  → 前进一格：取「尚未展示」里发布时间最新的一条，置为第一条并标记已展示
-    候选为空     → 说明全池都展示过了，清空标记，从头开始（一轮结束才循环）
-
-  新条目天然插队：它的 guid 不在已展示集合里、时间又最新，下一个窗就是它。
-  同一来源在冷却窗口内不重复上屏（ROTATE_COOLDOWN），避免快讯源霸屏把别的源饿死。
+    信息按时间倒序排；第一条上屏，并标注已显示
+    下一轮：取「没有已显示标注」里最新的一条上屏，标注已显示
+    全部都有标注了 → 清掉所有标注，从最新一条重新开始
+    同一时间窗内（w = now // ROTATE_SECONDS）重复构建不推进，后台多跑几轮也不跳条
 
 特性：
   * 零第三方依赖，Python 3.8+
@@ -36,19 +33,22 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
   OUT_FILE           完整版输出，默认 ./docs/feed.xml
   FEED_URL           频道 <link>，默认 https://cheney-hub.github.io/rss-hub/feed.xml
   REFRESH_SECONDS    循环刷新到第几秒结束（0 = 只跑一轮），默认 0
+  PER_SOURCE         每源取几条，默认 3
+  ITEM_LIMIT         去重后条目上限，默认 120（超出按时间砍最旧）
   FETCH_TIMEOUT      单源超时秒数，默认 20
   CONCURRENCY        并发数，默认 12
   SCREEN_OUT         设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml
   SCREEN_LINE_WIDTH  标题行宽度（全角字符数），默认 13
                      —— 设备 296×152 屏是大字号单行，实测 13 个全角字满宽，
                      再多就被 Dot 云端从右边切掉。所以标题只放得下多少给多少。
-  SCREEN_BODY_MAX    正文（description）最多保留多少全角字，默认 60
-                     —— 标题装不下的部分原文接进正文；太长的正文尾端补省略号。
+  SCREEN_BODY_MAX    正文（description）最多保留多少全角字，默认 90
+                     —— 正文 = 标题装不下的余文 + 原 feed 的 description/摘要原文；
+                     296×152 屏正文区约 4 行 × 22 全角 ≈ 88 字，取 90 刚好填满。
+                     太长的正文尾端会补省略号。
   ROTATE_SECONDS     每条在屏上驻留多少秒（= 设备刷新周期），默认 300
                      —— 调大等于放慢轮播。Pages CDN 缓存 600 秒，
                      若真机上出现「同一条连显两次」，把它改成 600。
-  ROTATE_COOLDOWN    同一来源多少窗内不再上屏，默认 6（=30 分钟），0 = 关闭冷却
-  ROTATE_POOL_MAX    轮播池上限，默认 0 = 不限（每源 1 条，通常 40 条上下）
+  ROTATE_POOL_MAX    轮播池上限，默认 0 = 不限（= 去重后的全部条目）
   ROTATE_STATE       轮播状态文件，默认与 OUT_FILE 同目录的 rotate.json
   ROTATE_STATE_URL   线上状态地址，默认 FEED_URL 同目录的 rotate.json
 """
@@ -80,11 +80,10 @@ CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
 SCREEN_OUT = os.environ.get(
     "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-wrap.xml"))
 LINE_WIDTH = float(os.environ.get("SCREEN_LINE_WIDTH", "13"))
-BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "60")))
+BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "90")))
 
 # 轮播：设备版一次只发布一条，按时间窗前进，走完一轮才回头
 ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))   # 每条驻留 = 设备刷新周期
-ROTATE_COOLDOWN = max(0, int(os.environ.get("ROTATE_COOLDOWN", "6")))    # 同源冷却窗数，0 = 关
 ROTATE_POOL_MAX = max(0, int(os.environ.get("ROTATE_POOL_MAX", "0")))    # 0 = 池子不限
 ROTATE_STATE = os.environ.get(
     "ROTATE_STATE", os.path.join(os.path.dirname(OUT_FILE) or ".", "rotate.json"))
@@ -93,7 +92,8 @@ UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 RETRY_DELAY = 1.0
 
-ITEM_LIMIT = 60         # 输出条目上限，避免无限膨胀
+PER_SOURCE = max(1, int(os.environ.get("PER_SOURCE", "3")))   # 每源取几条
+ITEM_LIMIT = max(1, int(os.environ.get("ITEM_LIMIT", "120")))  # 去重后上限，超出按时间砍最旧
 ENTITY_FIX = {
     "&nbsp;": " ", "&mdash;": "—", "&ndash;": "–", "&hellip;": "…",
     "&ldquo;": "“", "&rdquo;": "”", "&lsquo;": "‘", "&rsquo;": "’",
@@ -195,7 +195,8 @@ def _sanitize(xml_text):
     return re.sub(r'(<\?xml[^>]*?)\s+encoding="[^"]*"', r"\1", xml_text, count=1)
 
 
-def parse_latest(xml_text, source_url):
+def parse_items(xml_text, source_url, limit=PER_SOURCE):
+    """解析一个源，按发布时间倒序取前 limit 条；每条都带摘要原文（summary）。"""
     try:
         root = ET.fromstring(_sanitize(xml_text))
         nodes = [n for n in root.iter() if _local(n.tag) in ("item", "entry")]
@@ -220,6 +221,10 @@ def parse_latest(xml_text, source_url):
             date_raw = (_rx(raw, r"<pubDate\b[^>]*>(.*?)</pubDate>")
                         or _rx(raw, r"<published\b[^>]*>(.*?)</published>")
                         or _rx(raw, r"<updated\b[^>]*>(.*?)</updated>"))
+            summary = (_rx(raw, r"<content:encoded\b[^>]*>(.*?)</content:encoded>")
+                       or _rx(raw, r"<description\b[^>]*>(.*?)</description>")
+                       or _rx(raw, r"<summary\b[^>]*>(.*?)</summary>")
+                       or _rx(raw, r"<content\b[^>]*>(.*?)</content>"))
         else:
             title = _first_text(node, {"title"})
             link = ""
@@ -229,16 +234,21 @@ def parse_latest(xml_text, source_url):
                     if link:
                         break
             date_raw = _first_text(node, {"pubdate", "published", "updated", "date"})
+            # 正文来源按「原文优先」排：content:encoded > description > summary > content
+            summary = _first_text(node, {"encoded", "description", "summary", "content"})
         return {"title": clean_text(title), "link": (link or "").strip(),
-                "date_raw": clean_text(date_raw), "ts": _parse_date(clean_text(date_raw))}
+                "date_raw": clean_text(date_raw), "ts": _parse_date(clean_text(date_raw)),
+                "summary": clean_text(summary)}
 
     items = [entry_of(n) for n in nodes]
     items.sort(key=lambda x: x["ts"] or 0, reverse=True)
-    best = items[0]
-    best["src"] = source_url
-    if best["ts"] is None:
-        best["ts"] = 0
-    return best
+    out = []
+    for it in items[:limit]:
+        it["src"] = source_url
+        if it["ts"] is None:
+            it["ts"] = 0
+        out.append(it)
+    return out
 
 
 def _rx(raw, pattern):
@@ -282,7 +292,7 @@ def dedupe(items):
 
 
 def load_prev_items():
-    """读上一份 feed.xml，取 源地址 → 条目 的映射，用于失败回退。"""
+    """读上一份 feed.xml，取 源地址 → 条目列表 的映射，用于失败回退。"""
     prev = {}
     if not os.path.exists(OUT_FILE):
         return prev
@@ -298,15 +308,19 @@ def load_prev_items():
         url = (src_el.get("url") or "").strip()
         if not url:
             continue
-        prev[url] = {
+        bucket = prev.setdefault(url, [])
+        if len(bucket) >= PER_SOURCE:
+            continue
+        bucket.append({
             "title": (it.findtext("title") or "").strip(),
             "link": (it.findtext("link") or "").strip(),
             "date_raw": (it.findtext("pubDate") or "").strip(),
             "ts": _parse_date(it.findtext("pubDate") or "") or 0,
+            "summary": (it.findtext("description") or "").strip(),
             "src": url,
             "src_name": (src_el.text or "").strip(),
             "stale": True,
-        }
+        })
     return prev
 
 
@@ -418,6 +432,39 @@ def split_title(title, line_w=None, body_max=None):
     return head, tail
 
 
+def compose_body(tail, summary, title="", body_max=None):
+    """正文 = 标题装不下的余文 + 原 feed 里的摘要原文，装不下就截断。
+
+    原 feed 的 <description> / <content:encoded> 里常有一段导语（财经快讯尤其多），
+    以前全丢掉了；墨水屏正文区还能排四行，白扔可惜，接着标题往下排。
+    """
+    body_max = BODY_MAX if body_max is None else body_max
+    parts = []
+    head_text = plain_text(tail)
+    if head_text:
+        parts.append(head_text)
+
+    s = plain_text(clean_text(summary or ""))
+    s = re.sub(r"[ \t]+", " ", s).strip()
+    if s:
+        tt = plain_text(title)
+        # 「【标题】正文」这种格式（金十、财联社常见）：方括号里是标题的复述，整段去掉
+        m = re.match(r"^[【\[〔](.{2,80}?)[】\]〕]\s*", s)
+        if m and tt and (m.group(1) == tt or m.group(1) in tt or tt.startswith(m.group(1))):
+            s = s[m.end():]
+        # 摘要把标题原样重复一遍（「标题 — 导语」），开头这段重复去掉
+        if tt and s.startswith(tt):
+            s = s[len(tt):].lstrip(" 　:：,，。、-—|｜")
+        if s and s not in parts:
+            parts.append(s)
+
+    body = " ".join(parts)
+    if body_max and text_width(body) > body_max:
+        bc = _cut_index(body, body_max - 1)         # 留 1 个位给省略号
+        body = body[:bc].rstrip(BREAK_CHARS + "-—…") + "…"
+    return body
+
+
 # ---------------- 轮播（设备版一条一条轮） ----------------
 # 目标：设备每 5 分钟刷新一次，每次都要换一条；全池走完才回头，不重不漏。
 #
@@ -477,13 +524,12 @@ def save_rotate_state(state):
 
 
 def rotate_pick(items, state, now=None):
-    """按排空队列取「这一窗该上屏的那一条」，返回 (条目, 新状态, 说明)。
+    """取「这一窗该上屏的那一条」，返回 (条目, 新状态, 说明)。
 
-    items 必须已按发布时间倒序（run_once 保证）。规则：
-      1. 未展示的条目里，发布时间最新的优先 —— 新资讯天然插队；
-      2. 同一来源在 ROTATE_COOLDOWN 个窗内不重复上屏，防止快讯源霸屏；
-      3. 未展示集合空了 = 全池都展示过 → 清空重来（一轮结束才循环）；
-      4. 同一个时间窗内重复调用不推进，屏幕不会因为后台多跑几轮而跳条。
+    items 必须已按发布时间倒序（run_once 保证）。规则只有三条：
+      1. 取「未标注已显示」里发布时间最新的一条上屏，并给它打上已显示标记；
+      2. 全部条目都已显示 → 清空所有标记，下一窗从最新一条重新开始；
+      3. 同一个时间窗内重复调用不推进，后台多跑几轮也不会跳条。
     """
     dwell = ROTATE_SECONDS
     w = int((now if now is not None else time.time()) // dwell)
@@ -503,29 +549,19 @@ def rotate_pick(items, state, now=None):
     shown = [g for g in (state.get("shown") or []) if g in index]   # 顺手清掉已消失的条目
     cycle = int(state.get("cycle") or 1)
     if len(shown) >= len(index):
-        shown = []                                   # 全池展示完 → 新一轮
+        shown = []                                   # 全部都显示过 → 清空标记，新一轮
         cycle += 1
 
     shown_set = set(shown)
     cands = [it for it in items if item_guid(it) not in shown_set]
-    if not cands:
-        cands = list(items)
-    last_src = dict(state.get("last_src") or {})
-    if ROTATE_COOLDOWN > 0:
-        cooled = [it for it in cands
-                  if w - int(last_src.get(it.get("src") or "", -10 ** 9)) >= ROTATE_COOLDOWN]
-        if cooled:                                   # 全在冷却中就忽略冷却，宁可重复也不能空屏
-            cands = cooled
 
     pick = cands[0]
     guid = item_guid(pick)
     shown.append(guid)
-    last_src[pick.get("src") or ""] = w
     new_state = {
         "window": w,
         "current": guid,
         "shown": shown,
-        "last_src": last_src,
         "cycle": cycle,
         "pool": len(index),
         "dwell": dwell,
@@ -569,12 +605,16 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
     if not screen:
         lines += ["<generator>github-actions/rss-hub</generator>", "<ttl>5</ttl>"]
     for it in items:
-        head, tail = split_title(it["title"]) if screen else (it["title"], "")
+        if screen:
+            head, tail = split_title(it["title"])
+            body = compose_body(tail, it.get("summary"), it["title"])
+        else:
+            head, tail, body = it["title"], "", ""
         lines.append("<item>")
         lines.append("<title>%s</title>" % esc(head))
-        # 标题装不下的原文接进正文：云端正文区只要能渲染，屏上就能接着读到后半句
-        if tail:
-            lines.append("<description>%s</description>" % esc(tail))
+        # 标题装不下的余文 + 原 feed 摘要，一起进正文：屏上正文区能接着读到后半句
+        if body:
+            lines.append("<description>%s</description>" % esc(body))
         lines.append("<link>%s</link>" % esc(it["link"]))
         if it.get("date_raw"):
             lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
@@ -605,37 +645,38 @@ def run_once(entries, prev_items):
             status, body = http_get(e["url"])
             if status != 200:
                 raise RuntimeError("HTTP %s" % status)
-            item = parse_latest(decode_body(body), e["url"])
-            item["src_name"] = e["name"]
-            return e, item, None
+            got = parse_items(decode_body(body), e["url"], PER_SOURCE)
+            for it in got:
+                it["src_name"] = e["name"]
+            return e, got, None
         except Exception as err:
             return e, None, err
 
     with ThreadPoolExecutor(max_workers=CONCURRENCY) as ex:
         futs = [ex.submit(fetch_one, e) for e in entries]
         for fut in as_completed(futs):
-            e, item, err = fut.result()
+            e, got, err = fut.result()
             if err is not None:
                 # 重试一次
                 time.sleep(RETRY_DELAY)
-                e2, item2, err2 = fetch_one(e)
-                item, err = item2, err2
-            if item is not None:
+                e2, got2, err2 = fetch_one(e)
+                got, err = got2, err2
+            if got:
                 ok += 1
-                items.append(item)
+                items.extend(got)
             else:
                 fail += 1
                 fb = prev_items.get(e["url"])
                 if fb:
                     stale += 1
-                    items.append(dict(fb))
+                    items.extend(dict(x) for x in fb)
                     print("[回退] %-22s %s (%s)" % (e["name"][:20], e["url"][:70], err))
                 else:
                     print("[失败] %-22s %s (%s)" % (e["name"][:20], e["url"][:70], err))
 
     items.sort(key=lambda x: x.get("ts") or 0, reverse=True)
     items, dropped = dedupe(items)
-    if len(items) > ITEM_LIMIT:
+    if len(items) > ITEM_LIMIT:                  # 超上限：按时间排序后节选最新的
         dropped += len(items) - ITEM_LIMIT
         items = items[:ITEM_LIMIT]
     stats = {"total": len(entries), "ok": ok, "fail": fail, "stale": stale,

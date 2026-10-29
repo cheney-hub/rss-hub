@@ -31,9 +31,10 @@ HEAD = """name: RSS 五分钟节拍发布
 
 # 本文件由 tools/gen_minute_workflow.py 生成，改结构请改脚本后重新生成。
 #
-# 节奏：每整点 :07 触发一次，作业内连续跑 {cycles} 轮，每轮 5 分钟，全天不间断。
+# 节奏：北京时间 06:00–23:59（UTC 22,23,0-15）每整点 :07 触发一次，作业内连续跑 {cycles} 轮，
+#   每轮 5 分钟；北京时间 00:00–06:00 交给 nightly.yml，每小时一次。
 #   :07 起跑 → 各轮对齐到 :10 :15 … :55 :00 :05，跑完约 58 分钟，等下一个 :07。
-#   每轮 = 采集 43 源 → 打包 docs/ → 部署到 Pages → 对齐到下一个 5 分钟整点
+#   每轮 = 采集 43 源 × 3 条 → 打包 docs/ → 部署到 Pages → 对齐到下一个 5 分钟整点
 # 为什么这么绕：GitHub 的 cron 最短 5 分钟且会丢档，只有「小时级 cron + 作业内循环」
 #   才能稳定。5 分钟节拍也让 Pages 部署降到 216 次/天（原来 1 分钟节拍是 990 次）。
 # 轮播：设备版 feed-wrap.xml 每轮只发布「当前该显示的那一条」，游标记在 docs/rotate.json，
@@ -42,13 +43,13 @@ HEAD = """name: RSS 五分钟节拍发布
 
 on:
   schedule:
-    # 全天每小时触发一次，作业内自己按 5 分钟节拍跑满一小时。
-    # 白天夜里同一节奏：设备每 5 分钟刷新，后台就每 5 分钟给一条新的。
-    - cron: "7 * * * *"
+    # 只在北京时间 06:00–23:59 跑 5 分钟节拍（UTC 22:00–15:59，跨天写成两段）
+    # 北京时间 00:00–06:00 由 nightly.yml 接管，每小时一次，两个时段互补不重叠
+    - cron: "7 22,23,0-15 * * *"
   workflow_dispatch:
 
 concurrency:
-  # Pages 同一时刻只允许一个部署。
+  # 与 nightly.yml 同组：Pages 同一时刻只允许一个部署。
   # cancel-in-progress: true 保证每个整点都重新对齐——万一上一次被排过队、拖过了整点，
   # 这一次直接接管，触发时刻不会一路后移累积。
   group: rss-pages
@@ -85,9 +86,10 @@ CYCLE_TPL = """
           CONCURRENCY: "12"
           FETCH_TIMEOUT: "20"
           SCREEN_LINE_WIDTH: "13"
-          SCREEN_BODY_MAX: "60"
+          SCREEN_BODY_MAX: "90"
+          PER_SOURCE: "3"
+          ITEM_LIMIT: "120"
           ROTATE_SECONDS: "{period}"
-          ROTATE_COOLDOWN: "6"
           CYCLE: "{n}"
 
         run: |
