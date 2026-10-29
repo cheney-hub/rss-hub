@@ -1,6 +1,14 @@
 // RSS 聚合服务（纯服务端）：读取 feeds.txt 中所有源 → 抓取各自最新一条 →
 // 跨源去重 → 按发布时间倒序 → 输出 RSS 2.0。零第三方依赖，Node 18+（内置 fetch）。
 //
+// 【状态】归档版：主链路已迁到 GitHub Actions + Pages（build_feed.py + .github/workflows/rss.yml）。
+//        这一版用于「有常驻进程和公网入口」的自托管场景，逻辑与主链路一致，可随时启用。
+//
+// 接口：
+//   /feed.xml   /rss.xml    订阅内容（gzip + ETag + 304）
+//   /status.json            自检（ok / items / sources / lastBuiltAt / refreshing）；/healthz 被部分平台占用
+//   /                       状态页（各源成功/失败一览）
+//
 // 环境变量：
 //   PORT            监听端口（默认 3000）
 //   CACHE_TTL       服务端刷新周期，秒（默认 60）

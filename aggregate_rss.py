@@ -11,7 +11,8 @@ RSS 聚合器（GitHub Pages 版）
   GITHUB_TOKEN   Personal Access Token（需 repo 写权限）——不设则仅本地生成
   GITHUB_REPO    形如 owner/repo
   GITHUB_BRANCH  分支，默认 main
-  FEED_PATH      仓库内文件路径，默认 feed.xml
+  FEED_PATH      仓库内文件路径，默认 docs/feed.xml（GitHub Pages 发布目录）
+  FEED_URL       频道 <link>，默认按 owner.github.io/repo 推算
   FEEDS_FILE     订阅源列表路径，默认脚本同目录 feeds.txt
   DRY_RUN        =1 时只生成本地 feed.xml，不推送
 """
@@ -35,7 +36,7 @@ OUT_FILE = os.environ.get("OUT_FILE", os.path.join(BASE_DIR, "feed.xml"))
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "").strip()
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main").strip()
-FEED_PATH = os.environ.get("FEED_PATH", "feed.xml").strip()
+FEED_PATH = os.environ.get("FEED_PATH", "docs/feed.xml").strip()
 DRY_RUN = os.environ.get("DRY_RUN", "") == "1"
 
 FETCH_TIMEOUT = int(os.environ.get("FETCH_TIMEOUT", "20"))          # 秒
@@ -316,9 +317,13 @@ def main():
     items.sort(key=lambda x: x.get("ts") or 0, reverse=True)
     items, dropped = dedupe(items)
 
-    feed_url = ("https://%s.github.io/%s/%s"
-                % (GITHUB_REPO.split("/")[0], GITHUB_REPO.split("/")[1], FEED_PATH)) \
-        if "/" in GITHUB_REPO else "https://example.org/feed.xml"
+    feed_url = os.environ.get("FEED_URL", "").strip()
+    if not feed_url and "/" in GITHUB_REPO:
+        owner, repo = GITHUB_REPO.split("/", 1)
+        # Pages 以 /docs 为站点根，对外路径要去掉 docs/ 前缀
+        published = re.sub(r"^docs/", "", FEED_PATH)
+        feed_url = "https://%s.github.io/%s/%s" % (owner, repo, published)
+    feed_url = feed_url or "https://example.org/feed.xml"
     xml_text = build_rss(items, feed_url)
     with open(OUT_FILE, "w", encoding="utf-8") as f:
         f.write(xml_text)
