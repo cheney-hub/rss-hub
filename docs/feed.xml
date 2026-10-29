@@ -6,36 +6,57 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 09:22:04 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 09:32:03 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>宏昌电子：第三季度净利润同比增长2545% 环比增长455%</title>
-<link>https://flash.jin10.com/detail/20261029171818025800</link>
-<pubDate>Thu, 29 Oct 2026 17:18:18 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029171818025800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<title>法院声明显示，Meta Platforms(META.O)在巴黎上诉法院与出版商的案件中败诉。</title>
+<link>https://flash.jin10.com/detail/20261029172956758800</link>
+<pubDate>Thu, 29 Oct 2026 17:29:56 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029172956758800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
 </item>
 <item>
-<title>中泰证券首席宏观分析师张德礼：科技产业趋势未发生逆转 产业基本面中长期向好</title>
-<link>https://api3.cls.cn/share/article/2519328?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 17:15:06 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519328?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<title>宜家中国回应上海徐汇餐厅须“消费入座”</title>
+<link>https://api3.cls.cn/share/article/2519344?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 17:24:28 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519344?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
 </item>
 <item>
-<title>云南：边疆村寨绘就团结新画卷</title>
-<link>https://www.chinanews.com.cn/txy/2026/10-29/10722846.shtml</link>
-<pubDate>Thu, 29 Oct 2026 17:14:17 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/txy/2026/10-29/10722846.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<title>纳指ETF汇添富(159660)将于2026年10月30日开市起停牌，自2026年10 月30日10:30起复牌，停牌期间赎回业务照常办理。</title>
+<link>https://xueqiu.com/5124430882/414511619</link>
+<pubDate>Thu, 29 Oct 2026 17:24:07 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414511619|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+</item>
+<item>
+<title>商务部：若欧方一意孤行 中方必将采取一切必要措施</title>
+<link>https://www.chinanews.com.cn/cj/2026/10-29/10722844.shtml</link>
+<pubDate>Thu, 29 Oct 2026 17:23:47 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722844.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
 <source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
-<title>伦敦金属交易所（LME）数据显示，铜库存272200吨，增加750吨。铝库存231675吨，减少225吨。锌库存162675吨，减少1950吨。镍库存27879…</title>
-<link>https://xueqiu.com/5124430882/414508949</link>
-<pubDate>Thu, 29 Oct 2026 17:13:34 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414508949|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
+<title>When Steve Kerr Met His Doppelgänger</title>
+<link>https://www.nytimes.com/2026/10/29/podcasts/steve-kerr-warriors-head-coach-doppelganger.html</link>
+<pubDate>Thu, 29 Oct 2026 09:18:03 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/podcasts/steve-kerr-warriors-head-coach-doppelganger.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+</item>
+<item>
+<title>Eh, could Canada be the next big wine country? Find out at Hong Kong Wine &amp; Dine Festival</title>
+<link>https://www.scmp.com/lifestyle/food-drink/article/3372554/eh-could-canada-be-next-big-wine-country-find-out-hong-kong-wine-dine-festival</link>
+<pubDate>Thu, 29 Oct 2026 09:15:09 +0000</pubDate>
+<guid isPermaLink="false">https://www.scmp.com/lifestyle/food-drink/article/3372554/eh-could-canada-be-next-big-wine-country-find-out-hong-kong-wine-dine-festival|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>《令人心动的 offer 8》，造星失败！</title>
+<link>https://www.guokr.com/article/470569/</link>
+<pubDate>Thu, 29 Oct 2026 17:15:06 +0800</pubDate>
+<guid isPermaLink="false">https://www.guokr.com/article/470569/|https://feed.quanwenrss.com/feed/guokr-science.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/guokr-science.xml">果壳·科学</source>
 </item>
 <item>
 <title>蔡司杨晓光：通过AI技术，让传统光学服务更专业、更高效</title>
@@ -52,18 +73,18 @@
 <source url="https://feed.quanwenrss.com/feed/caixin-latest.xml">财新网·最新</source>
 </item>
 <item>
-<title>Suddenly, Empathy Isn’t So Toxic</title>
-<link>https://www.nytimes.com/2026/10/29/opinion/toxic-empathy-immigration-ice.html</link>
-<pubDate>Thu, 29 Oct 2026 09:03:24 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/opinion/toxic-empathy-immigration-ice.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+<title>兆易创新Q3净利润同比增长729%，环比下降21% | 财报见闻</title>
+<link>https://wallstreetcn.com/articles/3784765</link>
+<pubDate>Thu, 29 Oct 2026 17:08:53 +0800</pubDate>
+<guid isPermaLink="false">https://wallstreetcn.com/articles/3784765|https://dedicated.wallstreetcn.com/rss.xml</guid>
+<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
-<title>EU officials to push yuan appreciation in Beijing visits</title>
-<link>https://www.scmp.com/plus/news/china/diplomacy/article/3372579/eu-officials-push-yuan-appreciation-beijing-visits</link>
-<pubDate>Thu, 29 Oct 2026 09:01:15 +0000</pubDate>
-<guid isPermaLink="false">https://www.scmp.com/plus/news/china/diplomacy/article/3372579/eu-officials-push-yuan-appreciation-beijing-visits|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+<title>宏福苑報告揭火災很可能由一支煙造成 棚網及生口等致重大傷亡</title>
+<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029170619465-1029_00822_001.html</link>
+<pubDate>Thu, 29 Oct 2026 09:06:19 GMT</pubDate>
+<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029170619465-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
+<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
 </item>
 <item>
 <title>国防部：菲方军舰非法坐滩仁爱礁早该被拖走</title>
@@ -115,13 +136,6 @@
 <source url="https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml">界面新闻·快讯</source>
 </item>
 <item>
-<title>AI投资回报存疑，美股盘前谷歌跌超10%，存储板块普跌，油价下跌，金价走软</title>
-<link>https://wallstreetcn.com/articles/3784748</link>
-<pubDate>Thu, 29 Oct 2026 16:37:27 +0800</pubDate>
-<guid isPermaLink="false">https://wallstreetcn.com/articles/3784748|https://dedicated.wallstreetcn.com/rss.xml</guid>
-<source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
-</item>
-<item>
 <title>日韩防长会谈 一致同意就朝鲜核导问题紧密合作</title>
 <link>https://china.kyodonews.net/articles/-/17611</link>
 <pubDate>Thu, 29 Oct 2026 17:35:00 +0900</pubDate>
@@ -150,11 +164,11 @@
 <source url="https://feed.quanwenrss.com/feed/people-redian.xml">人民日报客户端·热点</source>
 </item>
 <item>
-<title>宏福苑火災獨立報告 政府啟動部門首長調查 3個月內完成</title>
-<link>https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029125207592-1029_00822_001.html</link>
-<pubDate>Thu, 29 Oct 2026 08:25:06 GMT</pubDate>
-<guid isPermaLink="false">https://hk.on.cc/hk/bkn/cnt/news/20261029/bkn-20261029125207592-1029_00822_001.html|https://rsshub.rss.tips/oncc/hk</guid>
-<source url="https://rsshub.rss.tips/oncc/hk">东网</source>
+<title>Ethiopia receives 12 Russian fighter jets and air defence systems as Tigray war escalates</title>
+<link>https://www.bbc.com/news/articles/cw78prj801pvo</link>
+<pubDate>Thu, 29 Oct 2026 08:23:31 +0000</pubDate>
+<guid isPermaLink="false">https://www.bbc.com/news/articles/cw78prj801pvo|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
 <title>AI巨头面临全新评价体系：现金流才是当前最关键指标</title>
@@ -192,18 +206,11 @@
 <source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
 </item>
 <item>
-<title>宏福苑調查報告｜何永賢問責辭職 李家超率7官員鞠躬道歉｜直播</title>
+<title>何永賢問責辭職 李家超率領官員鞠躬道歉｜宏福苑報告記者會總覽</title>
 <link>https://hk01.com/sns/article/60404686</link>
 <pubDate>Thu, 29 Oct 2026 07:58:01 GMT</pubDate>
 <guid isPermaLink="false">https://hk01.com/sns/article/60404686|https://rsshub.rss.tips/hk01/hot</guid>
 <source url="https://rsshub.rss.tips/hk01/hot">香港01·热榜</source>
-</item>
-<item>
-<title>Hello Kitty maker cuts ties with Japanese spy drama after China backlash</title>
-<link>https://www.bbc.com/news/articles/cry4x177jlnyo</link>
-<pubDate>Thu, 29 Oct 2026 07:54:33 +0000</pubDate>
-<guid isPermaLink="false">https://www.bbc.com/news/articles/cry4x177jlnyo|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
 <title>“东盟防长扩大会举办以来，这是中方参会官员级别最低的一次”</title>
@@ -248,13 +255,6 @@
 <source url="https://feed.quanwenrss.com/feed/nikkei-latest.xml">日经中文网·最新</source>
 </item>
 <item>
-<title>想让 AI 好好干活，光靠骂能行吗？</title>
-<link>https://www.guokr.com/article/470568/</link>
-<pubDate>Thu, 29 Oct 2026 13:15:06 +0800</pubDate>
-<guid isPermaLink="false">https://www.guokr.com/article/470568/|https://feed.quanwenrss.com/feed/guokr-science.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/guokr-science.xml">果壳·科学</source>
-</item>
-<item>
 <title>日本千叶县发生震度5弱地震 未引发海啸</title>
 <link>https://www3.nhk.or.jp/nhkworld/zh/news/20261029_RS12/</link>
 <pubDate>Thu, 29 Oct 2026 13:54:23 +0900</pubDate>
@@ -283,10 +283,10 @@
 <source url="https://feed.quanwenrss.com/feed/rci-zh-hans-latest.xml">加拿大国际广播电台 RCI 中文·最新</source>
 </item>
 <item>
-<title>每周时事分析：金正恩访问丹东的影响</title>
-<link>https://www.ftchinese.com/story/001111226</link>
+<title>香港特首就宏福苑大火致歉</title>
+<link>https://www.ftchinese.com/story/001111231</link>
 <pubDate>Wed, 28 Oct 2026 16:00:00 +0000</pubDate>
-<guid isPermaLink="false">https://www.ftchinese.com/story/001111226|https://feed.quanwenrss.com/feed/ftchinese-all.xml</guid>
+<guid isPermaLink="false">https://www.ftchinese.com/story/001111231|https://feed.quanwenrss.com/feed/ftchinese-all.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/ftchinese-all.xml">FT中文网·全部</source>
 </item>
 <item>
