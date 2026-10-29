@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.2.2**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.2.3**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -183,6 +183,8 @@ git commit -m "revert feed" && git push
 轮换：GitHub → Settings → Developer settings → Personal access tokens → 吊销旧的、生成新的 → 更新 Secret。
 
 ## 监控
+
+本项目**没有常驻监控进程**：不跑定时巡检、不接告警通道，判断「活着没」只看这两个来源。
 
 - **Actions**：https://github.com/cheney-hub/rss-hub/actions —— 耗时、日志、失败轮次都在这里；
 - **线上自检**：

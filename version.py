@@ -12,4 +12,4 @@ RSS 里的 `<generator>`、`docs/*.html` 的页脚。散落在各处必然漂移
   修订号  只修 bug；除排版切点类修复外，输出应逐字节不变（用 tests/golden.txt 验证）
 """
 
-__version__ = "1.2.2"
+__version__ = "1.2.3"

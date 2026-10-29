@@ -38,7 +38,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 | 每源抓取 | 取最新 3 条，跨源去重后约 110～120 条，上限 120 条（超出按时间砍最旧） |
 | 抓取频率 | 白天（北京 06:00–23:59）**每 5 分钟一轮**；夜间（00:00–05:59）每小时一轮 |
 | 发布频率 | 白天约 216 版/天 + 夜间 6 版（自定义 Actions 部署，不受 Pages 10 次/小时限制） |
-| 单轮耗时 | 40 秒左右（43 源 × 3 条，并发 12 路） |
+| 单轮耗时 | 本机约 10 秒；GitHub runner 上 25～45 秒（43 源 × 3 条，并发 12 路） |
 | 设备版标题 | 前 13 全角进标题 |
 | 设备版正文 | 标题余文 + 原 feed 的摘要原文，最多 90 全角（屏上正文区约 4 行） |
 | 设备版条目 | **每版只发 1 条**，5 分钟换一条；优先播当前时间片的新内容，`lag` 稳态 0~1 片 |
@@ -73,13 +73,17 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 │   ├── nightly.yml          #   夜间 00:00–05:59：每小时一轮
 │   ├── rss.yml              #   改源即时发布
 │   └── review.yml           #   质量门禁：凭据 + 语法 + 单测 + 审查规则
-├── tools/gen_minute_workflow.py  # 生成 minute.yml（改轮数就是改这里）
-├── tools/check_secrets.py        # 凭据扫描（本地与 CI 共用）
-├── tools/review_check.py         # 审查门禁：把 CODE_REVIEW.md 的硬规则做成可执行检查
-├── tests/test_core.py            # 核心纯函数单测（38 例，零依赖、不联网）
-├── tests/test_golden.py          # 行为基线比对（渲染输出必须与 golden.txt 逐字节一致）
-├── tests/golden.txt              # 行为基线（脚本生成，不手改）
-├── tools/golden_snapshot.py      # 生成/更新上面那份基线
+├── tools/
+│   ├── gen_minute_workflow.py   # 生成 minute.yml（改轮数就是改这里）
+│   ├── review_check.py          # 审查门禁：把 CODE_REVIEW.md 的硬规则做成可执行检查
+│   ├── check_secrets.py         # 凭据扫描（本地与 CI 共用）
+│   ├── golden_snapshot.py       # 生成/更新行为基线
+│   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
+├── tests/                   # 83 个用例，零依赖、不联网
+│   ├── test_core.py         #   53 例：核心纯函数（宽度、切分、去重、解析、轮播稳态）
+│   ├── test_rotate_edge.py  #   29 例：轮播边界（时钟错乱、池子挤兑、参数极值）
+│   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 逐字节比对
+│   └── golden.txt           #   行为基线（脚本生成，不手改）
 ├── CHANGELOG.md             # 版本历史与行为变更记录
 ├── CODE_REVIEW.md           # 代码审查标准与流程（提交前必读）
 └── OPERATIONS.md            # 运维手册 + 故障排查
@@ -101,10 +105,11 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 `guid` 用「文章链接|源地址」：同一篇文章被两个源同时收录时 guid 仍不同，阅读器不会吞条目。
 设备版则把 guid 换成该串的 12 位 md5——它同时是轮播判断「这条是否已展示」的键。
 
-## 轮播：让每条资讯都轮到
+## 轮播：屏幕怎么决定下一条播什么
 
 云端只渲染 feed 里的**第一条**。如果照时间倒序整份发出去，屏幕就永远停在最新那条，
-其余 100 多条一辈子轮不到。所以设备版 `feed-wrap.xml` 每版只发一条，选谁由 `docs/rotate.json` 的标记决定：
+其余 100 多条一辈子轮不到。所以设备版 `feed-wrap.xml` 每版只发一条，选谁由 `docs/rotate.json` 的标记决定
+（注意：这一条规则**不追求「每条都轮到」**，覆盖率的上限只有三分之一，原因见下面的「代价」）：
 
 ```
 把池子按「5 分钟」切成时间片，每片取最新一条当代表
@@ -280,7 +285,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：39 个用例（含分层契约、行为基线）
+python3 -m unittest discover -s tests -v    # 单测：83 个用例（含分层契约、行为基线、轮播边界）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
@@ -297,8 +302,8 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 
 1. **不手改生成文件**：`minute.yml` 由脚本生成、`tests/golden.txt` 由快照脚本生成，
    改结构请改脚本后重新生成（门禁会比对，手改必红）；
-2. **改了 `build_feed.py` 要先取消正在跑的 `minute.yml` 作业**，再重新 dispatch——
-   跑着的作业用的是它启动时 checkout 的旧代码，会每 5 分钟用旧逻辑覆盖新发布；
+2. **改了 `build_feed.py` / `rotate.py` / `render.py` 要先取消正在跑的 `minute.yml` 作业**，
+   再重新 dispatch——跑着的作业用的是它启动时 checkout 的旧代码，会每 5 分钟用旧逻辑覆盖新发布；
 3. **改参数必须同步 `OPERATIONS.md` 的参数表**，门禁会检查代码里的每个环境变量是否在文档中出现过；
 4. **发版必须三件套**：`version.py` 加版本号 → `CHANGELOG.md` 记一条 → 页面页脚跟上，
    门禁会检查 README / OPERATIONS / 两个页面上有没有出现当前版本号。
@@ -314,6 +319,9 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 
 ## 监控
 
+本项目**不跑常驻监控进程**（没有定时巡检任务，也不需要额外账号）：GitHub 的状态页与 Actions
+运行记录就是权威信息源，需要时手动看一眼即可。
+
 - Actions 运行历史：https://github.com/cheney-hub/rss-hub/actions
 - 线上自检：`curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep lastBuildDate`
 
@@ -322,7 +330,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.2.2` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.2.3` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

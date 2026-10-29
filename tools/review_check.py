@@ -50,7 +50,6 @@ STYLE_EXEMPT = set(GENERATED) | {"docs/feed.xml", "docs/feed-wrap.xml", "feeds.t
 VERSION_DOCS = ("README.md", "OPERATIONS.md", "docs/index.html", "docs/screen.html")
 
 CRITICAL, REQUIRED, NIT, INFO = "Critical", "Required", "Nit", "Info"
-RANK = {CRITICAL: 0, REQUIRED: 1, NIT: 2, INFO: 3}
 LABEL = {CRITICAL: "阻断", REQUIRED: "必改", NIT: "可选", INFO: "提示"}
 
 
