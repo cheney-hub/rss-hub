@@ -35,7 +35,9 @@ MAX_FUNC_LINES = 60        # 单函数上限
 MAX_LINE_LEN = 100         # 单行上限
 TODO_LIMIT = 0             # 遗留 TODO 数量上限
 
-SKIP_DIRS = {".git", "__pycache__", "node_modules", ".workbuddy", "docs"}
+# .qa-tmp 是 QA 放临时脚本的地方（仿真、压测）：它会被扫进「文件行数 / 模块要有测试」
+# 这类检查里，一不留神就把门禁搞红，而那里的东西本来就不进仓库。
+SKIP_DIRS = {".git", "__pycache__", "node_modules", ".workbuddy", "docs", ".qa-tmp"}
 # 只认「带真实域名」的外链；http://x/1 这类测试夹具、以及规则文本里的裸 "http://" 不算
 _RE_OUTBOUND = re.compile(r"https?://[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
 GENERATED = {

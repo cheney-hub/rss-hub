@@ -162,14 +162,19 @@ class TestBody(unittest.TestCase):
 
 
 class TestRotate(unittest.TestCase):
-    """轮播规则（用户定稿口径）：
+    """轮播规则：**锚定当前窗 —— 每窗播池子里最新的、还没播过的那一片**。
 
-    信息按时间倒序排 → 第一条上屏并标注已显示 → 下一轮只显示没有标注的最新一条
-    → 全部都有标注则清空所有标注，重新开始。同一时间窗内重复构建不推进。
+    全池播完才清标记重来；同一时间窗内重复构建不推进。
 
     标记的单位是「时间片」（dwell 秒一片），不是单条：
     每 5 分钟各源会产出十几条，屏幕只放得下 1 条，按条轮永远追不上，
     老条目还没轮到就被池子上限挤出去 —— 所以一个片只出一条代表。
+
+    与旧机制（开轮时拍清单快照、从新到旧推进）的差别就在「锚定」两字：
+    旧机制第 k 窗必播「第 k 新」的那条，延迟随轮次线性增长（线上实测滞后 75 分钟、
+    仿真最差 4.3 小时），而运行期间新涌入的条目根本不在冻结的清单里，本轮一条都播不到。
+    所以 test_new_item_airs_next_window 是这次修复的核心用例，其余用例守的是
+    「延迟不增长」「先新后旧」「播完才回头」「同一窗不推进」这几条边界。
     """
 
     def setUp(self):
@@ -177,35 +182,46 @@ class TestRotate(unittest.TestCase):
         self.dwell = B.ROTATE_SECONDS
         self.items = [mk("T%d" % i, src="s%d" % i, ts=1000 - i * self.dwell)
                       for i in range(4)]
+        # 这批条目的片号是 3、2、1、0，所以窗口从第 4 窗开始用（片号 ≤ 当前窗）。
+        # 用更小的窗号会把它们当成「发布时间在未来」而被轮播剔掉 —— 见 _bucketize。
+        self.w0 = 4
 
     def pick(self, state, w, items=None):
         return B.rotate_pick(items if items is not None else self.items,
                              state, now=w * self.dwell)
 
+    def at(self, bucket, title=None):
+        """造一条落在第 bucket 片里的条目（+1 秒保证片号就是这个 bucket）。"""
+        return mk(title or ("B%d" % bucket), src="s%d" % bucket,
+                  ts=bucket * self.dwell + 1)
+
     def test_advances_one_per_window(self):
         st, seq = {}, []
-        for w in range(1, 5):
+        for w in range(self.w0, self.w0 + 4):
             it, st, _ = self.pick(st, w)
             seq.append(it["title"])
         self.assertEqual(seq, ["T0", "T1", "T2", "T3"])
 
     def test_idempotent_in_same_window(self):
+        """同一窗内重跑不推进：后台一窗可能构建好几次，跳条比晚一条更糟。"""
         it, st, _ = self.pick({}, 10)
         for _ in range(5):
             it2, st, _ = self.pick(st, 10)
             self.assertEqual(it2["title"], it["title"])
 
     def test_clears_after_full_cycle(self):
+        """全池播完才清标记重来：cycle +1，shown 只剩刚上屏那一片。"""
         st = {}
-        for w in range(1, 5):
+        for w in range(self.w0, self.w0 + 4):
             _, st, _ = self.pick(st, w)
-        it, st, _ = self.pick(st, 5)
+        it, st, _ = self.pick(st, self.w0 + 4)
         self.assertEqual(st["cycle"], 2)
         self.assertEqual(len(st["shown"]), 1)
         self.assertEqual(it["title"], "T0")
+        self.assertEqual(st["lag"], 5)      # 第 8 窗播第 3 片（池子只有这 4 片）
 
     def test_same_bucket_takes_latest(self):
-        """同一个 5 分钟片里的多条只出一条（取最新的），且只占队列一格。"""
+        """同一个 5 分钟片里的多条只出一条（取最新的），整片只算一格。"""
         items = [
             mk("B0-old", src="a", ts=1000 + 10),
             mk("B0-new", src="b", ts=1000 + 90),   # 同片、更新
@@ -213,38 +229,220 @@ class TestRotate(unittest.TestCase):
         ]
         items.sort(key=lambda x: x["ts"], reverse=True)
         st, seq = {}, []
-        for w in range(1, 4):
+        for w in range(4, 7):
             it, st, _ = self.pick(st, w, items)
             seq.append(it["title"])
         self.assertEqual(seq[:2], ["B0-new", "B1"])
-        self.assertEqual(len(st["queue"]), 2)      # 两片，不是三条
+        self.assertEqual(st["pool"], 2)            # 两片，不是三条
 
-    def test_new_item_waits_next_cycle(self):
-        """新条目不在本轮插队：本轮清单是开轮时拍好的快照，播完才重排。"""
-        st = {}
-        _, st, _ = self.pick(st, 1)                        # 本轮从 T0 开始
-        items = [mk("NEW", src="n", ts=9999)] + self.items  # 来了一条更新的
-        it, st, _ = self.pick(st, 2, items)
-        self.assertEqual(it["title"], "T1")                # 不插队，继续走清单
-        for w in range(3, 5):
-            _, st, _ = self.pick(st, w, items)
-        it, st, _ = self.pick(st, 5, items)                # 一轮播完，重排
-        self.assertEqual(it["title"], "NEW")
+    def test_steady_state_airs_current_window(self):
+        """稳态（每窗产出 3 条，消费 1 条）：每窗都播这一窗的新内容，延迟不累积。
 
-    def test_queue_survives_pool_rollover(self):
-        """池子在滚动（老条目被上限挤掉）也不该让本轮清单中途重排。"""
+        旧机制在这里会沿清单往下走：第 k 窗播「第 k 新」的那条，池子越大延迟越大，
+        20 窗之后屏上已经是十几窗前的消息。锚定当前窗后 lag 恒定在 1 片。
+        """
+        pool, st, titles, lags = [], {}, [], []
+        for w in range(100, 120):
+            # 本窗 3 条，发布时间比现在早 5~60 秒（源有发布延迟），都落在 w-1 片
+            for k in range(3):
+                pool.append(mk("T%d_%d" % (w, k), src="s%d" % k,
+                               ts=w * self.dwell - 5 - k * 20))
+            pool.sort(key=lambda x: x["ts"], reverse=True)
+            it, st, _ = self.pick(st, w, pool)
+            titles.append(it["title"])
+            lags.append(st["lag"])
+        self.assertEqual(titles, ["T%d_0" % w for w in range(100, 120)])
+        self.assertEqual(set(lags), {1})           # 恒定 1 片，不随轮次增长
+
+    def test_prefers_recent_unplayed_over_deep_backlog(self):
+        """最近有没播过的片时，不会跳到更旧的那批 —— 稳态的行为就是「先播新的」。
+
+        规则只有一条「播全池最新的未播片」，所以只要最近几片还有没播的，最新未播片
+        自然就落在最近这几片里；20 片前的那批要等前面播完才轮得到。
+        换句话说：会一路往旧里走的前提是「最新未播片在很旧的地方」—— 那正是低产能时段。
+        """
+        base = 200
+        recent = [self.at(base - k, "R%d" % (base - k)) for k in range(3)]
+        deep = [self.at(base - 20 - k, "D%d" % (base - 20 - k)) for k in range(3)]
+        pool = sorted(recent + deep, key=lambda x: x["ts"], reverse=True)
+        st, seq, lags = {}, [], []
+        for w in range(base + 1, base + 4):
+            it, st, _ = self.pick(st, w, pool)
+            seq.append(it["title"])
+            lags.append(st["lag"])
+        self.assertEqual(seq, ["R200", "R199", "R198"])    # 旧片一片都没插进来
+        self.assertEqual(lags, [1, 3, 5])                  # 落后量只随窗口走，不跳档
+
+    def test_relaxes_to_whole_pool_when_recent_done(self):
+        """最近几片都播过（真没新内容了）→ 播池子里最新的那片旧片，而不是原地打转。"""
+        base = 200
+        recent = [self.at(base - k, "R%d" % (base - k)) for k in range(3)]
+        deep = [self.at(base - 20 - k, "D%d" % (base - 20 - k)) for k in range(3)]
+        pool = sorted(recent + deep, key=lambda x: x["ts"], reverse=True)
         st = {}
-        _, st, _ = self.pick(st, 1)
-        queue = list(st["queue"])
-        # 模拟新条目涌入，但清单里的片都还在
-        more = [mk("N%d" % k, src="z%d" % k, ts=9000 + k) for k in range(5)]
-        items = sorted(more + self.items, key=lambda x: x["ts"], reverse=True)
-        _, st, _ = self.pick(st, 2, items)
-        self.assertEqual(st["queue"], queue)               # 清单没被改写
+        for w in range(base + 1, base + 4):
+            _, st, _ = self.pick(st, w, pool)
+        it, st, _ = self.pick(st, base + 4, pool)
+        self.assertEqual(it["title"], "D180")            # 全池里最新的一片旧片
+        self.assertEqual(st["lag"], 24)                  # 落后 24 片，且没有年龄门槛挡着
+        self.assertEqual(st["cycle"], 1)                 # 还没播完，不是重开一轮
+
+    def test_backfills_when_current_window_is_already_shown(self):
+        """当前窗播过了就播次新的那一片，绝不空屏 —— 这条规则没有年龄门槛。
+
+        曾经有个 `ROTATE_MAX_LAG` 想控制「往旧里找几片」，已删除：两级取的都是
+        「全池未播里最新的一片」，参数取什么值都不改变结果（穷举 5 万组状态零反例，
+        24 小时端到端 0/1/6/24 逐项相同）。留着只会让人以为能调新鲜度。
+        """
+        b, shown, _ = B._pick_bucket({"shown": [101], "cycle": 1}, [101, 100, 99])
+        self.assertEqual(b, 100)                    # 当前窗已播 → 次新的那片
+        self.assertEqual(shown, {101})              # 补播不动已有标记
+        b2, _, cycle = B._pick_bucket({"shown": [101, 100, 99], "cycle": 1}, [101, 100, 99])
+        self.assertEqual(b2, 101)                   # 全播过 → 重开一轮，从最新那片起
+        self.assertEqual(cycle, 2)
+
+    def test_new_item_airs_next_window(self):
+        """核心用例：池子里还有旧片没播，新条目下一窗就能上屏。
+
+        旧机制把清单冻结在开轮那一刻，新条目要等整轮播完（几小时）才可能上屏 ——
+        这正是线上「屏幕上是 75 分钟前的消息」的成因。
+        """
+        st = {}
+        w0 = 50
+        pool = [self.at(w0, "OLD-0"), self.at(w0 - 1, "OLD-1")]
+        it, st, _ = self.pick(st, w0, pool)
+        self.assertEqual(it["title"], "OLD-0")
+
+        pool.insert(0, self.at(w0 + 1, "NEW"))           # 下一窗来了一条更新的
+        it, st, _ = self.pick(st, w0 + 1, pool)
+        self.assertEqual(it["title"], "NEW")             # 立刻上屏，不排队等整轮
+        self.assertEqual(st["lag"], 0)
+
+    def test_shown_is_trimmed(self):
+        """shown 只留池子里还在的片：稳态跑 60 窗后它的规模由池子决定，不随时间增长。"""
+        pool, st = [], {}
+        for w in range(100, 160):
+            pool.append(self.at(w - 1, "T%d" % w))
+            pool.sort(key=lambda x: x["ts"], reverse=True)
+            _, st, _ = self.pick(st, w, pool)
+        self.assertLessEqual(len(st["shown"]), st["pool"])
+        self.assertEqual(len(st["shown"]), st["pool"])   # 60 窗全播过，正好一片一个标记
+
+    def test_stopped_production_restarts_cleanly(self):
+        """产能停了（池子冻住）：仍要「一轮内不重播 → 全播完才回头」，cycle 真的在涨。
+
+        这是 shown 裁剪规则的回归用例：按「最近的窗」裁会抹掉仍可能被选中的标记，
+        结果是同一条隔几窗就重播、cycle 永远停在 1、lag 无限上涨。
+        """
+        pool = [self.at(b, "B%d" % b) for b in range(30)]
+        st, seq, cycles = {}, [], []
+        for w in range(31, 91):
+            it, st, _ = self.pick(st, w, pool)
+            seq.append(it["title"])
+            cycles.append(st["cycle"])
+        self.assertEqual(len(set(seq[:30])), 30)         # 一轮 30 片不重播
+        self.assertEqual(seq[:30], seq[30:60])           # 播完才回头，顺序一致
+        self.assertGreater(cycles[-1], cycles[0])        # cycle 在递增，不是卡住
+
+    def test_future_dated_item_never_hogs_screen(self):
+        """源时钟错乱（2030 年的 pubDate）不能让屏幕被它独吞。
+
+        未来时间的片号永远最大，若参与轮播「取最近几片里最新的未播片」每窗都选它。
+        现在的口径是「时间还没到就先不播」：它一次都不上屏，真正的新闻照常轮。
+        """
+        real = [self.at(100 - k, "R%d" % (100 - k)) for k in range(3)]
+        future = mk("Y2030", src="bad", ts=1893456000)     # 2030-01-01
+        pool = sorted(real + [future], key=lambda x: x["ts"], reverse=True)
+        st, seq, notes = {}, [], []
+        for w in range(101, 106):
+            it, st, note = self.pick(st, w, pool)
+            seq.append(it["title"])
+            notes.append(note)
+        self.assertNotIn("Y2030", seq)                     # 一次都没上屏
+        self.assertEqual(seq[:3], ["R100", "R99", "R98"])  # 正常内容照常轮
+        self.assertEqual(st["pool"], 3)                    # 未来那一片不算进池子片数
+        self.assertGreaterEqual(st["lag"], 0)              # lag 不会出现负数
+        # 剔除不能是静默的：日志里必须能看出「有个源的时间戳在未来」
+        self.assertIn("已排除出设备版轮播", notes[0])
+        self.assertIn("另有 1 条", notes[0])
+
+    def test_future_window_state_is_discarded(self):
+        """状态里的 window 跑到未来（写它的那次运行时钟错了 / 文件被写坏）必须丢弃重来。
+
+        不丢的话 w > prev_w 永远为假 → 一直 hold → window 永不前进 → 屏幕永久卡死，
+        而且每次运行都会把这份坏状态原样读回来，自己治不了自己。
+        """
+        pool = [self.at(199, "R199"), self.at(198, "R198")]
+        poisoned = {"version": B.ROTATE_STATE_VERSION, "window": 10 ** 6,
+                    "bucket": 10 ** 6, "current": "deadbeefdead", "shown": [10 ** 6],
+                    "cycle": 9, "lag": 0, "pool": 2, "items": 2, "dwell": self.dwell}
+        it, st, note = self.pick(poisoned, 200, pool)
+        self.assertIsNotNone(it, "坏状态必须被丢掉，否则这一版就是空转")
+        self.assertEqual(st["window"], 200)
+        self.assertEqual(st["cycle"], 1)                   # 从头起轮，不是接着第 10 轮
+        self.assertIn("新窗推进", note)
+
+    def test_small_clock_rollback_still_holds(self):
+        """小幅回拨（NTP 校正，CLOCK_SKEW_WINDOWS 以内）不丢状态：冻结一版就好。"""
+        pool = [self.at(99, "屏上这条"), self.at(98, "旧的")]
+        _, st, _ = self.pick({}, 100, pool)
+        it, st2, note = self.pick(st, 100 - B.CLOCK_SKEW_WINDOWS, pool)
+        self.assertEqual(it["title"], "屏上这条")
+        self.assertIn("同窗保持", note)
+        self.assertEqual(st2["window"], 100)               # 没有推进
+
+    def test_large_clock_rollback_reinitialises(self):
+        """回拨超过容忍窗口 → 丢状态重来（否则之后每次构建都 hold，永不推进）。"""
+        pool = [self.at(99, "屏上这条"), self.at(98, "旧的")]
+        _, st, _ = self.pick({}, 100, pool)
+        it, st2, _ = self.pick(st, 100 - B.CLOCK_SKEW_WINDOWS - 1, pool)
+        # 池子里的片对新窗号来说都还在未来 → 这一版没得播，但坏状态已经清掉
+        self.assertIsNone(it)
+        self.assertEqual(st2, {})
+
+    def test_single_bucket_restart_does_not_crash(self):
+        """池子只有一片：重开一轮只能重播同一条（无解），但绝不能抛 IndexError。"""
+        pool = [self.at(10, "唯一一条")]
+        st, seq = {}, []
+        for w in range(11, 14):
+            it, st, _ = self.pick(st, w, pool)
+            seq.append(it["title"])
+        self.assertEqual(seq, ["唯一一条"] * 3)
+        self.assertEqual(st["cycle"], 3)                   # 每窗都算「播完一轮重开」
+
+    def test_same_window_representative_updates_current(self):
+        """同窗内片内代表被顶掉：照播新代表，state.current 必须一起改。
+
+        留着旧 guid 的话，rotate.json 的 title/current 与实际屏上内容不一致，
+        排障会按错的条目推断；片号失效的兜底路径还会误判「该条离场」而空转一版。
+        """
+        w = 60
+        pool = [mk("A", src="s1", ts=w * self.dwell - 200)]
+        it, st, _ = self.pick({}, w, pool)
+        self.assertEqual(it["title"], "A")
+        b1 = st["bucket"]
+
+        pool.insert(0, mk("A2", src="s2", ts=w * self.dwell - 100))   # 同片、更晚
+        it2, st, note = self.pick(st, w, pool)
+        self.assertEqual(it2["title"], "A2")               # 接受更新，不 skip
+        self.assertEqual(st["current"], R.item_guid(it2))  # 状态与屏上内容一致
+        self.assertEqual(st["title"], "A2")
+        self.assertEqual(st["bucket"], b1)                 # 仍是同一片，游标没推进
+        self.assertIn("片内代表更新", note)
+
+    def test_old_state_discarded(self):
+        """旧版状态（带 queue 的 v2）直接丢弃：结构变了，宁可重复一条也不能乱序。"""
+        legacy = {"version": 2, "window": 10, "bucket": 3, "current": "x",
+                  "queue": [3, 2, 1], "shown": [3], "cycle": 4, "dwell": self.dwell}
+        it, st, _ = self.pick(legacy, 11)
+        self.assertIsNotNone(it)
+        self.assertEqual(st["version"], B.ROTATE_STATE_VERSION)
+        self.assertNotIn("queue", st)
+        self.assertEqual(st["cycle"], 1)                 # 从第 1 轮重新开始
 
     def test_no_repeat_within_cycle(self):
         st, seen = {}, []
-        for w in range(1, 7):
+        for w in range(self.w0, self.w0 + 6):
             it, st, _ = self.pick(st, w)
             seen.append(it["title"])
         self.assertEqual(len(seen[:4]), len(set(seen[:4])))
@@ -354,6 +552,23 @@ class TestParseItems(unittest.TestCase):
             for i in range(1, 6))
         got = B.parse_items(xml, "https://c/feed", 2)
         self.assertEqual([g["title"] for g in got], ["T5", "T4"])
+
+    def test_same_ts_order_is_deterministic(self):
+        """同一时间戳的多条，输出次序必须唯一（次级键 guid）。
+
+        并发抓取的到达顺序、源自己的抖动都会让文档顺序在两次运行里不同；
+        排序是稳定的，不补次级键就会「同样的数据排出两个池子」，
+        而轮播按片取第一条当代表 —— 屏幕会莫名换内容。
+        """
+        def doc(titles):
+            return "<rss><channel>%s</channel></rss>" % "".join(
+                "<item><title>%s</title><link>https://d/%s</link>"
+                "<pubDate>Thu, 29 Oct 2026 12:00:00 +0800</pubDate></item>" % (t, t)
+                for t in titles)
+
+        a = B.parse_items(doc(["甲甲甲甲甲", "乙乙乙乙乙", "丙丙丙丙丙"]), "https://d/feed", 5)
+        b = B.parse_items(doc(["丙丙丙丙丙", "甲甲甲甲甲", "乙乙乙乙乙"]), "https://d/feed", 5)
+        self.assertEqual([g["title"] for g in a], [g["title"] for g in b])
 
 
 if __name__ == "__main__":

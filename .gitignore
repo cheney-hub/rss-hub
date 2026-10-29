@@ -5,6 +5,10 @@ docs/rotate.json
 .DS_Store
 Thumbs.db
 
+# 临时目录：.qa-tmp 放 QA 的仿真/压测脚本，*.tmp.xml 是本地跑出来的中间产物
+.qa-tmp/
+*.tmp.xml
+
 # ---- 凭证与密钥：一律不入库 ----
 .env
 .env.*

@@ -141,17 +141,26 @@ def _sec_rss(w):
 
 
 def _sec_rotate(w):
-    """轮播游标序列 + 纯文本化。"""
+    """轮播游标序列 + 纯文本化。
+
+    序列格式是「标题(第几轮, shown 片数, 落后几片)」，只看结构不看时间：
+    轮播规则一改（比如从「冻结清单」换成「锚定当前窗 + 回溯」），这里必然变，
+    变的就是本次改动的证据。
+
+    注意窗口从第 5 窗起算：样本条目的片号是 3 ~ -5，都落在「过去」。
+    改用更小的窗号，前几片会被当成「发布时间在未来」而被轮播剔掉（见 _bucketize），
+    序列就不再是「逐片推进」的样子了。"""
     w("\n== rotate_pick 序列 ==")
     # 每条间隔一个时间片（= 设备刷新周期），这样才有「逐片推进」可看。
     # 若都塞在同一个片里，按片轮播只会出一条代表，等于什么都没测到。
     pool = [{"title": "T%d" % i, "link": "http://x/r%d" % i, "src": "s%d" % (i % 4),
              "ts": 1000 - i * B.ROTATE_SECONDS} for i in range(9)]
     st, seq = {}, []
-    for win in range(1, 13):
+    for win in range(5, 17):
         pick, st, _ = B.rotate_pick([dict(p) for p in pool], st,
                                     now=win * B.ROTATE_SECONDS)
-        seq.append("%s(%s,%s)" % (pick["title"], st["cycle"], len(st["shown"])))
+        seq.append("%s(%s,%s,%s)" % (pick["title"], st["cycle"], len(st["shown"]),
+                                     st["lag"]))
     w(" ".join(seq))
 
     w("\n== plain_text ==")
