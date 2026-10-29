@@ -12,7 +12,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: rss-nightly
+  # 与 minute.yml 同一个组：Pages 同一时刻只允许一个部署，
+  # 撞上时排队而不是报 "in progress deployment"。两个工作流时段互补，正常不会排队。
+  group: rss-pages
   cancel-in-progress: false
 
 permissions:

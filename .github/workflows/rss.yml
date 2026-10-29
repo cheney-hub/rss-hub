@@ -56,3 +56,23 @@ jobs:
         uses: actions/deploy-pages@v4
         with:
           artifact_name: site-oneshot
+        continue-on-error: true
+
+      # Pages 同一时刻只允许一个部署。若正好撞上 minute.yml 的轮次会报 in progress，
+      # 这里等一轮再试，避免改个源就红一次。
+      - name: 等 Pages 空档
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 35
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.deploy.outcome == 'failure'
+        with:
+          name: site-oneshot-retry
+          path: docs
+          retention-days: 1
+
+      - name: 重新部署
+        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-oneshot-retry
