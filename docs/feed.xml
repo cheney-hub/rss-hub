@@ -6,36 +6,43 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 08:06:09 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 08:16:03 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
 <item>
-<title>欧盟能源负责人：这场危机更严重，还因为涉及了石油产品。</title>
-<link>https://flash.jin10.com/detail/20261029160451607800</link>
-<pubDate>Thu, 29 Oct 2026 16:04:51 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029160451607800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+<title>商务部：如欧方对中国产品采取歧视性限制措施，中方必将采取一切必要措施</title>
+<link>https://www.chinanews.com.cn/cj/2026/10-29/10722765.shtml</link>
+<pubDate>Thu, 29 Oct 2026 16:12:37 +0800</pubDate>
+<guid isPermaLink="false">https://www.chinanews.com.cn/cj/2026/10-29/10722765.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
+<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
 </item>
 <item>
-<title>两部门联合发布农牧业雪灾风险预警</title>
-<link>https://api3.cls.cn/share/article/2519196?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 16:04:22 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519196?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
+<title>嘉士伯第三季度啤酒销量下降3.5%，软饮料业务增长抵消部分压力</title>
+<link>https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwwpnw2878843.shtml</link>
+<pubDate>Thu, 29 Oct 2026 08:10:46 GMT</pubDate>
+<guid isPermaLink="false">https://finance.sina.com.cn/stock/usstock/c/2026-10-29/doc-iniwwpnw2878843.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
+<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
 </item>
 <item>
-<title>欧股开盘涨跌不一</title>
-<link>https://xueqiu.com/5124430882/414490664</link>
-<pubDate>Thu, 29 Oct 2026 16:03:41 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414490664|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
+<title>香港恒生指数收跌0.59% 恒生科技指数跌2.84%</title>
+<link>https://xueqiu.com/5124430882/414492148</link>
+<pubDate>Thu, 29 Oct 2026 16:09:50 +0800</pubDate>
+<guid isPermaLink="false">https://xueqiu.com/5124430882/414492148|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
-<title>中国国防部：日方窥视滋扰中方正当行动暴露受迫害妄想症</title>
-<link>https://www.chinanews.com.cn/gn/2026/10-29/10722769.shtml</link>
-<pubDate>Thu, 29 Oct 2026 16:02:59 +0800</pubDate>
-<guid isPermaLink="false">https://www.chinanews.com.cn/gn/2026/10-29/10722769.shtml|https://www.chinanews.com.cn/rss/scroll-news.xml</guid>
-<source url="https://www.chinanews.com.cn/rss/scroll-news.xml">中国新闻网·滚动新闻</source>
+<title>克里姆林宫：希望人道主义援助能在周四或周五抵达俄罗斯控制的阿列什基镇，想离开的人将能够离开。</title>
+<link>https://flash.jin10.com/detail/20261029160919762800</link>
+<pubDate>Thu, 29 Oct 2026 16:09:19 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029160919762800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
+<item>
+<title>多所高校“砍学分”</title>
+<link>https://www.yicai.com/news/103415272.html</link>
+<pubDate>Thu, 29 Oct 2026 08:05:11 GMT</pubDate>
+<guid isPermaLink="false">https://www.yicai.com/news/103415272.html|https://rsshub.rss.tips/yicai/news</guid>
+<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
 </item>
 <item>
 <title>CK Asset pauses Hong Kong sales launch at Yuen Long’s Montage development</title>
@@ -43,6 +50,34 @@
 <pubDate>Thu, 29 Oct 2026 08:00:20 +0000</pubDate>
 <guid isPermaLink="false">https://www.scmp.com/business/companies/article/3372560/ck-asset-pauses-hong-kong-sales-launch-yuen-longs-montage-development|https://feed.quanwenrss.com/feed/scmp-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/scmp-latest.xml">南华早报 SCMP·最新</source>
+</item>
+<item>
+<title>15-Minute Lesson Plan: Reporting on Teen Activism and A.I. Data Centers</title>
+<link>https://www.nytimes.com/2026/10/29/learning/15-minute-lesson-plan-reporting-on-teen-activism-and-ai-data-centers.html</link>
+<pubDate>Thu, 29 Oct 2026 08:00:02 +0000</pubDate>
+<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/learning/15-minute-lesson-plan-reporting-on-teen-activism-and-ai-data-centers.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
+</item>
+<item>
+<title>涉在泰经营跨国卖淫网络 两狮城男与三泰国人被捕</title>
+<link>https://www.zaobao.com/news/sea/story20261029-9914820</link>
+<pubDate>Thu, 29 Oct 2026 07:54:48 +0000</pubDate>
+<guid isPermaLink="false">https://www.zaobao.com/news/sea/story20261029-9914820|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
+</item>
+<item>
+<title>Hello Kitty maker cuts ties with Japanese spy drama after China backlash</title>
+<link>https://www.bbc.com/news/articles/cry4x177jlnyo</link>
+<pubDate>Thu, 29 Oct 2026 07:54:33 +0000</pubDate>
+<guid isPermaLink="false">https://www.bbc.com/news/articles/cry4x177jlnyo|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
+</item>
+<item>
+<title>中远海能近5日震荡持平大盘 10月28日主力净流出 当前估值处历史高位区间</title>
+<link>https://www.eeo.com.cn/2026/1029/1078690.shtml</link>
+<pubDate>Thu, 29 Oct 2026 15:53:47 +0800</pubDate>
+<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078690.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
 </item>
 <item>
 <title>卢甘斯克遭乌军大规模袭击，民居及民用基础设施受损</title>
@@ -150,25 +185,11 @@
 <source url="https://rsshub.rss.tips/oncc/hk">东网</source>
 </item>
 <item>
-<title>《大金刚》1981年街机宣传画原稿以近33万美元成交</title>
-<link>https://www.cnbeta.com.tw/articles/game/1584296.htm</link>
-<pubDate>Thu, 29 Oct 2026 15:11:00 +0800</pubDate>
-<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/game/1584296.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
+<title>特斯拉Model 3停车状态车内起火 三星手机成怀疑对象</title>
+<link>https://www.cnbeta.com.tw/articles/tech/1584300.htm</link>
+<pubDate>Thu, 29 Oct 2026 15:14:00 +0800</pubDate>
+<guid isPermaLink="false">https://www.cnbeta.com.tw/articles/tech/1584300.htm|https://feed.quanwenrss.com/feed/cnbeta-all.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cnbeta-all.xml">cnBeta·全部资讯</source>
-</item>
-<item>
-<title>银行板块再度走强！多只个股涨超4%，四大行总市值破10万亿元</title>
-<link>https://finance.sina.com.cn/jryx/bank/2026-10-29/doc-iniwwpnw2819542.shtml</link>
-<pubDate>Thu, 29 Oct 2026 07:08:58 GMT</pubDate>
-<guid isPermaLink="false">https://finance.sina.com.cn/jryx/bank/2026-10-29/doc-iniwwpnw2819542.shtml|https://rsshub.rss.tips/sina/rollnews</guid>
-<source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
-</item>
-<item>
-<title>宏福苑大火问责 香港房屋局局长何永贤请辞</title>
-<link>https://www.zaobao.com/news/china/story20261029-9914517</link>
-<pubDate>Thu, 29 Oct 2026 07:03:22 +0000</pubDate>
-<guid isPermaLink="false">https://www.zaobao.com/news/china/story20261029-9914517|https://feed.quanwenrss.com/feed/zaobao-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/zaobao-latest.xml">联合早报</source>
 </item>
 <item>
 <title>先问AI再看医生：患者“信”了，医生愁了</title>
@@ -185,18 +206,11 @@
 <source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
 </item>
 <item>
-<title>At NYC Marathon, Cowbells Are a Signature Sound. But Why?</title>
-<link>https://www.nytimes.com/2026/10/29/nyregion/nyc-marathon-race-cowbell.html</link>
-<pubDate>Thu, 29 Oct 2026 07:00:24 +0000</pubDate>
-<guid isPermaLink="false">https://www.nytimes.com/2026/10/29/nyregion/nyc-marathon-race-cowbell.html|https://feed.quanwenrss.com/feed/nytimes-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/nytimes-latest.xml">纽约时报·最新</source>
-</item>
-<item>
-<title>东和新材前三季度增收不增利 现金流改善订单储备大幅增加</title>
-<link>https://www.eeo.com.cn/2026/1029/1078579.shtml</link>
-<pubDate>Thu, 29 Oct 2026 14:49:27 +0800</pubDate>
-<guid isPermaLink="false">https://www.eeo.com.cn/2026/1029/1078579.shtml|https://feed.quanwenrss.com/feed/eeo-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/eeo-latest.xml">经济观察报·最新</source>
+<title>钢琴家反田恭平因超速被判3个月拘禁刑 缓刑两年</title>
+<link>https://china.kyodonews.net/articles/-/17597</link>
+<pubDate>Thu, 29 Oct 2026 15:53:00 +0900</pubDate>
+<guid isPermaLink="false">https://china.kyodonews.net/articles/-/17597|https://feed.quanwenrss.com/feed/kyodo-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
 </item>
 <item>
 <title>吴澧 | 安妮·卡森的诗和希腊语法</title>
@@ -213,32 +227,11 @@
 <source url="https://rsshub.rss.tips/hk01/hot">香港01·热榜</source>
 </item>
 <item>
-<title>〈更新〉三丽鸥发声明称终止与《VIVANT》联动合作</title>
-<link>https://china.kyodonews.net/articles/-/17595</link>
-<pubDate>Thu, 29 Oct 2026 15:35:00 +0900</pubDate>
-<guid isPermaLink="false">https://china.kyodonews.net/articles/-/17595|https://feed.quanwenrss.com/feed/kyodo-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/kyodo-latest.xml">共同社</source>
-</item>
-<item>
-<title>科创无界 产业共生，2026沿沪宁城市协同创新日启幕在即</title>
-<link>https://www.yicai.com/news/103415040.html</link>
-<pubDate>Thu, 29 Oct 2026 06:33:10 GMT</pubDate>
-<guid isPermaLink="false">https://www.yicai.com/news/103415040.html|https://rsshub.rss.tips/yicai/news</guid>
-<source url="https://rsshub.rss.tips/yicai/news">第一财经·要闻</source>
-</item>
-<item>
 <title>三丽鸥日本官网发文致歉：终止与日剧《VIVANT》联名</title>
 <link>https://m.thepaper.cn/newsDetail_forward_34359007</link>
 <pubDate>Thu, 29 Oct 2026 06:25:04 +0000</pubDate>
 <guid isPermaLink="false">https://m.thepaper.cn/newsDetail_forward_34359007|https://feed.quanwenrss.com/feed/thepaper-latest.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/thepaper-latest.xml">澎湃新闻·最新</source>
-</item>
-<item>
-<title>El Salvador sends 2,000 troops to Haiti to rescue four missing soldiers</title>
-<link>https://www.bbc.com/news/articles/ck0e075n79j5o</link>
-<pubDate>Thu, 29 Oct 2026 06:24:56 +0000</pubDate>
-<guid isPermaLink="false">https://www.bbc.com/news/articles/ck0e075n79j5o|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
 </item>
 <item>
 <title>成田机场26年度上半年国际航班减少4%</title>
