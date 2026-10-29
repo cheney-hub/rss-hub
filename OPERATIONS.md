@@ -281,6 +281,32 @@ curl -s "源地址" | head -c 200      # 看 XML 声明里的 encoding=
 
 都正常就只能等，或手动 Run workflow 补水。
 
+**本仓库实测（2026-10-29 建库当天）**：`event=schedule` 计数为 0，即建库 5 小时内一次都没触发过。
+建库当天靠 cron 不可靠，先用下面的命令手动起一轮（跑满 1 小时，覆盖 13 个 5 分钟窗）：
+
+```bash
+TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill | sed -n 's/^password=//p')
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/cheney-hub/rss-hub/actions/workflows/minute.yml/dispatches \
+  -d '{"ref":"main"}'      # 204 = 已排队
+```
+
+查是否真有 schedule 事件在跑：
+
+```bash
+curl -s "https://api.github.com/repos/cheney-hub/rss-hub/actions/runs?event=schedule&per_page=1" \
+  | grep -o '"total_count":[0-9]*'
+```
+
+若建库满 24 小时后 `total_count` 仍是 0，说明这台仓库的 cron 队列长期不给配额，两条兜底路线选一：
+
+| 方案 | 做法 | 代价 |
+|---|---|---|
+| 外部定时器（推荐） | [cron-job.org](https://cron-job.org) 免费建一个 5 分钟任务，POST 上面那个 dispatch 地址，Header 带 `Authorization: Bearer <fine-grained PAT>`（只给本仓库 Actions: write） | token 存在第三方站点，需单独建一个最小权限 PAT |
+| 手动补水 | 每天点 4 次 Run workflow（每次覆盖 1 小时），或在手机 GitHub App 上点 | 人工 4 次/天 |
+
+两者都不影响 feed 本身：轮播游标按时间窗走，晚启动一小时只会让节奏从启动时刻重新对齐，不会乱序。
+
 ### 11. 凭据扫描失败
 
 `凭据扫描 / scan` 变红，说明被 `tools/check_secrets.py` 命中。本地复现：
