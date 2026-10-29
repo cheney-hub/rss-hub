@@ -447,7 +447,9 @@ def split_title(title, line_w=None, body_max=None):
             i -= 1
         if text_width(t[:i]) >= line_w * 0.6:
             cut = i
-    head = t[:cut].rstrip(" 　")
+    # 切点落在连接标点上（「万事达盘前上涨1.8%，」）时，标题别拖着逗号收尾，
+    # 那是被切断的痕迹；余文本来就从下一句开始。
+    head = t[:cut].rstrip(" 　").rstrip("，,、；;") or t[:cut].rstrip(" 　")
     # 正文不能以标点开头（「，停建124个猪场」）：那是被切断处的连接符，
     # 正文本来就另起一段，读起来不需要它。
     tail = t[cut:].lstrip(" 　" + HEAD_STRIP)
