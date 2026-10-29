@@ -1,0 +1,54 @@
+name: RSS 聚合
+
+on:
+  schedule:
+    # 每 5 分钟触发一次（GitHub 免费额度内的最小间隔）
+    - cron: "*/5 * * * *"
+  workflow_dispatch:          # 手动触发
+  push:
+    branches: [main]
+    paths:                    # 改订阅源/脚本立即重建，改 feed.xml 不会触发（防死循环）
+      - "feeds.txt"
+      - "build_feed.py"
+      - ".github/workflows/rss.yml"
+
+concurrency:
+  group: rss-aggregate
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 抓取并生成 feed（作业内每 60 秒刷一轮，持续约 4 分钟）
+        env:
+          REFRESH_SECONDS: "240"
+          FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
+          CONCURRENCY: "12"
+          FETCH_TIMEOUT: "20"
+        run: python build_feed.py
+
+      - name: 提交更新
+        run: |
+          git config user.name  "rss-hub-bot"
+          git config user.email "rss-hub-bot@users.noreply.github.com"
+          git add docs/feed.xml
+          if git diff --cached --quiet; then
+            echo "内容无变化，跳过提交"
+          else
+            git commit -m "feed: $(date -u '+%Y-%m-%d %H:%M UTC') 更新"
+            git pull --rebase --autostash origin main || true
+            git push origin HEAD:main
+          fi

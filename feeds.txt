@@ -1,0 +1,171 @@
+# ============================================================
+# RSS 订阅源列表
+# 格式：# 开头的注释行说明下一个地址；一行一个 RSS 地址
+# 服务端每 5 分钟自动读取本文件刷新，修改后需重新部署才会上线
+# ============================================================
+
+# ---------- 综合新闻 ----------
+
+# 中国新闻网·滚动新闻
+https://www.chinanews.com.cn/rss/scroll-news.xml
+
+# 新华社·要闻
+https://feed.quanwenrss.com/feed/xinhua-yw.xml
+
+# 新京报·要闻
+https://feed.quanwenrss.com/feed/bjnews-yaowen.xml
+
+# 光明网·热点
+https://feed.quanwenrss.com/feed/gmw-hot.xml
+
+# 新华社·国际
+https://feed.quanwenrss.com/feed/xinhua-gj.xml
+
+# 人民日报客户端·热点
+https://feed.quanwenrss.com/feed/people-redian.xml
+
+# 澎湃新闻·最新
+https://feed.quanwenrss.com/feed/thepaper-latest.xml
+
+# 南方周末·最新
+https://feed.quanwenrss.com/feed/nfzm-latest.xml
+
+# 界面新闻·快讯（滚动快讯，刷屏可注释掉）
+https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml
+
+# 财经杂志·最新
+https://feed.quanwenrss.com/feed/caijing-latest.xml
+
+# ---------- 国际媒体中文版（quanwenrss 镜像，沙箱可达）----------
+
+# 联合早报（新加坡）·最新
+https://feed.quanwenrss.com/feed/zaobao-latest.xml
+
+# BBC·国际（英文）
+https://feed.quanwenrss.com/feed/bbc-world.xml
+
+# 纽约时报·最新（大源，300 条）
+https://feed.quanwenrss.com/feed/nytimes-latest.xml
+
+# FT中文网·全部（镜像，官方源沙箱不可达）
+https://feed.quanwenrss.com/feed/ftchinese-all.xml
+
+# 日经中文网·最新
+https://feed.quanwenrss.com/feed/nikkei-latest.xml
+
+# 共同社（日本）中文网·最新
+https://feed.quanwenrss.com/feed/kyodo-latest.xml
+
+# NHK WORLD（日本）中文·新闻
+https://feed.quanwenrss.com/feed/nhkworld-zh.xml
+
+# 德国之声中文·最新
+https://feed.quanwenrss.com/feed/dw-latest.xml
+
+# 中央社 CNA（中国台湾）·即时（繁体）
+https://feed.quanwenrss.com/feed/cna-aall.xml
+
+# 俄罗斯卫星通讯社中文·最新
+https://feed.quanwenrss.com/feed/sputnik-latest.xml
+
+# 加拿大国际广播电台 RCI 中文·最新
+https://feed.quanwenrss.com/feed/rci-zh-hans-latest.xml
+
+# 南华早报 SCMP·最新（大源，200 条）
+https://feed.quanwenrss.com/feed/scmp-latest.xml
+
+# 凤凰网军事·最新
+https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml
+
+# ---------- 财经 ----------
+
+# 财新网·最新（大源，120 条）
+https://feed.quanwenrss.com/feed/caixin-latest.xml
+
+# 经济观察报·最新
+https://feed.quanwenrss.com/feed/eeo-latest.xml
+
+# 哈佛商业评论中文版·最新
+https://feed.quanwenrss.com/feed/hbrchina-latest.xml
+
+# 财联社·电报滚动（1000 条，刷屏可注释掉）
+https://feed.quanwenrss.com/feed/cailianshe-roll.xml
+
+# 雪球·实时快讯（1000 条，刷屏可注释掉）
+https://feed.quanwenrss.com/feed/xueqiu-livenews.xml
+
+# 华尔街见闻·最新（官方 RSS 仍在线，已验证实时更新）
+https://dedicated.wallstreetcn.com/rss.xml
+
+# 第一财经·要闻（RSSHub 镜像，已验证实时更新）
+https://rsshub.rss.tips/yicai/news
+
+# 金十数据·7×24 快讯（滚动快讯，刷屏可注释掉）
+https://feed.quanwenrss.com/feed/jin10-flash.xml
+
+# ---------- 科技/知识 ----------
+
+# 36氪·最新
+https://feed.quanwenrss.com/feed/36kr-latest.xml
+
+# 知乎日报·最新
+https://feed.quanwenrss.com/feed/zhihu-latest.xml
+
+# 果壳·科学
+https://feed.quanwenrss.com/feed/guokr-science.xml
+
+# 虎嗅·前沿科技
+https://feed.quanwenrss.com/feed/huxiu-tech.xml
+
+# cnBeta·全部资讯
+https://feed.quanwenrss.com/feed/cnbeta-all.xml
+
+# ---------- 门户（RSSHub 公共实例镜像，官方 RSS 已停更）----------
+
+# 新浪新闻·滚动（官方 RSS 停更于 2016/2018，此为实时镜像）
+https://rsshub.rss.tips/sina/rollnews
+
+# 网易新闻·今日关注（官方 RSS 已停更，此为实时镜像）
+https://hub.slarker.me/163/today
+
+# 凤凰网·资讯（官方 RSS 已停更，RSSHub 镜像，已验证更新）
+https://rsshub.rss.tips/ifeng/news
+
+# ---------- 港澳（RSSHub 镜像，繁体）----------
+
+# 东网（香港东方日报）·港澳新闻（已验证实时更新）
+https://rsshub.rss.tips/oncc/hk
+
+# 香港01·热榜（繁体，官方 RSS 无，RSSHub 镜像）
+https://rsshub.rss.tips/hk01/hot
+
+# ---------- 新加坡（中文）----------
+
+# 联合早报·新加坡即时新闻（RSSHub 镜像，已验证分钟级更新）
+https://rsshub.rss.tips/zaobao/realtime/singapore
+
+# 8world（新传媒中文新闻，官方 RSS 无，RSSHub 镜像，已验证更新）
+https://rsshub.rss.tips/8world/news
+
+# 备用：联合早报·最新新加坡（quanwenrss 镜像，如上两条失效可启用）
+# https://feed.quanwenrss.com/feed/zaobao-latest-singapore.xml
+
+# ---------- 备用（沙箱不可达或重复，勿启用）----------
+
+# 彭博社（境内无可用镜像）
+# https://www.bloomberg.com/feeds/news.rss
+
+# 澎湃（anyfeeder 镜像，与上面澎湃重复）
+# https://plink.anyfeeder.com/thepaper
+
+# FT中文网官方源（沙箱不可达，已用 quanwenrss 镜像）
+# https://www.ftchinese.com/rss/news
+
+# BBC中文官方源（沙箱不可达，已用 quanwenrss 镜像）
+# https://feeds.bbci.co.uk/zhongwen/trad/rss.xml
+
+# 纽约时报中文网官方源（沙箱不可达，已用 quanwenrss 镜像）
+# https://cn.nytimes.com/rss.html
+
+# 新华每日电讯·最新一期（镜像站已 404 下线）
+# https://feed.quanwenrss.com/feed/mrdx-latest.xml

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+state.json
+/feed.xml
+.DS_Store
+Thumbs.db
