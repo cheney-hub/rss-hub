@@ -6,9 +6,16 @@
 <atom:link href="https://cheney-hub.github.io/rss-hub/feed.xml" rel="self" type="application/rss+xml"/>
 <description>多源 RSS 头条聚合，按发布时间倒序（源 43 个）</description>
 <language>zh-CN</language>
-<lastBuildDate>Thu, 29 Oct 2026 10:14:40 +0000</lastBuildDate>
+<lastBuildDate>Thu, 29 Oct 2026 10:20:46 +0000</lastBuildDate>
 <generator>github-actions/rss-hub</generator>
 <ttl>5</ttl>
+<item>
+<title>花旗：将微软(MSFT.O)目标价从636美元上调至680美元。</title>
+<link>https://flash.jin10.com/detail/20261029181924776800</link>
+<pubDate>Thu, 29 Oct 2026 18:19:24 +0800</pubDate>
+<guid isPermaLink="false">https://flash.jin10.com/detail/20261029181924776800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
+</item>
 <item>
 <title>ATFX:柬埔寨团队走进查克托穆克步行街 面向市民开展金融知识普及</title>
 <link>https://finance.sina.com.cn/money/forex/forexroll/videoroll/2026-10-29/doc-iniwwtux5304618.shtml</link>
@@ -17,25 +24,11 @@
 <source url="https://rsshub.rss.tips/sina/rollnews">新浪新闻·滚动</source>
 </item>
 <item>
-<title>财料</title>
-<link>https://flash.jin10.com/detail/20261029180906729800</link>
-<pubDate>Thu, 29 Oct 2026 18:09:06 +0800</pubDate>
-<guid isPermaLink="false">https://flash.jin10.com/detail/20261029180906729800|https://feed.quanwenrss.com/feed/jin10-flash.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/jin10-flash.xml">金十数据·7×24 快讯</source>
-</item>
-<item>
-<title>领益智造：前三季度净利润同比下降1.27% Q3净利润环比增长209%</title>
-<link>https://api3.cls.cn/share/article/2519434?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
-<pubDate>Thu, 29 Oct 2026 18:09:02 +0800</pubDate>
-<guid isPermaLink="false">https://api3.cls.cn/share/article/2519434?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
+<title>谷歌母公司持有SpaceX股票公允价值达752亿美元</title>
+<link>https://api3.cls.cn/share/article/2519440?os=ios&amp;sv=8.8.3&amp;app=cailianpress</link>
+<pubDate>Thu, 29 Oct 2026 18:13:03 +0800</pubDate>
+<guid isPermaLink="false">https://api3.cls.cn/share/article/2519440?os=ios&amp;sv=8.8.3&amp;app=cailianpress|https://feed.quanwenrss.com/feed/cailianshe-roll.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/cailianshe-roll.xml">财联社·电报滚动</source>
-</item>
-<item>
-<title>洋河三季报：稳价去库筑底盘，动销回暖迎修复 10月29日，洋河股份发布2026年三季度业绩报告，公司前三季度实现营业收入118.22亿元，归属于上市公司股东净利…</title>
-<link>https://xueqiu.com/5124430882/414523794</link>
-<pubDate>Thu, 29 Oct 2026 18:08:59 +0800</pubDate>
-<guid isPermaLink="false">https://xueqiu.com/5124430882/414523794|https://feed.quanwenrss.com/feed/xueqiu-livenews.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/xueqiu-livenews.xml">雪球·实时快讯</source>
 </item>
 <item>
 <title>Thailand and Vietnam meat seizures highlight deepening risk of unsafe food on the table</title>
@@ -87,6 +80,13 @@
 <source url="https://dedicated.wallstreetcn.com/rss.xml">华尔街见闻·最新</source>
 </item>
 <item>
+<title>中共中央将于30日上午举行新闻发布会，介绍和解读党的二十届五中全会精神</title>
+<link>https://www.mycaijing.com/article/detail/586529?source_id=40</link>
+<pubDate>Thu, 29 Oct 2026 17:47:09 +0800</pubDate>
+<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586529?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
+<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
+</item>
+<item>
 <title>思泰克301568近5日空头行情主力净流出 10月28日估值处历史高位区间</title>
 <link>https://www.eeo.com.cn/2026/1029/1078872.shtml</link>
 <pubDate>Thu, 29 Oct 2026 17:45:21 +0800</pubDate>
@@ -113,6 +113,13 @@
 <pubDate>Thu, 29 Oct 2026 17:38:18 +0800</pubDate>
 <guid isPermaLink="false">https://m.huxiu.com/article/4901451.html?type=text|https://feed.quanwenrss.com/feed/huxiu-tech.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/huxiu-tech.xml">虎嗅·前沿科技</source>
+</item>
+<item>
+<title>27岁医学生患乳腺癌去世 称起初以为是纤维瘤没有重视</title>
+<link>https://c.m.163.com/news/a/LAE227H405149N8T.html</link>
+<pubDate>Thu, 29 Oct 2026 09:30:11 GMT</pubDate>
+<guid isPermaLink="false">https://c.m.163.com/news/a/LAE227H405149N8T.html|https://hub.slarker.me/163/today</guid>
+<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
 </item>
 <item>
 <title>农事“丰”景｜金秋时节，农村都在忙什么？</title>
@@ -185,13 +192,6 @@
 <source url="https://rsshub.rss.tips/ifeng/news">凤凰网·资讯</source>
 </item>
 <item>
-<title>国防部：菲方军舰非法坐滩仁爱礁早该被拖走</title>
-<link>https://c.m.163.com/news/a/LAE1V00L0514R9P4.html</link>
-<pubDate>Thu, 29 Oct 2026 09:00:15 GMT</pubDate>
-<guid isPermaLink="false">https://c.m.163.com/news/a/LAE1V00L0514R9P4.html|https://hub.slarker.me/163/today</guid>
-<source url="https://hub.slarker.me/163/today">网易新闻·今日关注</source>
-</item>
-<item>
 <title>俞汝捷 | 忆作家吴越</title>
 <link>https://www.infzm.com/contents/343592</link>
 <pubDate>Thu, 29 Oct 2026 17:00:00 +0800</pubDate>
@@ -218,13 +218,6 @@
 <pubDate>Thu, 29 Oct 2026 08:38:54 +0000</pubDate>
 <guid isPermaLink="false">https://www.bbc.com/news/articles/cmqxnl312v34o|https://feed.quanwenrss.com/feed/bbc-world.xml</guid>
 <source url="https://feed.quanwenrss.com/feed/bbc-world.xml">BBC·国际</source>
-</item>
-<item>
-<title>AI巨头面临全新评价体系：现金流才是当前最关键指标</title>
-<link>https://www.mycaijing.com/article/detail/586523?source_id=40</link>
-<pubDate>Thu, 29 Oct 2026 16:23:19 +0800</pubDate>
-<guid isPermaLink="false">https://www.mycaijing.com/article/detail/586523?source_id=40|https://feed.quanwenrss.com/feed/caijing-latest.xml</guid>
-<source url="https://feed.quanwenrss.com/feed/caijing-latest.xml">财经杂志·最新</source>
 </item>
 <item>
 <title>弗拉维奥·博索纳罗称将在海外反对卢拉政府</title>

@@ -199,7 +199,19 @@ grep -n "SCREEN_TITLE_WIDTH" .github/workflows/*.yml | head
 SCREEN_TITLE_WIDTH=12 python3 build_feed.py
 ```
 
-**c. 想一屏看多条** —— RSS 卡片做不到，换文本 API：配好 `DOT_API_KEY` / `DOT_DEVICE_ID` 后
+**c. 订阅了折行版 `feed-wrap.xml`，屏幕还是只有一行** —— 说明云端把标题里的换行符吃掉了。
+先确认不是自己搞错了源（页首应是「RSS 头条 · 折行」），再逐个试三种分隔符：
+
+```bash
+# 依次订阅探针源，看屏上是否变成 3 行
+#   .../wrap/t1.xml  真实换行     .../wrap/t2.xml  <br>
+#   .../wrap/t3.xml  U+2028      .../wrap/t4.xml  分段多条
+```
+
+哪个折行就设 `SCREEN_WRAP_SEP` 为该值（`lf` / `br` / `u2028`）并重新生成；
+三个都不折行就是云端不支持，折行此路不通——走下面 d。
+
+**d. 想一屏看多条** —— RSS 卡片做不到，换文本 API：配好 `DOT_API_KEY` / `DOT_DEVICE_ID` 后
 `push_text.py` 会推「标题 1 行 + 正文 3 行」，一屏 4 条（见 [README](README.md#一屏-4-条文本-api推荐)）。
 配了密钥但设备没变，按顺序查：
 

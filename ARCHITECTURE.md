@@ -116,6 +116,9 @@ feeds.txt ──► │ Actions 作业（白天每小时触发，内跑 55 轮�
 | `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-screen.xml` | 墨水屏版输出路径 |
 | `SCREEN_TITLE_WIDTH` | `13` | 墨水屏标题宽度上限（全角字符数）。设备 RSS 卡片是一行大字号，296px 宽实测放 13～14 个全角字，超过即被云端硬切；调成 13 让我们的截断（标点断句、不切书名号）先发生 |
 | `SCREEN_ITEMS` | `60` | 墨水屏版条目数。Dot 云端取「最新 N 条」且 N 由它决定，给满随它挑 |
+| `WRAP_OUT` | 与 `OUT_FILE` 同目录的 `feed-wrap.xml` | 折行版输出路径 |
+| `SCREEN_WRAP_LINES` | `3` | 折行版最多折几行（每行仍是 `SCREEN_TITLE_WIDTH` 全角） |
+| `SCREEN_WRAP_SEP` | `lf` | 折行分隔符：`lf`（`&#10;`）/ `br`（CDATA 内 `<br>`）/ `u2028`（`&#8232;`）。哪种生效要靠 `docs/wrap/` 的探针在真机上确认 |
 
 ## 六、设计取舍
 

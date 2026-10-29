@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>标题折行探针 · RSS 聚合头条</title>
+<style>
+  :root{--bg:#f2f3f5;--fg:#1b1f24;--sub:#5f6b7a;--card:#fff;--line:#dcdfe4;--ok:#0a7d43}
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0f1216;--fg:#e8eaed;--sub:#9aa4b2;--card:#171b21;--line:#262c35;--ok:#4ade80}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:26px 16px 56px;background:var(--bg);color:var(--fg);
+       font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:620px;margin:0 auto}
+  h1{font-size:21px;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:13px;margin:0 0 22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+        padding:14px 16px;margin-bottom:12px}
+  .card h2{font-size:15px;margin:0 0 4px}
+  .card .why{color:var(--sub);font-size:12.5px;margin:0 0 10px}
+  .url{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--sub);
+       word-break:break-all;background:rgba(127,127,127,.09);border-radius:7px;padding:7px 9px}
+  .row{display:flex;gap:8px;align-items:center;margin-top:9px;flex-wrap:wrap}
+  button{border:1px solid var(--line);background:transparent;color:var(--fg);
+         border-radius:8px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+  button:active{opacity:.75}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--sub);font-weight:600;font-size:12px}
+  .ok{color:var(--ok);font-weight:600}
+  .note{color:var(--sub);font-size:12.5px;margin-top:18px;line-height:1.9}
+  .back{color:var(--sub);font-size:13px;margin-top:22px;text-align:center}
+  .back a{color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>标题折行探针</h1>
+  <p class="sub">
+    用途：确认 Dot 云端渲染 RSS 卡片时，<b>会不会保留标题里的换行符</b>。
+    四个源用的是同一句话，只有「换行怎么表示」不同——加进 Dot App 的循环内容逐个看屏幕即可。
+  </p>
+
+  <div class="card">
+    <h2>① 真实换行</h2>
+    <p class="why">标题里插入 <code>&amp;#10;</code>（真实换行符）。多数解析器会保留，是最可能生效的一种。</p>
+    <div class="url" id="u1">https://cheney-hub.github.io/rss-hub/wrap/t1.xml</div>
+    <div class="row"><button onclick="cp('u1',this)">复制地址</button></div>
+  </div>
+
+  <div class="card">
+    <h2>② &lt;br&gt; 标签</h2>
+    <p class="why">标题里放 CDATA 包裹的 <code>&lt;br&gt;</code>。只有把标题当 HTML 解析的渲染端才认它。</p>
+    <div class="url" id="u2">https://cheney-hub.github.io/rss-hub/wrap/t2.xml</div>
+    <div class="row"><button onclick="cp('u2',this)">复制地址</button></div>
+  </div>
+
+  <div class="card">
+    <h2>③ U+2028</h2>
+    <p class="why">标题里放 Unicode 行分隔符（<code>&amp;#8232;</code>）。少数老派排版引擎认它。</p>
+    <div class="url" id="u3">https://cheney-hub.github.io/rss-hub/wrap/t3.xml</div>
+    <div class="row"><button onclick="cp('u3',this)">复制地址</button></div>
+  </div>
+
+  <div class="card">
+    <h2>④ 分段多条</h2>
+    <p class="why">
+      同一句话拆成 3 条 item。测的是另一件事：<b>云端会不会轮播同一个源的多条</b>。
+      若会，长标题就能拆段读全，不必依赖换行符。
+    </p>
+    <div class="url" id="u4">https://cheney-hub.github.io/rss-hub/wrap/t4.xml</div>
+    <div class="row"><button onclick="cp('u4',this)">复制地址</button></div>
+  </div>
+
+  <p class="sub" style="margin-top:22px">判读方法</p>
+  <div class="card">
+    <table>
+      <tr><th>屏上看到</th><th>结论</th><th>接下来</th></tr>
+      <tr>
+        <td>3 行小字，正好是「国家能源局：9月核发绿证3.2 / 亿个，同比增长21%，/ 全年累计突破20亿个」</td>
+        <td class="ok">换行生效</td>
+        <td>直接订阅 <a href="../feed-wrap.xml">feed-wrap.xml</a>，一屏能读到 3 行标题</td>
+      </tr>
+      <tr>
+        <td>只有 1 行，后面被切掉或带它自己加的省略号</td>
+        <td>换行被吃掉</td>
+        <td>折行这条路走不通，改走文本 API（一屏 4 条）；或继续用单行版 <a href="../feed-screen.xml">feed-screen.xml</a></td>
+      </tr>
+      <tr>
+        <td>④ 屏上 3 段内容会变</td>
+        <td class="ok">云端会轮播同一源的多条</td>
+        <td>可把长标题拆成多条 item，逐段展示</td>
+      </tr>
+      <tr>
+        <td>④ 一直是第一段「…绿证3.2」</td>
+        <td>只取最新 1 条</td>
+        <td>这条支路作废</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="note">
+    提醒：折行版即使失效也不会比现在差——第一行前 13 字的内容与单行版一致，
+    最坏情况就是回到「一屏一行」。所以可以放心把 <code>feed-wrap.xml</code> 加进 App 对比着看。
+  </div>
+
+  <div class="back">
+    <a href="../screen.html">效果示意</a> ·
+    <a href="../">订阅说明</a> ·
+    <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
+  </div>
+</div>
+
+<script>
+function cp(id, btn){
+  const t = document.getElementById(id).textContent.trim();
+  const done = () => { const o = btn.textContent; btn.textContent = '已复制'; setTimeout(() => btn.textContent = o, 1400); };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(t).then(done).catch(() => fallback(t, done));
+  } else {
+    fallback(t, done);
+  }
+}
+function fallback(t, done){
+  const ta = document.createElement('textarea');
+  ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { alert(t); }
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>

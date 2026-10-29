@@ -11,11 +11,13 @@
 
 ```
 feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►  GitHub Pages  ──►  RSS 阅读器
-（源清单）      （Actions 里跑）      docs/feed-screen.xml                        ──►  墨水屏设备
+（源清单）      （Actions 里跑）      docs/feed-screen.xml                        ──►  墨水屏设备（单行）
+                                     docs/feed-wrap.xml                          ──►  墨水屏设备（折行）
 ```
 
-同一份数据出两个版本：**完整版**标题原样，给电脑/手机上的 RSS 阅读器；**墨水屏版**标题转纯文本并优雅截断
-（13 个全角字符内，实测一行容量）、条目给足 60 条，填进 Dot Quote/0 的循环内容列表（显示样式由 Dot 云端渲染）。
+同一份数据出三份：**完整版**标题原样，给电脑/手机上的 RSS 阅读器；**墨水屏版**标题转纯文本并优雅截断
+（13 个全角字符内，实测一行容量）；**折行版**同样纯文本，但把标题折成 3 行（能否显示取决于云端是否保留换行符，
+见[下文](#标题折行实验)）。条目都给足 60 条，填进 Dot Quote/0 的循环内容列表（显示样式由 Dot 云端渲染）。
 想要一屏看 4 条，用 `push_text.py` 走文本 API。
 
 ## 订阅地址
@@ -23,7 +25,9 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 | 用途 | 地址 |
 |---|---|
 | 主地址（推荐） | `https://cheney-hub.github.io/rss-hub/feed.xml` |
-| 墨水屏版 | `https://cheney-hub.github.io/rss-hub/feed-screen.xml` |
+| 墨水屏版 · 单行 | `https://cheney-hub.github.io/rss-hub/feed-screen.xml` |
+| 墨水屏版 · 折行 | `https://cheney-hub.github.io/rss-hub/feed-wrap.xml` |
+| 折行探针（测设备） | https://cheney-hub.github.io/rss-hub/wrap/ |
 | 说明页 | https://cheney-hub.github.io/rss-hub/ |
 | 墨水屏预览 | https://cheney-hub.github.io/rss-hub/screen.html |
 | 镜像 1（raw） | `https://raw.githubusercontent.com/cheney-hub/rss-hub/main/docs/feed.xml` |
@@ -42,7 +46,7 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 | 发布频率 | 白天每分钟一版，深夜整点一版（自定义 Actions 部署，不受 Pages 10 次/小时限制） |
 | 单轮耗时 | 3～5 秒（43 源并发 12 路） |
 | 单次作业 | 白天 55 分钟 / 55 轮；单轮约 5 秒抓取 + 约 20 秒部署 |
-| 墨水屏版 | 标题纯文本 ≤ 13 全角字符（实测一行容量），60 条给足；文本 API 版一屏 4 条 |
+| 墨水屏版 | 单行版标题 ≤ 13 全角字符（实测一行容量）；折行版折 3 行；文本 API 版一屏 4 条 |
 
 ## 快速开始
 
@@ -63,9 +67,11 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 ├── push_text.py               # 【主链路】把最新 4 条推给 Dot 文本 API（一屏 4 条）
 ├── docs/                      # ← GitHub Pages 发布的目录（站点根）
 │   ├── feed.xml               #   完整版订阅文件（每 10 轮备份提交一次）
-│   ├── feed-screen.xml        #   墨水屏版：纯文本标题 + 优雅截断 + 字段极简
+│   ├── feed-screen.xml        #   墨水屏版：纯文本标题 + 优雅截断（单行）+ 字段极简
+│   ├── feed-wrap.xml          #   墨水屏版 · 折行：标题按 13 全角折 3 行
 │   ├── index.html             #   订阅说明页（前端读取 feed.xml 渲染）
-│   └── screen.html            #   小屏内容示意：一次一条，Dot 实际渲染以其云端模板为准
+│   ├── screen.html            #   小屏内容示意：单行 / 折行 / 文本 API 三栏对比
+│   └── wrap/                  #   折行探针：t1~t4 四个测试源 + 说明页
 ├── .github/workflows/
 │   ├── minute.yml             #   分钟级发布：白天每小时 55 轮循环，每分钟部署一次
 │   ├── nightly.yml            #   夜间整点发布：北京 00:00–06:00 每小时一次
@@ -73,6 +79,7 @@ feeds.txt  ──►  build_feed.py  ──►  docs/feed.xml          ──►
 │   └── guard.yml              #   凭据扫描：推送时检查有无混入 token
 ├── tools/check_secrets.py     # 仓库凭据扫描脚本（本地与 CI 共用）
 ├── tools/gen_minute_workflow.py # 生成 minute.yml（改轮数就是改这里）
+├── tools/gen_wrap_probe.py    # 生成折行探针源（测设备认哪种换行符）
 ├── ARCHITECTURE.md            # 架构、算法规则、参数与取舍
 ├── OPERATIONS.md              # 运维手册：改源、凭证、监控、迁移
 └── TROUBLESHOOTING.md         # 故障排查
@@ -119,6 +126,38 @@ https://cheney-hub.github.io/rss-hub/feed-screen.xml
 
 > 判断是否用对了源：设备页首小字标题是 **「RSS 头条 · 墨水屏」** 才说明订阅的是墨水屏版；
 > 如果是「RSS 聚合头条」，那是完整版，标题没有任何预处理，被切得更难看。
+
+## 标题折行（实验）
+
+单行 13 字实在不够读。折行能不能成，取决于一个我们控制不了的点：**Dot 云端抓取时会不会保留标题里的换行符**。
+所以除了单行版，另外输出一份**折行版** `feed-wrap.xml`——同一批数据，标题按 13 全角一行折成 3 行：
+
+| 源 | 标题实际长什么样 | 一屏能读到 |
+|---|---|---|
+| `feed-screen.xml` | `花旗：将微软(MSFT.O…` | 13 字 |
+| `feed-wrap.xml` | `花旗：将微软(MSFT.O)` / `目标价从636美元上调至680美` / `元。` | 约 39 字 |
+
+**先用探针确认设备认哪种换行**（4 个源，同一句话，只有换行表示方式不同）：
+
+https://cheney-hub.github.io/rss-hub/wrap/
+
+| 探针 | 换行怎么表示 | 判定 |
+|---|---|---|
+| `t1.xml` | 真实换行符（`&#10;`） | 屏上 3 行 → 生效，用 `feed-wrap.xml` 默认配置 |
+| `t2.xml` | `<br>`（CDATA 包裹） | 屏上 3 行 → 说明云端按 HTML 解析，设 `SCREEN_WRAP_SEP=br` |
+| `t3.xml` | U+2028 行分隔符 | 屏上 3 行 → 设 `SCREEN_WRAP_SEP=u2028` |
+| `t4.xml` | 同一句话拆成 3 条 item | 屏上段落会变 → 云端会轮播同源多条，可走「拆分多条」支路 |
+
+全都只显示 1 行、后面被切 → 换行被云端吃掉了，折行此路不通，回到单行版或走文本 API。
+
+**折行版失效也不会更差**：第一行前 13 字与单行版内容一致，最坏情况就是退回「一屏一行」，
+所以可以放心加进 App 对比着看。调参不用改代码：
+
+```bash
+SCREEN_WRAP_LINES=4 SCREEN_WRAP_SEP=lf python3 build_feed.py   # 折 4 行
+```
+
+探针源由 `tools/gen_wrap_probe.py` 生成（同一句话、行宽与正式源一致，避免结论失真）。
 
 ## 一屏 4 条：文本 API（推荐）
 

@@ -35,6 +35,12 @@
   .m{font-size:9px;margin-top:10px;opacity:.55;white-space:nowrap;overflow:hidden;
      text-overflow:ellipsis}
 
+  /* 折行版：同一块屏，标题折成 3 行（字号自然小一档）。
+     能否真折行取决于 Dot 云端是否保留标题里的换行符，本页只是「假设生效」的样子 */
+  .device.wrapv .wl{font-size:12px;line-height:1.5;font-weight:600;overflow:hidden}
+  .device.wrapv .wl div{white-space:nowrap;overflow:hidden}
+  .device.wrapv .m{margin-top:8px}
+
   /* 文本 API 版面：标题 1 行 + 正文 3 行 + 右下角落款（Dot 官方固定布局） */
   .device.api{justify-content:flex-start;padding:13px 14px}
   .device.api .t1{font-size:15px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden}
@@ -53,9 +59,9 @@
 <body>
 <div class="wrap">
   <h1>小屏效果示意</h1>
-  <p class="sub">Dot Quote/0 的显示由 Dot 云端渲染，本页只示意两种喂法的效果差异，实际样式以设备为准。</p>
+  <p class="sub">Dot Quote/0 的显示由 Dot 云端渲染，本页只示意三种喂法的效果差异，实际样式以设备为准。</p>
 
-  <div class="cap">① RSS 卡片（现状）：一行大字号，约 13 个汉字满宽 —— 一屏只有一条</div>
+  <div class="cap">① RSS 卡片 · 单行（<code>feed-screen.xml</code>）：约 13 个汉字满宽，超出即被云端硬切</div>
   <div class="stage" id="stage">
     <div class="device" onclick="toggleZoom()" title="点击放大 / 缩小">
       <div class="q" id="q">—</div>
@@ -63,7 +69,15 @@
     </div>
   </div>
 
-  <div class="cap">② 文本 API：标题 1 行 + 正文 3 行 + 右下角落款 —— 一屏四条</div>
+  <div class="cap">② RSS 卡片 · 折行（<code>feed-wrap.xml</code>）：同一块屏塞 3 行 —— <b>前提是云端保留换行符</b></div>
+  <div class="stage">
+    <div class="device wrapv">
+      <div class="wl" id="wl">—</div>
+      <div class="m" id="wm">—</div>
+    </div>
+  </div>
+
+  <div class="cap">③ 文本 API：标题 1 行 + 正文 3 行 + 右下角落款 —— 一屏四条</div>
   <div class="stage">
     <div class="device api">
       <div class="t1" id="t1">—</div>
@@ -78,21 +92,32 @@
   </div>
 
   <div class="specs">
-    订阅源：本站 <code>feed-screen.xml</code> —— 纯文本标题（emoji / 装饰符号已摘除）、<br>
-    标题在标点处优雅截断（<code>SCREEN_TITLE_WIDTH</code>，默认 13 全角 = 实测一行容量）、条目给足 60 条、字段极简
+    三份 feed 都来自同一批数据，区别只在标题怎么处理：<br>
+    <code>feed-screen.xml</code> 单行截断 13 全角（<code>SCREEN_TITLE_WIDTH</code>）·
+    <code>feed-wrap.xml</code> 折 3 行（<code>SCREEN_WRAP_LINES</code>）<br>
+    纯文本标题（emoji / 装饰符号已摘除）、条目给足 60 条、字段极简
+  </div>
+
+  <div class="note">
+    <b>折行能不能生效，得设备说了算</b>：RSS 卡片是云端单行渲染，
+    <a href="./wrap/">这里的 4 个探针源</a>用同一句话分别试「真实换行 / &lt;br&gt; / U+2028 / 分段多条」，
+    加进 Dot App 看屏上是 3 行还是 1 行即可判断。
   </div>
 
   <div class="foot">
     <a href="./feed-screen.xml">feed-screen.xml</a> ·
+    <a href="./feed-wrap.xml">feed-wrap.xml</a> ·
+    <a href="./wrap/">折行探针</a> ·
     <a href="./">订阅说明</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
   </div>
 </div>
 
 <script>
-let items = [], idx = 0, zoomed = false;
+let items = [], wraps = [], idx = 0, zoomed = false;
 
 const $ = id => document.getElementById(id);
+const esc1 = s => (s || '').replace(/[<>&]/g, '');
 
 function ago(s){
   if(!s) return '';
@@ -111,10 +136,18 @@ function render(){
   $('q').textContent = it.title;                       // ① RSS 卡片：只有这一行
   $('m').textContent = [it.src, ago(it.date)].filter(Boolean).join(' · ');
 
-  // ② 文本 API：标题 1 行 + 正文 3 行
+  // ② 折行版：按标题里的换行符分行显示
+  const wt = wraps.length ? wraps[idx % wraps.length] : it;
+  $('wl').innerHTML = (wt.title || '')
+    .split(/[\r\n\u2028]+|<br\s*\/?>/i)
+    .filter(Boolean)
+    .map(p => '<div>' + esc1(p) + '</div>').join('');
+  $('wm').textContent = [wt.src || it.src, ago(wt.date || it.date)].filter(Boolean).join(' · ');
+
+  // ③ 文本 API：标题 1 行 + 正文 3 行
   const next = [1,2,3].map(k => items[(idx + k) % items.length]).filter(Boolean);
   $('t1').textContent = it.title;
-  $('b').innerHTML = next.map(x => '<div>' + x.title.replace(/[<>&]/g, '') + '</div>').join('');
+  $('b').innerHTML = next.map(x => '<div>' + esc1(x.title) + '</div>').join('');
   const now = new Date();
   $('sig').textContent = String(now.getMonth()+1).padStart(2,'0') + '-' +
                          String(now.getDate()).padStart(2,'0') + ' ' +
@@ -127,19 +160,24 @@ function toggleZoom(){
   $('stage').className = zoomed ? 'stage z2' : 'stage';
 }
 
-fetch('./feed-screen.xml', {cache:'no-store'})
-  .then(r => r.text())
-  .then(t => {
-    const doc = new DOMParser().parseFromString(t, 'text/xml');
-    items = [...doc.querySelectorAll('item')].map(it => ({
-      title: (it.querySelector('title')||{}).textContent || '',
-      src:   (it.querySelector('source')||{}).textContent || '',
-      date:  (it.querySelector('pubDate')||{}).textContent || ''
-    }));
-    render();
-    setInterval(() => { idx++; render(); }, 8000);   // 每 8 秒换一组，模拟轮播
-  })
-  .catch(() => { $('q').textContent = '无法加载 feed-screen.xml'; });
+const parse = txt => {
+  const doc = new DOMParser().parseFromString(txt, 'text/xml');
+  return [...doc.querySelectorAll('item')].map(it => ({
+    title: (it.querySelector('title')||{}).textContent || '',
+    src:   (it.querySelector('source')||{}).textContent || '',
+    date:  (it.querySelector('pubDate')||{}).textContent || ''
+  }));
+};
+
+Promise.all([
+  fetch('./feed-screen.xml', {cache:'no-store'}).then(r => r.text()),
+  fetch('./feed-wrap.xml',   {cache:'no-store'}).then(r => r.text()).catch(() => '')
+]).then(([single, wrapTxt]) => {
+  items = parse(single);
+  wraps = wrapTxt ? parse(wrapTxt) : [];
+  render();
+  setInterval(() => { idx++; render(); }, 8000);   // 每 8 秒换一组，模拟轮播
+}).catch(() => { $('q').textContent = '无法加载 feed-screen.xml'; });
 </script>
 </body>
 </html>

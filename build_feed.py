@@ -15,6 +15,7 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
 同时输出两份 feed：
   docs/feed.xml         完整版，标题原样，给电脑/手机上的阅读器
   docs/feed-screen.xml  墨水屏版（Dot Quote/0）：纯文本标题、字段极简，供 Dot 云端渲染
+  docs/feed-wrap.xml    折行版：同墨水屏版，但标题折成多行（取决于渲染端是否保留换行符）
 
 环境变量：
   FEEDS_FILE       订阅源列表，默认 ./feeds.txt
@@ -25,10 +26,13 @@ RSS 聚合器（GitHub Actions / 任意机器通用版）
   FETCH_TIMEOUT    单源超时秒数，默认 20
   CONCURRENCY      并发数，默认 12
   SCREEN_OUT       墨水屏版输出路径，默认与 OUT_FILE 同目录的 feed-screen.xml
-  SCREEN_TITLE_WIDTH 墨水屏标题宽度上限（全角字符数），默认 13
+  SCREEN_TITLE_WIDTH 墨水屏标题每行宽度上限（全角字符数），默认 13
                     —— RSS 卡片在设备上是大字号单行，296px 宽实测只放得下 13～14 个全角字，
                     超过就被云端从右边硬切（还会补自己的省略号）。这里按 13 让我们的截断先发生。
   SCREEN_ITEMS     墨水屏版条目数上限，默认 60
+  WRAP_OUT         折行版输出路径，默认同目录的 feed-wrap.xml
+  SCREEN_WRAP_LINES  折行版最多折几行，默认 3
+  SCREEN_WRAP_SEP    折行分隔符：lf（换行）/ br（<br> 标签）/ u2028，默认 lf
 """
 import os
 import re
@@ -59,6 +63,12 @@ SCREEN_OUT = os.environ.get(
     "SCREEN_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-screen.xml"))
 SCREEN_TITLE_WIDTH = float(os.environ.get("SCREEN_TITLE_WIDTH", "13"))
 SCREEN_ITEMS = max(1, int(os.environ.get("SCREEN_ITEMS", "60")))
+
+# 折行版（标题折成多行，而不是一行截断）。和墨水屏版并列输出，便于对比订阅。
+WRAP_OUT = os.environ.get(
+    "WRAP_OUT", os.path.join(os.path.dirname(OUT_FILE) or ".", "feed-wrap.xml"))
+SCREEN_WRAP_LINES = max(1, int(os.environ.get("SCREEN_WRAP_LINES", "3")))
+SCREEN_WRAP_SEP = os.environ.get("SCREEN_WRAP_SEP", "lf")      # lf | br | u2028
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -364,17 +374,79 @@ def fit_title(title, max_w=SCREEN_TITLE_WIDTH):
     return (head + "…") if head else t[:cut] + "…"
 
 
+# 折行用的分隔符：不同渲染端对「标题里的换行」处理方式不同，
+#     lf      真实换行（XML 里写成 &#10;）—— 多数渲染端会保留
+#     br      <br> 标签（不转义）—— 少数把标题当 HTML 解析的渲染端认它
+#     u2028   U+2028 LINE SEPARATOR —— 老派排版分隔符
+WRAP_SEPS = ("lf", "br", "u2028")
+
+
+def wrap_title(title, line_w=SCREEN_TITLE_WIDTH, max_lines=3):
+    """把标题折成 ≤max_lines 行、每行 ≤line_w 全角宽，尽量在标点处换行。
+
+    返回行列表（不是带换行符的整串），由调用方按目标渲染端自己拼分隔符。
+    与 fit_title 的区别：fit_title 是「一行内截断」，本函数是「多行折行」。
+    RSS 卡片本身按单行渲染（字号行数由云端模板决定），能否真正显示多行
+    取决于渲染端是否保留标题里的换行符——所以这里只负责给出分行结果。
+    """
+    t = plain_text(title)
+    t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
+    if text_width(t) <= line_w:
+        return [t]
+
+    lines, rest = [], t
+    while rest:
+        if len(lines) >= max_lines - 1:                 # 已是最后一行
+            if text_width(rest) <= line_w:
+                lines.append(rest)
+            else:
+                cut = _cut_index(rest, line_w - 1)      # 留 1 个位给省略号
+                lines.append(rest[:cut].rstrip(BREAK_CHARS + "-—…") + "…")
+            break
+        cut = _cut_index(rest, line_w)
+        head = rest[:cut] or rest[:1]                   # 防御：绝不返回空串
+        # 行尾落在标点上更好读，但不许为此丢掉超过 30% 的宽度
+        for i in range(len(head) - 1, max(0, int(len(head) * 0.7)) - 1, -1):
+            if head[i] in BREAK_CHARS:
+                head = head[:i + 1]
+                break
+        head = head.rstrip(" 　")
+        if not head:
+            head = rest[:1]
+        lines.append(head)
+        rest = rest[len(head):].lstrip(" 　" + BREAK_CHARS + "-—…")
+    return lines
+
+
+def join_title_xml(rows, sep="lf"):
+    """把多行标题拼成 XML 里的 title 文本，转义各段，绝不转义分隔符本身。"""
+    if len(rows) <= 1:
+        return esc(rows[0] if rows else "")
+    if sep == "br":
+        # <br> 必须放在 CDATA 里，否则整份 feed 就是非法 XML（连源都加不进去）。
+        # CDATA 内不做实体转义，所以只挡一下可能提前闭合的 ]]>
+        body = "<br>".join(rows).replace("]]>", "]]&gt;")
+        return "<![CDATA[%s]]>" % body
+    if sep == "u2028":
+        return "&#8232;".join(esc(r) for r in rows)     # U+2028
+    return "&#10;".join(esc(r) for r in rows)           # 默认：真实换行
+
+
 # ---------------- 生成 RSS ----------------
 def esc(s):
     return html.escape(s or "", quote=True)
 
 
 def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
-              description=None, title_width=None, limit=None, minimal=False):
+              description=None, title_width=None, limit=None, minimal=False,
+              wrap_lines=0, wrap_sep="lf"):
     """minimal=True 时输出极简版：只留小屏真正会用到的东西。
 
     省略 atom:link / generator / ttl 以及 guid 里的长地址（改为 12 位短哈希），
     单条体积降到原来的三成左右；设备与解析端拿到的仍然是合法 RSS 2.0。
+
+    wrap_lines>0 时标题按 title_width 折成多行（而不是一行截断），
+    分隔符由 wrap_sep 指定——用于实测哪种换行方式在设备渲染端生效。
     """
     now = email.utils.format_datetime(datetime.now(timezone.utc))
     if description is None:
@@ -399,9 +471,16 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
     if not minimal:
         lines += ["<generator>github-actions/rss-hub</generator>", "<ttl>5</ttl>"]
     for it in items:
-        title = fit_title(it["title"], title_width) if title_width else it["title"]
+        if wrap_lines:
+            title_xml = join_title_xml(
+                wrap_title(it["title"], title_width or SCREEN_TITLE_WIDTH, wrap_lines),
+                wrap_sep)
+        elif title_width:
+            title_xml = esc(fit_title(it["title"], title_width))
+        else:
+            title_xml = esc(it["title"])
         lines.append("<item>")
-        lines.append("<title>%s</title>" % esc(title))
+        lines.append("<title>%s</title>" % title_xml)
         lines.append("<link>%s</link>" % esc(it["link"]))
         if it.get("date_raw"):
             lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
@@ -493,7 +572,18 @@ def write_feed(items, stats):
         description="多源头条，纯文本标题，已为小屏墨水屏精简（源 %d 个）" % stats["total"],
         title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS, minimal=True)
     _write(SCREEN_OUT, screen_text)
-    return xml_text, screen_text
+
+    # 折行版：同样纯文本，但标题按行宽折成多行而不是一行截断。
+    # 只有当渲染端保留标题里的换行符时才有意义，所以单独成文件，方便和上面那份对比着订阅。
+    wrap_text = build_rss(
+        items, FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(WRAP_OUT), stats,
+        channel_title="RSS 头条 · 折行",
+        description="多源头条，标题折成 %d 行，供支持换行的渲染端使用（源 %d 个）"
+                    % (SCREEN_WRAP_LINES, stats["total"]),
+        title_width=SCREEN_TITLE_WIDTH, limit=SCREEN_ITEMS, minimal=True,
+        wrap_lines=SCREEN_WRAP_LINES, wrap_sep=SCREEN_WRAP_SEP)
+    _write(WRAP_OUT, wrap_text)
+    return xml_text, screen_text, wrap_text
 
 
 def main():
