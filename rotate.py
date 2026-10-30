@@ -63,6 +63,10 @@ ROTATE_STATE_VERSION = 4      # 状态结构版本，改了就自动丢弃旧状
 CLOCK_SKEW_WINDOWS = 2
 # 最近几个窗（1 窗 = ROTATE_SECONDS，3 窗 = 15 分钟）不许出现同一个「屏上显示串」。
 #
+# 记住的是**已经上屏的那几窗**（w-1 / w-2 / w-3），本窗正在选的那条不在里面，
+# 所以同一个显示串之间真正的最小间隔是 **4 窗 = 20 分钟**，不是 15 分钟
+# （「最近 3 窗不出现」= 中间至少夹着 3 条别的）。排障时按 20 分钟算，别按 15 分钟。
+#
 # 这是**观感约束，不是内容去重**：内容去重归 render.dedupe() 管（同一事件的整个条目
 # 会被丢掉），而这里处理的是「标题前 13 字撞车」—— 云端只渲染第一行，两条毫无关系的
 # 新闻截到 13 字可能一模一样（线上实测：《TAIPEI TIMES》栏目稿四连发、「CFTC：截至…」
@@ -160,6 +164,22 @@ def _display_key(item):
     return str(head or "")
 
 
+def _str_list(v):
+    """把状态里读出来的列表字段当成字符串列表用；不是列表/元组就当这个字段不存在。
+
+    rotate.json 是**发布出去的产物**，形状不由本模块保证：CDN 缓存住的旧版本、
+    别的分支写过、手工编辑坏了，都可能让它变成 `{"recent": 12345}` 这种样子。
+    列表推导遇到整数是 TypeError，而 `build_feed.main()` 没有 try —— 整个这一轮
+    会死在选条之前，feed 和 rotate.json 都不落盘，屏幕就此冻在上一版（和「设备坏了」
+    分不出来）。按「没有这个字段」继续的代价只是重复播一条，划算。
+    字符串本身也会掉进这个坑（`"abc"` 是可迭代的，会被逐字符拆成 a/b/c），所以只认
+    list / tuple 两种形状。
+    """
+    if not isinstance(v, (list, tuple)):
+        return []
+    return [str(x) for x in v if str(x)]
+
+
 def _pick_item(state, items):
     """选出这一窗该上屏的条目，返回 (条目 或 None, 已播 guid 集合, 轮次)。
 
@@ -185,8 +205,8 @@ def _pick_item(state, items):
     永远是同一条。穷举 5 万组状态 + 24 小时端到端，参数取 0/1/6/24 结果逐项相同，
     于是连同环境变量一起删掉了 —— 留着只会让排障的人对着一个假旋钮调半天。
     """
-    shown = {str(g) for g in (state.get("shown") or [])}
-    recent = [str(k) for k in (state.get("recent") or []) if str(k)]
+    shown = set(_str_list(state.get("shown")))  # 形状不对就当没播过（见 _str_list）
+    recent = _str_list(state.get("recent"))
     cycle = int(state.get("cycle") or 1)        # 1 = 第 1 轮；全池播完重开时 +1
     if not items:
         return None, shown, cycle
@@ -227,7 +247,7 @@ def _trim_recent(recent, key):
     已经命中时就把它挪到队首（而不是留两个副本）：它代表的是「距离现在几窗」，
     两个副本会让后面几窗被同一条挡两次，白白浪费一格记忆。
     """
-    keys = [str(k) for k in (recent or []) if str(k)]
+    keys = _str_list(recent)
     if key and key in keys:
         keys.remove(key)
     if key:

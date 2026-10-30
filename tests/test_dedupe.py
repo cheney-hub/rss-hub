@@ -36,7 +36,8 @@ class TestTitleDedupe(unittest.TestCase):
         2026-10-31 从 Pi 线上那份 120 条里实测出来的：`norm_title()` 当时会把数字删掉，
         「国际油价30日上涨」归一化后只剩「国际油价日上涨」= 7 字，够不着当时的 8 字门槛，
         于是雪球 / 财联社 / 金十三家的同一条新闻**同时上了屏** —— 用户看到的
-        「一直在显示」就是这个。修法是保留数字（`DEDUP_TITLE_MIN` 同时降到 6）。
+        「一直在显示」就是这个。修法是**保留数字** —— 门槛不用动：归一化后 9 字，
+        8 字门槛照样拦得住（门槛试过降到 6，实测零收益，见 `DEDUP_TITLE_MIN` 的注释）。
         """
         items = [
             mk("国际油价30日上涨", link="http://a/1", src="a", ts=300),
@@ -64,18 +65,47 @@ class TestTitleDedupe(unittest.TestCase):
         self.assertIn("30", R.norm_title("国际油价30日上涨"), "数字必须留在去重键里")
 
     def test_title_threshold_boundary(self):
-        """门槛降到 6 字之后的上下边界（常量 `DEDUP_TITLE_MIN`，别再写死 8）。"""
-        long_a = mk("A股迎来开门红", link="http://x/1", src="a")      # 归一化 7 字：参与判重
-        long_b = mk("A股迎来开门红", link="http://x/2", src="b")
+        """门槛上下界各留一条：**8 字判重 / 7 字不判重**（现 `DEDUP_TITLE_MIN = 8`）。
+
+        为什么两条都得在：只留「够长 → 判重」那半边，把门槛偷偷调到 1（一律判重）
+        测试照样绿；只留「够短 → 放行」那半边，把门槛调到 99（永不判重）也绿。
+        本项目栽过两次（`ROTATE_MAX_LAG`、`sim --seed`），都是参数改了没人能证明。
+        所以下面两条不写死数字，而是断言这组语料**正好卡在门槛两侧**：门槛一改，
+        这里立刻红，逼着改的人连同语料一起改。
+        """
+        # 上界：8 字（= 门槛）→ 参与判重
+        long_a = mk("A股迎来开门红啦", link="http://x/1", src="a")
+        long_b = mk("A股迎来开门红啦", link="http://x/2", src="b")
+        self.assertEqual(len(R.norm_title(long_a["title"])), R.DEDUP_TITLE_MIN,
+                         "这条语料要正好等于门槛长度，否则边界就名不副实")
         out, dropped = R.dedupe([long_a, long_b])
-        self.assertEqual(len(out), 1, "≥6 字的同题标题要并成一条")
+        self.assertEqual(len(out), 1, "够到门槛的同题标题要并成一条")
         self.assertEqual(dropped, 1)
 
-        short_a = mk("港股收盘", link="http://y/1", src="c")          # 4 字：不参与判重
-        short_b = mk("港股收盘", link="http://y/2", src="d")
+        # 下界：7 字（门槛 - 1）→ 放行。挡的是「门槛被调低」：
+        # 降到 6 实测一条都没多丢，但会把「主力资金流向」「融资融券余额」这类
+        # 栏目型短标题（归一化 6~7 字）在不同事件撞名时并成一条。
+        short_a = mk("A股迎来开门红", link="http://y/1", src="c")
+        short_b = mk("A股迎来开门红", link="http://y/2", src="d")
+        self.assertEqual(len(R.norm_title(short_a["title"])), R.DEDUP_TITLE_MIN - 1,
+                         "这条语料要正好比门槛短一个字")
         out2, dropped2 = R.dedupe([short_a, short_b])
-        self.assertEqual(len(out2), 2, "极短标题不能互相误杀")
+        self.assertEqual(len(out2), 2, "够不着门槛的短标题不能互相误杀")
         self.assertEqual(dropped2, 0)
+
+    def test_long_titles_are_compared_beyond_first_20_chars(self):
+        """长标题的分歧落在第 21 字之后时，仍需分成两条（键取前 `NORM_TITLE_MAX` 字）。
+
+        只比前 20 字的话，「…增仓…升至 5.2%」和「…降至 4.2%」会被当成同一条丢掉一条。
+        键加长是纯收紧方向：只会让撞键更难，不会新增误并。
+        """
+        a = mk("北向资金本周增持宁德时代持股比例由4.1%升至5.2%创近三个月新高",
+               link="http://x/1", src="a")
+        b = mk("北向资金本周增持宁德时代持股比例由4.1%降至4.2%创近三个月新高",
+               link="http://x/2", src="b")
+        out, dropped = R.dedupe([a, b])
+        self.assertEqual(len(out), 2, "分歧在后半句的两条长标题不能合并")
+        self.assertEqual(dropped, 0)
 
 
 if __name__ == "__main__":

@@ -267,6 +267,36 @@ class TestRecentAntiRepeat(RotateEdgeBase):
         self.assertEqual(len(st["recent"]), R.RECENT_MAX, "跑满之后应当正好顶到上限")
         self.assertEqual(st["recent"][0], R._display_key(last), "最近的排在最前")
 
+    def test_colliding_titles_are_pushed_apart_not_dropped(self):
+        """显示串撞车的三条：各上屏一次，撞车的两条**不相邻**，且一条都不丢。
+
+        把 `test_core.py::test_same_span_items_each_get_a_turn` 因改名而丢掉的那条路径
+        锁回来：那条用例原本用 `B0-old` / `B0-new`，但 `render.split_title()` 会把
+        「- 来源名」尾巴去掉，两条的显示键**都塌成 `B0`** —— 上屏顺序因此被 `recent`
+        插进另一条，断言挂了，当时的处理是把语料改成 `B0先到` / `B0后到`
+        （避开撞车，测的还是「同一时间片里几条都能轮到」）。
+        改名之后「显示串撞车 → 往后挪」这条路没人守了，这条补上：
+        同窗多条若屏显串相同，第二条往后挪最多 3 窗（15 分钟），内容不丢。
+        """
+        b0_old = mk("B0-old", 2 * self.dwell)
+        b0_new = mk("B0-new", 1 * self.dwell)
+        b1 = mk("B1", 0)
+        pool = sorted([b0_old, b0_new, b1], key=sort_key)
+
+        self.assertEqual(R._display_key(b0_old), R._display_key(b0_new),
+                         "前置条件：这两条的屏显串确实撞车（都塌成 B0）")
+        self.assertNotEqual(item_guid(b0_old), item_guid(b0_new), "但它们是两条不同的条目")
+
+        st, aired = {}, []
+        for w in range(100, 103):
+            it, st, _ = self.pick(pool, st, w)
+            aired.append(it["title"])
+        self.assertEqual(sorted(aired), sorted([b0_old["title"], b0_new["title"], b1["title"]]),
+                         "三条各上屏一次，一条都不能丢：%r" % (aired,))
+        i_old, i_new = aired.index(b0_old["title"]), aired.index(b0_new["title"])
+        self.assertNotEqual(abs(i_old - i_new), 1,
+                            "两个 B0 不能挨着播（观感上就是「一直在显示」）：%r" % (aired,))
+
     def test_skipped_item_still_airs_later(self):
         """被 recent 跳过只是「往后挪」：几窗之后它照样上屏，并记进 shown。"""
         pool = sorted([self.twin("甲", 2 * self.dwell),

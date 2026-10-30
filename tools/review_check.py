@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -245,6 +246,62 @@ def check_tests(rep):
             rep.add(REQUIRED, f, 1, "没有任何测试引用该模块（tests/ 下需覆盖核心纯函数）")
 
 
+def _count_cases(tests_dir, pattern):
+    """用 unittest 的加载器数用例 —— **只加载不执行**，一次几毫秒。"""
+    return unittest.defaultTestLoader.discover(
+        tests_dir, pattern=pattern, top_level_dir=tests_dir).countTestCases()
+
+
+def check_test_count_sync(rep):
+    """README 里写的用例数必须等于 `unittest discover` 实际数到的数。
+
+    这条来自真实脱节：README 的目录树写着「94 个用例 / core 64 / rotate_edge 29」，
+    而实际是 106，同一页另一处又写着 106 —— 一页自相矛盾，且树里少了新建的
+    `tests/test_dedupe.py`。数字是手抄的，加一个文件就少同步一处；
+    机器数得出来的东西不该让人抄（本项目栽过两次：`ROTATE_MAX_LAG`、`sim --seed`，
+    都是「参数变了没人能证明」）。所以这里按实际数核对，写错就是必改。
+    """
+    tests_dir = os.path.join(ROOT, "tests")
+    readme = os.path.join(ROOT, "README.md")
+    if not (os.path.isdir(tests_dir) and os.path.exists(readme)):
+        return
+    names = sorted(f for f in os.listdir(tests_dir)
+                   if f.startswith("test") and f.endswith(".py"))
+    try:
+        actual = {n: _count_cases(tests_dir, n) for n in names}
+    except Exception as e:                                   # 加载失败不该连带门禁崩掉
+        rep.add(INFO, "README.md", 0, "用例数核对跳过：%s" % e)
+        return
+    total = sum(actual.values())
+
+    text = read(readme)
+    # 目录树里的两处：「tests/  # N 个用例」和各文件行尾的「# N 例」
+    declared = {}
+    for m in re.finditer(r"(test[\w.]*\.py)\s*#\s*(\d+)\s*例", text):
+        declared[m.group(1)] = int(m.group(2))
+    for n in names:
+        if n not in declared:
+            rep.add(REQUIRED, "README.md", 0,
+                    "目录树里没有 %s（实际 %d 例），新增测试文件请同步" % (n, actual[n]))
+        elif declared[n] != actual[n]:
+            rep.add(REQUIRED, "README.md", 0,
+                    "%s 写的 %d 例，实际 %d 例" % (n, declared[n], actual[n]))
+    for n in declared:
+        if n not in actual:
+            rep.add(REQUIRED, "README.md", 0, "目录树里的 %s 不存在" % n)
+    for m in re.finditer(r"tests/\s*#\s*(\d+)\s*个用例", text):
+        if int(m.group(1)) != total:
+            rep.add(REQUIRED, "README.md", 0,
+                    "目录树写的 %s 个用例，实际 %d 个（%s）"
+                    % (m.group(1), total,
+                       " + ".join("%s %d" % (k, v) for k, v in sorted(actual.items()))))
+    for m in re.finditer(r"单测：(\d+)\s*个用例", text):
+        if int(m.group(1)) != total:
+            rep.add(REQUIRED, "README.md", 0,
+                    "「改动代码前后跑这三条」那行写的 %s 个用例，实际 %d 个"
+                    % (m.group(1), total))
+
+
 def check_doc_sync(rep):
     """代码里的可调参数必须出现在 README / OPERATIONS 里 —— 文档与常量是一份契约。
 
@@ -327,6 +384,7 @@ def main():
     if "--no-tests" not in args:
         check_generated(rep)
         check_tests(rep)
+        check_test_count_sync(rep)
     check_doc_sync(rep)
     check_version_sync(rep)
 
