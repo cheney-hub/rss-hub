@@ -164,74 +164,87 @@ def parse_feed(path):
     return items
 
 
+def _fs(s, base):
+    """字号：所有尺寸都按短边比例缩放，横竖屏共用一套排版。"""
+    return max(10, int(round(base * s)))
+
+
+def _fonts(s):
+    return {
+        "head": load_font(_fs(s, 22), bold=True),
+        "meta": load_font(_fs(s, 18)),
+        "lead": load_font(_fs(s, 40), bold=True),
+        "body": load_font(_fs(s, 24)),
+        "list": load_font(_fs(s, 26)),
+        "foot": load_font(_fs(s, 17)),
+    }
+
+
+def _rule(d, x0, x1, y, s):
+    d.line((x0, y, x1, y), fill=GRAY_META, width=max(1, int(s * 2)))
+
+
+def _draw_header(d, x0, x1, y, s, fonts, built_at):
+    d.text((x0, y), "RSS 头条", font=fonts["head"], fill=BLACK)
+    stamp = time.strftime("%m-%d %H:%M", time.localtime(built_at))
+    tw = d.textlength(stamp, font=fonts["meta"])
+    d.text((x1 - tw, y + _fs(s, 4)), stamp, font=fonts["meta"], fill=GRAY_META)
+    y += int(_fs(s, 22) * 1.5)
+    _rule(d, x0, x1, y, s)
+    return y + int(_fs(s, 22) * 0.55)
+
+
+def _draw_lead(d, x0, x1, y, s, fonts, item, content_w):
+    """头条：大字标题（最多 3 行）+ 摘要（最多 3 行），末尾一条分隔线。"""
+    title, desc = item[0], item[1]
+    lh_lead = int(_fs(s, 40) * 1.28)
+    for ln in wrap(d, title, fonts["lead"], content_w, 3):
+        d.text((x0, y), ln, font=fonts["lead"], fill=BLACK)
+        y += lh_lead
+    y += int(_fs(s, 24) * 0.35)
+    if desc:
+        lh_body = int(_fs(s, 24) * 1.35)
+        for ln in wrap(d, desc, fonts["body"], content_w, 3):
+            d.text((x0, y), ln, font=fonts["body"], fill=GRAY_BODY)
+            y += lh_body
+    y += int(_fs(s, 24) * 0.5)
+    _rule(d, x0, x1, y, s)
+    return y + int(_fs(s, 26) * 0.5)
+
+
+def _draw_list(d, x0, y, s, fonts, items, content_w, bottom):
+    """列表：时间戳 + 单行标题，按剩余高度塞，塞不下就停。"""
+    lh = int(_fs(s, 26) * 1.32)
+    time_w = int(_fs(s, 26) * 2.6)
+    gap = int(_fs(s, 26) * 0.18)
+    for title, _desc, hhmm, _src in items:
+        if y + lh + gap > bottom:
+            break
+        if hhmm:
+            d.text((x0, y), hhmm, font=fonts["meta"], fill=GRAY_META)
+        lines = wrap(d, title, fonts["list"], content_w - time_w, 1)
+        d.text((x0 + time_w, y), lines[0] if lines else "", font=fonts["list"], fill=BLACK)
+        y += lh + gap
+    return y
+
+
 def draw_board(w, h, items, built_at):
     """排版：页眉 / 头条大字（含摘要）/ 分隔线 / 列表 / 页脚。横竖屏通用。"""
     img = Image.new("L", (w, h), WHITE)
     d = ImageDraw.Draw(img)
     ref = float(min(w, h))          # 以短边为基准缩放，横竖屏都能用
     s = ref / 758.0
-
-    def fs(base):
-        return max(10, int(round(base * s)))
-
-    f_head = load_font(fs(22), bold=True)
-    f_meta = load_font(fs(18))
-    f_lead = load_font(fs(40), bold=True)
-    f_body = load_font(fs(24))
-    f_list = load_font(fs(26))
-    f_foot = load_font(fs(17))
+    fonts = _fonts(s)
 
     m = int(round(ref * 0.045))
     x0, x1 = m, w - m
-    y = m
-
-    # 页眉
-    d.text((x0, y), "RSS 头条", font=f_head, fill=BLACK)
-    stamp = time.strftime("%m-%d %H:%M", time.localtime(built_at))
-    tw = d.textlength(stamp, font=f_meta)
-    d.text((x1 - tw, y + fs(4)), stamp, font=f_meta, fill=GRAY_META)
-    y += int(fs(22) * 1.5)
-    d.line((x0, y, x1, y), fill=GRAY_META, width=max(1, int(s * 2)))
-    y += int(fs(22) * 0.55)
-
-    content_w = x1 - x0
-
-    # 头条区
+    y = _draw_header(d, x0, x1, m, s, fonts, built_at)
     if items:
-        title, desc, hhmm, src = items[0]
-        head_lines = wrap(d, title, f_lead, content_w, 3)
-        lh_lead = int(fs(40) * 1.28)
-        for ln in head_lines:
-            d.text((x0, y), ln, font=f_lead, fill=BLACK)
-            y += lh_lead
-        y += int(fs(24) * 0.35)
-        if desc:
-            body_lines = wrap(d, desc, f_body, content_w, 3)
-            lh_body = int(fs(24) * 1.35)
-            for ln in body_lines:
-                d.text((x0, y), ln, font=f_body, fill=GRAY_BODY)
-                y += lh_body
-        y += int(fs(24) * 0.5)
-        d.line((x0, y, x1, y), fill=GRAY_META, width=max(1, int(s * 2)))
-        y += int(fs(26) * 0.5)
-
-    # 列表区：按剩余高度塞，塞不下就停
-    lh_list = int(fs(26) * 1.32)
-    time_w = int(fs(26) * 2.6)
-    gap = int(fs(26) * 0.18)
-    foot_h = int(fs(17) * 1.8)
-    for title, _desc, hhmm, _src in items[1:]:
-        if y + lh_list + gap + foot_h > h - m:
-            break
-        if hhmm:
-            d.text((x0, y), hhmm, font=f_meta, fill=GRAY_META)
-        lines = wrap(d, title, f_list, content_w - time_w, 1)
-        d.text((x0 + time_w, y), lines[0] if lines else "", font=f_list, fill=BLACK)
-        y += lh_list + gap
-
-    # 页脚
-    foot = "moreaix.com · 共 %d 条" % len(items)
-    d.text((x0, h - m - int(fs(17) * 1.1)), foot, font=f_foot, fill=GRAY_META)
+        y = _draw_lead(d, x0, x1, y, s, fonts, items[0], x1 - x0)
+    foot_h = int(_fs(s, 17) * 1.8)
+    _draw_list(d, x0, y, s, fonts, items[1:], x1 - x0, h - m - foot_h)
+    d.text((x0, h - m - int(_fs(s, 17) * 1.1)),
+           "moreaix.com · 共 %d 条" % len(items), font=fonts["foot"], fill=GRAY_META)
     return img
 
 
@@ -278,9 +291,8 @@ def main():
     ap = argparse.ArgumentParser(description="feed.xml -> Kindle 灰度 PNG")
     ap.add_argument("--feed", default="/home/user/rss-hub/docs/feed.xml")
     ap.add_argument("--out-dir", default="/home/user/kindle")
-    ap.add_argument("--sizes", default=os.environ.get(
-        "KINDLE_SIZES", "1024x758"),
-        help="逗号分隔的 WxH 列表，第一个同时存为 kindle.png")
+    ap.add_argument("--sizes", default="1024x758",
+                    help="逗号分隔的 WxH 列表，第一个同时存为 kindle.png")
     args = ap.parse_args()
     if not os.path.isfile(args.feed):
         sys.exit("feed 不存在: %s" % args.feed)
