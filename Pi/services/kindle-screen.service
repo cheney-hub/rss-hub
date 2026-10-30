@@ -1,0 +1,10 @@
+[Unit]
+Description=Render RSS board PNG for Kindle e-ink display
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=user
+Environment=PYTHONUNBUFFERED=1
+# 1024x758 = Kindle Paperwhite 2（第 6 代）；换机型只改这一行
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle --sizes 1024x758

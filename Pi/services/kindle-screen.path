@@ -1,0 +1,11 @@
+[Unit]
+Description=Re-render Kindle board whenever feed.xml is rebuilt
+
+[Path]
+# rss-build 每轮结束时重写 feed.xml，这里跟着重画一次图。
+# 用 path 而不是 timer：不做无谓轮询，feed 不动就一次都不跑。
+PathModified=/home/user/rss-hub/docs/feed.xml
+Unit=kindle-screen.service
+
+[Install]
+WantedBy=multi-user.target
