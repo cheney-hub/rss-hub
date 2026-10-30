@@ -28,10 +28,9 @@ import xml.etree.ElementTree as ET
 
 from PIL import Image, ImageDraw, ImageFont
 
-# 灰阶：e-ink 只有 16 级灰，浅灰在屏上会糊，所以正文用较深的灰而不是常见的 #888
+# 灰阶：e-ink 只有 16 级灰，浅灰在屏上会糊，所以次要文字用较深的灰而不是常见的 #888
 WHITE = 255
 BLACK = 0
-GRAY_BODY = 70
 GRAY_META = 140
 
 TAG_RE = re.compile(r"<[^>]+>")
@@ -129,9 +128,11 @@ def wrap(draw, text, font, max_w, max_lines):
             fixed.append(ln)
     if len(fixed) == max_lines and fixed:
         last = fixed[-1]
-        full = "".join(atomize(text))
-        if not full.endswith(last):
-            fixed[-1] = last[:-1] + "…" if len(last) > 1 else last
+        if not "".join(atomize(text)).endswith(last):
+            # 用「…」替换末字可能反而更宽（末字是半角时），所以要退到量出来放得下为止
+            while last and draw.textlength(last + "…", font=font) > max_w:
+                last = last[:-1]
+            fixed[-1] = last + "…"
     return fixed
 
 
@@ -173,15 +174,9 @@ def _fonts(s):
     return {
         "head": load_font(_fs(s, 22), bold=True),
         "meta": load_font(_fs(s, 18)),
-        "lead": load_font(_fs(s, 40), bold=True),
-        "body": load_font(_fs(s, 24)),
         "list": load_font(_fs(s, 26)),
         "foot": load_font(_fs(s, 17)),
     }
-
-
-def _rule(d, x0, x1, y, s):
-    d.line((x0, y, x1, y), fill=GRAY_META, width=max(1, int(s * 2)))
 
 
 def _draw_header(d, x0, x1, y, s, fonts, built_at):
@@ -190,46 +185,52 @@ def _draw_header(d, x0, x1, y, s, fonts, built_at):
     tw = d.textlength(stamp, font=fonts["meta"])
     d.text((x1 - tw, y + _fs(s, 4)), stamp, font=fonts["meta"], fill=GRAY_META)
     y += int(_fs(s, 22) * 1.5)
-    _rule(d, x0, x1, y, s)
+    d.line((x0, y, x1, y), fill=GRAY_META, width=max(1, int(s * 2)))
     return y + int(_fs(s, 22) * 0.55)
 
 
-def _draw_lead(d, x0, x1, y, s, fonts, item, content_w):
-    """头条：大字标题（最多 3 行）+ 摘要（最多 3 行），末尾一条分隔线。"""
-    title, desc = item[0], item[1]
-    lh_lead = int(_fs(s, 40) * 1.28)
-    for ln in wrap(d, title, fonts["lead"], content_w, 3):
-        d.text((x0, y), ln, font=fonts["lead"], fill=BLACK)
-        y += lh_lead
-    y += int(_fs(s, 24) * 0.35)
-    if desc:
-        lh_body = int(_fs(s, 24) * 1.35)
-        for ln in wrap(d, desc, fonts["body"], content_w, 3):
-            d.text((x0, y), ln, font=fonts["body"], fill=GRAY_BODY)
-            y += lh_body
-    y += int(_fs(s, 24) * 0.5)
-    _rule(d, x0, x1, y, s)
-    return y + int(_fs(s, 26) * 0.5)
+def _fit_title(d, font, title, avail):
+    """标题排版：最多 2 行。两种情况下退成「一行 + 省略号」：
+
+    1. 任一行超出可用宽度 —— 行首标点回挂会把两行并回一行并顶出边界
+       （标题只差一个字放不下时就会这样，第二行只剩个「。」）。
+    2. 第二行只剩两三个字（孤字行），版面很难看。
+
+    宁可截掉一个字，也不要出界或出现孤字行。
+    """
+    lines = wrap(d, title, font, avail, 2)
+    wide = [ln for ln in lines if d.textlength(ln, font=font) > avail]
+    if wide:
+        return wrap(d, title, font, avail, 1)
+    if len(lines) == 2 and d.textlength(lines[1], font=font) < avail * 0.3:
+        return wrap(d, title, font, avail, 1)
+    return lines
 
 
 def _draw_list(d, x0, y, s, fonts, items, content_w, bottom):
-    """列表：时间戳 + 单行标题，按剩余高度塞，塞不下就停。"""
-    lh = int(_fs(s, 26) * 1.32)
+    """条目列表：时间戳 + 标题。所有条目同一规格，第一条不放大。
+
+    行高不固定（1 行还是 2 行取决于标题长度），所以先算好这一条需要多高，
+    塞不下就整条不画，避免出现半截行。
+    """
+    lh = int(_fs(s, 26) * 1.34)
     time_w = int(_fs(s, 26) * 2.6)
-    gap = int(_fs(s, 26) * 0.18)
+    gap = int(_fs(s, 26) * 0.45)
     for title, _desc, hhmm, _src in items:
-        if y + lh + gap > bottom:
+        lines = _fit_title(d, fonts["list"], title, content_w - time_w)
+        need = lh * len(lines) + gap
+        if y + need > bottom:
             break
         if hhmm:
             d.text((x0, y), hhmm, font=fonts["meta"], fill=GRAY_META)
-        lines = wrap(d, title, fonts["list"], content_w - time_w, 1)
-        d.text((x0 + time_w, y), lines[0] if lines else "", font=fonts["list"], fill=BLACK)
-        y += lh + gap
+        for i, ln in enumerate(lines):
+            d.text((x0 + time_w, y + i * lh), ln, font=fonts["list"], fill=BLACK)
+        y += need
     return y
 
 
 def draw_board(w, h, items, built_at):
-    """排版：页眉 / 头条大字（含摘要）/ 分隔线 / 列表 / 页脚。横竖屏通用。"""
+    """排版：页眉 / 条目列表 / 页脚。所有条目同一规格，横竖屏通用。"""
     img = Image.new("L", (w, h), WHITE)
     d = ImageDraw.Draw(img)
     ref = float(min(w, h))          # 以短边为基准缩放，横竖屏都能用
@@ -239,9 +240,8 @@ def draw_board(w, h, items, built_at):
     m = int(round(ref * 0.045))
     x0, x1 = m, w - m
     y = _draw_header(d, x0, x1, m, s, fonts, built_at)
-    if items:
-        y = _draw_lead(d, x0, x1, y, s, fonts, items[0], x1 - x0)
     foot_h = int(_fs(s, 17) * 1.8)
+    _draw_list(d, x0, y, s, fonts, items, x1 - x0, h - m - foot_h)
     _draw_list(d, x0, y, s, fonts, items[1:], x1 - x0, h - m - foot_h)
     d.text((x0, h - m - int(_fs(s, 17) * 1.1)),
            "moreaix.com · 共 %d 条" % len(items), font=fonts["foot"], fill=GRAY_META)
