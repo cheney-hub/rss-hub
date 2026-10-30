@@ -138,53 +138,8 @@ class TestDedupe(unittest.TestCase):
         self.assertEqual(len(out), 1)
         self.assertEqual(dropped, 1)
 
-    def test_same_headline_three_sources(self):
-        """同一条快讯被三个源转发（标题相同、链接不同）→ 只留最新那条，dropped=2。
-
-        2026-10-31 从 Pi 线上那份 120 条里实测出来的：`norm_title()` 当时会把数字删掉，
-        「国际油价30日上涨」归一化后只剩「国际油价日上涨」= 7 字，够不着当时的 8 字门槛，
-        于是雪球 / 财联社 / 金十三家的同一条新闻**同时上了屏** —— 用户看到的
-        「一直在显示」就是这个。修法是保留数字（`DEDUP_TITLE_MIN` 同时降到 6）。
-        """
-        items = [
-            mk("国际油价30日上涨", link="http://a/1", src="a", ts=300),
-            mk("国际油价30日上涨", link="http://b/2", src="b", ts=200),
-            mk("国际油价30日上涨", link="http://c/3", src="c", ts=100),
-        ]
-        out, dropped = R.dedupe(items)
-        self.assertEqual(len(out), 1, "三源转发同一条新闻只该留一条")
-        self.assertEqual(dropped, 2)
-        self.assertEqual(out[0]["src"], "a", "保留先到的那条（items 已按时间倒序）")
-
-    def test_date_in_headline_distinguishes_stories(self):
-        """30 日 vs 31 日必须分成两条 ——「保留数字」这条护栏的反向用例。
-
-        口径类改动必须有「不同取值 → 不同结果」的那一条：只锁「去重成功」的话，
-        把 `norm_title` 粗暴改成「一律判重」也能通过。本项目栽过两次
-        （`ROTATE_MAX_LAG`、`sim --seed` 都是没有反向断言的假旋钮 / 被忽略的参数）。
-        """
-        out, dropped = R.dedupe([
-            mk("国际油价30日上涨", link="http://a/1", src="a"),
-            mk("国际油价31日上涨", link="http://b/2", src="b"),
-        ])
-        self.assertEqual(len(out), 2, "不同日期是两条不同的新闻")
-        self.assertEqual(dropped, 0)
-        self.assertIn("30", R.norm_title("国际油价30日上涨"), "数字必须留在去重键里")
-
-    def test_title_threshold_boundary(self):
-        """门槛降到 6 字之后的上下边界（常量 `DEDUP_TITLE_MIN`，别再写死 8）。"""
-        long_a = mk("A股迎来开门红", link="http://x/1", src="a")      # 归一化 7 字：参与判重
-        long_b = mk("A股迎来开门红", link="http://x/2", src="b")
-        out, dropped = R.dedupe([long_a, long_b])
-        self.assertEqual(len(out), 1, "≥6 字的同题标题要并成一条")
-        self.assertEqual(dropped, 1)
-
-        short_a = mk("港股收盘", link="http://y/1", src="c")          # 4 字：不参与判重
-        short_b = mk("港股收盘", link="http://y/2", src="d")
-        out2, dropped2 = R.dedupe([short_a, short_b])
-        self.assertEqual(len(out2), 2, "极短标题不能互相误杀")
-        self.assertEqual(dropped2, 0)
-
+    # 「标题归一化判重」那三条（同题三源 / 30 日 vs 31 日 / 字数门槛上下界）
+    # 搬到了 tests/test_dedupe.py：本文件加完它们就过了 750 行的拆分提醒线。
     def test_utm_params_ignored(self):
         a = mk("标题甲甲甲甲甲甲", link="http://x/1?utm_source=a")
         b = mk("标题乙乙乙乙乙乙", link="http://x/1")
