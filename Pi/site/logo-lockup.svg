@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268 64" width="268" height="64" role="img" aria-label="moreaix">
+  <defs>
+    <linearGradient id="mx" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(2.6,2.6) scale(0.92)">
+    <circle cx="32" cy="32" r="27" fill="none" stroke="url(#mx)" stroke-width="1" stroke-dasharray="2.5 6" opacity="0.55"/>
+    <g filter="url(#glow)" stroke="url(#mx)" stroke-width="5.5" stroke-linecap="round">
+      <line x1="15" y1="15" x2="49" y2="49"/>
+      <line x1="49" y1="15" x2="15" y2="49"/>
+    </g>
+    <rect x="28.4" y="28.4" width="7.2" height="7.2" transform="rotate(45 32 32)" fill="url(#mx)"/>
+    <g fill="url(#mx)">
+      <circle cx="15" cy="15" r="4.6"/><circle cx="49" cy="15" r="4.6"/>
+      <circle cx="15" cy="49" r="4.6"/><circle cx="49" cy="49" r="4.6"/>
+    </g>
+    <g fill="#e8ecf4">
+      <circle cx="15" cy="15" r="1.7"/><circle cx="49" cy="15" r="1.7"/>
+      <circle cx="15" cy="49" r="1.7"/><circle cx="49" cy="49" r="1.7"/>
+    </g>
+  </g>
+
+  <text x="66" y="44" font-family="-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial,sans-serif"
+        font-size="34" font-weight="800" letter-spacing="-1" fill="#e8ecf4">moreai<tspan fill="url(#mx)">&#215;</tspan></text>
+</svg>

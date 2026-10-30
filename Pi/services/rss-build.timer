@@ -1,0 +1,12 @@
+[Unit]
+Description=Run RSS build every minute
+
+[Timer]
+# 节拍：每 5 分钟。改 1 分钟就改成 *:*:00
+OnBootSec=45s
+OnCalendar=*:0/5:00
+AccuracySec=1s
+Unit=rss-build.service
+
+[Install]
+WantedBy=timers.target

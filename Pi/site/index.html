@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>moreaix — Applied AI, deployed</title>
+<meta name="description" content="moreaix is where AI-empowered applications are built and set to work in the real world.">
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<style>
+  :root{
+    --bg:#05060c;
+    --cyan:#22d3ee;
+    --blue:#3b82f6;
+    --violet:#a855f7;
+    --txt:#e8ecf4;
+    --muted:#9aa6c4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--txt);
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---- background layers ---- */
+  .bg{position:fixed;inset:0;z-index:-3;overflow:hidden}
+  .bg::before{
+    content:"";position:absolute;inset:-25%;
+    background:
+      radial-gradient(40% 50% at 18% 12%, rgba(34,211,238,.20), transparent 60%),
+      radial-gradient(45% 55% at 86% 18%, rgba(168,85,247,.20), transparent 60%),
+      radial-gradient(55% 65% at 50% 105%, rgba(59,130,246,.16), transparent 60%),
+      var(--bg);
+    animation:drift 20s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    from{transform:translate3d(-2%,-1%,0) scale(1.05)}
+    to{transform:translate3d(2%,2%,0) scale(1.12)}
+  }
+  /* perspective grid floor */
+  .grid{
+    position:fixed;left:-50%;right:-50%;bottom:-12%;height:62vh;z-index:-2;
+    background-image:
+      linear-gradient(rgba(34,211,238,.28) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(34,211,238,.28) 1px,transparent 1px);
+    background-size:48px 48px;
+    transform:perspective(420px) rotateX(62deg);
+    transform-origin:bottom center;
+    -webkit-mask-image:linear-gradient(to top,#000 4%,transparent 78%);
+    mask-image:linear-gradient(to top,#000 4%,transparent 78%);
+    opacity:.55;
+    animation:grid 7s linear infinite;
+  }
+  @keyframes grid{from{background-position:0 0}to{background-position:0 48px}}
+  canvas#net{position:fixed;inset:0;z-index:-2;opacity:.45}
+
+  /* ---- layout ---- */
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;
+    padding:clamp(22px,5vw,60px) 22px;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:12px}
+  .brand{font-weight:700;letter-spacing:.6px;font-size:20px}
+  .x-logo{width:1em;height:1em;vertical-align:-0.12em;flex:0 0 auto;
+    filter:drop-shadow(0 0 10px rgba(34,211,238,.45))}
+  .brand b{background:linear-gradient(90deg,var(--cyan),var(--violet));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .hero{margin-top:clamp(36px,11vh,110px);flex:1}
+  .eyebrow{font-size:13px;letter-spacing:3.5px;text-transform:uppercase;
+    color:var(--cyan);font-weight:600;opacity:.92}
+  h1{font-size:clamp(44px,9vw,92px);line-height:1.02;font-weight:800;
+    margin:16px 0 0;letter-spacing:-1.5px}
+  h1 .grad{background:linear-gradient(100deg,var(--cyan),var(--blue) 45%,var(--violet));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    background-size:220% auto;animation:shine 7s linear infinite;display:inline-block}
+  @keyframes shine{to{background-position:220% center}}
+  .sub{margin:18px 0 0;font-size:clamp(18px,2.6vw,26px);font-weight:600;color:#fff;letter-spacing:-.2px}
+  .lead{margin:22px 0 0;max-width:690px;font-size:clamp(15px,2.1vw,20px);
+    line-height:1.62;color:var(--muted)}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:16px;margin:44px 0 0}
+  .card{padding:22px;border-radius:16px;background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.09);backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);transition:.3s;position:relative;overflow:hidden}
+  .card:hover{transform:translateY(-4px);border-color:rgba(34,211,238,.5);
+    box-shadow:0 12px 44px rgba(34,211,238,.16)}
+  .card .ico{font-size:22px;margin-bottom:10px;display:block}
+  .card h3{font-size:17px;margin-bottom:8px;color:#fff}
+  .card p{font-size:14px;line-height:1.55;color:var(--muted)}
+
+  .cta{margin:46px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:999px;
+    text-decoration:none;font-weight:600;color:#05060c;
+    background:linear-gradient(90deg,var(--cyan),var(--violet));
+    box-shadow:0 0 30px rgba(34,211,238,.4);transition:.25s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 0 46px rgba(168,85,247,.55)}
+  .btn .at{font-weight:800}
+  .note{color:var(--muted);font-size:14px;max-width:360px;line-height:1.5}
+
+  footer{margin-top:auto;padding-top:42px;color:#61ebbf;opacity:.7;font-size:13px;letter-spacing:.3px}
+
+  @media (prefers-reduced-motion: reduce){
+    .bg::before,.grid,h1 .grad{animation:none}
+  }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid"></div>
+  <canvas id="net"></canvas>
+
+  <div class="wrap">
+    <header>
+      <span class="brand"><b>more</b>ai<img class="x-logo" src="/logo.svg" alt="×"></span>
+    </header>
+
+    <main class="hero">
+      <p class="eyebrow">Applied Artificial Intelligence</p>
+      <h1><span class="grad">moreai<img class="x-logo" src="/logo.svg" alt="×"></span></h1>
+      <p class="sub">The home of AI-empowered, real-world applications.</p>
+      <p class="lead">
+        moreaix is where intelligent systems are actually <strong style="color:#fff">built, deployed, and set to work</strong> —
+        not demos behind glass. We turn models into production services that perceive,
+        decide, and act in the real world, running around the clock.
+      </p>
+
+      <section class="cards">
+        <div class="card">
+          <span class="ico">⚡</span>
+          <h3>Built, not pitched</h3>
+          <p>Production-grade AI running 24/7. No slideware, no “maybe later” — systems that ship and stay up.</p>
+        </div>
+        <div class="card">
+          <span class="ico">🌐</span>
+          <h3>Edge to cloud</h3>
+          <p>Models and agents deployed close to where the work happens, wherever that happens to be.</p>
+        </div>
+        <div class="card">
+          <span class="ico">🔁</span>
+          <h3>Always learning</h3>
+          <p>Live data pipelines that ingest, reason, and improve with every cycle — intelligence that compounds.</p>
+        </div>
+      </section>
+
+      <div class="cta">
+        <a class="btn" href="mailto:Ai@moreaix.com">
+          <span class="at">@</span> Ai@moreaix.com
+        </a>
+        <p class="note">Have a problem worth automating? Tell us what you're trying to make real.</p>
+      </div>
+    </main>
+
+    <footer>© 2026 moreaix.com — Applied AI, built and running.</footer>
+  </div>
+
+  <script>
+    // Subtle node-network backdrop. Runs in the visitor's browser, not on the server.
+    (function(){
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var c = document.getElementById('net');
+      if(!c || reduce) return;
+      var ctx = c.getContext('2d');
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w, h, pts;
+      function resize(){
+        w = c.width = innerWidth * dpr;
+        h = c.height = innerHeight * dpr;
+        var n = Math.min(70, Math.round(innerWidth / 22));
+        pts = [];
+        for(var i=0;i<n;i++){
+          pts.push({x:Math.random()*w, y:Math.random()*h,
+            vx:(Math.random()-.5)*0.25*dpr, vy:(Math.random()-.5)*0.25*dpr});
+        }
+      }
+      function step(){
+        ctx.clearRect(0,0,w,h);
+        for(var i=0;i<pts.length;i++){
+          var p = pts[i];
+          p.x += p.vx; p.y += p.vy;
+          if(p.x<0||p.x>w) p.vx*=-1;
+          if(p.y<0||p.y>h) p.vy*=-1;
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,1.4*dpr,0,Math.PI*2);
+          ctx.fillStyle='rgba(34,211,238,.8)';
+          ctx.fill();
+          for(var j=i+1;j<pts.length;j++){
+            var q = pts[j], dx=p.x-q.x, dy=p.y-q.y, d=Math.sqrt(dx*dx+dy*dy);
+            if(d < 130*dpr){
+              ctx.beginPath();
+              ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y);
+              ctx.strokeStyle='rgba(120,170,255,'+(0.16*(1-d/(130*dpr)))+')';
+              ctx.lineWidth=dpr*0.6;
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(step);
+      }
+      resize();
+      addEventListener('resize', resize);
+      step();
+    })();
+  </script>
+</body>
+</html>

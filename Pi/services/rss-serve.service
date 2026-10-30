@@ -1,0 +1,16 @@
+[Unit]
+Description=RSS Feed Static Server (serves rss-hub/docs for Cloudflare Tunnel)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/rss-hub
+ExecStart=/usr/bin/python3 /home/pi/pi-pipeline/serve.py --root /home/pi/rss-hub/docs --port 8080 --prefix /rss
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

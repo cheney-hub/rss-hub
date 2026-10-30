@@ -1,0 +1,16 @@
+[Unit]
+Description=moreaix.com Static Homepage Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=user
+WorkingDirectory=/home/user/site
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix=
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

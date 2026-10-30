@@ -1,0 +1,22 @@
+[Unit]
+Description=RSS build on Pi (one round, local state)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=user
+WorkingDirectory=/home/user/rss-hub
+Environment=FEEDS_FILE=/home/user/rss-hub/feeds.txt
+Environment=OUT_FILE=/home/user/rss-hub/docs/feed.xml
+Environment=FEED_URL=https://moreaix.com/rss/feed.xml
+Environment=ROTATE_STATE=/home/user/rss-hub/docs/rotate.json
+Environment=ROTATE_STATE_URL=http://127.0.0.1:8080/rss/rotate.json
+Environment=PER_SOURCE=5
+Environment=ITEM_LIMIT=120
+Environment=ROTATE_POOL_MAX=120
+Environment=SOURCE_TZ_OFFSET=8
+Environment=CONCURRENCY=10
+Environment=FETCH_TIMEOUT=15
+# flock：上一轮还没跑完就跳过本 tick，绝不并发两轮
+ExecStart=/bin/bash -c 'exec 9>/tmp/rss-build.lock; flock -n 9 || exit 0; exec /usr/bin/python3 /home/user/rss-hub/build_feed.py'
