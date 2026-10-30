@@ -99,7 +99,8 @@ def main():
     httpd = ThreadingHTTPServer(
         (args.bind, args.port), make_handler(args.root, args.prefix.strip("/"))
     )
-    print("serving %s -> http://%s:%d" % (os.path.abspath(args.root), args.bind, args.port), flush=True)
+    root_show = os.path.abspath(args.root)
+    print("serving %s -> http://%s:%d" % (root_show, args.bind, args.port), flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

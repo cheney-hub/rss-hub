@@ -51,10 +51,8 @@ HEAD = """name: RSS 五分钟节拍发布
 #   要真做到 5 分钟一版，只能靠外部定时器 dispatch（OPERATIONS §10）。
 
 on:
-  schedule:
-    # 只在北京时间 06:00–23:59 跑 5 分钟节拍（UTC 22:00–15:59，跨天写成两段）
-    # 北京时间 00:00–06:00 由 nightly.yml 接管，每小时一次，两个时段互补不重叠
-    - cron: "7 22,23,0-15 * * *"
+  # 定时已停用：日常更新改由 rss.yml 每天 3 次（北京时间 08/13/18）负责。
+  # 保留本文件与作业内 5 分钟节拍逻辑，需要临时高频时用 workflow_dispatch 手动触发。
   workflow_dispatch:
 
 concurrency:
