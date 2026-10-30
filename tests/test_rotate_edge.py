@@ -188,6 +188,100 @@ class TestMaxLagRemoved(RotateEdgeBase):
                          "别再读这个环境变量了：它不影响任何选片结果，接上去就是一个假旋钮")
 
 
+class TestRecentAntiRepeat(RotateEdgeBase):
+    """最近几窗不许出现同一个「屏上显示串」（`RECENT_MAX`，观感约束）。
+
+    和问题清单里的内容去重不是一回事：`dedupe()` 挡的是「同一条新闻」，这里挡的是
+    「标题前 13 字撞车」—— 云端只渲染第一行，两条毫无关系的新闻截到 13 字可能一模一样
+    （线上实测：同一个栏目稿四连发、「CFTC：截至…」三连发都是同一个前缀）。
+    被这条挡下来的条目**不写进 shown**，仍是未标注，几窗后照常上屏 —— 内容不丢。
+    """
+
+    # 屏上只显示前 13 全角字，所以这几个标题（前面 14 字相同、后面不同）在屏上一模一样，
+    # 但它们的 guid 不同 —— 正是「不同条目、同一张脸」的情形。
+    HEAD13 = "美股三大指数集体收涨道指涨逾"
+    OTHER = "另一条完全无关的新闻标题内容够长"
+
+    def twin(self, tag, ts):
+        """造一条「屏显串相同、但身份（guid）不同」的条目。"""
+        return mk(self.HEAD13 + tag, ts)
+
+    def _pool(self):
+        return sorted([self.twin("甲", 3 * self.dwell),
+                       self.twin("乙", 2 * self.dwell),
+                       self.twin("丙", 1 * self.dwell),
+                       mk(self.OTHER, 0)], key=sort_key)
+
+    def test_precondition_display_keys_collide(self):
+        """前置条件：这几条的屏显串确实相同（否则下面的用例根本没测到这回事）。"""
+        k = R._display_key(self.twin("甲", 0))
+        self.assertTrue(k, "显示串不能是空的")
+        self.assertEqual(k, R._display_key(self.twin("乙", 0)))
+        self.assertNotEqual(k, R._display_key(mk(self.OTHER, 0)))
+        self.assertLessEqual(len(k), len(self.HEAD13), "显示串就是屏上那 13 个全角字")
+
+    def test_recent_suppresses_same_display_string(self):
+        """连续三窗：不许出现同一个屏显串；被跳过的那条不写进 shown。"""
+        pool = self._pool()
+        st, keys = {}, []
+        for w in range(100, 103):
+            it, st, _ = self.pick(pool, st, w)
+            keys.append(R._display_key(it))
+        self.assertEqual(keys[0], R._display_key(self.twin("甲", 0)),
+                         "第一窗播最新的那条")
+        self.assertEqual(keys[1], R._display_key(mk(self.OTHER, 0)),
+                         "第二窗要跳过同展示串的那两条，退到再下一条")
+        for i in range(1, len(keys)):
+            self.assertNotEqual(keys[i], keys[i - 1],
+                                "第 %d 窗连着播了与上一窗相同的显示串" % (100 + i))
+        shown = set(st["shown"])
+        self.assertIn(item_guid(self.twin("甲", 0)), shown, "上过屏的要记进 shown")
+        self.assertNotIn(item_guid(self.twin("丙", 0)), shown,
+                         "被 recent 跳过≠播过：它还排在队里等着上屏")
+
+    def test_recent_falls_back_instead_of_blanking(self):
+        """候选全落在 recent 里（无处可选）→ 仍返回一条，绝不 None。
+
+        这是刻意的最后一道：屏幕「停住」和「设备坏了」在用户眼里分不出来，
+        所以宁可让同一个显示串连着出，也不返回 None 让设备版停在上一版。
+        """
+        pool = sorted([self.twin("甲", 2 * self.dwell),
+                       self.twin("乙", 1 * self.dwell)], key=sort_key)
+        first, st, _ = self.pick(pool, {}, 99)
+        self.assertEqual(R._display_key(first), R._display_key(self.twin("甲", 0)))
+
+        second, st, note = self.pick(pool, st, 100)
+        self.assertIsNotNone(second, "无处可选时也必须给内容，不能空屏")
+        self.assertIn("新窗推进", note)
+        self.assertNotEqual(item_guid(second), item_guid(first), "换一条上，别重播同一条")
+
+    def test_recent_is_trimmed_to_max(self):
+        """recent 是滑动记忆：最近的在前，长度封顶 RECENT_MAX。"""
+        pool = sorted([mk("第%d条完全不同的新闻内容足够长的标题" % i, i * 60)
+                       for i in range(8)], key=sort_key)
+        st, last = {}, None
+        for w in range(100, 106):
+            last, st, _ = self.pick(pool, st, w)
+            self.assertLessEqual(len(st["recent"]), R.RECENT_MAX,
+                                 "recent 不能随时间增长")
+        self.assertEqual(len(st["recent"]), R.RECENT_MAX, "跑满之后应当正好顶到上限")
+        self.assertEqual(st["recent"][0], R._display_key(last), "最近的排在最前")
+
+    def test_skipped_item_still_airs_later(self):
+        """被 recent 跳过只是「往后挪」：几窗之后它照样上屏，并记进 shown。"""
+        pool = sorted([self.twin("甲", 2 * self.dwell),
+                       self.twin("乙", 1 * self.dwell),
+                       mk(self.OTHER, 0)], key=sort_key)
+        st, titles = {}, []
+        for w in range(100, 106):
+            it, st, _ = self.pick(pool, st, w)
+            titles.append(it["title"])
+        self.assertIn(self.twin("乙", 0)["title"], titles,
+                      "被 recent 挡过的条目最终要上屏，内容不能丢")
+        self.assertIn(item_guid(self.twin("乙", 0)), set(st["shown"]),
+                      "上屏之后它才有资格写进 shown")
+
+
 class TestNeverBlanks(RotateEdgeBase):
     """永不空屏：只要池子里还有一条没播过的，就必须有内容上屏。
 

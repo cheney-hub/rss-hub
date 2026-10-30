@@ -1,6 +1,6 @@
 # rss-hub · RSS 聚合头条
 
-> 当前版本 **v1.7.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+> 当前版本 **v1.7.1**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
 >
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
@@ -102,7 +102,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
    - **链接**：去掉 `#` 锚点与 `utm_*` / `from` / `spm` 这类**追踪参数**后比对，参数顺序也不影响身份
      （`?a=1&b=2` 与 `?b=2&a=1` 是同一条）；**有意义的查询参数必须保留** ——
      整段砍掉会把 `…?uid=3&pid=741` 这种「id 写在查询串里」的整站条目折叠成一条（RTI 实测从 5 条掉到 1 条）；
-   - **标题**：去标点空白、只留汉字取前 20 字，且**须 ≥ 8 字**才参与比较（否则「港股收盘」这类短标题会被误杀）。
+   - **标题**：去电头、去标点空白（**保留数字与字母**）取前 20 字，且**须 ≥ 6 字**（`DEDUP_TITLE_MIN`）才参与比较
+     （否则「港股收盘」这类短标题会被误杀）。数字必须留着：「30日上涨」和「31日上涨」是两条新闻。
 5. 某源这轮抓不到：立即重试一次 → 仍失败就用上一份 `feed.xml` 里该源的条目顶上（保留原 `pubDate`，
    排序位置不变），单源抖动不会让整份 feed 少一条。
 6. 每天把 `docs/feed.xml` 备份提交一次（判断依据是「最后一次提交是不是今天」，当天第一档跑起来的那轮负责提交）：
@@ -303,7 +304,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：98 个用例（含分层契约、行为基线、轮播边界、清洗边界）
+python3 -m unittest discover -s tests -v    # 单测：106 个用例（含分层契约、行为基线、轮播边界、清洗边界）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
@@ -350,7 +351,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.7.0` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.7.1` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

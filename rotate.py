@@ -12,10 +12,15 @@
 为什么设备版只有一条：Dot 云端只渲染文档里的第一条。按时间倒序发全量的话屏幕永远
 停在最新那条，其余条目一辈子轮不到；所以设备版只发一条，选谁由「已播标记」决定。
 
-规则（只有一条，别再拆台阶）：
+规则（选条只有一条，别再拆台阶）：
     每窗锚定当前时间窗，取「全池还没标注过的最新一条」上屏，并用 guid 标注它；
     全池都标注过 → 清掉全部标注，从池子最新的一条重新开始一轮（cycle + 1）；
     同一时间窗内（w = now // ROTATE_SECONDS）重复构建不推进，后台多跑几轮也不跳条。
+
+上面那条之外还有一层**观感约束**（不是选条规则，所以没写进同一句）：
+最近 RECENT_MAX 窗（15 分钟）内不许出现同一个「屏上显示串」（标题前 13 字），
+免得两条不同新闻因为前缀撞车、在屏上长得一模一样，连着几窗看下来像屏幕卡住了。
+被这条跳过的条目仍是「未标注」，几窗后照常上屏 —— 内容不丢，只是往后挪（见 RECENT_MAX）。
 
 为什么按「条」而不是按「时间片」（这里是本模块最大的一次改规则，理由写清楚）：
   1.4.0 ~ 1.6.x 把池子按 ROTATE_SECONDS 切成时间片、片内取最新一条当代表、shown 记片号。
@@ -41,7 +46,7 @@ import time
 import urllib.request
 from datetime import datetime, timezone
 
-from render import item_guid
+from render import item_guid, split_title, strip_dateline
 
 # 每条在屏上驻留多少秒（= 设备刷新周期）。调大等于放慢轮播。
 # Pages CDN 缓存 600 秒，若真机上出现「同一条连显两次」，把它改成 600。
@@ -56,6 +61,17 @@ ROTATE_STATE_VERSION = 4      # 状态结构版本，改了就自动丢弃旧状
 # 容忍的墙钟回拨窗数（1 窗 = ROTATE_SECONDS，2 窗 = 10 分钟）：NTP 校正会往回跳几十秒，
 # 那不算坏状态；超过这个幅度才认定 rotate.json 的 window 是坏的（详见 rotate_pick）。
 CLOCK_SKEW_WINDOWS = 2
+# 最近几个窗（1 窗 = ROTATE_SECONDS，3 窗 = 15 分钟）不许出现同一个「屏上显示串」。
+#
+# 这是**观感约束，不是内容去重**：内容去重归 render.dedupe() 管（同一事件的整个条目
+# 会被丢掉），而这里处理的是「标题前 13 字撞车」—— 云端只渲染第一行，两条毫无关系的
+# 新闻截到 13 字可能一模一样（线上实测：《TAIPEI TIMES》栏目稿四连发、「CFTC：截至…」
+# 三连发都是同一前缀），连着三窗看下来屏幕像卡住了。
+#   * 被这条约束跳过的条目**不写进 shown**，仍是「未标注」，几窗后照常上屏 —— 内容不丢，
+#     只是往后挪；
+#   * 真的无处可选时（候选全在 recent 里）会退回最新那条，宁可连播也不空屏，
+#     理由与「不设年龄上限」一致：屏幕上「停住」和「设备坏了」在用户眼里是同一件事。
+RECENT_MAX = 3
 
 
 # ---------------- 状态读写 ----------------
@@ -129,11 +145,28 @@ def _pickable(items, w, dwell):
     return [it for it in items if _bucket_of(it, dwell) <= w]
 
 
+def _display_key(item):
+    """这条在屏上真正显示的那一行字（标题的前 13 全角）。
+
+    用 render.split_title() 而不是自己截：屏上那一行到底取到哪几个字，是 render 的
+    显示规则（含「不把数字和单位切开」「不在半个英文词中间切」），在这里重算一遍必然
+    漂移 —— 一旦漂了，「防连播」拦的就是一条长得跟屏幕不一样的键，等于没拦。
+    空标题返回 ""，由调用方当成「不参与这条约束」处理（它连显示串都没有）。
+    """
+    title = str(item.get("title") or "")
+    if not title:
+        return ""
+    head, _tail = split_title(strip_dateline(title))
+    return str(head or "")
+
+
 def _pick_item(state, items):
     """选出这一窗该上屏的条目，返回 (条目 或 None, 已播 guid 集合, 轮次)。
 
     规则只有一条：**播池子里最新的、还没播过的那一条**。items 已按发布时间倒序、
     已由 _pickable() 剔掉未来条目，所以第一个没被标注的就是答案。
+    在此之上还有一层观感约束：避开 `state["recent"]` 里记着的、最近几窗的屏显串
+    （见 RECENT_MAX；被跳过的不写 shown，内容不丢）。
     全池都播过才清标记、从池子最新的一条重开一轮（cycle + 1）。
 
     标记用 guid 而不是「池子里第几条」：池子每窗都在滚动（新条目从头部进来、
@@ -153,23 +186,53 @@ def _pick_item(state, items):
     于是连同环境变量一起删掉了 —— 留着只会让排障的人对着一个假旋钮调半天。
     """
     shown = {str(g) for g in (state.get("shown") or [])}
+    recent = [str(k) for k in (state.get("recent") or []) if str(k)]
     cycle = int(state.get("cycle") or 1)        # 1 = 第 1 轮；全池播完重开时 +1
     if not items:
         return None, shown, cycle
 
-    fresh = next((it for it in items if item_guid(it) not in shown), None)
-    if fresh is not None:
-        return fresh, shown, cycle
+    unplayed = [it for it in items if item_guid(it) not in shown]
+    if unplayed:
+        return _without_recent(unplayed, recent), shown, cycle
 
     # 全池都播过：清标记重开一轮（cycle + 1），从池子最新的一条重新开始。
     # 唯一的例外是「刚刚上屏那一条」—— 池子小、换血快时 items[0] 往往就是它，
     # 清完标记立刻又选中它，屏幕上看起来像「没换」。这时改从「最新的另一条」起轮。
     # 只跳过这一条、不保留它的标记：留着的话它要到下一轮才回来，一轮就会少播一条。
+    # recent 在这里**不清空**：它是「最近几窗别连播」的滑动记忆，跟着轮次走，
+    # 刚清完标记就允许连播等于这条约束没加。
     prev_g = str(state.get("current") or "")
-    restart = next((it for it in items if item_guid(it) != prev_g), None)
-    if restart is None:                  # 池子只有这一条：只能重播它（无解，但不能崩）
-        restart = items[0]
-    return restart, set(), cycle + 1
+    restart = [it for it in items if item_guid(it) != prev_g] or [items[0]]
+    return _without_recent(restart, recent), set(), cycle + 1
+
+
+def _without_recent(cands, recent):
+    """在候选里跳过最近几窗的屏显串；全被挡住就退回第一条候选。
+
+    cands 已按发布时间倒序，所以「退回第一条」=「宁可跟上一窗撞串，也要接着播」。
+
+    空串不参与比较：`_display_key` 对空标题返回 ""，若把它当成被约束值，
+    一堆没有标题的条目会互相挡住（它们本来就没有可看的显示串）。
+    """
+    if not recent:
+        return cands[0]
+    fresh = next((it for it in cands
+                  if not _display_key(it) or _display_key(it) not in recent), None)
+    return fresh if fresh is not None else cands[0]
+
+
+def _trim_recent(recent, key):
+    """把本窗上屏的显示串压进 recent：最近的在前、去重、长度封顶 RECENT_MAX。
+
+    已经命中时就把它挪到队首（而不是留两个副本）：它代表的是「距离现在几窗」，
+    两个副本会让后面几窗被同一条挡两次，白白浪费一格记忆。
+    """
+    keys = [str(k) for k in (recent or []) if str(k)]
+    if key and key in keys:
+        keys.remove(key)
+    if key:
+        keys.insert(0, key)
+    return keys[:RECENT_MAX]
 
 
 def _trim_shown(shown, live_guids, pick_g):
@@ -222,7 +285,7 @@ def _fmt_at(item):
     return datetime.fromtimestamp(ts, timezone.utc).strftime("%m-%d %H:%M") + " UTC"
 
 
-def _build_state(w, pick, shown, cycle, dwell, back, n_pool, n_items):
+def _build_state(w, pick, shown, recent, cycle, dwell, back, n_pool, n_items):
     """组装本轮要落盘的状态。
 
     字段含义（OPERATIONS.md 第 15 节按这份解释排障，改字段名请同步改文档）：
@@ -230,6 +293,9 @@ def _build_state(w, pick, shown, cycle, dwell, back, n_pool, n_items):
       back    落后最新几条（0 = 屏上就是池子里最新的一条）
       current 当前上屏条目的 guid —— 「这条是否已播」的唯一身份键，hold / skip 都靠它找回
       shown   已播过条目的 guid 列表（只留池子里还在的条目，见 _trim_shown）
+      recent  最近几窗上屏过的**屏显串**（≤ RECENT_MAX，最近的在前）：
+              选条时会避开这些串，防「标题前 13 字撞车」造成的连播观感。
+              它是观感约束、不是内容去重 —— 被它跳过的条目不进 shown，内容不丢。
       cycle   第几轮（1 起），全池播完重开时 +1
       pool    可播条数（不含发布时间在未来的条目）；items 是进池的原始条数
       at      上屏条目的发布时间（UTC）。1.7.0 之前这里记的是「时间片对应的时间」，
@@ -241,6 +307,7 @@ def _build_state(w, pick, shown, cycle, dwell, back, n_pool, n_items):
         "back": back,
         "current": item_guid(pick),
         "shown": sorted(shown),
+        "recent": recent,
         "cycle": cycle,
         "pool": n_pool,
         "items": n_items,
@@ -258,8 +325,10 @@ def rotate_pick(items, state, now=None):
 
     规则（为什么这么定、代价是什么见 _pick_item）：
       1. 每窗取「全池还没标注过的最新一条」上屏，guid 记进 shown；
-      2. 全池都播过 → 清空 shown，从池子最新的一条重新开始（cycle + 1）；
-      3. 同一时间窗内重复调用不推进，也不因本窗来了更新的条目而换台。
+      2. 上屏那一条再记一层「最近几窗的屏显串」recent（≤ RECENT_MAX，见 RECENT_MAX），
+         选条时会避开它，防标题前 13 字撞车的连播观感 —— 被它跳过的条目不写 shown；
+      3. 全池都播过 → 清空 shown，从池子最新的一条重新开始（cycle + 1）；
+      4. 同一时间窗内重复调用不推进，也不因本窗来了更新的条目而换台。
 
     第 1~2 步只在 `_pickable()` 给出的条目里选：发布时间在未来的条目不参与（原因见该函数）。
     """
@@ -293,8 +362,9 @@ def rotate_pick(items, state, now=None):
         return None, state, "池子里没有可播的条目"
     pick_g = item_guid(pick)
     shown = _trim_shown(shown | {pick_g}, {item_guid(it) for it in live}, pick_g)
+    recent = _trim_recent(state.get("recent"), _display_key(pick))
     back = next((i for i, it in enumerate(live) if item_guid(it) == pick_g), 0)
-    new_state = _build_state(w, pick, shown, cycle, dwell, back,
+    new_state = _build_state(w, pick, shown, recent, cycle, dwell, back,
                              len(live), len(items))
     return pick, new_state, _advance_note(new_state, shown, live, items, late)
 
