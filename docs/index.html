@@ -87,7 +87,7 @@
     <a href="./feed-wrap.xml">feed-wrap.xml</a> ·
     <a href="./screen.html">屏幕效果</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
-    <div style="margin-top:6px">rss-hub v1.6.1 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
+    <div style="margin-top:6px">rss-hub v1.7.0 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
   </div>
 </div>
 
@@ -113,22 +113,18 @@ function fmt(d){
 fetch('./rotate.json?t=' + Date.now(), {cache:'no-store'})
   .then(r => r.json())
   .then(st => {
-    // 这格原本显示「已播片数/池子片数 第几轮」，是旧机制的进度口径。
-    // 现在的轮播锚定当前时间片，比「走了多少」更该看的是「落后多少」：
-    // lag = 当前窗号 - 上屏片号，乘节拍就是屏幕上那条内容比现在旧多少分钟。
-    //
-    // lag 是**上次落盘时**算的。轮播在同一时间窗内重跑会 hold、上屏条目离场会 skip，
-    // 这两种情况都不写状态，window 冻住、lag 也就不再更新 —— 光看它会把真实滞后报小。
-    // 所以再叠上「距 updated 过去了几个窗」，那才是屏上那条现在到底多旧。
-    const dwell = st.dwell || 300;
-    let lag = st.lag;
-    if (lag != null && st.updated) {
-      const stalled = (Date.now() - new Date(st.updated).getTime()) / 1000 / dwell;
-      if (stalled > 0) lag += stalled;
-    }
+    // 这格显示「屏上这条离队首还有多远」。1.7.0 起 `back` 的单位是**条数**：
+    // 0 = 屏上正是池子里最新的一条，3 = 它前面还压着 3 条更新的没播过。
+    // 之前这里是 window - bucket（落后几片），乘节拍就能换算成「几分钟」；按条轮之后
+    // 「条数」和「时间」没有固定换算（一条什么时候排到，取决于本窗有没有新内容涌进来），
+    // 所以这里就老老实实报条数，不编造分钟数。想知道屏上那条具体多旧，
+    // 看 rotate.json 的 `at`（那条自己的发布时间，UTC）。
+    let back = st.back;
+    if (back == null && st.lag != null) back = st.lag;   // 兼容升级途中残留的 1.6.x 状态
     document.getElementById('r').textContent =
-      (lag == null) ? '—'
-        : (lag <= 1 ? '实时' : '滞后 ' + Math.round(lag * dwell / 60) + ' 分');
+      (back == null) ? '—'
+        : (back <= 1 ? '实时（' + (st.at || '未知时间') + '）'
+                     : '落后 ' + back + ' 条（屏上是 ' + (st.at || '未知时间') + ' 的）');
   })
   .catch(() => {});
 

@@ -1,4 +1,5 @@
-# 本地运行产物（生成物 docs/feed.xml、docs/feed-wrap.xml 要入库，供 Pages 兜底）
+# 本地运行产物（生成物 docs/feed.xml 要入库，供 Pages 兜底；设备版 feed-wrap.xml 不入库，
+# 1.7.0 起 GitHub 侧只发布完整版，设备版由树莓派 moreaix.com/rss/ 提供）
 __pycache__/
 *.pyc
 docs/rotate.json

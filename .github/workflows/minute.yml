@@ -9,7 +9,8 @@ name: RSS 五分钟节拍发布
 #   （源数不写死：加减源只改 feeds.txt，这里跟注释无关，写个数字反而会过期）
 # 为什么这么绕：GitHub 的 cron 最短 5 分钟且会丢档，只能「小时级 cron + 作业内循环」——
 #   这样只要 cron 兑现一次，就能连续覆盖约一小时。Pages 部署量也从 990 次/天降到 216 次/天。
-# 轮播：设备版 feed-wrap.xml 每轮只发布「当前该显示的那一条」，游标记在 docs/rotate.json，
+# 轮播：设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml），GitHub 这份只发布完整版
+# feed.xml 给阅读器订阅；游标记在 docs/rotate.json，
 #   随 Pages 一起发布；同一时间窗内重复构建不推进，所以多跑几轮也不会跳条。
 # 备份：每天第一次运行提交一次（判断依据是 docs/feed.xml 最后一次提交的日期，不是"UTC 00 点"）。
 #   仓库里的 feed 只是镜像，权威副本是 Pages 上那份；备份只为「Pages 挂了还能从 git 取回」。
@@ -68,11 +69,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "1"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -133,11 +137,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "2"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -198,11 +205,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "3"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -263,11 +273,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "4"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -328,11 +341,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "5"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -393,11 +409,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "6"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -458,11 +477,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "7"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -523,11 +545,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "8"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -588,11 +613,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "9"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -653,11 +681,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "10"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -718,11 +749,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "11"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -783,11 +817,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "12"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"
@@ -848,11 +885,14 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
           CYCLE: "13"
 
         run: |
           # 每小时首轮先拉代码：作业是整点 checkout 的，不拉就会整小时跑旧代码。
-          # 顺手丢弃上一轮留下的未提交产物（feed.xml / feed-wrap.xml），本轮马上重建。
+          # 顺手丢弃上一轮留下的未提交产物（feed.xml），本轮马上重建。
           if [ "$CYCLE" -eq 1 ]; then
             git config user.name  "rss-hub-bot"
             git config user.email "rss-hub-bot@users.noreply.github.com"

@@ -16,8 +16,8 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 轮播规则（为什么设备版只有一条）：
   Dot 云端只渲染文档里的第一条，按时间倒序排的话屏幕永远停在最新那条，其余条目一辈子轮不到。
   所以设备版每版只发一条，选谁由「已播标记」决定 —— **规则本身、以及为什么这么定，
-  全在 rotate.py 的模块说明与 `_pick_bucket` 的 docstring 里，这里不复制一份**（复制必然漂移）。
-  一句话版本：每窗播「池子里还没播过、最新的一片」，全播过才清标记重来；同一时间窗内重跑不推进。
+  全在 rotate.py 的模块说明与 `_pick_item` 的 docstring 里，这里不复制一份**（复制必然漂移）。
+  一句话版本：每窗播「池子里还没播过、最新的一条」，全播过才清标记重来；同一时间窗内重跑不推进。
 
 特性：
   * 零第三方依赖，Python 3.8+
@@ -28,11 +28,11 @@ RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 
 分工：
   render.py     显示规则（怎么切、怎么排、怎么拼 RSS），纯函数可单测 —— 改「屏上怎么显示」去这里
-  rotate.py     轮播（池子怎么切片、这一窗该播哪一条、游标状态怎么落盘），选条是纯函数 ——
-                改「上屏顺序 / 该播哪条」去这里（规则只有一条，别再拆台阶，见 _pick_bucket）
+  rotate.py     轮播（这一窗该播哪一条、已播标记怎么记、游标状态怎么落盘），选条是纯函数
+                —— 改「上屏顺序 / 该播哪条」去这里（规则只有一条，别再拆台阶，见 _pick_item）
   本文件        抓取、失败回退、写文件、编排。轮播相关只留「状态文件与线上地址在哪」这一层配置。
 
-本文件从 rotate 里 re-export 了轮播入口（rotate_pick / _pick_bucket / ROTATE_SECONDS /
+本文件从 rotate 里 re-export 了轮播入口（rotate_pick / _pick_item / ROTATE_SECONDS /
 ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tests/ 与 tools/ 继续按
 `build_feed.xxx` 调用，不必跟着搬家 —— 别把它们当成本模块的实现（新代码请直接 `from rotate`）。
 
@@ -85,18 +85,20 @@ from datetime import datetime, timedelta, timezone
 from render import (BODY_MAX, ENTITY_FIX, LINE_WIDTH, build_rss, clean_text,
                     dedupe, item_guid)
 # 轮播住在 rotate.py。这里 re-export 几个名字，让 tests/、tools/ 继续用 build_feed.xxx：
-#   rotate_pick、_pick_bucket  —— 行为入口
+#   rotate_pick、_pick_item   —— 行为入口（_pick_item 是「按条选一条」的实现，1.7.0 起
+#                                取代按时间片选代表的 _pick_bucket；名字跟着语义一起换了，
+#                                留旧名会让读代码的人以为还在切片）
 #   ROTATE_SECONDS、ROTATE_STATE_VERSION、CLOCK_SKEW_WINDOWS —— 测试要把窗口号算成秒
 # `__all__` 同时起两个作用：声明「本模块对外承诺的名字」，以及告诉 pyflakes
 # 这几个 import 不是死代码（它认 __all__，不认没有 flake8 的 # noqa）。
 # load_rotate_state / save_rotate_state 只在本文件的 main() 里用，路径由这里给。
 from rotate import (CLOCK_SKEW_WINDOWS, ROTATE_POOL_MAX, ROTATE_SECONDS,
-                    ROTATE_STATE_VERSION, _pick_bucket, load_rotate_state,
+                    ROTATE_STATE_VERSION, _pick_item, load_rotate_state,
                     rotate_pick, save_rotate_state)
 from version import __version__
 
 __all__ = ["__version__", "read_feed_entries", "parse_items", "run_once", "write_feed",
-           "main", "rotate_pick", "_pick_bucket", "ROTATE_SECONDS",
+           "main", "rotate_pick", "_pick_item", "ROTATE_SECONDS",
            "ROTATE_STATE_VERSION", "CLOCK_SKEW_WINDOWS"]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -272,8 +274,8 @@ def _parse_date(s):
     同一份数据会排出两套顺序，本地测通了线上却是乱的。
 
     这里**不**处理「发布时间在未来」的时间戳（源时钟错乱会造出 2030 年）：
-    钳到抓取时刻看着自然，但抓取每 5 分钟重跑一次、钳值跟着往前跑，片号永远是「本窗」，
-    轮播每窗都把它当成没播过的最新片选中 —— 同一条每窗重播一次（实测连跑 6 窗全是它），
+    钳到抓取时刻看着自然，但抓取每 5 分钟重跑一次、钳值跟着往前跑，它的发布时间永远是「本窗」，
+    轮播每窗都把它当成没播过的最新一条选中 —— 同一条每窗重播一次（实测连跑 6 窗全是它），
     比不钳更糟。未来时间戳由 `_pickable()` 在轮播时按「时间还没到就先不播」处理。
     """
     if not s:
@@ -373,7 +375,7 @@ def parse_items(xml_text, source_url, limit=PER_SOURCE):
             it["ts"] = 0
     # 次级键用 guid：同一时间戳的条目在不同次抓取里先后次序可能不同（源自己也在抖），
     # 而排序是稳定的 —— 次序不定就等于「同样的数据排出两个池子」，
-    # 而 _bucketize 取片内第一条当代表，同一片这次选 A、下次选 B，屏上会莫名换内容。
+    # 而轮播取「排在前面的第一条」，次序不定就是同一窗这次选 A、下次选 B，屏上会莫名换内容。
     items.sort(key=lambda x: (-(x["ts"] or 0), item_guid(x)))
     return items[:limit]
 
@@ -412,7 +414,7 @@ def load_prev_items():
 
 
 # ---------------- 轮播的位置配置 ----------------
-# 机制实现全在 rotate.py（怎么切片、这一窗该播哪条、状态里放什么、怎么落盘）。
+# 机制实现全在 rotate.py（怎么选这一条、标记怎么记、状态里放什么、怎么落盘）。
 # 本文件只留两件跟路径有关的配置：状态文件在哪（上面的 ROTATE_STATE，跟着 OUT_FILE 走）、
 # 线上状态地址在哪（下面的 _rotate_url，跟着 FEED_URL 走）。
 #
@@ -433,8 +435,8 @@ def run_once(entries, prev_items):
 
     排序的次级键必须是 guid：条目是 as_completed 并发收上来的，数组顺序取决于
     各源返回的快慢，而排序是稳定的 —— 不补次级键，同一时间戳的多条在两次运行里
-    会排出不同次序。轮播按片取「第一条」当代表，次序不定就是同一片这次选 A、
-    下次选 B，屏上表现为「内容莫名换了」。补上 guid 后，同一批数据只有一个池子顺序。
+    会排出不同次序，于是同一窗跑两遍会选出两条不同的内容（标记按 guid 走，
+    池子顺序再漂就等于随机换台）。补上 guid 后，同一批数据只有一个池子顺序。
     """
     items, ok, fail, stale = [], 0, 0, 0
 

@@ -51,6 +51,9 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
+          # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
+          SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"
         run: python build_feed.py
 
       - uses: actions/upload-pages-artifact@v3
