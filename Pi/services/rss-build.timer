@@ -1,10 +1,11 @@
 [Unit]
-Description=Run RSS build every minute
+Description=RSS build timer (day every 5 min; night 00:00-07:00 hourly)
 
 [Timer]
-# 节拍：每 5 分钟。改 1 分钟就改成 *:*:00
+# 节拍：白天 07:00-23:59 每 5 分钟；夜间 00:00-06:59 每小时整点一次
 OnBootSec=45s
-OnCalendar=*:0/5:00
+OnCalendar=*-*-* 07..23:0/5:00
+OnCalendar=*-*-* 00..06:00:00
 AccuracySec=1s
 Unit=rss-build.service
 

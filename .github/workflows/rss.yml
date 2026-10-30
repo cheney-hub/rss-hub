@@ -5,6 +5,9 @@ name: RSS 聚合（改源即时发布）
 # 免得等下一个整点。不做定时任务，避免和 minute.yml 抢 Pages 部署。
 
 on:
+  schedule:
+    # 北京时间 08:00 / 13:00 / 18:00 各更新一次（GitHub cron 用 UTC → 0,5,10）
+    - cron: "0 0,5,10 * * *"
   workflow_dispatch:
   push:
     branches: [main]
