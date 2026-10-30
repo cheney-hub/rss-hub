@@ -10,7 +10,10 @@ WorkingDirectory=/home/user/rss-hub
 Environment=FEEDS_FILE=/home/user/rss-hub/feeds.txt
 Environment=OUT_FILE=/home/user/rss-hub/docs/feed.xml
 Environment=FEED_URL=https://moreaix.com/rss/feed.xml
-Environment=ROTATE_STATE=/home/user/rss-hub/docs/rotate.json
+# 抓取只负责完整版 feed.xml（池子）。设备版与显示游标交给 rss-rotate.service，
+# 所以这里把它俩指到临时目录：抓取一小时跑一次，不该顺手把屏幕也定住一小时。
+Environment=SCREEN_OUT=/tmp/feed-wrap-build.xml
+Environment=ROTATE_STATE=/tmp/rotate-build.json
 Environment=ROTATE_STATE_URL=http://127.0.0.1:8080/rss/rotate.json
 Environment=PER_SOURCE=5
 Environment=ITEM_LIMIT=120

@@ -1,0 +1,11 @@
+[Unit]
+Description=Advance device feed (feed-wrap.xml) one item per display window
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=user
+Environment=PYTHONUNBUFFERED=1
+# 只读 feed.xml（池子）+ rotate.json（显示游标）→ 重写 feed-wrap.xml。
+# 不联网、不抓源，一次不到 1 秒；可以高频跑，与抓取任务互不干扰。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/rotate_screen.py

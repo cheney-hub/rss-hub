@@ -1,0 +1,14 @@
+[Unit]
+Description=Device display timeline: one item per window, all day
+
+[Timer]
+# 显示时间线：全天每 5 分钟推进一条，与抓取节拍（白天 5 分钟 / 夜间整点）无关。
+# 这两条线必须分开 —— 捆在一起时，夜间抓取一小时跑一次，屏幕就一小时不动。
+# 片长由 ROTATE_SECONDS（默认 300）决定，改那里就要跟着改这里的 0/5。
+OnBootSec=30s
+OnCalendar=*:0/5
+AccuracySec=1s
+Unit=rss-rotate.service
+
+[Install]
+WantedBy=timers.target
