@@ -155,6 +155,13 @@ git commit -m "revert feed" && git push
 | 树莓派抓取更快/更省 | 改 `Pi/services/rss-build.timer` 的 `OnCalendar`（白天 `07..23:0/5:00`、夜间 `00..06:00:00`） |
 | 树莓派屏幕换得更慢 | 改 `ROTATE_SECONDS`，**同时**把 `Pi/services/rss-rotate.timer` 的 `OnCalendar=*:0/5` 改成对应的分钟数（门禁会核对这两个值，见下） |
 
+**改节拍只能改 `.service` 里的 `Environment=`，不要改 `.timer` 里的 `Environment=`**：systemd 的
+`Environment=` 只作用于**被启动的那个单元**，`rss-rotate.timer` 上的 `Environment=ROTATE_SECONDS=600`
+不会传给由它拉起的 `rss-rotate.service`，届时节拍还是 300 而 timer 每 10 分钟才推进一次 —— 和下面
+那条漂移的表现一模一样，而且没有任何报错。要 overrides 就在
+`/home/user/pi-pipeline/` 对应的 `rss-rotate.service`（或 `systemctl edit rss-rotate.service`）里写。
+代码里的默认值在 `rotate.py`，改它必须同步三个 workflow 里的同名环境变量（门禁 `check_workflow_sync` 会拦）。
+
 **门禁会拦的「假旋钮」**：`ROTATE_SECONDS`（代码，默认 300）与 `rss-rotate.timer` 的 `OnCalendar=*:0/5`
 必须表示同一个节拍；只改一边会让「一条待多久」与「多久推进一次」错位，表现为跳条或重复。
 `review_check.py` 的 `check_rotate_timer_sync` 会把这种漂移报成必改。
