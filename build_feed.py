@@ -4,8 +4,11 @@
 RSS 聚合器 —— 专为 Dot (Quote/0) 墨水屏设备开发
 
 读 feeds.txt（注释行 = 中文源名，下一行 = 地址）
-→ 每源抓最新 PER_SOURCE 条 → 跨源去重 → 按发布时间倒序 → 截取最新 ITEM_LIMIT 条（默认 120）
+→ 每源抓最新 PER_SOURCE 条 → 跨源合并 → 按发布时间倒序 → 去重 → 截取最新 ITEM_LIMIT 条（默认 120）
 → 生成 RSS 2.0
+
+（排序在去重之前，不是笔误：`dedupe()` 保留先到者，先按时间排完才留得住「更新的那条」。
+`run_once()` 的 docstring 里有同样的顺序说明。）
 
 输出三份：
   docs/feed.xml       完整版：标题原样、全部条目按时间倒序 + 摘要正文，给电脑 / 手机上的 RSS 阅读器
@@ -38,8 +41,9 @@ ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tests/ 与 tools/ �
 
 版本号在 version.py（唯一真源），`python3 build_feed.py --version` 可直接打印。
 
-环境变量（带 SCREEN_/FEED_BODY_ 前缀的由 render.py 读，ROTATE_ 前缀的由 rotate.py 读，
-其余在本文件；改前缀请连模块一起看，别只改这里的说明）：
+环境变量（**按模块逐个点名，别按前缀推断**：前缀与读取方并不一一对应，
+SCREEN_OUT / ROTATE_STATE 两个带屏/轮播前缀的其实是本文件读的）：
+  ── 本文件读：
   FEEDS_FILE         订阅源列表，默认 ./feeds.txt
   OUT_FILE           完整版输出，默认 ./docs/feed.xml
   FEED_URL           频道 <link>，默认 https://cheney-hub.github.io/rss-hub/feed.xml
@@ -48,7 +52,11 @@ ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tests/ 与 tools/ �
   ITEM_LIMIT         去重后条目上限，默认 120（0 = 不限）：按发布时间倒序后节选最新的 120 条
   FETCH_TIMEOUT      单源超时秒数，默认 20
   CONCURRENCY        并发数，默认 12
-  SCREEN_OUT         设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml
+  SCREEN_OUT         设备版输出，默认与 OUT_FILE 同目录的 feed-wrap.xml（**本文件写**）
+  ROTATE_STATE       轮播状态文件，默认与 OUT_FILE 同目录的 rotate.json（**本文件写**）
+  ROTATE_STATE_URL   线上状态地址，默认 FEED_URL 同目录的 rotate.json
+  SOURCE_TZ_OFFSET   源没写时区时按哪个时区解释，默认 8（北京 +08）
+  ── render.py 读：
   SCREEN_LINE_WIDTH  标题行宽度（全角字符数），默认 13
                      —— 设备 296×152 屏是大字号单行，实测 13 个全角字满宽，
                      再多就被 Dot 云端从右边切掉。所以标题只放得下多少给多少。
@@ -58,24 +66,22 @@ ROTATE_STATE_VERSION / CLOCK_SKEW_WINDOWS），是为了让 tests/ 与 tools/ �
                      太长的正文尾端会补省略号。
   FEED_BODY_MAX      完整版正文最多保留多少全角字，默认 0 = 不限（完整版全文照发）
                      —— 正数才用来防止单条摘要把整份文件撑大，与屏宽无关。
-  ROTATE_SECONDS     每条在屏上驻留多少秒（= 设备刷新周期），默认 300（rotate.py 读）
+  ── rotate.py 读：
+  ROTATE_SECONDS     每条在屏上驻留多少秒（= 设备刷新周期），默认 300，下限 60
                      —— 调大等于放慢轮播。Pages CDN 缓存 600 秒，
                      若真机上出现「同一条连显两次」，把它改成 600。
-  ROTATE_POOL_MAX    轮播池上限，默认 120（0 = 不限）（rotate.py 读）
+  ROTATE_POOL_MAX    轮播池上限，默认 120（0 = 不限）
                      —— 设备端只消费「最新 120 条」：最差滞后 = 池条数 ÷ 每窗新增，
                      池子涨到 245 条会把最差滞后从 4.3 小时推到 8 小时以上，
                      所以设备池与完整版条数分开管：两边都钉在最新 120 条。
-  ROTATE_STATE       轮播状态文件，默认与 OUT_FILE 同目录的 rotate.json
-  ROTATE_STATE_URL   线上状态地址，默认 FEED_URL 同目录的 rotate.json
-  SOURCE_TZ_OFFSET   源没写时区时按哪个时区解释，默认 8（北京 +08）
 """
 import os
 import re
 import sys
 import time
-import gzip
 import zlib
 import email.utils
+import tempfile
 import urllib.request
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -83,7 +89,7 @@ from datetime import datetime, timedelta, timezone
 
 # 显示规则住在 render.py，build_feed 只负责抓取与编排。
 from render import (BODY_MAX, ENTITY_FIX, LINE_WIDTH, build_rss, clean_text,
-                    dedupe, item_guid)
+                    dedupe, device_description, item_guid)
 # 轮播住在 rotate.py。这里 re-export 几个名字，让 tests/、tools/ 继续用 build_feed.xxx：
 #   rotate_pick、_pick_item   —— 行为入口（_pick_item 是「按条选一条」的实现，1.7.0 起
 #                                取代按时间片选代表的 _pick_bucket；名字跟着语义一起换了，
@@ -107,7 +113,7 @@ OUT_FILE = os.environ.get("OUT_FILE", os.path.join(BASE_DIR, "docs", "feed.xml")
 FEED_URL = os.environ.get("FEED_URL", "https://cheney-hub.github.io/rss-hub/feed.xml")
 REFRESH_SECONDS = int(os.environ.get("REFRESH_SECONDS", "0"))
 FETCH_TIMEOUT = int(os.environ.get("FETCH_TIMEOUT", "20"))
-CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))
+CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))   # 并发上限（下限 1）
 
 # 设备版（Dot Quote/0）：标题截到屏宽，余下文字进正文，交给 Dot 云端渲染成位图
 SCREEN_OUT = os.environ.get(
@@ -122,10 +128,13 @@ ROTATE_STATE = os.environ.get(
 # 否则本地（+08）与 GitHub runner（UTC）会把同一份数据排出两套顺序。
 SOURCE_TZ = timezone(timedelta(hours=float(os.environ.get("SOURCE_TZ_OFFSET", "8"))))
 
+# 伪装成桌面 Chrome：不少源站对 urllib 的默认 UA 直接回 403，换 UA 是最省事的兼容手段
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+# 失败后隔多久重试一次（秒）。只重试一次：单轮总时长要压在 5 分钟节拍内，
+# 源站真挂了重试十次也还是挂，1 秒只是给偶发的连接重置 / 5xx 一个机会。
 RETRY_DELAY = 1.0
-# 单源响应体上限。正常 RSS 连 1 MB 都到不了（最大的源约 2~3 MB），
+# 单源响应体上限。绝大多数 RSS 在 1 MB 以内，最大的源约 2~3 MB，
 # 设这个上限只为一种情况：源地址被改成一个巨大的文件（视频、整站导出），
 # 一次 read() 就把 runner 的内存吃光，整轮采集跟着崩。宁可丢这一个源。
 MAX_BODY_BYTES = 12 * 1024 * 1024
@@ -138,7 +147,7 @@ def _cap(body):
                            % (len(body) >> 20, MAX_BODY_BYTES >> 20))
     return body
 
-PER_SOURCE = max(1, int(os.environ.get("PER_SOURCE", "5")))   # 每源取几条
+PER_SOURCE = max(1, int(os.environ.get("PER_SOURCE", "5")))   # 每源取几条（下限 1）
 ITEM_LIMIT = max(0, int(os.environ.get("ITEM_LIMIT", "120")))   # 去重后上限，默认 120（0 = 不限）
 
 
@@ -163,6 +172,8 @@ def read_feed_entries(path=None, skipped=None):
             if raw.startswith("#"):
                 txt = raw.lstrip("#").strip()
                 if txt and not txt.startswith(("=", "-", "*")):
+                    # 源名后面常跟括号备注（「财联社（快讯）」）：备注只给人看，
+                    # 上屏时占宽度，所以从第一个中/英文左括号起整段截掉
                     pending = re.sub(r"[（(].*?$", "", txt).strip()
                 continue
             url = raw.split("#")[0].strip()
@@ -180,6 +191,24 @@ def read_feed_entries(path=None, skipped=None):
 
 
 # ---------------- HTTP ----------------
+def _inflate(body, wbits):
+    """有界解压：最多产出 MAX_BODY_BYTES，多一个字节就判超限。
+
+    不能写成 `_cap(gzip.decompress(body))`：那是**先全量物化再量**，而压缩比可以到
+    1:1000 量级（实测 20 MB 全零压成 20 KB），12 MB 的响应对应 GB 级的解压结果，
+    `_cap` 执行时内存早就没了。这里用 decompressobj 的 max_length，多要 1 字节即可
+    判定越界，永远不会物化超过上限的中间结果。
+    """
+    d = zlib.decompressobj(wbits)
+    out = d.decompress(body, MAX_BODY_BYTES + 1)
+    if len(out) > MAX_BODY_BYTES or d.unconsumed_tail:
+        raise RuntimeError("解压后超过 %d MB 上限" % (MAX_BODY_BYTES >> 20))
+    out += d.flush()
+    if len(out) > MAX_BODY_BYTES:
+        raise RuntimeError("解压后超过 %d MB 上限" % (MAX_BODY_BYTES >> 20))
+    return out
+
+
 def http_get(url):
     """抓一个地址，返回 (状态码, 已解压的字节串, 响应头声明的字符集或 None)。
 
@@ -187,8 +216,8 @@ def http_get(url):
     少数（尤其老 nginx）回 deflate。以前只解 gzip，碰上 deflate 就把压缩流当
     正文去解码，解析必然失败、该源整轮走回退——所以这里两种都解。
 
-    读取有上限（MAX_BODY_BYTES），压缩前后各查一次：解压后的体积才是真正占内存的量，
-    一个 12 MB 的 gzip 能炸出几百 MB。
+    体积上限查两次：读到的压缩体不超过 MAX_BODY_BYTES，解压过程本身也封顶
+    （`_inflate` 是流式的，不会先把几百 MB 解出来再判断）。
     """
     req = urllib.request.Request(url, headers={
         "User-Agent": UA,
@@ -196,17 +225,18 @@ def http_get(url):
         "Accept-Encoding": "gzip, deflate",
     })
     with urllib.request.urlopen(req, timeout=FETCH_TIMEOUT) as resp:
+        # +1 是为了让「刚好等于上限」与「超过上限」可区分，不是笔误
         body = _cap(resp.read(MAX_BODY_BYTES + 1))
         enc = (resp.headers.get("Content-Encoding") or "").lower()
         if "gzip" in enc:
-            body = _cap(gzip.decompress(body))
+            body = _inflate(body, 16 + zlib.MAX_WBITS)
         elif "deflate" in enc:
-            # 规范里的 deflate 是 zlib 包装；有实现直接发裸 deflate，两种都试
+            # 规范里的 deflate 是 zlib 包装；有实现直接发裸 deflate，两种都试。
+            # 只吞 zlib.error：超限抛的是 RuntimeError，不能被当成「换种算法再试」。
             try:
-                body = zlib.decompress(body)
+                body = _inflate(body, zlib.MAX_WBITS)
             except zlib.error:
-                body = zlib.decompress(body, -zlib.MAX_WBITS)
-            body = _cap(body)
+                body = _inflate(body, -zlib.MAX_WBITS)
         return resp.status, body, resp.headers.get_content_charset()
 
 
@@ -297,14 +327,28 @@ def _parse_date(s):
 
 
 def _sanitize(xml_text):
-    """修补 XML 中未定义的 HTML 实体 + 去掉控制字符。"""
+    """把源站的脏 XML 修到 ET 能解析：去 DOCTYPE、修实体、剥控制字符、去编码声明。
+
+    顺序有意义：先剥 DOCTYPE（它里面可能有实体声明与 `>`，留在后面会干扰实体修补），
+    再修命名实体，最后处理控制字符与编码声明。
+    """
     def fix(m):
+        """命名实体 → 已知映射 / 保留 XML 五个预定义实体 / 其余换成空格。
+
+        未知实体不能原样留着：ET 遇到未定义的实体直接报错，整个源就得走兜底通路。
+        换成空格是唯一代价最小的选择（丢一个符号 vs 丢整条）。
+        """
         e = m.group(0)
         if e in ENTITY_FIX:
             return ENTITY_FIX[e]
         if e.startswith(("&amp;", "&lt;", "&gt;", "&quot;", "&apos;")):
             return e
         return " "
+
+    # DOCTYPE 显式剥掉：内部实体展开（billion laughs）没有任何正当用途，
+    # 而本文件原先对它其实是「偶然防住」的 —— 下面那条实体正则只匹配 2~9 字符的
+    # 实体名，名字更长的照样展开（实测 805 字节的输入能放出 10 万字符）。
+    xml_text = re.sub(r"<!DOCTYPE[^\[>]*(\[[\s\S]*?\])?[^>]*>", "", xml_text, flags=re.I)
     # 只处理「&amp;」这类命名实体；数字实体（&#8212;）正则匹配不到，ET 自己能处理
     xml_text = re.sub(r"&[a-zA-Z][a-zA-Z0-9]{1,8};", fix, xml_text)
     xml_text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", xml_text)
@@ -318,16 +362,18 @@ def _rx(raw, pattern):
     return m.group(1) if m else ""
 
 
-def parse_items(xml_text, source_url, limit=PER_SOURCE):
-    """解析一个源，按发布时间倒序取前 limit 条；每条都带摘要原文（summary）。
+def _item_nodes(xml_text):
+    """取出所有 <item>/<entry> 节点，两种形状对下游等价。
 
     两条通路：
       * 正常走 ElementTree，命名空间无关（RSS 2.0 / Atom / RDF 都能读）；
       * ET 报错时退回正则抽 <item>/<entry> 块——线上确实有源发不合法的 XML
         （未转义的 & 、未闭合标签），整源丢弃的代价比少几个字段大。
+    返回的元素因此可能是 ET 节点，也可能是 `{"__raw__": 原始片段}`；下游只经
+    `_entry_of()` 读它们。传进来的文本必须已经过 `_sanitize`（兜底通路也用同一份）。
     """
     try:
-        root = ET.fromstring(_sanitize(xml_text))
+        root = ET.fromstring(xml_text)
         nodes = [n for n in root.iter() if _local(n.tag) in ("item", "entry")]
     except ET.ParseError:
         blocks = re.findall(r"<(?:item|entry)\b.*?</(?:item|entry)>", xml_text,
@@ -335,40 +381,57 @@ def parse_items(xml_text, source_url, limit=PER_SOURCE):
         if not blocks:
             raise RuntimeError("XML 解析失败且无 item/entry")
         nodes = [{"__raw__": b} for b in blocks]
-
     if not nodes:
         raise RuntimeError("未解析到条目")
+    return nodes
 
-    def entry_of(node):
-        if isinstance(node, dict):                # 正则兜底通路
-            raw = node["__raw__"]
-            title = _rx(raw, r"<title\b[^>]*>(.*?)</title>")
-            link = (_rx(raw, r"<link\b[^>]*href=\"([^\"]+)\"")
-                    or _rx(raw, r"<link\b[^>]*>(.*?)</link>"))
-            date_raw = (_rx(raw, r"<pubDate\b[^>]*>(.*?)</pubDate>")
-                        or _rx(raw, r"<published\b[^>]*>(.*?)</published>")
-                        or _rx(raw, r"<updated\b[^>]*>(.*?)</updated>"))
-            summary = (_rx(raw, r"<content:encoded\b[^>]*>(.*?)</content:encoded>")
-                       or _rx(raw, r"<description\b[^>]*>(.*?)</description>")
-                       or _rx(raw, r"<summary\b[^>]*>(.*?)</summary>")
-                       or _rx(raw, r"<content\b[^>]*>(.*?)</content>"))
-        else:                                     # 正常通路
-            idx = _index(node)
-            title = idx.get("title", "")
-            link = ""
-            for c in node.iter():                 # Atom 的地址在 href 属性上
-                if _local(c.tag) == "link":
-                    link = (c.get("href") or "".join(c.itertext()) or "").strip()
-                    if link:
-                        break
-            date_raw = _pick(idx, ("pubdate", "published", "updated", "date"))
-            # 正文来源按「原文优先」排：content:encoded > description > summary > content
-            summary = _pick(idx, ("encoded", "description", "summary", "content"))
-        return {"title": clean_text(title), "link": (link or "").strip(),
-                "date_raw": clean_text(date_raw), "ts": _parse_date(clean_text(date_raw)),
-                "summary": clean_text(summary)}
 
-    items = [entry_of(n) for n in nodes]
+def _entry_of(node):
+    """把一条 <item>/<entry> 归一成下游唯一的字段契约。
+
+    输入两种形状（见 `_item_nodes`），输出固定五个键：
+    title / link / date_raw / ts / summary，`src` 由调用方补 ——
+    build_feed 与 render 都只认这几个键，改键名要两边一起改。
+    """
+    if isinstance(node, dict):                # 正则兜底通路
+        raw = node["__raw__"]
+        title = _rx(raw, r"<title\b[^>]*>(.*?)</title>")
+        # 两条正则的顺序就是优先级：先试 href 属性（Atom 的写法），
+        # 再退回元素文本（RSS 2.0 的写法）。反过来的话 Atom 会拿到空串。
+        link = (_rx(raw, r"<link\b[^>]*href=\"([^\"]+)\"")
+                or _rx(raw, r"<link\b[^>]*>(.*?)</link>"))
+        date_raw = (_rx(raw, r"<pubDate\b[^>]*>(.*?)</pubDate>")
+                    or _rx(raw, r"<published\b[^>]*>(.*?)</published>")
+                    or _rx(raw, r"<updated\b[^>]*>(.*?)</updated>"))
+        summary = (_rx(raw, r"<content:encoded\b[^>]*>(.*?)</content:encoded>")
+                   or _rx(raw, r"<description\b[^>]*>(.*?)</description>")
+                   or _rx(raw, r"<summary\b[^>]*>(.*?)</summary>")
+                   or _rx(raw, r"<content\b[^>]*>(.*?)</content>"))
+    else:                                     # 正常通路
+        idx = _index(node)
+        title = idx.get("title", "")
+        link = ""
+        for c in node.iter():                 # Atom 的地址在 href 属性上
+            if _local(c.tag) == "link":
+                link = (c.get("href") or "".join(c.itertext()) or "").strip()
+                if link:
+                    break
+        date_raw = _pick(idx, ("pubdate", "published", "updated", "date"))
+        # 正文来源按「原文优先」排：content:encoded > description > summary > content
+        summary = _pick(idx, ("encoded", "description", "summary", "content"))
+    return {"title": clean_text(title), "link": (link or "").strip(),
+            "date_raw": clean_text(date_raw), "ts": _parse_date(clean_text(date_raw)),
+            "summary": clean_text(summary)}
+
+
+def parse_items(xml_text, source_url, limit=PER_SOURCE):
+    """解析一个源，按发布时间倒序取前 limit 条；每条都带摘要原文（summary）。
+
+    **消毒在入口做，两条通路共用**：兜底通路以前直接拿原始文本抽字段，
+    源里的控制字符（如 U+0001）会原样进 feed.xml，让整份 XML 对所有订阅端非法
+    （`ET.fromstring` 报 invalid token）。`_sanitize` 幂等，ET 通路照旧安全。
+    """
+    items = [_entry_of(n) for n in _item_nodes(_sanitize(xml_text))]
     for it in items:
         it["src"] = source_url
         if it["ts"] is None:
@@ -398,6 +461,8 @@ def load_prev_items():
         if not url:
             continue
         bucket = prev.setdefault(url, [])
+        # 每个源最多回补 PER_SOURCE 条：旧 feed 里可能有上百条同一源的历史条目，
+        # 全塞回池子会把池子撑满、把新内容挤出去
         if len(bucket) >= PER_SOURCE:
             continue
         bucket.append({
@@ -408,7 +473,6 @@ def load_prev_items():
             "summary": (it.findtext("description") or "").strip(),
             "src": url,
             "src_name": (src_el.text or "").strip(),
-            "stale": True,
         })
     return prev
 
@@ -422,25 +486,31 @@ def load_prev_items():
 # 重跑、手动触发变成 30 次，用计数器就会跳条；用 w = now // ROTATE_SECONDS 做幂等键，
 # 同一个 5 分钟窗内构建多少次都只前进一格，节奏只跟墙上时钟走。
 def _rotate_url():
+    """线上状态地址：`ROTATE_STATE_URL` 优先，否则取 `FEED_URL` 同目录的同名文件。
+
+    为什么不放进 rotate.py：这个默认值由 OUT_FILE / FEED_URL 推导而来，而那两个
+    是本文件的配置。让 rotate 再复制一份默认值，两处必然漂移。
+    """
     return (os.environ.get("ROTATE_STATE_URL")
             or FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(ROTATE_STATE))
 
+
 # ---------------- 单轮采集 ----------------
-def run_once(entries, prev_items):
-    """抓全部源 → 排序 → 去重 → 截断，返回 (条目列表, 统计)。
+def _collect(entries, prev_items):
+    """并发抓全部源，失败的按「上一份 feed 里该源的条目」回退。
+
+    返回 (条目列表, {"ok": 成功源数, "fail": 失败源数, "stale": 走了回退的源数})。
+    条目顺序取决于各源返回的快慢，不能直接当池子用 —— 排序由调用方统一做。
 
     重试放在 worker 里做：以前在主线程的 as_completed 循环里 sleep 后重试，
-    43 个源里有 5 个超时就白等 5 秒，而且等待期间其它已完成的结果全都压着不处理。
-    放进 worker 后并发的 12 路各睡各的，主线程只管收结果。
-
-    排序的次级键必须是 guid：条目是 as_completed 并发收上来的，数组顺序取决于
-    各源返回的快慢，而排序是稳定的 —— 不补次级键，同一时间戳的多条在两次运行里
-    会排出不同次序，于是同一窗跑两遍会选出两条不同的内容（标记按 guid 走，
-    池子顺序再漂就等于随机换台）。补上 guid 后，同一批数据只有一个池子顺序。
+    四十几个源里只要有 5 个超时就要白等 5 秒（现在 49 个源），而且等待期间其它
+    已完成的结果全都压着不处理。放进 worker 后并发的 12 路各睡各的，主线程只管收结果。
     """
     items, ok, fail, stale = [], 0, 0, 0
 
     def fetch_one(e):
+        """抓一个源并解析。任何异常都收成 (entry, None, err) 交给主线程决定回退，
+        不在这里 sleep / 重试 —— 重试策略只写在 fetch_with_retry 一处。"""
         try:
             status, body, charset = http_get(e["url"])
             if status != 200:
@@ -453,7 +523,11 @@ def run_once(entries, prev_items):
             return e, None, err
 
     def fetch_with_retry(e):
-        """失败一次后隔 RETRY_DELAY 再试一次：源站偶发 5xx / 连接重置很常见。"""
+        """失败一次后隔 RETRY_DELAY 再试一次：源站偶发 5xx / 连接重置很常见。
+
+        不区分错因，404 / 解析失败也会重试一次 —— 判错因要把异常分类带下来，
+        而代价是每个坏源多 1 秒，比误判「偶发」变「永久」便宜。
+        """
         _, got, err = fetch_one(e)
         if got:
             return e, got, None
@@ -471,37 +545,75 @@ def run_once(entries, prev_items):
             fb = prev_items.get(e["url"])
             if fb:
                 stale += 1
+                # 浅拷贝：回退条目会被下面的排序 / 去重 / 截断动到，
+                # 不能让它们和 prev_items 缓存里的对象共享引用
                 items.extend(dict(x) for x in fb)
                 print("[回退] %-22s %s (%s)" % (e["name"][:20], e["url"][:70], err))
             else:
                 print("[失败] %-22s %s (%s)" % (e["name"][:20], e["url"][:70], err))
+    return items, {"ok": ok, "fail": fail, "stale": stale}
 
+
+def run_once(entries, prev_items):
+    """抓全部源 → 排序 → 去重 → 截断，返回 (条目列表, 统计)。
+
+    抓取与回退由 `_collect` 负责，这里只做「把一堆条目收敛成一个池子」：
+    排序 → 去重（保留先到者，所以排序必须在前面）→ 按 ITEM_LIMIT 截断。
+
+    排序的次级键必须是 guid：条目是 as_completed 并发收上来的，数组顺序取决于
+    各源返回的快慢，而排序是稳定的 —— 不补次级键，同一时间戳的多条在两次运行里
+    会排出不同次序，于是同一窗跑两遍会选出两条不同的内容（标记按 guid 走，
+    池子顺序再漂就等于随机换台）。补上 guid 后，同一批数据只有一个池子顺序。
+    """
+    items, counts = _collect(entries, prev_items)
     items.sort(key=lambda x: (-(x.get("ts") or 0), item_guid(x)))
-    items, dropped = dedupe(items)
+    items, dedup_dropped = dedupe(items)
     # 排序在前、裁剪在后，留下的一定是最新的那批（120 条 ≈ 4.3 小时产出）。
     # ITEM_LIMIT=0 仍表示不限；设备池由 ROTATE_POOL_MAX 单独收口，两者互不牵连。
+    trimmed = 0
     if ITEM_LIMIT and len(items) > ITEM_LIMIT:  # 超上限：按时间排序后节选最新的
-        dropped += len(items) - ITEM_LIMIT
+        trimmed = len(items) - ITEM_LIMIT
         items = items[:ITEM_LIMIT]
-    stats = {"total": len(entries), "ok": ok, "fail": fail, "stale": stale,
-             "items": len(items), "dropped": dropped}
+    # dedup_dropped 与 trimmed 分开统计：前者是「重复」，后者是「排在 120 名之外」，
+    # 合成一个数字时日志会把「池子满了」误读成「重复变多了」
+    stats = {"total": len(entries), "items": len(items),
+             "dedup_dropped": dedup_dropped, "trimmed": trimmed}
+    stats.update(counts)
     return items, stats
 
 
 def _write(path, xml_text):
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    tmp = path + ".tmp"
-    # 统一 LF：Windows 上默认会写成 CRLF，进仓库会反复产生换行差异
-    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-        f.write(xml_text)
-    os.replace(tmp, path)
+    """原子写文本文件：同目录建唯一临时文件 → 写 → `os.replace` 覆盖。
+
+    - 统一 LF：Windows 上默认会写成 CRLF，进仓库会反复产生换行差异；
+    - 临时文件名必须唯一（`mkstemp`）。固定成 `path + ".tmp"` 时两个进程同时写同一份
+      文件会踩踏：B 打开旧 inode → A 先 replace → B 的写入落到「已经是正式文件」的
+      那个 inode 上，读者可能读到半份内容（原子性丢失）；
+    - 不 fsync：这里丢一次产物最多重跑一轮，不值得付每次落盘的同步开销。
+    """
+    d = os.path.dirname(path) or "."
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=os.path.basename(path) + ".", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+            f.write(xml_text)
+        os.chmod(tmp, 0o644)          # mkstemp 建的是 0600，发布出去的文件要可读
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def write_feed(items, stats, pick=None):
     """写两份：完整版 feed.xml（全部条目）+ 设备版 feed-wrap.xml（只有轮播到的那一条）。
 
-    pick 为 None 表示这一窗不推进（同窗重跑，且原条目已离开池子）：
-    此时只刷新完整版，设备版保留上一版不动 —— 5 分钟内换两条比晚一条更糟。
+    pick 为 None 有两种成因（都不是「出错」）：
+      * 同窗重跑、且上一窗那条已离开池子（rotate_pick 返回 skip）；
+      * 池子里没有可播条目（全部条目的时间片都晚于当前窗）。
+    两种情况都只刷新完整版，设备版保留上一版不动 —— 5 分钟内换两条比晚一条更糟。
     pick 非 None 时设备版只写一条：云端本来就只渲染第一条，多写的部分纯属浪费体积。
     """
     _write(OUT_FILE, build_rss(items, FEED_URL, stats))
@@ -512,14 +624,13 @@ def write_feed(items, stats, pick=None):
     _write(SCREEN_OUT, build_rss(
         [pick], wrap_url, stats,
         channel_title="RSS 头条 · 小屏",
-        description="多源头条，纯文本；每 %d 分钟轮换一条，走完全部再从头开始。"
-                    "标题只放屏上显示得下的 %g 全角字，余下原文接在正文里，源 %d 个"
-                    % (ROTATE_SECONDS // 60, LINE_WIDTH, stats.get("total", 0)),
+        # 文案由 render 统一出，Pi 的 rotate_screen 也用同一份（见 device_description）
+        description=device_description(stats.get("total", 0)),
         screen=True))
 
 
 def _check_version_arg(argv):
-    """--version / -V：打印版本号后直接退出（排查线上跑的是哪一版时最省事）。"""
+    """--version / -V / -v：打印版本号后直接退出（排查线上跑的是哪一版时最省事）。"""
     for a in argv:
         if a in ("--version", "-V", "-v"):
             print("rss-hub %s" % __version__)
@@ -527,7 +638,37 @@ def _check_version_arg(argv):
     return False
 
 
+def _one_round(entries):
+    """跑一轮：采集 → 选条 → 写两份 → 落状态，返回 (pick, note, stats, 耗时秒)。
+
+    stats["items"] == 0 表示本轮一条都没采到，由调用方决定「保留旧 feed」。
+    选条只在池子（最新 ROTATE_POOL_MAX 条）里进行，完整版照旧写全部条目 ——
+    池子只管设备端，不影响阅读器能订到多少。
+    """
+    t0 = time.time()
+    items, stats = run_once(entries, load_prev_items())
+    if not items:
+        return None, "", stats, time.time() - t0
+    pool = items[:ROTATE_POOL_MAX] if ROTATE_POOL_MAX else items
+    state = load_rotate_state(ROTATE_STATE, _rotate_url(), UA)
+    pick, state, note = rotate_pick(pool, state)
+    write_feed(items, stats, pick)
+    if pick is not None:
+        save_rotate_state(state, ROTATE_STATE)
+    return pick, note, stats, time.time() - t0
+
+
 def main():
+    """跑一轮（或按 REFRESH_SECONDS 连跑多轮）：采集 → 选条 → 写两份 → 落状态。
+
+    退出码：0 = 正常结束；1 = feeds.txt 没有有效地址，或本轮一条都没采到
+    （此时保留上一份 feed 不覆盖）。CI 用 `python build_feed.py || echo ...` 兜住 1，
+    所以「失败一轮」不会让 Pages 变空，只是内容变旧。
+
+    Pi 上还有一处与 `Pi/rotate_screen.py` 并存的部署差异：rss-build.service 把
+    SCREEN_OUT / ROTATE_STATE 都指到 /tmp，屏幕那一路由 rotate_screen 驱动。
+    也就是说本函数里的选条段在那套部署下不产出对外文件（见 OPERATIONS.md 参数表）。
+    """
     if _check_version_arg(sys.argv[1:]):
         return 0
     skipped = []
@@ -549,28 +690,25 @@ def main():
     deadline = time.time() + REFRESH_SECONDS
     rounds = 0
     while True:
-        t0 = time.time()
-        prev_items = load_prev_items()
-        items, stats = run_once(entries, prev_items)
-        if not items:
+        pick, note, stats, elapsed = _one_round(entries)
+        if not stats["items"]:
             print("本轮无任何条目，保留旧 feed 不覆盖")
             return 1
-        pool = items[:ROTATE_POOL_MAX] if ROTATE_POOL_MAX else items
-        state = load_rotate_state(ROTATE_STATE, _rotate_url(), UA)
-        pick, state, note = rotate_pick(pool, state)
-        write_feed(items, stats, pick)
-        if pick is not None:
-            save_rotate_state(state, ROTATE_STATE)
         rounds += 1
-        print("[第 %d 轮] 成功 %d / 回退 %d / 失败 %d → 条目 %d（去重 %d）耗时 %.1fs"
+        print("[第 %d 轮] 成功 %d / 回退 %d / 失败 %d → 条目 %d"
+              "（重复 %d、超出上限裁掉 %d）耗时 %.1fs"
               % (rounds, stats["ok"], stats["stale"], stats["fail"],
-                 stats["items"], stats["dropped"], time.time() - t0))
+                 stats["items"], stats["dedup_dropped"], stats["trimmed"], elapsed))
         print("        上屏：%s ｜ %s"
               % (note, (pick.get("title") or "")[:36] if pick else "（设备版保持上一版）"))
 
         left = deadline - time.time()
-        if left < 45:                      # 剩余时间不够一轮就收工
+        # 45 秒的来历：一轮正常 15~25 秒（49 源 / 12 并发），留一倍余量。
+        # 少于这个数就没必要再起一轮 —— 起了也会被作业超时砍掉，反而留下半个产物。
+        if left < 45:
             break
+        # 一轮最多睡一个轮播节拍：REFRESH_SECONDS 很长时也要按 5 分钟节奏刷，
+        # 否则「循环多轮」会变成「睡到最后一刻只跑一轮」
         time.sleep(min(ROTATE_SECONDS, left))
     return 0
 

@@ -12,6 +12,7 @@ import re
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -111,6 +112,24 @@ class TestSplitTitle(unittest.TestCase):
         head, tail = R.split_title("港股收盘")
         self.assertEqual(head, "港股收盘")
         self.assertEqual(tail, "")
+
+    def test_source_name_tail_still_stripped(self):
+        """「标题 - 来源名」照旧剥掉：来源已经由 <source> 显示，重复占宽度。"""
+        head, tail = R.split_title("卡特彼勒第三季度电力与能源业务 - 财联社")
+        self.assertNotIn("财联社", head + tail)
+        self.assertTrue(head.startswith("卡特彼勒"))
+
+    def test_number_tail_is_not_a_source_name(self):
+        """尾巴带数字时不能剥：那是标题的一部分（年份 / 编号），不是来源名。
+
+        原先的正则把「苹果发布会-2024」的「-2024」当来源名吃掉，
+        屏幕上直接少一个年份，且没有任何报错。
+        """
+        for title, keep in (("苹果发布会-2024", "2024"),
+                            ("财报速递 | 2024", "2024"),
+                            ("某公司公告_123", "123")):
+            head, tail = R.split_title(title)
+            self.assertIn(keep, head + tail, "%s 里的 %s 被剥掉了" % (title, keep))
 
 
 class TestDateline(unittest.TestCase):
@@ -525,6 +544,19 @@ class TestFullFeed(unittest.TestCase):
         xml = R.build_rss([it], "http://x/feed.xml", {"total": 1})
         self.assertIn("<description>这是原 feed 的导语", xml)
 
+    def test_missing_fields_do_not_break_generation(self):
+        """缺 src / link 的条目不许让整份 feed 生成失败。
+
+        `_item_lines` 的 docstring 承诺「缺一个键不该让整份 feed 生成失败」，
+        但 <source> 那里曾用 `it["src"]` 下标取，缺键直接 KeyError
+        —— 一条坏条目会把整轮产物带崩。
+        """
+        xml = R.build_rss([{"title": "只有标题", "src_name": "示例源"}],
+                          "http://x/feed.xml", {"total": 1})
+        self.assertIn("<title>只有标题</title>", xml)
+        self.assertIn('<source url="">示例源</source>', xml)
+        ET.fromstring(xml)
+
     def test_summary_truncated_by_feed_body_max(self):
         """显式传 body_max=300 时超长摘要要截断补省略号。
 
@@ -641,6 +673,22 @@ class TestParseItems(unittest.TestCase):
         a = B.parse_items(doc(["甲甲甲甲甲", "乙乙乙乙乙", "丙丙丙丙丙"]), "https://d/feed", 5)
         b = B.parse_items(doc(["丙丙丙丙丙", "甲甲甲甲甲", "乙乙乙乙乙"]), "https://d/feed", 5)
         self.assertEqual([g["title"] for g in a], [g["title"] for g in b])
+
+    def test_fallback_path_is_sanitized(self):
+        """兜底解析通路也必须消毒：控制字符漏进 feed.xml 会让整份 XML 非法。
+
+        以前 `_sanitize` 只在 ET 通路里调，源里出现裸 \\x01 时 ET 必然报错、
+        走正则兜底，于是那个字节被原样写进 <title>，所有订阅端都解析失败。
+        这里同时放一个未转义的 `&`（制造 ParseError，强制走兜底）与控制字符。
+        """
+        xml = ("<rss><channel><item><title>坏\x01字符 & 未转义</title>"
+               "<link>https://e/1</link><pubDate>Thu, 29 Oct 2026 12:00:00 +0800"
+               "</pubDate></item></channel></rss>")
+        got = B.parse_items(xml, "https://e/feed", 3)
+        self.assertEqual(len(got), 1)
+        self.assertNotIn("\x01", got[0]["title"])
+        # 产出的 feed 必须能被标准解析器读回来
+        ET.fromstring(R.build_rss(got, "https://e/feed.xml", {"total": 1}))
 
 
 class TestWorkflowParams(unittest.TestCase):

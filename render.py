@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 """渲染层：一条资讯 → 屏上能显示的一段文字 → 一份合法 RSS。
 
-这里全是纯函数：不联网、不写文件，除三个正文长度参数外不读任何外部状态，
-所以 tests/test_core.py 能把它们直接拉进内存里跑，不用打桩。
+这里全是纯函数：不联网、不写文件。外部状态只有三个显示尺寸参数
+（`SCREEN_LINE_WIDTH` = 标题行宽，`SCREEN_BODY_MAX` = 设备版正文上限，
+`FEED_BODY_MAX` = 完整版正文上限），所以 tests/test_core.py 能把它们直接拉进
+内存里跑，不用打桩。
 `tests/test_golden.py` 另外拿固定输入跟 tests/golden.txt 逐字节比对，
 任何「顺手改了排版」的动作都会在那里现形。
 
 和 build_feed.py 的分工：
   * render.py     显示规则 —— 纯文本化、宽度折算、标题切分、正文合成、去重键、RSS 生成
-  * build_feed.py 抓取编排 —— 拉源、解析、失败回退、轮播游标、写文件、主循环
+  * build_feed.py 抓取编排 —— 拉源、解析、失败回退、写文件、主循环
+轮播游标不在 build_feed：选条与状态落盘都在 rotate.py（本文件也不碰它）。
 
 为什么拆：原先 776 行的单文件里，排版规则和 urllib 重试挤在一起，
 改一个「13 全角」的常量要在一堆网络代码里翻。分开后两边都能独立读、独立测。
@@ -140,6 +143,8 @@ def norm_title(t):
     放宽到 40 字是**纯收紧**：键变长只会让「撞键」更难，不会新增误并。
     """
     t = strip_dateline(t or "")
+    # 标点 / 空白 / 排版符号一律删掉，连 `-` `—` `…` `~` 也不留：同一个标题在不同源
+    # 写法不同（「A—B」「A - B」「A…B」），这些差异不该让同一条新闻躲过去重。
     t = re.sub(r"[「」【】\[\]（）()“”\"'‘’：:，,。.！!？?、\s|·\-—–…~]", "", t)
     return t[:NORM_TITLE_MAX]
 
@@ -165,6 +170,14 @@ def _link_key(link):
 
 
 def dedupe(items):
+    """两级去重：先看链接身份，再看归一化标题。
+
+    链接身份（`_link_key`，去掉锚点与追踪参数）命中即丢；标题归一化后
+    **至少 DEDUP_TITLE_MIN 字**才参与比较（短标题门槛的理由见该常量上方）。
+    两条都以「先到者胜」为准：调用方已按发布时间倒序，所以留下的是更新的那条。
+
+    返回 (保留的条目列表, 丢弃条数)；丢弃条数只统计这里，ITEM_LIMIT 的裁剪另算。
+    """
     seen_link, seen_title, out = set(), set(), []
     dropped = 0
     for it in items:
@@ -234,6 +247,7 @@ def char_width(ch):
 
 
 def text_width(s):
+    """整串的全角宽度合计（半角算 0.5）。所有截断判定都走这个口径，别用 len()。"""
     return sum(char_width(c) for c in s or "")
 
 
@@ -298,8 +312,11 @@ def split_title(title, line_w=None, body_max=None):
     line_w = LINE_WIDTH if line_w is None else line_w
     body_max = BODY_MAX if body_max is None else body_max
     t = strip_dateline(plain_text(title))          # 先去掉「财联社10月29日电，」占的位置
-    # 去掉 “标题 - 来源名” 这类尾巴（来源单独用 <source> 显示，重复占位）
-    t = re.sub(r"\s*[-_|｜]\s*[^-_|｜]{1,8}$", "", t) or t
+    # 去掉 “标题 - 来源名” 这类尾巴（来源单独用 <source> 显示，重复占位）。
+    # `{1,8}` 是「来源名一般不超过 8 字」——但不能照单全收：尾巴里含数字的一律
+    # 不剥，否则「苹果发布会-2024」「财报速递 | 2024」会把年份当来源名吃掉
+    # （2026-10-31 修：这条正则原先只排除分隔符，数字年份被静默截掉）。
+    t = re.sub(r"\s*[-_|｜]\s*[^-_|｜0-9]{1,8}$", "", t) or t
     if text_width(t) <= line_w:
         return t, ""
 
@@ -344,7 +361,9 @@ def compose_body(tail, summary, title="", body_max=None):
     s = re.sub(r"[ \t]+", " ", s).strip()
     if s:
         tt = plain_text(title)
-        # 「【标题】正文」这种格式（金十、财联社常见）：方括号里是标题的复述，整段去掉
+        # 「【标题】正文」这种格式（金十、财联社常见）：方括号里是标题的复述，整段去掉。
+        # 括号内 2~80 字是「像标题复述」的长度区间：低于 2 字（【A】）不可能是复述，
+        # 高于 80 字的多半是真正的栏目正文，不能当重复删掉。
         m = re.match(r"^[【\[〔](.{2,80}?)[】\]〕]\s*", s)
         if m and tt and (m.group(1) == tt or m.group(1) in tt or tt.startswith(m.group(1))):
             s = s[m.end():]
@@ -362,15 +381,42 @@ def compose_body(tail, summary, title="", body_max=None):
     return body
 
 
-# 条目的稳定身份：轮播游标和 RSS 的 <guid> 都用它，所以住在渲染层。
+def device_description(n_src):
+    """设备版 channel 的 <description>：一句话说清轮播方式、标题宽度与源数。
+
+    文案里的分钟数与宽度取自运行时常量（而不是写死 5 / 13），否则调参之后
+    这行说明会开始说谎。build_feed 与 Pi 的 rotate_screen 共用这一份，避免两处文案漂移
+    （以前各写一份，「源 N 个」的取数口径还不同：一个是清单条数、一个是池里实际源数）。
+
+    `ROTATE_SECONDS` 住在 rotate.py，而 rotate 依赖本模块（要用 split_title），
+    顶层 import 会形成循环，所以这里在函数内取——调用点都在两个模块都导入之后。
+    """
+    from rotate import ROTATE_SECONDS
+    return ("多源头条，纯文本；每 %d 分钟轮换一条，走完全部再从头开始。"
+            "标题只放屏上显示得下的 %g 全角字，余下原文接在正文里，源 %d 个"
+            % (ROTATE_SECONDS // 60, LINE_WIDTH, n_src))
+
+
+# 条目的稳定身份：轮播的 shown / current 与设备版 <guid> 都用它（完整版不是，见 _item_lines）。
 def item_guid(it):
-    """条目的稳定身份：链接 + 源地址的短哈希，与 feed 里的 guid 完全一致。"""
+    """条目的稳定身份：链接 + 源地址的 12 位 md5 短哈希。
+
+    只用于**设备版**：轮播的「已播标记」与 `feed-wrap.xml` 的 `<guid>`。
+    完整版的 `<guid>` 是 `link|src` 原文（同一篇文章被两个源收录时 guid 不同，
+    阅读器不会吞条目），两者不是同一个值，别互相套用。
+    """
     seed = (it.get("link") or it.get("title") or "") + "|" + str(it.get("src") or "")
     return hashlib.md5(seed.encode("utf-8")).hexdigest()[:12]
 
 
 # ---------------- 生成 RSS ----------------
 def esc(s):
+    """XML 文本 / 属性转义（含引号）。
+
+    只做转义，**不负责剔除非法字符**：控制字符（U+0000–U+0008 等）会让整份 XML
+    非法，这件事由 build_feed 的解析入口负责（`_sanitize`），因为只有那里能同时
+    覆盖 ElementTree 与正则兜底两条通路。
+    """
     return html.escape(s or "", quote=True)
 
 
@@ -397,7 +443,8 @@ def _channel_lines(feed_url, channel_title, description, screen):
         "<lastBuildDate>%s</lastBuildDate>" % now,
     ]
     if not screen:
-        # 版本号写进 generator：从订阅端就能看出线上跑的是哪一版，排障不用去翻提交历史
+        # 版本号写进 generator：从订阅端就能看出线上跑的是哪一版，排障不用去翻提交历史。
+        # ttl=5 是给阅读器的轮询间隔（分钟），与抓取的 5 分钟节拍对齐；改节拍要一起改这里。
         lines += ["<generator>rss-hub %s</generator>" % esc(__version__), "<ttl>5</ttl>"]
     return lines
 
@@ -405,8 +452,9 @@ def _channel_lines(feed_url, channel_title, description, screen):
 def _item_lines(it, screen):
     """一个 <item> 的字段。两种版本的差别集中在这里，一眼能对照。
 
-    标题 / 链接都用 .get 取：轮播回退路径上的条目来自上一份 feed，
-    字段集与抓取路径不完全一致，缺一个键不该让整份 feed 生成失败。
+    所有字段都用 .get 取：条目可能来自抓取路径、也可能来自上一份 feed 的回退路径，
+    字段集不保证齐全，缺一个键不该让整份 feed 生成失败（`<source>` 的 url 同理，
+    缺 src 时退化成空地址而不是 KeyError）。
     """
     title = it.get("title") or ""
     link = it.get("link") or ""
@@ -442,7 +490,7 @@ def _item_lines(it, screen):
                      % esc((link or title) + "|" + str(it.get("src") or "")))
     if it.get("src_name"):
         lines.append('<source url="%s">%s</source>'
-                     % (esc(it["src"]), esc(plain_text(it["src_name"]))))
+                     % (esc(it.get("src") or ""), esc(plain_text(it["src_name"]))))
     lines.append("</item>")
     return lines
 
@@ -454,8 +502,11 @@ def build_rss(items, feed_url, stats, channel_title="RSS 聚合头条",
     screen=False 完整版：标题原样（可含 emoji），正文放清洗后的原 feed 摘要，
                  字段齐全（含 atom:link / generator / ttl），给标准阅读器用。
     screen=True  设备版：标题截到屏宽 + 余文进 description + 字段极简，
-                 省略 atom:link / generator / ttl，guid 改成 12 位短哈希，
-                 单条体积降到完整版的三成左右；对解析端来说仍是合法 RSS 2.0。
+                 省略 atom:link / generator / ttl，guid 改成 12 位短哈希。
+                 单条体积与完整版**基本持平**（实测 343 B vs 388 B，约 88%）：
+                 省下的是 guid 长度与 channel 级三项，而 item 本身多带了标题余文，
+                 所以「设备版更小」只对整份文件成立（一版只发一条），不是对单条成立。
+                 对解析端来说仍是合法 RSS 2.0。
 
     stats 用 .get 取：调用方可能只传部分键（CI 烟测就只传六项），
     这里不该因为少一个统计字段把整份 feed 搞崩。

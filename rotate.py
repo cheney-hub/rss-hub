@@ -18,8 +18,12 @@
     同一时间窗内（w = now // ROTATE_SECONDS）重复构建不推进，后台多跑几轮也不跳条。
 
 上面那条之外还有一层**观感约束**（不是选条规则，所以没写进同一句）：
-最近 RECENT_MAX 窗（15 分钟）内不许出现同一个「屏上显示串」（标题前 13 字），
+最近 `RECENT_MAX` 个已上屏窗（默认 3 窗）内不许出现同一个「屏上显示串」（= `split_title()`
+返回的 head，宽度由 `SCREEN_LINE_WIDTH` 决定，可能短于该值），
+
 免得两条不同新闻因为前缀撞车、在屏上长得一模一样，连着几窗看下来像屏幕卡住了。
+「3 窗」不等于「间隔 15 分钟」：本窗选的那条不在记忆里，所以同一个显示串之间真正的最小
+间隔是 **4 窗 = 20 分钟**（详见 `RECENT_MAX` 的注释）。
 被这条跳过的条目仍是「未标注」，几窗后照常上屏 —— 内容不丢，只是往后挪（见 RECENT_MAX）。
 
 为什么按「条」而不是按「时间片」（这里是本模块最大的一次改规则，理由写清楚）：
@@ -43,6 +47,7 @@
 import os
 import json
 import time
+import tempfile
 import urllib.request
 from datetime import datetime, timezone
 
@@ -50,6 +55,7 @@ from render import item_guid, split_title, strip_dateline
 
 # 每条在屏上驻留多少秒（= 设备刷新周期）。调大等于放慢轮播。
 # Pages CDN 缓存 600 秒，若真机上出现「同一条连显两次」，把它改成 600。
+# 下限 60：比 1 分钟更短的节拍既追不上设备刷新，也会让 window 号涨得飞快（状态全是噪点）。
 ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))
 # 轮播池上限：设备端只消费「最新 120 条」。池子越深，被挤出池子的旧条目越多
 # （按条轮之后每条入池就有候选资格，能不能轮到只取决于它离场前来不来得及排到）。
@@ -79,7 +85,31 @@ RECENT_MAX = 3
 
 
 # ---------------- 状态读写 ----------------
+def _int(v, default):
+    """把状态里读出来的数值字段转成 int；转不了就用 default（与 `_str_list` 同一口径）。
+
+    rotate.json 是**发布出去的产物**，形状不由本模块保证。裸 `int()` 在这里会抛两类异常：
+    字符串抛 ValueError、list/dict 抛 TypeError，而 `build_feed.main()` 与 Pi 的
+    `rotate_screen.py` 都没有 try —— 异常发生在选条之前，feed 与状态都不落盘，
+    屏幕就永久停在上一版，且下次读回的仍是这份坏状态（自己治不了自己）。
+
+    能 `int()` 的数字字符串（"300"）按合法值接受：`json.dump` 写出来永远是 int，
+    字符串只可能来自手工编辑，接受它的行为与直接写 int 完全一致，额外拒绝反而会把
+    「静默接受」变成「每次读都丢状态重开」（shown 被清空、同批条目重播）。
+    bool 是 int 的子类，True 会转成 1，这里不做特殊处理。
+    """
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return default
+
+
 def _read_json(path):
+    """读一份 JSON 状态；不存在 / 坏 JSON / 顶层不是 dict 一律当空状态。
+
+    这是「已发布产物」容错链的第一环（第二环是 `_str_list` 与 `_int` 这类字段级守卫），
+    坏文件的代价只能是「重复播一条」，不能是「这一轮死掉」。
+    """
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -109,17 +139,36 @@ def load_rotate_state(state_path, remote_url, user_agent, timeout=8):
         remote = data if isinstance(data, dict) else {}
     except Exception:
         remote = {}
-    if int(remote.get("window") or 0) > int(local.get("window") or 0):
+    # 两份都是外部输入，window 可能被写成字符串或列表；坏值当 0（= 没有状态）
+    if _int(remote.get("window"), 0) > _int(local.get("window"), 0):
         return remote
     return local
 
 
 def save_rotate_state(state, state_path):
-    os.makedirs(os.path.dirname(state_path) or ".", exist_ok=True)
-    tmp = state_path + ".tmp"
-    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(state, f, ensure_ascii=False, indent=1)
-    os.replace(tmp, state_path)
+    """原子写盘：同目录建唯一临时文件 → 写 → `os.replace` 覆盖。
+
+    临时文件名必须唯一（`tempfile.mkstemp`）：固定成 `path + ".tmp"` 时，
+    两个进程同时写同一份状态会踩踏——B 打开旧 tmp、A 先 replace、B 的写入就落进了
+    已经被替换成正式文件的那个 inode，读者能看到半份 JSON（原子性丢失）。
+    `ensure_ascii=False` + `indent=1` 是刻意选的：线上那份要能直接读懂（排障只看这个文件）。
+    不 fsync：丢一次状态最多重复播一条，不值得为它付每次落盘的同步开销。
+    """
+    d = os.path.dirname(state_path) or "."
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=os.path.basename(state_path) + ".",
+                               suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(state, f, ensure_ascii=False, indent=1)
+        os.chmod(tmp, 0o644)          # mkstemp 建的是 0600，发布出去的文件要可读
+        os.replace(tmp, state_path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 # ---------------- 选条（纯函数） ----------------
@@ -135,12 +184,18 @@ def _bucket_of(item, dwell):
 def _pickable(items, w, dwell):
     """能参与本轮选条的条目（保持 items 原序，即按发布时间倒序）。
 
-    剔掉「发布时间晚于当前窗」的条目：源时钟错乱（时区写错、服务器漂移、模板把年份
-    拼成 2030）会造出未来时间戳，这种条目永远排在最前，每窗都是「最新未播条」→
+    口径：**发布时间落在当前或更早的时间片才参与选条**（`ts // dwell <= w`）。
+    注意它比「发布时间已到」宽一档：同一个片内的条目都算可播，所以最多容许
+    「本窗内、未来不到一个片长（默认 ≤ 5 分钟）」的条目 —— 这是刻意的，
+    抓取与显示是两条时间线，刚发布的那条不该因为比抓取时刻晚了几十秒就被判为未来、
+    白等一整个窗。
+
+    这么做的原因是另一头：源时钟错乱（时区写错、服务器漂移、模板把年份拼成 2030）
+    会造出真正的未来时间戳，这种条目永远排在最前，每窗都是「最新未播条」→
     屏幕被它独吞，`back` 还会失真。
       为什么不能改在解析层「钳到抓取时刻」：抓取每 5 分钟重跑一次，钳值跟着往前跑，
       它永远落在当前窗、永远「没播过」—— 同一条每窗重播一次（实测连跑 6 窗全是它），
-      比不钳更糟。按「时间还没到就先不播」处理后：源的时间真走到那天自然上屏，
+      比不钳更糟。按「时间片还没到就先不播」处理后：源的时间真走到那天自然上屏，
       一直错就一直不上设备版（条目仍完整留在 feed.xml 里）。
       解析失败 ts=0 的条目落在片 0（1970），永远 ≤ 当前窗，所以它照常参与选条，
       只是排序垫底 —— 正常情况下要等池子里排空才轮得到它，但池子退化到只剩它时
@@ -150,7 +205,11 @@ def _pickable(items, w, dwell):
 
 
 def _display_key(item):
-    """这条在屏上真正显示的那一行字（标题的前 13 全角）。
+    """这条在屏上真正显示的那一行字：`split_title()` 返回的 head。
+
+    head 的宽度由 `SCREEN_LINE_WIDTH`（默认 13 全角）决定，而且**可能短于它**：
+    词内退让（不足行宽 60% 就不退）、数字/单位退让、尾部标点 rstrip 都会让它更短。
+    所以别把它当成「固定 13 字前缀」。
 
     用 render.split_title() 而不是自己截：屏上那一行到底取到哪几个字，是 render 的
     显示规则（含「不把数字和单位切开」「不在半个英文词中间切」），在这里重算一遍必然
@@ -207,7 +266,8 @@ def _pick_item(state, items):
     """
     shown = set(_str_list(state.get("shown")))  # 形状不对就当没播过（见 _str_list）
     recent = _str_list(state.get("recent"))
-    cycle = int(state.get("cycle") or 1)        # 1 = 第 1 轮；全池播完重开时 +1
+    # 1 = 第 1 轮；全池播完重开时 +1。0 / 非数字 / 坏形状一律回到 1（轮次从 1 起算）
+    cycle = _int(state.get("cycle"), 1) or 1
     if not items:
         return None, shown, cycle
 
@@ -236,9 +296,12 @@ def _without_recent(cands, recent):
     """
     if not recent:
         return cands[0]
-    fresh = next((it for it in cands
-                  if not _display_key(it) or _display_key(it) not in recent), None)
-    return fresh if fresh is not None else cands[0]
+    # 显示串只算一次：split_title 里有两轮正则 + 宽度扫描，逐个候选算两遍纯属浪费
+    for it in cands:
+        key = _display_key(it)
+        if not key or key not in recent:
+            return it
+    return cands[0]
 
 
 def _trim_recent(recent, key):
@@ -309,15 +372,19 @@ def _build_state(w, pick, shown, recent, cycle, dwell, back, n_pool, n_items):
     """组装本轮要落盘的状态。
 
     字段含义（OPERATIONS.md 第 15 节按这份解释排障，改字段名请同步改文档）：
+      version 状态结构版本（ROTATE_STATE_VERSION）；与代码不一致时整份状态作废重开
       window  时间窗号 = now // dwell，幂等键，同一窗内不推进
+      dwell   落盘时的节拍（ROTATE_SECONDS 秒）。与当前节拍不一致 → 状态作废重开
       back    落后最新几条（0 = 屏上就是池子里最新的一条）
       current 当前上屏条目的 guid —— 「这条是否已播」的唯一身份键，hold / skip 都靠它找回
       shown   已播过条目的 guid 列表（只留池子里还在的条目，见 _trim_shown）
       recent  最近几窗上屏过的**屏显串**（≤ RECENT_MAX，最近的在前）：
-              选条时会避开这些串，防「标题前 13 字撞车」造成的连播观感。
+              选条时会避开这些串，防「屏显串撞车」造成的连播观感。
               它是观感约束、不是内容去重 —— 被它跳过的条目不进 shown，内容不丢。
       cycle   第几轮（1 起），全池播完重开时 +1
       pool    可播条数（不含发布时间在未来的条目）；items 是进池的原始条数
+      updated 写这份状态的时间（UTC，排障看「这份是谁什么时候写的」）
+      title   上屏条目的标题前 40 字（只是为了让人不用翻 feed 就能看懂这份状态）
       at      上屏条目的发布时间（UTC）。1.7.0 之前这里记的是「时间片对应的时间」，
               按条轮之后改成这一条自己的发布时间 —— 旧状态版本号不同会被直接丢弃。
     """
@@ -354,11 +421,15 @@ def rotate_pick(items, state, now=None):
     """
     dwell = ROTATE_SECONDS
     w = int((now if now is not None else time.time()) // dwell)
-    # 节拍改过（60 秒 ↔ 300 秒）或状态结构升级：标记的口径变了，重新起轮
+    # 节拍改过（60 秒 ↔ 300 秒）或状态结构升级：标记的口径变了，重新起轮。
+    # dwell 缺失时按「当前节拍」处理（老状态没有这个键不该被无故清空）；但写坏了
+    # （非数字 / 列表）一律当「节拍不符」—— 若让它回落到默认 dwell，下面这个比较
+    # 就恒为假，旧 cycle / shown 被静默沿用，比崩溃更隐蔽（见 _int 的 docstring）。
+    st_dwell = state.get("dwell")
     if (state.get("version") != ROTATE_STATE_VERSION
-            or int(state.get("dwell") or dwell) != dwell):
+            or (st_dwell is not None and _int(st_dwell, None) != dwell)):
         state = {}
-    prev_w = int(state.get("window") or 0)
+    prev_w = _int(state.get("window"), 0)
     # 状态里的 window 比当前窗还大，只可能是「写它的那次运行时钟错了」或文件被写坏：
     # 不丢的话 w > prev_w 永远为假 → 一直 hold → window 永不前进 → 屏幕永久卡死，
     # 且每次运行都原样读回这份坏状态，自己治不了自己。容忍 CLOCK_SKEW_WINDOWS 窗以内的
@@ -383,6 +454,7 @@ def rotate_pick(items, state, now=None):
     pick_g = item_guid(pick)
     shown = _trim_shown(shown | {pick_g}, {item_guid(it) for it in live}, pick_g)
     recent = _trim_recent(state.get("recent"), _display_key(pick))
+    # back = 这一条在可播集合里的下标，即「落后池子里最新那条几条」；0 表示播的就是最新那条
     back = next((i for i, it in enumerate(live) if item_guid(it) == pick_g), 0)
     new_state = _build_state(w, pick, shown, recent, cycle, dwell, back,
                              len(live), len(items))
@@ -400,5 +472,5 @@ def _advance_note(st, shown, live, items, late):
     note = ("新窗推进（%s · %s · 已播 %d 条 · 池 %d 条/%d 条 · 第 %d 轮）"
             % (where, st["at"], len(shown), len(live), len(items), st["cycle"]))
     if late:
-        note += " · 另有 %d 条时间戳晚于当前，已排除出设备版轮播" % late
+        note += " · 另有 %d 条时间片晚于当前窗，已排除出设备版轮播" % late
     return note
