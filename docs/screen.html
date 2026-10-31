@@ -44,7 +44,7 @@
 <body>
 <div class="wrap">
   <h1>屏幕效果</h1>
-  <p class="sub">读的是设备版 <code>feed-wrap.xml</code>：每 5 分钟换一条，标题只放屏上显示得下的 13 全角字，装不下的原文连同原文摘要一起接在正文里（最多 90 全角）。点击屏幕可放大。</p>
+  <p class="sub">读的是设备版 <code>feed-wrap.xml</code>（由树莓派每 5 分钟换一条，发布在 <code>moreaix.com/rss/</code>；GitHub Pages 只放完整版，不再发设备版）：标题只放屏上显示得下的 13 全角字，装不下的原文连同原文摘要一起接在正文里（最多 90 全角）。点击屏幕可放大。</p>
 
   <div class="stage" id="stage">
     <div class="device" onclick="toggleZoom()" title="点击放大 / 缩小">
@@ -67,11 +67,11 @@
   </div>
 
   <div class="foot">
-    <a href="./feed-wrap.xml">feed-wrap.xml</a> ·
+    <a href="https://moreaix.com/rss/feed-wrap.xml">feed-wrap.xml（设备版，树莓派）</a> ·
     <a href="./feed.xml">feed.xml</a> ·
     <a href="./">订阅说明</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
-    <div style="margin-top:6px">rss-hub v1.7.2</div>
+    <div style="margin-top:6px">rss-hub v1.7.3</div>
   </div>
 </div>
 
@@ -104,7 +104,12 @@ function toggleZoom(){
   $('stage').className = zoomed ? 'stage z2' : 'stage';
 }
 
-fetch('./feed-wrap.xml?t=' + Date.now(), {cache:'no-store'})
+/* 设备版由树莓派发布在 moreaix.com（GitHub Pages 已不发 feed-wrap.xml，取本地路径会 404）。
+   Pi 的 serve.py 对所有响应都带 access-control-allow-origin: *，所以可以跨域直接读；
+   带上 cache-busting 参数只是防浏览器缓存，服务端本身是 no-cache。 */
+const WRAP_URL = 'https://moreaix.com/rss/feed-wrap.xml';
+
+fetch(WRAP_URL + '?t=' + Date.now(), {cache:'no-store'})
   .then(r => r.text())
   .then(txt => {
     const doc = new DOMParser().parseFromString(txt, 'text/xml');
@@ -116,7 +121,10 @@ fetch('./feed-wrap.xml?t=' + Date.now(), {cache:'no-store'})
     }));
     render();
   })
-  .catch(() => { $('t').textContent = '无法加载 feed-wrap.xml'; });
+  .catch(() => {
+    $('t').textContent = '无法加载设备版';
+    $('b').textContent = '设备版由树莓派发布在 moreaix.com，请检查该地址是否可达；GitHub Pages 只发完整版 feed.xml。';
+  });
 </script>
 </body>
 </html>

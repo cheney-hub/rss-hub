@@ -3,6 +3,9 @@
 __pycache__/
 *.pyc
 docs/rotate.json
+# 本地直接跑 build_feed.py 会写出这一份（两个正式部署都不发布它：GitHub 指到 runner.temp、
+# 树莓派由 rotate_screen.py 单独写），忽略掉免得被误提交
+docs/feed-wrap.xml
 .DS_Store
 Thumbs.db
 

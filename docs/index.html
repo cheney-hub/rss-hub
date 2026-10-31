@@ -60,12 +60,12 @@
 
   <div class="card">
     <div class="row">
-      <input id="surl" readonly value="https://cheney-hub.github.io/rss-hub/feed-wrap.xml">
+      <input id="surl" readonly value="https://moreaix.com/rss/feed-wrap.xml">
       <button onclick="copyUrl('surl', this)">复制设备版地址</button>
     </div>
     <div class="meta" style="margin-top:10px">
-      设备版：标题转纯文本、只放屏上显示得下的 13 全角字，装不下的原文接进正文，一个字都不丢；
-      每版只发一条、5 分钟轮换一条；正文 = 标题余文 + 原文摘要（最多 90 全角），全池（最新 120 条）走完才从头开始。
+      设备版由<b>树莓派</b>每 5 分钟换一条（GitHub Pages 只发完整版，不再发这一份）：标题转纯文本、只放屏上显示得下的 13 全角字，装不下的原文接进正文，一个字都不丢；
+      每版只发一条；正文 = 标题余文 + 原文摘要（最多 90 全角），全池（最新 120 条）走完才从头开始。
       适合填进 <a href="./screen.html">Dot Quote/0</a> 的循环内容列表（显示样式由 Dot 云端渲染）。
     </div>
   </div>
@@ -84,10 +84,10 @@
 
   <div class="foot">
     <a href="./feed.xml">feed.xml</a> ·
-    <a href="./feed-wrap.xml">feed-wrap.xml</a> ·
+    <a href="https://moreaix.com/rss/feed-wrap.xml">feed-wrap.xml（设备版，树莓派）</a> ·
     <a href="./screen.html">屏幕效果</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
-    <div style="margin-top:6px">rss-hub v1.7.2 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
+    <div style="margin-top:6px">rss-hub v1.7.3 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
   </div>
 </div>
 
@@ -110,7 +110,12 @@ function fmt(d){
   return (d.getMonth()+1) + '/' + d.getDate();
 }
 
-fetch('./rotate.json?t=' + Date.now(), {cache:'no-store'})
+/* 设备版与轮播游标都在树莓派上（moreaix.com），GitHub Pages 只发完整版 feed.xml。
+   跨域读是允许的：Pi 的 serve.py 对所有响应都带 access-control-allow-origin: *。 */
+const DEVICE_URL = 'https://moreaix.com/rss/feed-wrap.xml';
+const STATE_URL  = 'https://moreaix.com/rss/rotate.json';
+
+fetch(STATE_URL + '?t=' + Date.now(), {cache:'no-store'})
   .then(r => r.json())
   .then(st => {
     // 这格显示「屏上这条离队首还有多远」。1.7.0 起 `back` 的单位是**条数**：

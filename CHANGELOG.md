@@ -6,6 +6,103 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.7.3] - 2026-10-31
+
+用户要求「审核一次所有代码」。做了**三路独立审查**（引擎核心 / Pi 部署层 / 工具链与测试），
+报告分级：**2 个阻断、13 项必改、20 余项可选**，另有 **16 处「注释说的和代码做的不是一回事」**。
+这一版把阻断与必改全部修掉、可选里便宜的一并做掉，并把注释与文档按代码事实重写一遍。
+没有新增任何环境变量。
+
+**阻断与安全**
+
+1. **看板整版双字叠印（线上可见）**：`Pi/kindle_screen.py` 连着两行 `_draw_list()`，第二行传
+   `items[1:]`、两次都从同一个 `y` 起笔 —— 除最后一行外每行都是两行字叠印，整版不可读。
+   来源是 `27f28f1` 删 `_draw_lead()` 时漏删下面那行（前一次重构 `3660c4d` 是干净的，
+   它「md5 不变」的说法成立）。已删，并在原处留注释说明「统一规格后不存在头条区+列表区两段」。
+2. **兜底解析通路没过消毒**：`_sanitize()` 原本只在 ElementTree 通路调用；源里带控制字符
+   （如裸 `U+0001`）时 ET 必然解析失败 → 走正则兜底 → 控制字符原样写进 `feed.xml` →
+   **整份完整版对所有订阅端非法**（`ET.fromstring` 报 invalid token），且只要该源还在就一直坏。
+   改成在 `parse_items()` 入口统一消毒（幂等，两条通路共用）。
+3. **解压上限是假的**：`_cap(gzip.decompress(body))` 是**先全量物化再检查**，压缩比可到 1:1000
+   （实测 20 MB 全零压成 20 KB），12 MB 响应能炸出 GB 级、runner 直接 OOM。改用
+   `zlib.decompressobj(...).decompress(body, MAX+1)`，`unconsumed_tail` 非空即判越界。
+4. **显式剥 `<!DOCTYPE>`**：实体炸弹此前只是被 `&…;` 白名单「偶然」挡住（11 字符的实体名照样展开，
+   实测 805 字节 → 10 万字符）。加一道显式防护，成本为零。
+
+**正确性**
+
+5. **状态数值字段不裸 `int()`**（`rotate._int`）：`{"window":"abc"}` / `[1]` / `{}` 会抛
+   `ValueError`/`TypeError`，而 `rotate_pick()` 两个调用方都没有 try —— Pi 上表现为
+   **每 5 分钟崩一次、`rotate.json` 永远不被重写、屏幕永久停在上一版**，无自愈。
+   现在：能 `int()` 就接受（数字字符串是合法值，不能当坏值丢掉），`window`/`cycle` 坏值当缺失，
+   `dwell` 坏值按「节拍不符 → 丢整份状态重开」。补 4 条用例（含 `window=str(w)` 与 `int` 等价、
+   `dwell=600` 必须重开），并把 `test_state_hygiene` 模块头「只覆盖列表字段」的窄口径改正。
+6. **`build_rss()` 缺 `src` 键会 KeyError**：`esc(it["src"])` → `esc(it.get("src") or "")`，
+   与它自己 docstring 承诺的「缺键不该让整份 feed 生成失败」对齐。
+7. **标题尾巴剥掉了数字**：`split_title()` 剥「标题 - 来源名」的正则原本吃 1~8 个任意字符，
+   于是 `苹果发布会-2024` → `苹果发布会`、`财报速递 | 2024` → `财报速递`。年份/编号是标题信息，
+   尾巴字符类改为不含数字。**这条会改变个别条目的标题行**，属于排版修正，由 golden 基线逐行锁住。
+8. **原子写的临时名固定**：两个进程同时写同一路径时，A 的 `os.replace` 会让 B 的写入落进
+   被替换的旧 inode，原子性失效。改用 `tempfile.mkstemp(dir=同目录)` + `chmod 0644`
+   （mkstemp 默认 0600，直接替换会让别的用户跑的 web server 读不到）。
+
+**Pi 无人值守（这一层以前完全没有机器检查）**
+
+9. `rss-build.service` 加 `TimeoutStartSec=900`：默认 90 秒，而 49 源 × 15s 超时 × 重试 / 并发 10
+   最坏要 155 秒 —— 网络稍差那一轮会被 systemd SIGTERM 掉，feed 停在旧版且没有任何告警。
+10. `rss-serve.service` 的 `User=pi` / `/home/pi/...` 改成 `user` / `/home/user/...`（它是唯一一份
+    `pi` 口径的单元，照它重装会起不来 → Tunnel 502）。`kindle-serve.service` 加
+    `ExecStartPre=mkdir -p`（首启目录不存在会 `sys.exit`，之后也不自愈）。
+11. `kindle-screen.path` 的 `PathModified=` → `PathChanged=`：`build_feed._write()` 用
+    `os.replace` 换掉了 inode，`IN_MODIFY` 不会发生，systemd 只会记 "possibly broken watch" 并重挂。
+12. `rss-rotate.service` 显式写 `ROTATE_SECONDS=300` / `ROTATE_POOL_MAX=120`（原本靠代码默认值，
+    改默认值会静默改掉 Pi 的行为），并注明必须与 `rss-build.service` 一致。
+13. `serve.py`：`realpath` 代替 `abspath`（root 内符号链接可指向 root 外）、`sys_version = ""`
+    （不再暴露 `Python/3.13.x`）、加 `Last-Modified` + `If-Modified-Since` → 304
+    （Kindle 每 5 分钟拉 ~80 KB 图，一天 45 MB）。**没有动 `Cache-Control` 与 CORS 头**。
+14. `board.sh`：下载后校验 PNG magic（`serve.py` 的 404 会带 HTML body，`-O` 落盘再 `mv`
+    会把 `board.png` 写坏）、加 `flock` 单实例保护。
+
+**门禁：把它自己的七个「静默通过」补上**
+
+15. `H8` 以前只查环境变量**名字**在不在文档里 —— 把参数表里的 `90` 改成 `60` 照样全绿。现在
+    解析表格取值与代码默认值比对（这正是本仓历史上「参数表写 60、代码早已是 90」那次事故的形状）。
+16. 生成物**缺失**以前 `continue`（删掉 `minute.yml` 或 `golden.txt` → 「全部通过」）；生成器
+    **抛异常**以前降级成 Info（超时也「通过」）；`subprocess.run` 不看 `returncode`。三处都改成必改。
+17. 凭据扫描没传 `cwd=ROOT`：从 `docs/` 跑门禁时 `git ls-files` 只列子树，根目录里的 key 扫不到。
+18. 版本号是子串匹配（`v1.7.20` 能顶替 `v1.7.2`）、`H4` 是子串匹配（往测试里加一句注释就算「有测试」）、
+    `docs/` 被整体排除（真正发布的两个页面从不参与 HTML 检查）—— 依次改成边界匹配、AST 收集 import、
+    对 `docs/*.html` 单独跑安全子集。
+19. **新增 `check_rotate_timer_sync`**：`ROTATE_SECONDS` 与 `Pi/services/rss-rotate.timer` 的
+    `OnCalendar=*:0/5` 必须表示同一节拍。这是本项目第三个「假旋钮」（前两个：`ROTATE_MAX_LAG`、
+    `sim_rotate --seed`），症状是改了参数、屏幕节奏没变（跳条 / 同一条连显）。
+20. **新增 `tests/test_gate.py`（44 例）**：门禁过去零测试，上面这些「静默通过」全是它的后果。
+    每条检查都要有一个「能把它弄红」的反例（`CODE_REVIEW.md` 新增 **H11**）。
+
+**注释与文档**
+
+21. **16 处与代码不符的注释全部按事实改**（`CODE_REVIEW.md` 新增 **H10**：注释写的是承诺，
+    改行为必须同提交改注释）。典型：`SCREEN_OUT` 注释说「压缩前后各查一次」而第二道在解压之后；
+    `rotate.py` 说「最近 3 窗 = 15 分钟」，真实最短间隔是 4 窗 = 20 分钟；`render.py` 说设备版
+    单条体积「降到三成」，实测 88%。
+22. **补齐 docstring**：引擎 11 个函数（`_write`/`main`/`dedupe`/`text_width`/`esc` 等）、
+    Pi 层 20 处（`serve.py` 原本 8 个函数一个都没有）、`tools/` 19 个、测试里 12 个关键用例
+    与 7 个类。**「说清了为什么」的那批高质量注释一律原样保留**，没有重写。
+23. **文档按现在的链路重写**：README 的链路图/地址表/目录树/抓取频率（GitHub 现在只有 `rss.yml`
+    每天 3 次，`minute.yml` 与 `nightly.yml` 的定时已停用）；`OPERATIONS.md` 的「刷新节奏」
+    重写成两张表（GitHub 与树莓派各自的抓取/显示节拍）、§15 排障改指向 `moreaix.com/rss/rotate.json`；
+    `Pi/README.md` 补上 `rotate_screen.py` 与 `rss-rotate.*`（显示时间线与抓取解耦是核心机制，
+    原来完全没写）；`Pi/TUNNEL.md`、`Pi/KINDLE.md` 按实际路径/版式/灰度改。
+24. **页面修了一个线上可见的错**：`docs/index.html` 的「设备版地址」与 `docs/screen.html` 的预览
+    都还在读 `cheney-hub.github.io/rss-hub/feed-wrap.xml` —— 那个文件已随设备版下线（404），
+    预览页只会显示「无法加载」。现在两处都指向 `moreaix.com/rss/feed-wrap.xml`，
+    预览页跨域直接读（Pi 的 `serve.py` 对所有响应都发 `access-control-allow-origin: *`）。
+25. `docs/feed.xml` 重新生成（此前那次备份停在 1.4.0，`<generator>` 与版本对不上）。
+
+**基线**：`tests/golden.txt` 重生成，改动只有 2 行（第 7 条的标题尾巴）+
+「`pubDate` 原文」新增样本 4 行（锁住「`date_raw` 优先于 `ts`」这个语义 —— 以前把来源从源站原文
+改成 `ts` 现算，基线逐字节不变、112 条用例全绿，等于这个语义没人看住）。
+
 ## [1.7.2] - 2026-10-31
 
 1.7.1 已推送并在 Pi 真机上跑起来了（等于已发布），所以这批收尾**单独发一版**：其中两条是

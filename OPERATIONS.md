@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.7.2**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.7.3**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -38,7 +38,9 @@ python3 tools/gen_minute_workflow.py 13
 ```
 
 > 下表与 `build_feed.py` / `rotate.py` 的常量是一份契约，对不上就是错的。改代码必须同步改这里——
-> `tools/review_check.py` 会检查代码里每个环境变量是否在文档中出现过。
+> `tools/review_check.py` 会检查两件事：① 代码里每个环境变量是否在文档中出现过；
+> ② **本表的「现值」列是否与代码默认值一致**（只出现在文档里、值与代码对不上也算必改）。
+> 后者是 2026-10-31 加上的 —— 以前只查名字，把表里的 90 改成 60 门禁照样绿。
 
 | 变量 | 现值 | 调整建议 |
 |---|---|---|
@@ -56,7 +58,7 @@ python3 tools/gen_minute_workflow.py 13
 | `FEEDS_FILE` | `./feeds.txt` | 订阅源清单，注释行写中文名、下一行写地址 |
 | `OUT_FILE` | `./docs/feed.xml` | 完整版输出路径 |
 | `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-wrap.xml` | 设备版输出路径。**GitHub 三个 workflow 都把它改指 `${{ runner.temp }}`，即本仓库不再发布设备版**；设备版只由树莓派发布在 `moreaix.com/rss/feed-wrap.xml`，Dot App 订阅那一个 |
-| `ROTATE_STATE` | 与 `OUT_FILE` 同目录的 `rotate.json` | 轮播游标状态，随 Pages 发布、不进仓库 |
+| `ROTATE_STATE` | 与 `OUT_FILE` 同目录的 `rotate.json` | 轮播游标状态。**GitHub 侧指到 `${{ runner.temp }}`（不发布、不提交）**；树莓派侧是 `/home/user/rss-hub/docs/rotate.json`，发布在 `moreaix.com/rss/rotate.json` |
 
 
 设备版还自动做了三件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、
@@ -86,20 +88,26 @@ curl -X POST \
 
 ```bash
 python3 build_feed.py --version                              # 打印版本号
-python3 build_feed.py                                        # 生成 docs/feed.xml + docs/feed-wrap.xml
+python3 build_feed.py                                        # 生成 docs/feed.xml + <同目录>/feed-wrap.xml
 OUT_FILE=/tmp/t.xml REFRESH_SECONDS=0 python3 build_feed.py   # 换路径、只跑一轮
 python3 -m unittest discover -s tests -v                      # 单测 + 行为基线
 ```
+
+本地跑 `build_feed.py` 仍会顺手写一份 `feed-wrap.xml`（默认与 `OUT_FILE` 同目录），
+那是给「单机一把梭」用的；**两个正式部署都不是这么跑的**：GitHub 侧把 `SCREEN_OUT` 指到
+`${{ runner.temp }}`（不发布），树莓派侧由 `rss-rotate.timer` 单独驱动 `Pi/rotate_screen.py`。
+所以本地跑完留下的 `docs/feed-wrap.xml` 别提交（`.gitignore` 已忽略）。
 
 零第三方依赖，Python 3.8+，Windows / macOS / Linux 都一样。
 
 ### 回滚某次发布
 
-`docs/` 下都是生成物，直接回退那一次提交即可：
+`docs/` 下的 `feed.xml` 是生成物，直接回退那一次提交即可（`feed-wrap.xml` / `rotate.json`
+**已不在仓库里**，它们由树莓派写在自己的 `docs/` 下，回滚 GitHub 仓库不涉及）：
 
 ```bash
 git log --oneline -- docs/feed.xml | head
-git checkout <commit> -- docs/feed.xml docs/feed-wrap.xml
+git checkout <commit> -- docs/feed.xml
 git commit -m "revert feed" && git push
 ```
 
@@ -127,33 +135,33 @@ git commit -m "revert feed" && git push
 
 ## 刷新节奏
 
-**设计**白天 5 分钟一版（北京时间 06:00–23:59，设备刷新周期也是 5 分钟），夜间 00:00–05:59 降为每小时一版；
-runner 占用约 13 轮 × 18 小时 + 6 次/天。节奏与轮播绑定：`ROTATE_SECONDS` 就是「一条在屏上待多久」，改它等于改轮播速度。
+**现在有两套各自独立的节拍，别再混着看**：
 
-**实际**（2026-10-30 实测，决定了当前口径）：GitHub 的 cron 在这台仓库是「低频兑现」——
-12 小时只兑现 4 档（预期 ~144 档），开始时间偏移 15~46 分钟，多数整点整档跳过。
-所以**线上真实更新间隔约 1~3 小时**，5 分钟只是作业内部的循环粒度。
-这一条不打算再用外部定时器补齐（用户 2026-10-30 决定「接受现状」），但要知道它是这个量级：
-判断「线上是不是最新」只看 `lastBuildDate` 距今多久，别按 5 分钟去对表。
-
-| 目标节奏 | 怎么改 | 屏上内容的典型延迟 |
+| 部署 | 抓取（多久去源站拿一次） | 显示（屏上多久换一条） |
 |---|---|---|
-| **5 分钟节拍（现状，兑现率见上）** | `gen_minute_workflow.py 13`，周期 300 秒，cron `7 22,23,0-15 * * *`（夜间另由 `7 16-21` 接管） | 落后 0~1 条 ≈ 5 分钟（`back` 正常就是 0~1）；实际入库间隔 1~3 小时 |
-| 10 分钟（CDN 缓存吃条时改这个） | `tools/gen_minute_workflow.py` 里 `PERIOD=600`、轮数 6；yml 里 `ROTATE_SECONDS: "600"` | 落后 0~1 条 ≈ 10 分钟 |
-| 2 分钟 | `PERIOD=120`、轮数 30；不要动 `ROTATE_SECONDS`（否则设备跟不上） | 落后 0~1 条 ≈ 5 分钟（受 `ROTATE_SECONDS` 限制） |
-| 省 runner | `gen_minute_workflow.py 1`（每小时只跑一轮），轮播自然变成 1 小时一条 | 约 1 小时 |
+| **GitHub**（只发完整版 `feed.xml`） | `rss.yml`，每天 3 次：北京 08:00 / 13:00 / 18:00（UTC `0 0,5,10`） | 不适用（GitHub 不发设备版） |
+| **树莓派**（发设备版 `feed-wrap.xml` + Kindle 看板） | `rss-build.timer`：白天 07:00–23:59 每 5 分钟、夜间每小时 | `rss-rotate.timer`：**全天每 5 分钟** |
 
-轮播锚定当前时间窗、按条取「还没播过里最新的一条」，所以「一天跑几轮构建」不再直接决定延迟；
-决定延迟的是「构建有多频繁」+ `ROTATE_SECONDS`（一条上屏多久）。
+**为什么 GitHub 只剩每天 3 次**：`minute.yml`（作业内 13 轮 × 5 分钟）与 `nightly.yml`（每小时）的
+`schedule` 都已停用。原因不是设计变了，而是 GitHub 的 cron 在这台仓库**兑现率太低**：
+2026-10-30 实测 12 小时只兑现 4 档（预期 ~144 档）、开始时间偏移 15~46 分钟、多数整点整档跳过。
+留着「设计 5 分钟、实际 1~3 小时」只会让排障时对着 `lastBuildDate` 误判。
+需要临时高频时用 `workflow_dispatch` 手动触发 `minute.yml`，跑完一轮循环约 58 分钟。
 
-两个绕不开的约束，也是这套设计的原因：
+| 想达到的节奏 | 怎么改 |
+|---|---|
+| **GitHub 每天 N 次**（现状 3） | 改 `rss.yml` 的 `cron: '0 0,5,10 * * *'`（UTC；北京 = +8） |
+| 临时高频（约 58 分钟 5 分钟一版） | `gh workflow run minute.yml` / 网页 Run workflow；作业内 `CYCLES` 轮可改 `tools/gen_minute_workflow.py` 后重新生成 |
+| 树莓派抓取更快/更省 | 改 `Pi/services/rss-build.timer` 的 `OnCalendar`（白天 `07..23:0/5:00`、夜间 `00..06:00:00`） |
+| 树莓派屏幕换得更慢 | 改 `ROTATE_SECONDS`，**同时**把 `Pi/services/rss-rotate.timer` 的 `OnCalendar=*:0/5` 改成对应的分钟数（门禁会核对这两个值，见下） |
 
-- **cron 不能写 `*/1`**：Actions 的 schedule 最短 5 分钟，且官方承认高负载会延迟、丢档；稳定节拍只能靠
-  「小时级 cron + 作业内循环 + 对齐到整点」；
-- **不能靠 commit 发布**：Pages 传统构建有 10 次/小时软限制；改用自定义 Actions 部署后不受限，
-  所以流程是「打包 artifact → `deploy-pages`」。
+**门禁会拦的「假旋钮」**：`ROTATE_SECONDS`（代码，默认 300）与 `rss-rotate.timer` 的 `OnCalendar=*:0/5`
+必须表示同一个节拍；只改一边会让「一条待多久」与「多久推进一次」错位，表现为跳条或重复。
+`review_check.py` 的 `check_rotate_timer_sync` 会把这种漂移报成必改。
 
-轮播状态（`docs/rotate.json`）随 artifact 一起发布，不提交进仓库（`.gitignore` 已忽略）。
+轮播状态的落盘位置**取决于部署**：GitHub 侧指到 `${{ runner.temp }}`（设备版不在那儿发，没人读）；
+树莓派侧是 `/home/user/rss-hub/docs/rotate.json`（发布在 `moreaix.com/rss/rotate.json`，供页面展示）。
+所以仓库里的 `docs/rotate.json` 已不存在，`.gitignore` 不管它。
 
 ## 轮播调参
 
@@ -419,12 +427,12 @@ Pages 同一时刻只允许一个部署，撞上就报这个 400。三份工作�
 
 ### 15. 设备上的内容不换 / 重复 / 跳条
 
-设备版每版只发一条，选谁由 `docs/rotate.json` 的游标决定。**1.7.0 起是「按条轮」**
+设备版每版只发一条，选谁由**树莓派上那份** `rotate.json` 的游标决定。**1.7.0 起是「按条轮」**
 （在此之前是「按 5 分钟时间片轮、片内只出一条代表」，那套规则会让同片后到的条目永远上不了屏，
-已废弃）。先看线上状态：
+已废弃）。先看线上状态（设备版与游标都在 Pi 上，GitHub Pages 已经没有这两个文件）：
 
 ```bash
-curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | python3 -m json.tool
+curl -s "https://moreaix.com/rss/rotate.json?cb=$(date +%s)" | python3 -m json.tool
 ```
 
 | 字段 | 含义 |
@@ -458,7 +466,7 @@ curl -s "https://cheney-hub.github.io/rss-hub/rotate.json?cb=$(date +%s)" | pyth
 | 现象 | 原因 | 处置 |
 |---|---|---|
 | 内容一直不变 | 设备刷新间隔设得比 `ROTATE_SECONDS` 长 | Dot App 里把刷新间隔改成 **5 分钟** |
-| 同一条连显两次、中间那条没看到 | Pages CDN 缓存 `max-age=600`，拿到 10 分钟前的版本。先核对 `rotate.json` 的 `window`/`current` 是否真在前进，再怀疑缓存 | `ROTATE_SECONDS` 改 `600`（永不漏，但 10 分钟才换） |
+| 同一条连显两次、中间那条没看到 | 先核对 `rotate.json` 的 `window`/`current` 是否真在前进。设备版现在走 Cloudflare + Pi 本地服务（`cf-cache-status: DYNAMIC`，服务端发 `no-cache`），**已经不该出现缓存吃条**；若确实前进正常还重复，问题在设备端刷新间隔或 Dot 云端抓取缓存 | 把 `ROTATE_SECONDS` 与 Dot App 的刷新间隔都调到 600 秒（永不漏，但 10 分钟才换） |
 | 连续几窗「看起来没换」 | 1.7.1 起有 `recent` 约束：最近 3 窗不许出现同一个屏显串，所以同前缀的稿子会被往后挪（最多挪 3 窗 = 15 分钟；同一个显示串之间的最小间隔是 4 窗 = 20 分钟）。看 `recent` 那几串是不是真的重复 | 这是观感约束，被挪的条目仍是未标注，会补上（不丢内容）；要放宽就改 `rotate.py` 的 `RECENT_MAX` |
 | 某个源的内容几乎不上设备版 | 1.6.x 及更早：同一个时间片里只有最新一条能当代表，其余被吞掉 | 1.7.0 起已按条轮、用 guid 标注，同片多条各上一次屏；升级后自动消失 |
 | 轮播卡死不动 | `rotate.json` 的 `dwell` 和当前 `ROTATE_SECONDS` 不一致（改过节拍），或它的 `window` 明显超前（写它的那次运行时钟错了 / 文件被写坏，`w > prev_w` 永远不成立就会一直 hold） | 两种都已自动识别并丢弃状态重新起轮（回拨在 2 窗 = 10 分钟内视为正常的 NTP 抖动，冻结一版即可）；仍有问题就删掉线上 `rotate.json` |

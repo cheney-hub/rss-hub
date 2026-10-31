@@ -1,6 +1,6 @@
 # rss-hub · RSS 聚合头条
 
-> 当前版本 **v1.7.2**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+> 当前版本 **v1.7.3**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
 >
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
@@ -13,20 +13,30 @@
 **不调用任何需要密钥的接口**。
 
 ```
-feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub Pages ──► RSS 阅读器
-（源清单）    （Actions 里跑）   docs/feed-wrap.xml                    ──► Dot 设备（标题＋正文）
+feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages ──► RSS 阅读器（完整版）
+（源清单）    （Actions 里跑）        │
+                                    └──────────► 树莓派（Pi/）──► moreaix.com ──► Dot 设备（设备版，一条一轮播）
 ```
+
+**两份产物、两条发布链路**：GitHub Actions 只发**完整版** `feed.xml`；
+**设备版** `feed-wrap.xml` 由树莓派上的 `Pi/rotate_screen.py` 每 5 分钟选一条写出来，发布在
+`moreaix.com/rss/`（GitHub 不再发这一份，旧地址已 404）。抓取与显示是**两条独立时间线**，
+细节见 [Pi/README.md](Pi/README.md)。
 
 ## 订阅地址
 
 | 用途 | 地址 |
 |---|---|
-| **设备版**（Dot App 里填这个） | `https://cheney-hub.github.io/rss-hub/feed-wrap.xml` |
+| **设备版**（Dot App 里填这个，由树莓派发布） | `https://moreaix.com/rss/feed-wrap.xml` |
 | 完整版（电脑 / 手机阅读器） | `https://cheney-hub.github.io/rss-hub/feed.xml` |
 | 说明页 | https://cheney-hub.github.io/rss-hub/ |
 | 屏幕效果预览 | https://cheney-hub.github.io/rss-hub/screen.html |
 | 镜像 1（raw） | `https://raw.githubusercontent.com/cheney-hub/rss-hub/main/docs/feed.xml` |
 | 镜像 2（jsDelivr） | `https://cdn.jsdelivr.net/gh/cheney-hub/rss-hub@main/docs/feed.xml` |
+
+> 设备版**不在 GitHub 上**：仓库已不再生成 `docs/feed-wrap.xml`，旧地址
+> `cheney-hub.github.io/rss-hub/feed-wrap.xml` 会 404。设备版与轮播游标都在树莓派上，
+> 由 `Pi/rotate_screen.py` 每 5 分钟写一次（见 [Pi/README.md](Pi/README.md)）。
 
 完整版粘进 FreshRSS / Feedly / Inoreader / NetNewsWire / 阅读 等任意阅读器即可。
 设备版填进 Dot App 的「循环内容」列表——**页首小字显示「RSS 头条 · 小屏」才说明用对了源**。
@@ -36,10 +46,11 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 | 项目 | 数值 |
 |---|---|
 | 订阅源 | 49 个（中文综合、国际媒体中文版、中国台湾、日本、财经快讯、科技、门户、港澳、新加坡中文） |
-| 每源抓取 | 取最新 5 条，跨源去重后约 200~245 条，**按发布时间倒序取最新 120 条**（`ITEM_LIMIT`，设 0 = 不限） |
-| 抓取频率 | **设计**白天（北京 06:00–23:59）每 5 分钟一轮、夜间每小时一轮；**实际约每 1~3 小时一版**——GitHub 的 cron 在这台仓库兑现稀疏（12 小时只给 4 档），作业内部仍是 5 分钟一轮 |
-| 发布频率 | 设计上白天约 216 版/天 + 夜间 6 版（自定义 Actions 部署，不受 Pages 10 次/小时限制）；实际受 cron 兑现率限制，一天约 10~20 版 |
-| 单轮耗时 | 本机 15～40 秒（取决于当天各源响应）；GitHub runner 上 25～45 秒（49 源 × 5 条，并发 12 路） |
+| 每源抓取 | 取最新 5 条 → 按时间倒序 → 跨源去重后约 200~245 条，**取最新 120 条**（`ITEM_LIMIT`，设 0 = 不限） |
+| 抓取频率（GitHub） | **每天 3 次**（北京 08:00 / 13:00 / 18:00，`rss.yml`）。`minute.yml` 的 5 分钟节拍与 `nightly.yml` 的每小时节拍**定时都已停用**（cron 兑现率实测 12 小时只给 4 档），需要高频时手动 `workflow_dispatch` |
+| 抓取频度（树莓派） | **独立时间线**：白天 07:00–23:59 每 5 分钟、夜间每小时（`rss-build.timer`）；显示轮播全天每 5 分钟（`rss-rotate.timer`） |
+| 发布频率 | 每天 3 版（GitHub Pages，自定义 Actions 部署，不受 Pages 10 次/小时限制）；设备版由树莓派每 5 分钟一版 |
+| 单轮耗时 | 本机 15～40 秒（取决于当天各源响应）；GitHub runner 上 25～45 秒（49 源 × 5 条，并发 12 路）；Pi 上约 30 秒（并发 10 路） |
 | 设备版标题 | 前 13 全角进标题 |
 | 设备版正文 | 标题余文 + 原 feed 的摘要原文，最多 90 全角（屏上正文区约 4 行） |
 | 设备版条目 | **每版只发 1 条**，5 分钟换一条；优先播「还没播过里最新的一条」，`back`（落后最新几条）稳态 0~1 |
@@ -63,12 +74,18 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ├── build_feed.py            # 抓取与编排：拉源、解析、失败回退、写文件
 ├── rotate.py                # 轮播：逐条推进、这一窗该播哪一条、游标状态（选条是纯函数）
 ├── render.py                # 渲染层（纯函数）：纯文本化、宽度折算、标题切分、正文合成、去重键、RSS 生成
-├── docs/                    # ← GitHub Pages 发布的目录（站点根）
-│   ├── feed.xml             #   完整版（每天备份提交一次）
-│   ├── feed-wrap.xml        #   设备版：只发轮播到的那一条（纯文本标题 + 截到屏宽 + 余文进正文）
-│   ├── rotate.json          #   轮播状态：哪条已展示、当前第几窗（每次发布自动更新）
+├── docs/                    # ← GitHub Pages 发布的目录（站点根；仓库里只有这三个文件）
+│   ├── feed.xml             #   完整版（每天备份提交一次；Pages 上那份才是权威）
 │   ├── index.html           #   订阅说明页
-│   └── screen.html          #   屏幕效果预览（读 feed-wrap.xml）
+│   └── screen.html          #   屏幕效果预览（跨域读树莓派那份 feed-wrap.xml）
+│                            #   ⚠ 设备版 feed-wrap.xml 与轮播游标 rotate.json 已不在本仓库：
+│                            #     它们由树莓派写到 /home/user/rss-hub/docs/ 并发布在 moreaix.com
+├── Pi/                      # 树莓派部署（设备版 + Kindle 看板；与上面这套 Cloud 链路隔离）
+│   ├── rotate_screen.py     #   显示时间线：读 feed.xml → 选一条 → 写 feed-wrap.xml（不联网、不抓源）
+│   ├── kindle_screen.py     #   feed.xml → 1024×758 灰度看板 PNG（Pillow）
+│   ├── serve.py             #   静态服务：8080/8081 走 Tunnel，8082 只在局域网
+│   ├── services/            #   systemd 单元（抓取 / 轮播 / 看板重绘 / 静态服务）
+│   └── README.md            #   端口归属、两条时间线、部署与排障
 ├── .github/workflows/
 │   ├── minute.yml           #   白天：每小时 13 轮 × 5 分钟（脚本生成）
 │   ├── nightly.yml          #   夜间 00:00–05:59：每小时一轮
@@ -80,12 +97,13 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 │   ├── check_secrets.py         # 凭据扫描（本地与 CI 共用）
 │   ├── golden_snapshot.py       # 生成/更新行为基线
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 112 个用例，零依赖、不联网（数量由门禁核对，别手改）
-│   ├── test_core.py         #   64 例：核心纯函数（宽度、切分、清洗、去重、解析、轮播稳态、workflow 参数契约）
+├── tests/                   # 166 个用例，零依赖、不联网（数量由门禁核对，别手改）
+│   ├── test_core.py         #   68 例：核心纯函数（宽度、切分、清洗、去重、解析、轮播稳态、workflow 参数契约）
 │   ├── test_rotate_edge.py  #   39 例：轮播边界（时钟错乱、池子挤兑、参数极值、屏显串防连播）
+│   ├── test_gate.py         #   44 例：门禁自身的正反用例（检查项必须能红，否则等于没有）
+│   ├── test_state_hygiene.py#   10 例：状态字段被写坏时的容错（列表与数值字段都不许把这一轮跑崩）
 │   ├── test_dedupe.py       #    4 例：跨源同题去重（标题身份、数字是否参与、字数门槛上下界）
-│   ├── test_state_hygiene.py#    4 例：状态字段被写坏时的容错（形状不对不能把这一轮跑崩）
-│   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 逐字节比对
+│   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 按行比对（换行已归一）
 │   └── golden.txt           #   行为基线（脚本生成，不手改）
 ├── CHANGELOG.md             # 版本历史与行为变更记录
 ├── CODE_REVIEW.md           # 代码审查标准与流程（提交前必读）
@@ -94,12 +112,16 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 
 ## 工作方式
 
-1. `.github/workflows/minute.yml` 在北京时间 **06:00–23:59** 每小时 :07 触发，作业内连跑 13 轮
-   （对齐到 :10 :15 … :55 :00 :05）；`nightly.yml` 在 **00:00–05:59** 每小时跑一轮。
-2. 每 5 分钟一轮：并发抓 49 源 × 5 条（约 40 秒）→ 生成两份 feed → 打包 `docs/` → 部署到 Pages → 对齐到下一个 5 分钟整点。
-3. 每源取**最新 5 条**（49 × 5 = 245 条），跨源去重后按时间倒序**取最新 120 条**进完整版
-   （`ITEM_LIMIT`）；设备端轮播池同样是最新 120 条（`ROTATE_POOL_MAX`）。
-   两个参数各管一头、现取同值 —— 只调 `ITEM_LIMIT` 不会改变上屏节奏。
+1. **日常抓取**由 `rss.yml` 负责：每天 **3 次**（北京 08:00 / 13:00 / 18:00，UTC `0 0,5,10`）。
+   `minute.yml`（作业内连跑 13 轮 × 5 分钟）与 `nightly.yml` 的**定时都已停用**——
+   GitHub 的 cron 在这台仓库兑现率太低（实测 12 小时只给 4 档），留着反而制造「设计 5 分钟、实际 3 小时」的错觉；
+   需要临时高频时用 `workflow_dispatch` 手动触发 `minute.yml`（跑完一轮循环约 58 分钟）。
+2. 每轮：并发抓 49 源 × 5 条（约 40 秒）→ 生成**完整版** `docs/feed.xml` → 打包 `docs/` → 部署到 Pages。
+   设备版不在这里生成（见文首「两条发布链路」）。
+3. 每源取**最新 5 条**（49 × 5 = 245 条）→ **按发布时间倒序** → 跨源去重（同题保留最靠前的那条，
+   也就是**最新**的一条）→ 截取最新 120 条进完整版（`ITEM_LIMIT`）。
+   设备端轮播池同样是最新 120 条（`ROTATE_POOL_MAX`）：两个参数各管一头、现取同值 ——
+   只调 `ITEM_LIMIT` 不会改变上屏节奏。
 4. 跨源两道去重，命中任一条即丢弃：
    - **链接**：去掉 `#` 锚点与 `utm_*` / `from` / `spm` 这类**追踪参数**后比对，参数顺序也不影响身份
      （`?a=1&b=2` 与 `?b=2&a=1` 是同一条）；**有意义的查询参数必须保留** ——
@@ -119,8 +141,13 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml       ──► GitHub
 ## 轮播：屏幕怎么决定下一条播什么
 
 云端只渲染 feed 里的**第一条**。如果照时间倒序整份发出去，屏幕就永远停在最新那条，
-其余 100 多条一辈子轮不到。所以设备版 `feed-wrap.xml` 每版只发一条，选谁由 `docs/rotate.json` 的标注决定
-（这一条规则不承诺「每条都轮到」—— 覆盖率的上限来自「每窗只播 1 条」，见下面的「代价」）：
+其余 100 多条一辈子轮不到。所以设备版 `feed-wrap.xml` 每版只发一条，选谁由 `rotate.json` 的标注决定
+（这一条规则不承诺「每条都轮到」—— 覆盖率的上限来自「每窗只播 1 条」，见下面的「代价」）。
+
+> **谁在跑这套规则**：`Pi/rotate_screen.py`，由树莓派上的 `rss-rotate.timer` 全天每 5 分钟拉起一次。
+> 它**不联网、不抓源**，只读 `feed.xml`（池子）+ `rotate.json`（游标），选一条写 `feed-wrap.xml`。
+> 抓取（`rss-build.timer`）与显示（`rss-rotate.timer`）是两条时间线 —— 以前选条写在抓取里，
+> 于是「夜里抓取一小时一次」直接变成「屏幕一小时才换一条」。规则本身在 `rotate.py`，两处共用同一份实现。
 
 ```
 每窗锚定当前时间窗：播「全池还没标注过的最新一条」，并把它的 guid 记进 shown
@@ -212,9 +239,11 @@ w = now // 300  同一时间窗内重复构建不推进（幂等，多跑几轮�
 源把时间改对之后自然恢复。也不能改成「按抓取时刻算」—— 那样它的时间每窗重算、永远是最新的，
 等于每窗都重播一次，比不钳更糟。
 
-> **已知硬约束**：GitHub Pages 的 CDN 缓存是 `max-age=600`（实测响应头）。
-> 5 分钟一版时，设备有可能拿到 10 分钟前的旧版本，出现「同一条连显两次、中间那条没看到」。
-> 真机上如果出现这现象，把 `ROTATE_SECONDS` 改成 `600`（10 分钟一条），节奏放慢但绝不漏。
+> **缓存这关已经绕开了（2026-10-30 起）**：设备版改由树莓派发布在 `moreaix.com/rss/`，
+> Cloudflare 对该路径是 `cf-cache-status: DYNAMIC`（不缓存），Pi 的 `serve.py` 也发
+> `Cache-Control: no-cache` —— 所以早期「Pages CDN `max-age=600` 导致同一条连显两次」的
+> 现象不会再出现。**这条历史约束仅当有人把设备版搬回 Pages 时才需要重新考虑**
+> （届时把 `ROTATE_SECONDS` 改成 600 是最省事的兜法）。
 
 ## 设备适配（Dot Quote/0）
 
@@ -297,15 +326,17 @@ python3 build_feed.py
 
 ## 已知限制
 
-- **GitHub 的 cron 会延迟和丢档，而且这台仓库是「低频兑现」**：设计白天每小时 13 档（:07 起），
-  实测 12 小时只兑现 **4 档**、开始时间偏移 15~46 分钟、多数整点直接跳过。所以**真实更新间隔约 1~3 小时**，
-  5 分钟只是作业内部的循环粒度与设备刷新周期。要做到 5 分钟一版只能挂外部定时器 dispatch
-  （见 [OPERATIONS.md#10-定时任务完全不触发](OPERATIONS.md#10-定时任务完全不触发)）；当前决定是接受现状；
+- **GitHub 的 cron 会延迟和丢档，这台仓库尤其低频**：实测 12 小时只兑现 **4 档**（预期 ~144 档）、
+  开始时间偏移 15~46 分钟、多数整点直接跳过。所以 5 分钟/每小时的节拍**已经停用**，
+  日常改成 `rss.yml` 每天 3 次（北京 08/13/18）——这是「设计值 ≈ 承诺值」的折中。
+  真要做到 5 分钟一版只有两条路：挂外部定时器 dispatch（见
+  [OPERATIONS.md#10-定时任务完全不触发](OPERATIONS.md#10-定时任务完全不触发)），
+  或者像树莓派那样用自己的 timer 抓（`Pi/services/rss-build.timer`，已这么做）；
 - **Pages 传统构建有 10 次/小时软限制**，每分钟一次会被限流；本项目改用自定义 Actions 部署
   （`build_type: workflow`），官方文档明确该限制不适用于这种构建方式；
-- **runner 占用**：白天 18 小时近乎连续（每小时 13 轮 ≈ 58 分钟）+ 夜间 6 次：公开仓库分钟数不计量，但属高频用法；
-  想降载就改轮数（见 [OPERATIONS.md#刷新节奏](OPERATIONS.md#刷新节奏)）；
-- 设备端「5 分钟换一条」说的是轮播节拍，不是产出入库速度：池子里 120 条可播，内容更新靠上面那条兑现率决定；
+- **runner 占用**：现在每天 3 次、每次约 40 秒，可忽略；若手动 dispatch `minute.yml` 会跑满约 58 分钟；
+- 设备端「5 分钟换一条」说的是**轮播节拍**（树莓派 `rss-rotate.timer`），不是产出入库速度：
+  池子里 120 条可播，池子换血靠上面抓到的新条目；
 - `github.io` 在部分网络环境访问偏慢，可用上面两个镜像（跟随仓库备份，每天更新一次）；
 - 正文能否显示取决于 Dot 云端是否渲染 `<description>`，不受本项目控制；不渲染时退化为 13 字标题。
 
@@ -314,7 +345,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：112 个用例（含分层契约、行为基线、轮播边界、清洗边界）
+python3 -m unittest discover -s tests -v    # 单测：166 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
@@ -331,9 +362,10 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 
 1. **不手改生成文件**：`minute.yml` 由脚本生成、`tests/golden.txt` 由快照脚本生成，
    改结构请改脚本后重新生成（门禁会比对，手改必红）；
-2. **改了 `build_feed.py` / `rotate.py` / `render.py` 要先取消正在跑的 `minute.yml` 作业**，
-   再重新 dispatch——作业只在每小时首轮 `git pull` 一次，所以整点内推送的代码最长要等 60 分钟
-   才被它用上，这期间每一轮都拿旧代码重新构建并覆盖 Pages（线上版本串被写回旧值就是这么来的）；
+2. **手动 dispatch 了 `minute.yml`（58 分钟循环）时，改代码前先取消它**，再重新 dispatch——
+   作业只在每小时首轮 `git pull` 一次，所以整点内推送的代码最长要等 60 分钟才被它用上，
+   这期间每一轮都拿旧代码重新构建并覆盖 Pages（线上版本串被写回旧值就是这么来的）。
+   **日常的 `rss.yml` 是一次性作业（约 40 秒），不存在这个问题**，不用取消；
    取消方式（网页按钮 / `gh run cancel` / 一次 API 调用）见 `OPERATIONS.md` §16；
 3. **改参数必须同步 `OPERATIONS.md` 的参数表**，门禁会检查代码里的每个环境变量是否在文档中出现过；
 4. **发版必须三件套**：`version.py` 加版本号 → `CHANGELOG.md` 记一条 → 页面页脚跟上，
@@ -361,7 +393,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.7.2` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.7.3` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 
