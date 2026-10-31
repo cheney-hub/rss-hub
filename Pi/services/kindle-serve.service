@@ -7,14 +7,14 @@ Wants=network-online.target
 Type=simple
 User=user
 WorkingDirectory=/home/user/kindle
-# 只有这一台绑 0.0.0.0 —— Kindle 在家庭局域网里来取图，不经过 Cloudflare。
-# 8080/8081 仍只监听 127.0.0.1 给 Tunnel 用，两套服务互不影响。
-# --prefix= 表示不要 /rss 那层前缀：板子上的 board.sh 直接取 /kindle.png。
-ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/kindle --port 8082 --bind 0.0.0.0 --prefix=
 # 首次开机的顺序不可控：kindle-serve 可能先于第一次渲染起来，那时 /home/user/kindle
 # 还不存在，serve.py 会直接 exit。没有这一行，单元会一直 failed，
 # 要等人手动 restart 才能恢复（Restart=always 救不了「参数导致必然失败」）。
 ExecStartPre=/bin/mkdir -p /home/user/kindle
+# 只有这一台绑 0.0.0.0 —— Kindle 在家庭局域网里来取图，不经过 Cloudflare。
+# 8080/8081 仍只监听 127.0.0.1 给 Tunnel 用，两套服务互不影响。
+# --prefix= 表示不要 /rss 那层前缀：板子上的 board.sh 直接取 /kindle.png。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/kindle --port 8082 --bind 0.0.0.0 --prefix=
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
