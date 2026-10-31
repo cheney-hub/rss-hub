@@ -44,17 +44,8 @@ _STAMP_RE = re.compile(r"<lastBuildDate>[^<]*</lastBuildDate>")
 
 # 选条规则与渲染都在引擎代码里，本脚本只复用、不重写
 sys.path.insert(0, RSS_HUB)
-import rotate                                     # noqa: E402
-from render import LINE_WIDTH, build_rss          # noqa: E402
-
-try:                                              # 文案的真源在 render，本文件只转发
-    from render import device_description         # noqa: E402
-except ImportError:                               # 抽出 render.device_description 前先顶上
-    def device_description(n_src):
-        """与 render.device_description 等价的临时实现（抽取落地后可删）。"""
-        return ("多源头条，纯文本；每 %d 分钟轮换一条，走完全部再从头开始。"
-                "标题只放屏上显示得下的 %g 全角字，余下原文接在正文里，源 %d 个"
-                % (rotate.ROTATE_SECONDS // 60, LINE_WIDTH, n_src))
+import rotate                                            # noqa: E402
+from render import build_rss, device_description          # noqa: E402
 
 
 def _text(node):
