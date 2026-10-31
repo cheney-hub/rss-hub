@@ -22,12 +22,19 @@ MobileRead Wiki 的 WatchThis 条目。
 1. USB 拷走 `documents/` 备份。
 2. 删根目录所有 `.bin` 和 `update.bin.tmp.partial`。
 3. 去掉设备密码锁（忘了就在密码框输 `111222777` 重置，会清数据）。
-4. 下载 `watchthis-jailbreak-r03.zip`（上面 MobileRead 帖子里有；网盘镜像也行）。
-   **解压到电脑上，不要解压到 Kindle**。里面按机型/固件分目录，我们要的是 **`PW2/5.12.2.2/`**，
-   需要三个文件：
+4. 下载 `watchthis-jailbreak-r03.zip`。官方直链在 MobileRead 一楼的 **Download Link**：
+   <https://mega.nz/file/2ahlQKZS#jXyYLEp9rvRQCOzv7LNYBF-9fOfPhpigaLZMHZkN7fg>
+   （`#` 后面那段是解密密钥，必须连着一起复制；mega 下不动就改用网盘镜像，但**务必用下面的校验值验一遍**）。
+   **解压到电脑上，不要解压到 Kindle**。解压出 `watchthis-release/`，里面先按机型分子目录、
+   再按「机型-固件」分子目录，我们要的是 **`watchthis-release/PW2/PW2-5.12.2.2/`**，需要三个文件：
    - `PW2-5.12.2.2.zip`（**不要解压**）
    - `demo.json`
-   - `Update_hotfix_watchthis_custom.bin`（后面第 3 步用）
+   - `Update_hotfix_watchthis_custom.bin`（第 3 步用；**注意它在 `watchthis-release/` 根目录**，
+     不在 PW2 子目录里）
+
+   校验值（2026-10 实测）：整包 646247 字节，SHA256 `38ed5dadd0f98b1ac846967fbde14aa0543fc824207ee1889159993c87a2bfa3`；
+   `PW2-5.12.2.2.zip` 的 MD5 是 `4e6052f30ada437c5924a6e416e186c8`，**与 `demo.json` 里
+   `files[0].checksum` 是同一个值**——这个字段本来就是给机器验的，对不上说明包坏了或被换过，别往机器上放。
 5. 开飞行模式。
 
 ---
