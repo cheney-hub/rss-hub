@@ -120,6 +120,87 @@ curl -s  https://moreaix.com/rss/feed.xml | head -n 20
 - 匹配：`URI Path` `starts_with "/rss"`
 - 动作：**Bypass cache**
 
+## 第 6 步（可选）：把 Kindle 看板也放到公网
+
+8082 原本只打算在局域网里用，走到了这一步要把它交给隧道：`moreaix.com` 的隧道是
+Pi **主动出站**连到 Cloudflare 的，不需要任何入站规则 —— 所以它恰好绕开了 Pi 那层
+让我们试不通的防火墙。
+
+### 6.1 加一条 Public Hostname
+
+Zero Trust → Networks → Tunnels → 点开 `rss-pi` → **Public Hostname** → Add a public hostname
+
+| 字段 | 填 |
+|---|---|
+| Subdomain | `board` |
+| Domain | `moreaix.com` |
+| Path | 留空 |
+| Service · Type | `HTTP` |
+| Service · URL | `localhost:8082` |
+
+保存后 Cloudflare 会自动建 DNS 记录 `board.moreaix.com → <tunnel-id>.cfargotunnel.com`。
+
+**别把它挂成 `moreaix.com/kindle` 这种路径**：8082 那台 `serve.py` 是 `--prefix=`
+（无前缀），后端期待的是 `/kindle.png`，而 Cloudflare 的路径转发**不会**替你剥掉前缀，
+挂上去只会拿到一排 404。专用子域一行代码都不用改。
+
+### 6.2 边缘缓存也要 bypass
+
+Cloudflare 默认会替静态扩展名（含 `.png`）在边缘存一份，优先级高过源站发的
+`Cache-Control`，结果是「图早就重画了、浏览器拿到的还是旧的」。所以沿用同类规矩：
+
+- **Caching → Cache Rules** 新建规则
+- 匹配：`Hostname` `equals` `board.moreaix.com`
+- 动作：**Bypass cache**
+
+### 6.3 Pi 侧先自证健康（隧道转发到 localhost，与外网无关）
+
+```bash
+sudo systemctl status kindle-serve.service
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/kindle.png   # 期望 200
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/            # 期望 200
+```
+
+第二条是 `kindle_page.py` 写的网页看板（见下面 6.4）。它是 `kindle-screen.service`
+的第二条 ExecStart，跟着 feed.xml 的重建一起跑，不用单独装任何东西。
+
+### 6.4 两个地址，各管一摊
+
+| 地址 | 给谁用 |
+|---|---|
+| `https://board.moreaix.com/` | 网页看板：能滚动、能点开原文，条目远远多于一屏 |
+| `https://board.moreaix.com/kindle.png` | 单张 PNG：给 `board.sh` + `eips` 画屏那条路 |
+
+两者读同一份 `feed.xml`，互不依赖：删掉网页那一步，eips 那条路照常工作。
+
+### 6.5 Kindle 老浏览器可能不认 Cloudflare 的证书
+
+KPW2 的实验性浏览器自带的根证书比较旧，遇到现代证书链有可能直接报证书错误
+（而不是「打不开」）。三条解决办法，按顺序试：
+
+1. 先试 `http://board.moreaix.com` —— Cloudflare 默认会重定向到 https，
+   先不用管，看浏览器能不能过；
+2. 报证书错的：SSL/TLS → Edge Certificates → 关掉 **Always Use HTTPS**
+   （可以只对这一个子域配 Configuration Rule，别全局关）；
+3. 还不行就让 `board.sh` 走非加密地址：
+   `BOARD_URL="http://board.moreaix.com/kindle.png" sh board.sh`
+
+> 这一节我没能在真机上验过（这台机器够不到 Kindle），是预案不是结论。
+> 试出来哪一条可用，请回来把这一段改成实际结果。
+
+### 6.6 board.sh 要不要改走公网
+
+默认仍是局域网直连（最快，也不依赖隧道和外网）：
+
+```bash
+sh board.sh                                            # 局域网
+BOARD_URL="https://board.moreaix.com/kindle.png" sh board.sh   # 走公网
+```
+
+只有在「ping 通但所有端口一律超时」时才需要第二种 —— 代价是每 5 分钟的取图都要
+绕 Cloudflare 一圈。注意这是**进程级**环境变量：KUAL 菜单里的「启动常驻刷新」
+用的是默认地址，要长期走公网得改 `start.sh`（或在该脚本里 export）。
+
 ## 常见故障
 
 | 现象 | 原因 / 处理 |

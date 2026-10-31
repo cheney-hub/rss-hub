@@ -98,7 +98,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── golden_snapshot.py       # 生成/更新行为基线
 │   ├── gate_contracts.py        # 跨文件契约：版本 / workflow 调参 / timer 节拍 / 用例数 ↔ 文档
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 242 个用例，零依赖、不联网（数量由门禁核对，别手改）
+├── tests/                   # 257 个用例，零依赖、不联网（数量由门禁核对，别手改）
 │   ├── test_core.py         #   57 例：抓取与序列化的核心行为（清洗、去重、解析、轮播稳态、workflow 参数契约）
 │   ├── test_title_layout.py #   11 例：屏幕宽度折算与标题切点（数字不分家、不留行尾逗号）
 │   ├── test_rotate_edge.py  #   39 例：轮播边界（时钟错乱、池子挤兑、参数极值、屏显串防连播）
@@ -109,6 +109,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── test_pi_serve.py     #   15 例：Pi 静态服务（目录穿越、前缀、304、CORS 与无 Python 版本）
 │   ├── test_pi_rotate_screen.py # 21 例：显示时间线（按需落盘、坏状态自愈、地址不写死）
 │   ├── test_pi_kindle_screen.py # 28 例：Kindle 排版（折行硬上限、只画一遍列表、PNG 原子替换）
+│   ├── test_pi_kindle_page.py   # 15 例：网页看板（伪协议过滤、HTML 转义、空池子不砸旧页）
 │   └── golden.txt           #   行为基线（脚本生成，不手改）
 ├── CHANGELOG.md             # 版本历史与行为变更记录
 ├── CODE_REVIEW.md           # 代码审查标准与流程（提交前必读）
@@ -350,7 +351,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：242 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
+python3 -m unittest discover -s tests -v    # 单测：257 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```

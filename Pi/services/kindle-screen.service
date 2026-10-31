@@ -10,7 +10,16 @@ Environment=PYTHONUNBUFFERED=1
 # 和条目里的时间差一个时区，所以和另外两个单元写同一个 TZ。
 Environment=TZ=Asia/Shanghai
 # 1024x758 = Kindle Paperwhite 2（第 6 代）；换机型只改这一行
-ExecStart=/usr/bin/python3 /home/user/pi-pipeline/kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle --sizes 1024x758
+#
+# 两条命令同一个 oneshot、同一个触发源（feed.xml 一变就跑）：
+#   kindle_screen.py -> kindle.png，eips 画屏那条路用；
+#   kindle_page.py   -> index.html，浏览器 / 公网那条路用。
+# 第一条前面那个 "-" 是必须的：它俩读同一个 feed.xml，池子空的时候**两条都会**
+# 返回 1；没有前缀的话 systemd 一撞上第一条失败就不再往下执行，网页从此不再更新
+# （表现为「屏上是旧图、网页也永远是旧页」这种很难归位的症状）。
+# 由第二条决定单元成败：语义和从前一样（空池 -> journal 里标 failed）。
+ExecStart=-/usr/bin/python3 /home/user/pi-pipeline/kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle --sizes 1024x758
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/kindle_page.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle
 
 # 故意没有 [Install]：本单元只由 kindle-screen.path 在 feed.xml 变化时触发，
 # 不是常驻服务。别 enable 它 —— 开机时 feed.xml 还没重建，enable 了只是白画一张。

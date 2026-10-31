@@ -35,8 +35,13 @@ Kindle: wget → eips -g / fbink -g
 ```bash
 systemctl is-active kindle-screen.path kindle-serve.service
 curl -o /tmp/k.png http://127.0.0.1:8082/kindle.png   # 应为 200 / image/png
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/   # 网页版，也应为 200
 python3 /home/user/pi-pipeline/kindle_screen.py --help
 ```
+
+同一个 `kindle-screen.path` 现在会跑两条：`kindle_screen.py` 出 PNG、`kindle_page.py`
+出 `index.html`（网页看板）。后者能滚动、能点开原文，条目数远多于一屏；不需要的话
+删掉 `kindle-screen.service` 里第二条 `ExecStart`，PNG 那条路不受影响。
 
 ## 客户端（要越狱才能做）
 

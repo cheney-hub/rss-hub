@@ -13,7 +13,12 @@
 # 刻意不写 set -e：这是一个永不退出的循环，一次 wget 失败或 eips 报错都只该记一笔、
 # 继续下一轮；加上 -e 会让整个看板因为一次网络抖动就停摆。
 
-URL="http://192.168.6.6:8082/kindle.png"   # 必须是 Pi 的 wlan0 地址，换 IP 要同步改 JAILBREAK.md
+# 图的来源。默认走家庭局域网直连 Pi；可用 BOARD_URL 覆盖成公网地址：
+#   BOARD_URL="https://board.moreaix.com/kindle.png" sh board.sh
+# 要不要覆盖看现场：局域网直连最快、也不依赖隧道与外网；但凡 Pi 侧的防火墙
+# （nft/ufw/Docker 改过策略时很常见）把入站 TCP 丢了 —— 表现为 ping 得通、
+# 所有端口一律超时 —— 就只能改走公网那条路，代价是每次取图都要绕 Cloudflare 一圈。
+URL="${BOARD_URL:-http://192.168.6.6:8082/kindle.png}"
 TMP="/mnt/us/board.png.new"
 IMG="/mnt/us/board.png"
 LOCK="/mnt/us/board.lock"
