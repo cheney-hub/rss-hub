@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""行为快照：把渲染层全部纯函数 + RSS 生成在固定输入上跑一遍，输出可 diff 的文本。
+"""行为快照：把渲染层主要纯函数 + RSS 生成在固定输入上跑一遍，输出可 diff 的文本。
 
 用途有两个：
 
@@ -13,12 +13,14 @@
        diff /tmp/before.txt /tmp/after.txt      # 必须无输出
 
 2. **回归基线**——`tests/test_golden.py` 拿当前输出跟入库的 `tests/golden.txt`
-   逐字节比对，任何「顺手改了排版」的动作都会在 CI 里现形：
+   逐行比对（换行已归一，CRLF 不会假红），任何「顺手改了排版」的动作都会在 CI 里现形：
 
        python3 tools/golden_snapshot.py --write   # 确认是有意改动后更新基线
        # 别忘了在 CHANGELOG.md 里写清改了什么、为什么
 
-日期、构建时间这类天然会变的东西统一替换成 <DATE>，保证两次输出可逐字节比较。
+日期、构建时间这类天然会变的东西统一替换成 <DATE>，保证两次输出可逐行比较。
+例外是 `pubDate` 的来源样本：那一行故意不归一，否则「改用 ts 现算」这类
+语义变化会被 <DATE> 一起吞掉（见 _sec_pubdate）。
 输入写死在文件里（不读 feeds.txt、不联网），所以它同时是一份「已知输出的样本集」。
 """
 import io
@@ -63,7 +65,7 @@ SUMMARIES = [
 
 
 def norm(s):
-    """把时间戳和版本号换成占位符，让两次输出可逐字节比较。
+    """把时间戳和版本号换成占位符，让两次输出可逐行比较。
 
     版本号也必须归一：不然每次发版都要重生成基线，
     基线一改就没人知道「这次变的到底是排版还是版本号」。
@@ -131,13 +133,34 @@ def _sec_dedupe(w):
 
 
 def _sec_rss(w):
-    """两份 RSS 的逐字节输出：任何字段顺序 / 转义 / 截断的变化都会在这里现形。"""
+    """两份 RSS 的完整输出：任何字段顺序 / 转义 / 截断的变化都会在这里现形。"""
     rich = _rich_items()
     stats = {"total": 3, "ok": 3, "stale": 0, "fail": 0, "items": len(rich), "dropped": 0}
     w("\n== build_rss（设备版）==")
     w(norm(R.build_rss([dict(r) for r in rich], "http://x/feed.xml", stats, screen=True)))
     w("\n== build_rss（完整版）==")
     w(norm(R.build_rss([dict(r) for r in rich], "http://x/feed.xml", stats)))
+
+
+def _sec_pubdate(w):
+    """`<pubDate>` 的取值来源：有 `date_raw` 用源站原文，没有才用 `ts` 现算。
+
+    这一行**故意不归一**。两种来源经 `norm()` 之后都是 `<DATE>`，所以只留归一后的
+    样本的话，「悄悄把 date_raw 换成 ts」这种语义变化在基线里完全看不出来
+    （2026-10 实测：改了优先级，基线一行都没变、112 条用例全绿）。
+    `ts=2000` 是固定值，渲染结果是 1970-01-01 那一串，跨机器跨时间都一致；
+    有 date_raw 的那条用的是写死的原文，也不随时间变。
+    """
+    cases = (
+        ("date_raw", {"title": "带 date_raw", "link": "http://x/p1", "src": "s",
+                      "date_raw": "Thu, 29 Oct 2026 12:00:00 +0800", "ts": 2000}),
+        ("ts", {"title": "只有 ts", "link": "http://x/p2", "src": "s", "ts": 2000}),
+    )
+    w("\n== pubDate 来源 ==")
+    for label, it in cases:
+        xml = R.build_rss([it], "http://x/feed.xml", {"total": 1})
+        line = [ln for ln in xml.splitlines() if "<pubDate>" in ln]
+        w("pubDate(%s)=%s" % (label, line[0] if line else "<无>"))
 
 
 def _sec_rotate(w):
@@ -196,12 +219,18 @@ def _rich_items():
 def snapshot():
     """跑一遍全部样本，返回快照文本（纯函数：不读文件、不联网、不写文件）。"""
     out = []
-    for section in (_sec_layout, _sec_text, _sec_dedupe, _sec_rss, _sec_rotate):
+    for section in (_sec_layout, _sec_text, _sec_dedupe, _sec_rss, _sec_pubdate, _sec_rotate):
         section(out.append)
     return "\n".join(out) + "\n"
 
 
 def main():
+    """打印快照；带 `--write` 时覆盖写 tests/golden.txt（统一 LF）。
+
+    两个模式的用途不同：不带参数是「重构前后各跑一次再 diff」（只打印、不落盘），
+    带 `--write` 是「确认这次排版改动是有意的，更新入库基线」——后者必须在
+    CHANGELOG 里写清改了什么、为什么，否则下次没人知道基线为什么变。
+    """
     text = snapshot()
     if "--write" in sys.argv[1:]:
         os.makedirs(os.path.dirname(GOLDEN), exist_ok=True)

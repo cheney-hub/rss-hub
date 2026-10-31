@@ -4,18 +4,21 @@
 
 为什么不用 cron 直接每 5 分钟触发：
   GitHub Actions 的 schedule 最小间隔虽是 5 分钟，但官方明确「高负载时会延迟甚至丢档」，
-  实测新仓库 50 分钟内 0 次触发。所以改成「每小时触发一次，作业内自己循环 12 轮」，
-  每轮：采集 → 打包 docs/ → 部署 Pages → 对齐到下一个 5 分钟整点。
+  实测新仓库 50 分钟内 0 次触发。所以改成「每小时触发一次，作业内自己循环 CYCLES 轮
+  （默认 13 轮）」，每轮：采集 → 打包 docs/ → 部署 Pages → 对齐到下一个 5 分钟整点。
+  **注意**：产物的 `on:` 现在只有 workflow_dispatch（定时已停用，日常更新由 rss.yml
+  每天 3 次负责），作业内循环只在手动 dispatch 时跑一次，别拿它当线上节奏。
 
 为什么用 artifact 部署而不是 commit：
   Pages 传统构建（从分支发布）有 10 次/小时软限制，5 分钟一次虽然不会超，
   但官方文档明确「用自定义 GitHub Actions 工作流构建并发布时不受该限制」，artifact 更稳。
 
 节拍与轮播的关系：
-  设备 5 分钟刷新一次，后台也 5 分钟一轮。轮播游标（docs/rotate.json）用「时间窗」判断，
+  设备 5 分钟刷新一次（Pi 的 rss-rotate.timer），轮播游标（docs/rotate.json）用「时间窗」判断，
   同一窗内重复构建不推进，所以重跑、手动触发、作业重叠都不会让屏幕跳条。
 
-用法：python tools/gen_minute_workflow.py [轮数]
+用法：python tools/gen_minute_workflow.py            # 按模块常量 CYCLES（默认 13 轮）生成
+      python tools/gen_minute_workflow.py 6          # 临时改轮数（生成物会与门禁默认值不一致，仅供试验）
 """
 
 import io
@@ -23,7 +26,11 @@ import os
 import sys
 
 PERIOD = 300                                   # 每轮节拍（秒）= 设备刷新周期
-CYCLES = int(sys.argv[1]) if len(sys.argv) > 1 else 13
+# 轮数可用 argv 覆盖，但**门禁（tools/review_check.py）按默认值重生成并逐字节比对**，
+# 所以真正改轮数请改这里的默认值，别只在命令行传参——传参会生出一份门禁判成「手改」的文件。
+# 只认纯数字：`python -m unittest` 之类的命令行里 argv[1] 可能是 "discover"，直接 int() 会崩。
+_ARG = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1].strip().isdigit() else None
+CYCLES = int(_ARG) if _ARG else 13
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, ".github", "workflows", "minute.yml")
 
@@ -31,13 +38,17 @@ HEAD = """name: RSS 五分钟节拍发布
 
 # 本文件由 tools/gen_minute_workflow.py 生成，改结构请改脚本后重新生成。
 #
-# 节奏：北京时间 06:00–23:59（UTC 22,23,0-15）每整点 :07 触发一次，作业内连续跑 {cycles} 轮，
-#   每轮 5 分钟；北京时间 00:00–06:00 交给 nightly.yml，每小时一次。
-#   :07 起跑 → 各轮对齐到 :10 :15 … :55 :00 :05，跑完约 58 分钟，等下一个 :07。
+# **当前定时已停用**：`on:` 只剩 workflow_dispatch。下面描述的是「触发之后怎么跑」，
+#   不代表线上节奏 —— 日常更新由 rss.yml（每天 3 次）与 Pi 上的 rss-build / rss-rotate
+#   timer 负责；这里保留作业内循环，是为了手动 dispatch 一次就能连续补一轮（约一小时）。
+# 节奏（手动触发时）：作业内连续跑 {cycles} 轮，每轮 5 分钟；
+#   :07 起跑 → 各轮对齐到 :10 :15 … :55 :00 :05，跑完约 63 分钟
+#   （{cycles} × 5 分钟 = 65 分钟上限，扣掉最后一轮对齐的余量）。
 #   每轮 = 抓 feeds.txt 里全部源 × PER_SOURCE 条 → 打包 docs/ → 部署到 Pages → 对齐到下一个 5 分钟整点
 #   （源数不写死：加减源只改 feeds.txt，这里跟注释无关，写个数字反而会过期）
 # 为什么这么绕：GitHub 的 cron 最短 5 分钟且会丢档，只能「小时级 cron + 作业内循环」——
-#   这样只要 cron 兑现一次，就能连续覆盖约一小时。Pages 部署量也从 990 次/天降到 216 次/天。
+#   这样只要 cron 兑现一次，就能连续覆盖约一小时。Pages 部署量也从 990 次/天降到 234 次/天
+#   （{cycles} 轮 × 18 小时）。
 # 轮播：设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml），GitHub 这份只发布完整版
 # feed.xml 给阅读器订阅；游标记在 docs/rotate.json，
 #   随 Pages 一起发布；同一时间窗内重复构建不推进，所以多跑几轮也不会跳条。
@@ -46,10 +57,10 @@ HEAD = """name: RSS 五分钟节拍发布
 #   为什么不再钉 00 点那一轮：GitHub 常把 00:07 档整档跳过，钉死等于当天不备份（2026-10-30 实测）。
 # 拉代码：每小时首轮 git pull 一次（不是每天），推送的代码最长 60 分钟生效。
 #
-# 兑现率（2026-10-30 实测，别拿设计值当承诺）：上面这些都只是「触发后怎么跑」。
-#   GitHub 的 cron 在这台仓库 12 小时只兑现 4 档（预期 ~144 档），开始时间偏移 15~46 分钟。
-#   所以真实节奏是「约每 1~3 小时一版」，5 分钟节拍只是作业内部的循环粒度。
-#   要真做到 5 分钟一版，只能靠外部定时器 dispatch（OPERATIONS §10）。
+# 兑现率（2026-10-30 实测，当时 schedule 还开着，别拿设计值当承诺）：
+#   GitHub 的 cron 在这台仓库 12 小时只兑现 4 档（预期 ~144 档），开始时间偏移 15~46 分钟，
+#   真实节奏变成「约每 1~3 小时一版」，5 分钟节拍只是作业内部的循环粒度。
+#   这是定时最终被停用、日常节奏交给 rss.yml（每天 3 次）的直接原因。
 
 on:
   # 定时已停用：日常更新改由 rss.yml 每天 3 次（北京时间 08/13/18）负责。
@@ -157,6 +168,11 @@ CYCLE_TPL = """
 
 
 def main():
+    """把 HEAD + CYCLES 段 CYCLE_TPL 拼起来写进 .github/workflows/minute.yml。
+
+    无条件覆盖写、统一 LF：产物是生成物，手改会在门禁里被判成漂移。
+    轮数取自模块常量（可用 argv 临时覆盖，但门禁按默认值重生成，别靠命令行定稿）。
+    """
     parts = [HEAD.format(cycles=CYCLES)]
     for n in range(1, CYCLES + 1):
         parts.append(CYCLE_TPL.format(n=n, period=PERIOD))
