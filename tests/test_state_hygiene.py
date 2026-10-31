@@ -96,22 +96,50 @@ class TestMalformedStateFields(unittest.TestCase):
 
     def test_window_not_a_number_is_treated_as_absent(self):
         """window 是字符串：当「没有状态」，照常推进到当前窗。"""
-        it, st, note = self._pick(self._state(window="not-a-number"))
+        it, st, note = self._pick(self._state(window="abc"))
         self.assertIsNotNone(it, "坏 window 不能让选条失败")
         self.assertIn("新窗推进", note)
         self.assertEqual(st["window"], 100, "坏 window 当成 0，于是当前窗就是新窗")
 
     def test_window_not_a_scalar_does_not_crash(self):
-        """window 是列表：int() 抛的是 TypeError 而不是 ValueError，守卫要一起吞。"""
-        it, st, _ = self._pick(self._state(window=[1]))
-        self.assertIsNotNone(it, "TypeError 型坏值同样不能崩")
-        self.assertEqual(st["window"], 100)
+        """window 是列表 / 字典：int() 抛的是 TypeError 而不是 ValueError，守卫要一起吞。"""
+        for bad in ([1], {"a": 1}):
+            it, st, _ = self._pick(self._state(window=bad))
+            self.assertIsNotNone(it, "%r 这种坏值同样不能崩" % (bad,))
+            self.assertEqual(st["window"], 100)
+
+    def test_numeric_string_window_behaves_like_int(self):
+        """数字字符串窗号是**合法值**：`"5978038"` 必须与 `5978038` 逐项等效。
+
+        反过来「字符串一律当坏值」会引入每轮都丢状态重开的真 bug（shown 被清空、
+        同批条目重播），所以这里断的是等价性，不是「重开」。
+        比较字段而不是整份 dict：`updated` 是当前时间，两次调用可能差一秒。
+        """
+        w = 5978038
+        base = self._state(window=w - 1)          # 落后一窗 → 走「新窗推进」分支
+        as_int = self._pick(base, w=w)
+        as_str = self._pick(dict(base, window=str(w - 1)), w=w)
+        self.assertEqual(item_guid(as_int[0]), item_guid(as_str[0]), "选中的必须是同一条")
+        self.assertEqual(as_int[2], as_str[2], "说明文字必须一致")
+        for k in ("window", "cycle", "shown", "recent"):
+            self.assertEqual(as_int[1][k], as_str[1][k], "落盘字段 %s 必须一致" % k)
+
+    def test_dwell_mismatch_discards_state(self):
+        """dwell 与当前节拍不一致 → 整份状态作废重开（这条分支原先零覆盖）。
+
+        把 `!=` 写成 `==`、或改成「静默沿用旧状态」，别的用例都不会红 ——
+        所以这里锁的是重开的**可观测证据**：cycle 归 1、shown 只剩本窗一条。
+        """
+        it, st, _ = self._pick(self._state(dwell=DWELL * 2, cycle=7, shown=["旧的"]))
+        self.assertEqual(st["cycle"], 1, "节拍变了必须重开一轮")
+        self.assertEqual(st["shown"], [item_guid(it)], "旧标记必须被清掉")
+        self.assertEqual(st["dwell"], DWELL, "重开后的状态要写回当前节拍")
 
     def test_dwell_not_a_number_discards_state(self):
-        """dwell 写坏 = 节拍不符 → 整份状态作废重开，不能回落到默认值继续用。
+        """dwell 写坏（非数字）= 节拍不符 → 整份状态作废重开，不能回落到默认值继续用。
 
-        回落成默认 300 会让 `int(dwell) != dwell` 恒假、旧 cycle / shown 被静默沿用，
-        比崩溃更隐蔽，所以这里断的是「重开的可观测证据」而不是「没崩」。
+        回落成默认 300 会让 `_int(dwell) != dwell` 恒假、旧 cycle / shown 被静默沿用，
+        比崩溃更隐蔽，所以这里断的同样是「重开的可观测证据」而不是「没崩」。
         """
         it, st, _ = self._pick(self._state(dwell="not-a-number", cycle=7, shown=["旧的"]))
         self.assertEqual(st["cycle"], 1, "坏 dwell 必须重开一轮")
