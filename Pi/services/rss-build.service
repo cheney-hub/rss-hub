@@ -7,19 +7,36 @@ After=network-online.target
 Type=oneshot
 User=user
 WorkingDirectory=/home/user/rss-hub
+# 让脚本内部的时间（日志、pubDate 里的显示时间）与系统时区一致。
+# 注意它**不影响** rss-build.timer 的 OnCalendar：日历定时按系统时区解释，
+# Environment 只作用于本进程。所以 Pi 的 timedatectl 必须设成 Asia/Shanghai
+# （见 Pi/README.md「时区」一节），否则 07..23 的日夜节拍会整体偏移。
+Environment=TZ=Asia/Shanghai
+
 Environment=FEEDS_FILE=/home/user/rss-hub/feeds.txt
 Environment=OUT_FILE=/home/user/rss-hub/docs/feed.xml
 Environment=FEED_URL=https://moreaix.com/rss/feed.xml
 # 抓取只负责完整版 feed.xml（池子）。设备版与显示游标交给 rss-rotate.service，
-# 所以这里把它俩指到临时目录：抓取一小时跑一次，不该顺手把屏幕也定住一小时。
+# 所以这里把它俩指到临时目录：抓取白天每 5 分钟一轮、夜间每小时一轮，
+# 不该顺手替屏幕决定「现在播哪一条」（两者节奏不同，捆一起屏幕就会僵住）。
 Environment=SCREEN_OUT=/tmp/feed-wrap-build.xml
 Environment=ROTATE_STATE=/tmp/rotate-build.json
 Environment=ROTATE_STATE_URL=http://127.0.0.1:8080/rss/rotate.json
 Environment=PER_SOURCE=5
 Environment=ITEM_LIMIT=120
+# 必须与 rss-rotate.service 的同名项相等：池子大小不同，build 选条与屏幕选条
+# 看到的就不是同一批条目，轮播会选出「build 眼里早已不在池里」的内容。
 Environment=ROTATE_POOL_MAX=120
 Environment=SOURCE_TZ_OFFSET=8
 Environment=CONCURRENCY=10
 Environment=FETCH_TIMEOUT=15
+
+# 默认 TimeoutStartSec=90s 会把这一轮直接打断：49 个源 / 并发 10 = 5 批，
+# 每源最坏 15s 超时 + 1s 退避 + 再 15s 重试 = 31s，5 批就是 ~155s。
+# 被 SIGTERM 时 feed.xml 不会更新（_write 是最后一步原子替换），
+# 表现是「feed 停更但没有任何报错」，只能靠事后翻 journal 才发现。
+TimeoutStartSec=900
+TimeoutStopSec=30
+
 # flock：上一轮还没跑完就跳过本 tick，绝不并发两轮
 ExecStart=/bin/bash -c 'exec 9>/tmp/rss-build.lock; flock -n 9 || exit 0; exec /usr/bin/python3 /home/user/rss-hub/build_feed.py'

@@ -1,8 +1,9 @@
 name: RSS 聚合（改源即时发布）
 
-# 日常节奏由 minute.yml 负责（每小时连续跑 13 轮，每轮 5 分钟）。
-# 本工作流只处理一类场景：feeds.txt / build_feed.py 被改动后，立刻重建并发布一次，
-# 免得等下一个整点。不做定时任务，避免和 minute.yml 抢 Pages 部署。
+# 日常更新的唯一节拍在这里：北京时间每天 08:00 / 13:00 / 18:00 各发一版
+# （GitHub cron 用 UTC，即 00/05/10 点）。minute.yml 与 nightly.yml 的 schedule 都已停用，
+# 要临时高频时手动 dispatch 那两份。
+# 另外 feeds.txt / 引擎代码被改动时立刻重建发布一次，免得等下一个整点。
 
 on:
   schedule:
@@ -20,6 +21,9 @@ on:
       - ".github/workflows/rss.yml"
 
 concurrency:
+  # 这个 group 只防「自己和自己」重叠（手动 dispatch 连点、push 与 schedule 撞一起）。
+  # 和 minute.yml / nightly.yml 不是同一个 group，抢不到它们；Pages 同一时刻只允许
+  # 一个部署，那件事靠下面「等 Pages 空档 + 重新部署」两步兜。
   group: rss-oneshot
   cancel-in-progress: true
 
@@ -45,8 +49,9 @@ jobs:
           python-version: "3.12"
 
       - name: 抓取并生成 feed（单轮）
-        # 参数必须与 minute.yml 一致：这里少写一项就会写成代码默认值，
-        # 出现「手动改源那一次排版跟平时不一样」的怪现象（历史上 SCREEN_BODY_MAX 就写错过）
+        # 参数必须与 nightly.yml / minute.yml 那两份逐字一致：少写一项就会静默落回
+        # 代码默认值，出现「这一版排版跟平时不一样」的怪现象（历史上 SCREEN_BODY_MAX 写错过）。
+        # 唯一的例外是 SCREEN_OUT / ROTATE_STATE：那两项三份都指向各自的 runner 临时目录。
         env:
           REFRESH_SECONDS: "0"
           FEED_URL: "https://cheney-hub.github.io/rss-hub/feed.xml"
@@ -59,6 +64,9 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 游标也丢到 runner 临时目录：设备版已不在 GitHub 侧发布，docs/rotate.json
+          # 没有任何读者，没必要每轮多传一个文件上 Pages（Pi 有自己的游标）。
+          ROTATE_STATE: "${{ runner.temp }}/rotate.json"
           # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
           # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
           SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"

@@ -6,7 +6,11 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=user
+# 主页产物（index.html + logo*.svg）放在 /home/user/site，serve.py 只读地发出去。
 WorkingDirectory=/home/user/site
+# 8081 与 8080 都只绑默认的 127.0.0.1：公网入口只有 Cloudflare Tunnel
+# （根域 / → 8081，/rss → 8080），本机不开任何公网端口。
+# --prefix= 表示不要 /rss 那层前缀 —— 根域主页就挂在 / 上。
 ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix=
 Restart=always
 RestartSec=5

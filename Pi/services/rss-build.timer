@@ -3,6 +3,8 @@ Description=RSS build timer (day every 5 min; night 00:00-07:00 hourly)
 
 [Timer]
 # 节拍：白天 07:00-23:59 每 5 分钟；夜间 00:00-06:59 每小时整点一次
+# 这两条 OnCalendar 按**系统时区**解释（timer 单元里的 Environment=TZ 对它无效），
+# 所以 Pi 的 timedatectl 必须是 Asia/Shanghai，否则日夜节拍会整体偏一个时区。
 OnBootSec=45s
 OnCalendar=*-*-* 07..23:0/5:00
 OnCalendar=*-*-* 00..06:00:00

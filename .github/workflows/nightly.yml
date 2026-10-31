@@ -1,10 +1,12 @@
 name: RSS 夜间整点发布
 
-# 北京时间 00:00–06:00（UTC 16:00–21:59）降为每小时一次。
-# 白天的高频由 minute.yml 负责，两者按 UTC 小时互斥，不重叠：
-#   minute.yml   UTC 22,23,0-15  → 北京 06:00–23:59，5 分钟一轮
-#   nightly.yml  UTC 16-21       → 北京 00:00–05:59，每小时一轮
-# 深夜新闻源更新稀少，没必要 5 分钟抓一轮；轮播相应变成一小时换一条。
+# schedule 已停用（见下面 on: 里的注释）：日常更新由 rss.yml 每天 3 次负责。
+# 这份保留下来只为两件事：需要时手动 dispatch 跑一轮「抓取 + 发布」，
+# 以及 rss.yml 出问题时的备用通道。
+#
+# 历史背景（当时的设计，现在不生效）：夜间 00:00–06:00 每小时一次、白天交给
+# minute.yml 5 分钟一轮，两者按 UTC 小时互斥。如今 minute.yml 的定时也停了，
+# 「夜间轮播变成一小时一条」这句话已经不成立 —— Pi 侧的显示节拍是固定 5 分钟。
 
 on:
   # schedule:  # 已停用：日常更新改由 rss.yml 每天 3 次（北京 08/13/18）负责
@@ -12,8 +14,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # 与 minute.yml 同一个组：Pages 同一时刻只允许一个部署，
-  # 撞上时排队而不是报 "in progress deployment"。两个工作流时段互补，正常不会排队。
+  # 与 minute.yml 同一个组：Pages 同一时刻只允许一个部署，撞上时排队
+  # 而不是直接报 "in progress deployment"。（rss.yml 用的是另一个 group，
+  # 它靠「等 35 秒再重新部署」兜，所以不在这里。）
   group: rss-pages
   cancel-in-progress: false
 
@@ -51,6 +54,9 @@ jobs:
           ITEM_LIMIT: "120"
           ROTATE_SECONDS: "300"
           ROTATE_POOL_MAX: "120"
+          # 游标也丢到 runner 临时目录：设备版已不在 GitHub 侧发布，docs/rotate.json
+          # 没有任何读者，没必要多传一个文件上 Pages（Pi 有自己的游标）。
+          ROTATE_STATE: "${{ runner.temp }}/rotate.json"
           # 设备版只在树莓派上发（moreaix.com/rss/feed-wrap.xml）。GitHub 这份只供阅读器
           # 订阅完整版 feed.xml，所以把设备版输出丢到 runner 临时目录，不进 docs/、不发布。
           SCREEN_OUT: "${{ runner.temp }}/feed-wrap.xml"

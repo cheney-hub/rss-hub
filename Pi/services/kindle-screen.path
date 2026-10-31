@@ -2,9 +2,14 @@
 Description=Re-render Kindle board whenever feed.xml is rebuilt
 
 [Path]
-# rss-build 每轮结束时重写 feed.xml，这里跟着重画一次图。
-# 用 path 而不是 timer：不做无谓轮询，feed 不动就一次都不跑。
-PathModified=/home/user/rss-hub/docs/feed.xml
+# rss-build 每轮结束都会重写 feed.xml，这里跟着重画一次图。
+# 用 path 而不是 timer：不做无谓轮询（每轮构建都会重画一次，不构建就不跑）。
+#
+# 用 PathChanged 而不是 PathModified：build_feed._write() 是「写 .tmp + os.replace」，
+# 被监视的那个 inode 会被换掉，IN_MODIFY 根本不会发生 —— systemd 只会打一行
+# "possibly broken watch ... retrying" 再重新挂 watch，单元不触发，屏幕从此不再更新。
+# PathChanged 覆盖「文件被 rename 覆盖」这一情形，才和这种写入方式对得上。
+PathChanged=/home/user/rss-hub/docs/feed.xml
 Unit=kindle-screen.service
 
 [Install]

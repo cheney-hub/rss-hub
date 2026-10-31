@@ -6,6 +6,16 @@ After=network-online.target
 Type=oneshot
 User=user
 Environment=PYTHONUNBUFFERED=1
+# 与 rss-build.service 写同一个时区：窗口号按 epoch 秒算本与时区无关，但 stderr 里
+# 打出来的时间、以及将来任何按墙钟判断的逻辑都与它一致才不别扭。
+Environment=TZ=Asia/Shanghai
+# 下面两项必须与 rss-build.service 的同名项逐字相等：
+#   ROTATE_POOL_MAX 不同 → 两边选条看到的池子不是同一批；
+#   ROTATE_SECONDS 与 rss-rotate.timer 的 0/5 不同 → 屏幕换条与推进窗口错位。
+# 写在这里而不是靠 rotate.py 的默认值：默认值一改，Pi 的行为就静默跟着变。
+Environment=ROTATE_SECONDS=300
+Environment=ROTATE_POOL_MAX=120
 # 只读 feed.xml（池子）+ rotate.json（显示游标）→ 重写 feed-wrap.xml。
 # 不联网、不抓源，一次不到 1 秒；可以高频跑，与抓取任务互不干扰。
+# 正文与上一版一致时脚本自己跳过写入，不会每 5 分钟磨一次 SD 卡。
 ExecStart=/usr/bin/python3 /home/user/pi-pipeline/rotate_screen.py

@@ -6,5 +6,11 @@ After=network-online.target
 Type=oneshot
 User=user
 Environment=PYTHONUNBUFFERED=1
+# 页眉右上角那个「更新时间」取 feed.xml 的 mtime 再过 localtime，时区不固定就会
+# 和条目里的时间差一个时区，所以和另外两个单元写同一个 TZ。
+Environment=TZ=Asia/Shanghai
 # 1024x758 = Kindle Paperwhite 2（第 6 代）；换机型只改这一行
 ExecStart=/usr/bin/python3 /home/user/pi-pipeline/kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle --sizes 1024x758
+
+# 故意没有 [Install]：本单元只由 kindle-screen.path 在 feed.xml 变化时触发，
+# 不是常驻服务。别 enable 它 —— 开机时 feed.xml 还没重建，enable 了只是白画一张。

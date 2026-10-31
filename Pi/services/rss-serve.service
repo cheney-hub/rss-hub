@@ -5,9 +5,16 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/rss-hub
-ExecStart=/usr/bin/python3 /home/pi/pi-pipeline/serve.py --root /home/pi/rss-hub/docs --port 8080 --prefix /rss
+User=user
+WorkingDirectory=/home/user/rss-hub
+# --bind 走默认的 127.0.0.1：公网入口只有 Cloudflare Tunnel，cloudflared 从本机回连。
+# 全套服务里只有 kindle-serve（8082）绑 0.0.0.0，那是给局域网里的 Kindle 取图用的。
+# --prefix /rss：对外是 moreaix.com/rss/feed.xml，磁盘上就是 docs/feed.xml，
+# 这一层前缀由 serve.py 剥掉（Tunnel 剥没剥它都认，两种路径都能命中）。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/rss-hub/docs --port 8080 --prefix /rss
+# 无状态只读服务，挂了就重启（5 秒退避）。用 always 而不是 on-failure：
+# docs/ 还没生成时 serve.py 会直接 exit，这类失败必须能自己爬起来，
+# 否则 Tunnel 会一直 502 到有人登录手动 start。
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1

@@ -40,9 +40,10 @@ jobs:
 
       - name: 2/4 语法检查
         run: |
-          # 根目录的 .py 要一个不漏：漏掉 rotate.py / render.py 的话，它们的语法错误
-          # 只能靠第 3 步 import 时才发现，报错信息也更难读
-          python -m compileall -q *.py tools tests
+          # 三个目录都要一个不漏：根目录是引擎，Pi/ 是设备侧脚本（不进 publishing 链路，
+          # 但一样会跑在树莓派上），tools/ 与 tests/ 是门禁自己。
+          # 漏掉 Pi/ 的话，那边的语法错误只能靠第 4 步的 ast.parse 兜，报错也更难读。
+          python -m compileall -q *.py Pi tools tests
           python - <<'EOF'
           import glob, sys, yaml
           bad = 0

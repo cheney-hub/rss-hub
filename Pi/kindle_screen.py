@@ -28,7 +28,8 @@ import xml.etree.ElementTree as ET
 
 from PIL import Image, ImageDraw, ImageFont
 
-# 灰阶：e-ink 只有 16 级灰，浅灰在屏上会糊，所以次要文字用较深的灰而不是常见的 #888
+# 灰阶：e-ink 只有 16 级灰，浅灰在屏上会糊。次要文字（时间戳、页眉时间、页脚）取 140，
+# 和常见的 #888(136) 是同一档；再往浅走一档在 Kindle 上就发虚，再往深又会和正文抢注意力。
 WHITE = 255
 BLACK = 0
 GRAY_META = 140
@@ -76,9 +77,22 @@ def _usable(font, size):
 
 
 _font_cache = {}
+_fallback_warned = False
 
 
 def load_font(size, bold=False):
+    """按候选顺序找一个真有汉字、能用的字体；找不到就退成位图默认字体。
+
+    两层探测：
+    - 外层遍历 pick_font_paths() 的文件（.ttc 里装了多个 family，同一文件能出多套字）；
+    - 内层 index 0..7 逐个试，用 _usable() 确认「中」真的能画出来。
+    内层捕获到异常时用 break 而不是 continue：同一个文件里 index=1 报错就说明这个
+    文件不吃 index（.ttf 只认 0），换下一个文件比继续试 index 更快，也避免把
+    OSError 重试 7 次。找不到任何 CJK 字体时退成 load_default()（西文可读、汉字是
+    豆腐块），并且往 stderr 叫一声——否则整屏豆腐块而日志里一句话都没有。
+    只叫一次：一屏要用 4 套字号 × 若干尺寸，每套都叫一遍会把 journal 刷满。
+    """
+    global _fallback_warned
     key = (size, bold)
     if key in _font_cache:
         return _font_cache[key]
@@ -91,6 +105,9 @@ def load_font(size, bold=False):
             if _usable(f, size):
                 _font_cache[key] = f
                 return f
+    if not _fallback_warned:
+        _fallback_warned = True
+        sys.stderr.write("警告：没有可用的 CJK 字体，退成位图默认字体（汉字会变豆腐块）\n")
     _font_cache[key] = ImageFont.load_default()
     return _font_cache[key]
 
@@ -100,22 +117,52 @@ def atomize(text):
     return SPLIT_KEEP.findall(text)
 
 
+def _cut_to_width(draw, text, font, max_w):
+    """把放不下的文字按字符切到「恰好放得下」，返回 (前段, 剩下的)。
+
+    二分找最长能放下的前缀，避免逐字量（一个 140 字的 URL 逐字量要 140 次 textlength）。
+    至少返回 1 个字符：版面窄到连一个字都放不下时也要往前走，否则调用方会死循环。
+    """
+    lo, hi = 1, len(text)
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if draw.textlength(text[:mid], font=font) <= max_w:
+            lo = mid
+        else:
+            hi = mid - 1
+    return text[:lo], text[lo:]
+
+
 def wrap(draw, text, font, max_w, max_lines):
-    """贪心折行；行首不出现收尾标点（宁可让上一行略微溢出）。"""
+    """贪心折行；行首不出现收尾标点（宁可让上一行略微溢出）。
+
+    单个原子比一整行还宽时（长 URL、没有空格的超长英文词）做字符级硬切：原子是
+    折行的最小单位，切不开就只能整段画出去——实测 140 个 a 在 1024px 宽的版面上
+    量出 1960px，直接糊到画布外面。切完剩下的部分继续按原子往下排。
+    """
     lines, cur = [], ""
     for atom in atomize(text):
         if atom.isspace():
             if cur and draw.textlength(cur, font=font) <= max_w:
                 cur += " "
             continue
-        trial = cur + atom
-        if cur and draw.textlength(trial, font=font) > max_w:
-            lines.append(cur.rstrip())
-            cur = atom.lstrip()
-            if len(lines) >= max_lines:
+        while atom:
+            if draw.textlength(cur + atom, font=font) <= max_w:
+                cur += atom
                 break
-        else:
-            cur = trial
+            if cur:                      # 这一行到此为止；同一个原子在空行上重新量
+                lines.append(cur.rstrip())
+                cur = ""
+                if len(lines) >= max_lines:
+                    atom = ""
+                    break
+                continue
+            head, atom = _cut_to_width(draw, atom, font, max_w)   # 原子自己就超宽
+            lines.append(head)
+            if len(lines) >= max_lines:
+                cur = atom               # 剩下那截留给下面的「…」逻辑
+                atom = ""
+                break
     if len(lines) < max_lines and cur.strip():
         lines.append(cur.strip())
     # 行首标点回挂
@@ -137,7 +184,16 @@ def wrap(draw, text, font, max_w, max_lines):
 
 
 def parse_feed(path):
-    """返回 [(title, summary, hhmm, source)]，取不到就退成空列表而不是崩。"""
+    """返回 [(title, summary, hhmm, source)]，取不到就退成空列表而不是崩。
+
+    hhmm 是**直接从 pubDate 原串里正则抓的 HH:MM，不转时区**：feed 里各源的时间
+    带着各自的时区后缀（+0800 / +0000 / GMT 混着来），所以时间列在混源时可能
+    「非单调」（00:03 后面跟着 16:02）。要改成按 SOURCE_TZ 归一得先动 render 侧
+    的 date_raw 口径，别只在这里加转换。
+
+    title 开头若带「【源名】」会剥掉：当前 render 不写这个前缀，留着是兼容更早的
+    产物与个别仍然自带方括号标题的源。
+    """
     items = []
     try:
         root = ET.parse(path).getroot()
@@ -146,6 +202,7 @@ def parse_feed(path):
         return items
     for it in root.iter("item"):
         def g(tag):
+            """取 <tag> 的文本并清洗（去标签、解实体、压空白）；缺字段给空串。"""
             node = it.find(tag)
             clean = clean_text(node.text) if node is not None and node.text else ""
             return clean
@@ -171,6 +228,11 @@ def _fs(s, base):
 
 
 def _fonts(s):
+    """按缩放系数 s 造出四套字：head 页眉标题 / meta 时间戳 / list 条目标题 / foot 页脚。
+
+    四个角色各自对应版式里的一块，字号写在各处调用点上（_draw_header / _draw_list /
+    draw_board）；这里只管一次取齐，顺带吃 load_font 的缓存。
+    """
     return {
         "head": load_font(_fs(s, 22), bold=True),
         "meta": load_font(_fs(s, 18)),
@@ -180,6 +242,11 @@ def _fonts(s):
 
 
 def _draw_header(d, x0, x1, y, s, fonts, built_at):
+    """画页眉（左「RSS 头条」+ 右更新时间 + 一条分隔线），返回分隔线下方可用的 y。
+
+    返回值就是列表第一行的起点，调用方直接接着画，不用自己再算间距。
+    built_at 是 feed.xml 的 mtime，所以右上角那个时间是「数据时间」而不是「渲染时间」。
+    """
     d.text((x0, y), "RSS 头条", font=fonts["head"], fill=BLACK)
     stamp = time.strftime("%m-%d %H:%M", time.localtime(built_at))
     tw = d.textlength(stamp, font=fonts["meta"])
@@ -214,7 +281,9 @@ def _draw_list(d, x0, y, s, fonts, items, content_w, bottom):
     塞不下就整条不画，避免出现半截行。
     """
     lh = int(_fs(s, 26) * 1.34)
-    time_w = int(_fs(s, 26) * 2.6)
+    # 时间列宽取「2.6em」与「最宽时间串实测宽」的较大者：字号随短边缩放、字体随机器
+    # 不同（Noto / 文泉驿 / Arphic），写死 em 数在换字体时可能和标题贴在一起。
+    time_w = max(int(_fs(s, 26) * 2.6), int(d.textlength("88:88", font=fonts["meta"])))
     gap = int(_fs(s, 26) * 0.45)
     for title, _desc, hhmm, _src in items:
         lines = _fit_title(d, fonts["list"], title, content_w - time_w)
@@ -241,14 +310,24 @@ def draw_board(w, h, items, built_at):
     x0, x1 = m, w - m
     y = _draw_header(d, x0, x1, m, s, fonts, built_at)
     foot_h = int(_fs(s, 17) * 1.8)
+    # 只画一遍：这里曾经连着两行 _draw_list（第二行传 items[1:]），两次都从同一个 y 起笔、
+    # 返回值也不接，于是除最后一行外每行都叠印双字，整版不可读（27f28f1 删 _draw_lead 时漏删）。
+    # 所有条目统一规格之后不存在「头条区 + 列表区」两段，别再拆成两次调用。
     _draw_list(d, x0, y, s, fonts, items, x1 - x0, h - m - foot_h)
-    _draw_list(d, x0, y, s, fonts, items[1:], x1 - x0, h - m - foot_h)
     d.text((x0, h - m - int(_fs(s, 17) * 1.1)),
            "moreaix.com · 共 %d 条" % len(items), font=fonts["foot"], fill=GRAY_META)
     return img
 
 
 def render(feed_path, out_dir, sizes):
+    """把 feed 渲成每种尺寸一张 PNG，并把第一张复制成 kindle.png；返回进程退出码。
+
+    built_at 取 feed.xml 的 mtime，所以页眉写的是「这份数据是什么时候抓的」，
+    不是「这张图是什么时候画的」——两者差几分钟时前者更有意义。
+    每张图都先写 .tmp 再 os.replace：Kindle 那头正在 wget 时也不会读到半张图
+    （读到半张 PNG 会直接画失败，屏幕停在上一版）。
+    池子空时返回 1 且不碰旧图：宁可屏上停一条旧的，也别把画面刷成空白。
+    """
     items = parse_feed(feed_path)
     if not items:
         sys.stderr.write("no items, keep old png untouched\n")
@@ -277,6 +356,11 @@ def render(feed_path, out_dir, sizes):
 
 
 def parse_sizes(text):
+    """把 "1024x758,800x600" 解析成 [(w, h), ...]；格式不对直接 sys.exit。
+
+    故意用 sys.exit 而不是抛异常：尺寸是 systemd 单元里写死的参数，写错就该在启动
+    那一下失败并让 journal 记下原因，而不是带着错参数跑出一堆怪图。
+    """
     out = []
     for part in text.split(","):
         part = part.strip().lower()
@@ -288,6 +372,11 @@ def parse_sizes(text):
 
 
 def main():
+    """命令行入口：--feed / --out-dir / --sizes 三个参数，默认值就是 Pi 上的部署路径。
+
+    退出码透传 render 的（0 = 出了新图，1 = 池子空、旧图未动），
+    systemd 据此在 journal 里标 failed。
+    """
     ap = argparse.ArgumentParser(description="feed.xml -> Kindle 灰度 PNG")
     ap.add_argument("--feed", default="/home/user/rss-hub/docs/feed.xml")
     ap.add_argument("--out-dir", default="/home/user/kindle")
