@@ -1,0 +1,55 @@
+{
+	"items": [
+	{
+		"name": "RSS Board",
+		"priority": -900,
+		"items": [
+		{
+			"name": "立即刷新一次",
+			"action": "sh /mnt/us/extensions/rssboard/bin/refresh.sh",
+			"priority": -900,
+			"exitmenu": true,
+			"refresh": false,
+			"status": false,
+			"internal": "Fetching one frame"
+		},
+		{
+			"name": "启动常驻刷新",
+			"action": "sh /mnt/us/extensions/rssboard/bin/start.sh",
+			"priority": -899,
+			"exitmenu": true,
+			"refresh": false,
+			"status": false,
+			"internal": "Starting board loop"
+		},
+		{
+			"name": "停止刷新",
+			"action": "sh /mnt/us/extensions/rssboard/bin/stop.sh",
+			"priority": -898,
+			"exitmenu": true,
+			"refresh": false,
+			"status": false,
+			"internal": "Stopping board loop"
+		},
+		{
+			"name": "查看状态（画在屏幕上）",
+			"action": "sh /mnt/us/extensions/rssboard/bin/status.sh",
+			"priority": -897,
+			"exitmenu": true,
+			"refresh": false,
+			"status": false,
+			"internal": "Printing status"
+		},
+		{
+			"name": "移除本扩展（保留 board.sh）",
+			"action": "sh /mnt/us/extensions/rssboard/bin/uninstall.sh",
+			"priority": -896,
+			"exitmenu": true,
+			"refresh": false,
+			"status": false,
+			"internal": "Removing extension only"
+		}
+		]
+	}
+	]
+}

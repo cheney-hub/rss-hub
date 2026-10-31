@@ -105,13 +105,19 @@ MobileRead Wiki 的 WatchThis 条目。
 
 ## 4. 装 MRPI + KUAL（拿到"能装东西"和"能点东西"的能力）
 
-下载页 <https://kindlemodding.org/jailbreaking/Legacy/post-jailbreak/installing-kual-mrpi> 有两个
-MRPI 按钮，**按机型二选一**，别都装：
+下载页 <https://kindlemodding.org/jailbreaking/Legacy/post-jailbreak/installing-kual-mrpi>，
+2026-11 实测可用的四个直链：
 
-- **MRPI (for modern devices)** → `kual-mrinstaller-khf.zip`（Marek 版）。**我们用这个**：K5 及更新
-  （固件 5.x，含 KPW2 @ 5.12.2.2）。作者原话是「normal mrpi 支持的机器它都支持」。
-- **MRPI (for legacy devices - pre-K5)** → `kual-mrinstaller-1.7.N-r19303.zip`。只给 K4 / K3 / DX
-  这类固件 4.x 及更早的机器。
+| 组件 | 适用 | 直链 |
+|---|---|---|
+| MRPI (modern) | **KPW2 @ 5.12.2.2 用这个**（固件 5.x 的都用它） | <https://kindlemodding.org/jailbreaking/Legacy/post-jailbreak/installing-kual-mrpi/kual-mrinstaller-khf.zip> |
+| MRPI (legacy - pre-K5) | K4 / K3 / DX（固件 4.x 及更早） | <https://kindlemodding.org/jailbreaking/Legacy/post-jailbreak/installing-kual-mrpi/kual-mrinstaller-1.7.N-r19303.zip> |
+| PEKI（KUAL） | K5 及更新，**我们用这个** | <https://github.com/KindleTweaks/PEKI/releases/latest/download/PEKI.zip> |
+| KUAL-KDK-1.0.azw2 | K4 及更早，放 `documents/` | <https://kindlemodding.org/jailbreaking/Legacy/post-jailbreak/KUAL-KDK-1.0.azw2> |
+
+两个 MRPI 按钮**按机型二选一**，别都装：modern 版是 Marek 的 `kual-mrinstaller-khf.zip`
+（作者原话「normal mrpi 支持的机器它都支持」），legacy 版 `kual-mrinstaller-1.7.N-r19303.zip`
+只给 pre-K5 的机器。
 
 1. 解压 MRPI 包（**用 7-Zip 或 `tar`，别用 WinZip**——它解 `.xz` 会坏文件，之后 `;log mrpi`
    只会回一句 "MRPI is not installed"），把里面的 **`extensions`** 和 **`mrpackages`**
@@ -165,13 +171,31 @@ MRPI 按钮，**按机型二选一**，别都装：
 
 ## 7. 上我们的看板
 
+两条路，**装一次就行，选一条**：
+
+**A. scp（最省事，改脚本方便）**
+
 1. `scp Pi/kindle/board.sh root@<kindle-ip>:/mnt/us/board.sh`
 2. `ssh root@<kindle-ip> 'chmod +x /mnt/us/board.sh'`
 3. 先**前台试跑**：`ssh root@<kindle-ip> 'sh /mnt/us/board.sh'`，看屏幕有没有出图。
    不出图就先在本机 curl `http://192.168.6.6:8082/kindle.png` 确认图床是好的，再排 Kindle 侧。
 4. 确认 OK 后常驻：
    `ssh root@<kindle-ip> 'nohup sh /mnt/us/board.sh >/dev/null 2>&1 &'`
-5. Kindle 没有 systemd，**重启后要重新拉一次**。要真正开机自启就把它挂到 KUAL 的启动项里。
+
+**B. KUAL 扩展（之后能在机器上点着用）**
+
+把 `Pi/kindle/extension/rssboard/` 整个目录放到 Kindle 的 `/mnt/us/extensions/` 下，
+KUAL 里会多出一组 **RSS Board** 菜单：立即刷新一次 / 启动常驻刷新 / 停止刷新 /
+查看状态（写屏）/ 移除扩展。菜单不出现就先查 `config.xml` 和 `menu.json` 有没有到位
+——少一个 KUAL 只是静静地不显示，没有任何报错。
+
+**C. 打成 MRPI 安装包（要重装机器时才值得费这个事）**
+
+`Pi/kindle/build-mrpackage.sh` 会把 `board.sh` + 扩展一起包成
+`Update_rssboard_install.bin`，丢进根目录 `mrpackages/` 后 `;log mrpi` 即可安装。
+它需要一台能编 `kindletool` 的 Linux（树莓派就行），详见脚本头注释。
+
+无论哪条路：**Kindle 没有 systemd，重启后都要重新点一次「启动常驻刷新」**（或重新 nohup）。
 
 刷新策略（按 `board.sh` 实际行为）：每 **5 分钟拉一次图**，内容变了才 `eips -g` 局部刷屏；
 `FULL_EVERY=10` 是**按真正刷屏的次数**计数，不是墙钟 50 分钟——图长期不变时它会一直等着，
