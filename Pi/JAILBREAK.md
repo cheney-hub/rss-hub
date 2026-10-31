@@ -105,11 +105,27 @@ MobileRead Wiki 的 WatchThis 条目。
 
 ## 4. 装 MRPI + KUAL（拿到"能装东西"和"能点东西"的能力）
 
-1. 解压 MRPI 包，把里面的 **`extensions`** 和 **`mrpackages`** 两个目录拷到 Kindle 根目录。
-2. 解压 KUAL 包，把 `Update_KUALBooklet_*_install.bin` 拷进 `mrpackages/`。
+下载页 <https://kindlemodding.org/jailbreaking/Legacy/post-jailbreak/installing-kual-mrpi> 有两个
+MRPI 按钮，**按机型二选一**，别都装：
+
+- **MRPI (for modern devices)** → `kual-mrinstaller-khf.zip`（Marek 版）。**我们用这个**：K5 及更新
+  （固件 5.x，含 KPW2 @ 5.12.2.2）。作者原话是「normal mrpi 支持的机器它都支持」。
+- **MRPI (for legacy devices - pre-K5)** → `kual-mrinstaller-1.7.N-r19303.zip`。只给 K4 / K3 / DX
+  这类固件 4.x 及更早的机器。
+
+1. 解压 MRPI 包（**用 7-Zip 或 `tar`，别用 WinZip**——它解 `.xz` 会坏文件，之后 `;log mrpi`
+   只会回一句 "MRPI is not installed"），把里面的 **`extensions`** 和 **`mrpackages`**
+   两个目录拷到 Kindle 根目录。
+2. KUAL 两条路，二选一：
+   - **PEKI（页面现在推荐这个）**：解压 `PEKI.zip`，把 `KUAL.sh` 和 `KUAL.jar` 拷进 **`documents/`**，
+     回书库直接点 KUAL 即可，不需要 `;log mrpi`。
+   - **老办法**：`Update_KUALBooklet_*_install.bin` 拷进 `mrpackages/`，再走下面第 3、4 步装上。
 3. 弹出 → 搜索框输 **`;log mrpi`** 回车（或 KUAL → Helper → Install MR Packages）。
 4. 看到 "Hush, little baby" 后 UI 重启，书库里多一本 KUAL 的书。
    期间弹 Application Error 是正常的，关掉即可。
+
+⚠️ 装之前确认有 **约 220 MB** 空余空间；**先开飞行模式再腾空间**，否则 Kindle 可能拿这块空地
+去后台下 OTA 更新，漏洞就白做了。
 
 **`;log mrpi` 完全没反应**（PW2 上有人遇到过）：先装
 [`Update_hotfix_universal.bin`](https://github.com/KindleModding/Hotfix/releases)，再重试 `;log mrpi`。
@@ -157,8 +173,9 @@ MobileRead Wiki 的 WatchThis 条目。
    `ssh root@<kindle-ip> 'nohup sh /mnt/us/board.sh >/dev/null 2>&1 &'`
 5. Kindle 没有 systemd，**重启后要重新拉一次**。要真正开机自启就把它挂到 KUAL 的启动项里。
 
-刷新策略：5 分钟局部刷一次，每 10 次（约 50 分钟）用 `eips -c` 整屏闪一次清残影。
-墨水屏刷太勤既费电也留残影，别把 `INTERVAL` 调太小。
+刷新策略（按 `board.sh` 实际行为）：每 **5 分钟拉一次图**，内容变了才 `eips -g` 局部刷屏；
+`FULL_EVERY=10` 是**按真正刷屏的次数**计数，不是墙钟 50 分钟——图长期不变时它会一直等着，
+不会自己整屏闪。墨水屏刷太勤既费电也留残影，别把 `INTERVAL` 调小。
 
 ---
 
