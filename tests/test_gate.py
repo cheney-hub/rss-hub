@@ -262,6 +262,129 @@ class TestModuleHasTests(Sandbox):
         self.assertEqual([(r[0], r[1]) for r in rep.rows], [(RC.INFO, "Pi/board.py")])
 
 
+class TestCountSync(Sandbox):
+    """README 目录树里的用例数：五态五套文案，每态一个反例。
+
+    为什么逐态断言文案、而不只断言「有没有输出」：这条检查栽过一次**文案说谎**——
+    行尾写成 `# core 逻辑 68 例` 时它报「目录树里没有 test_core.py（实际 68 例）」，
+    文件明明在树里，照着改就会变成两行重复、数字各说各的。只断言「红了」看不出
+    它又在说谎，所以每态都断言「本态关键词在、别态关键词不在」。
+    """
+
+    def _tests(self, **cases):
+        """在临时 tests/ 下造含 n 个用例的文件。
+
+        各态用不同的文件名：`unittest discover` 按模块名导入，同名模块会被
+        sys.modules 缓存串味，前一个用例的用例数会跑到后一个用例里。
+        """
+        shutil.rmtree(os.path.join(self.tmp, "tests"), ignore_errors=True)
+        for name, n in sorted(cases.items()):
+            body = ["import unittest", "", "", "class T(unittest.TestCase):"]
+            for i in range(n):
+                body += ["    def test_%d(self):" % i, "        self.assertTrue(True)"]
+            if not n:
+                body += ["    pass"]
+            self.write("tests/" + name, "\n".join(body) + "\n")
+
+    def _readme(self, rows, total):
+        """造一份带 tests/ 子树的 README；rows 是各文件行的行尾原文。"""
+        lines = ["```", "├── tests/                   # %d 个用例" % total]
+        lines += ["│   ├── " + r for r in rows]
+        lines += ["└── CHANGELOG.md", "```"]
+        self.write("README.md", "\n".join(lines) + "\n")
+
+    def _run(self, cases, rows, total=None):
+        """布置好仓库跑一遍检查，返回 (文案列表, 严重级列表)。"""
+        self._tests(**cases)
+        self._readme(rows, sum(cases.values()) if total is None else total)
+        rep = RC.Report()
+        RC.check_test_count_sync(rep)
+        return [r[3] for r in rep.rows], [r[0] for r in rep.rows]
+
+    def test_state1_matching_counts_passes(self):
+        """状态 1：提到了且数字一致 → 一条都不报（防「永远红」的假阳性）。"""
+        msgs, _ = self._run({"test_sync_ok.py": 3}, ["test_sync_ok.py  # 3 例"])
+        self.assertEqual(msgs, [])
+
+    def test_state2_prose_tail_is_a_format_problem(self):
+        """状态 2：行尾写成散文 → 必须点名是格式问题，不许说成「目录树里没有」。"""
+        msgs, sevs = self._run({"test_sync_prose.py": 3},
+                               ["test_sync_prose.py  # 核心行为 3 例"])
+        self.assertEqual(sevs, [RC.REQUIRED])
+        self.assertIn("不是「# N 例」计数格式", msgs[0])
+        self.assertIn("实际 3 例", msgs[0])
+        self.assertNotIn("目录树里没有", msgs[0])
+
+    def test_state3_not_mentioned_at_all(self):
+        """状态 3：目录树里压根没这一行 → 请同步新增文件。"""
+        msgs, sevs = self._run({"test_sync_absent.py": 3}, [])
+        self.assertEqual(sevs, [RC.REQUIRED])
+        self.assertIn("目录树里没有 test_sync_absent.py", msgs[0])
+        self.assertIn("新增测试文件请同步", msgs[0])
+
+    def test_state4_declared_but_missing_on_disk(self):
+        """状态 4：树里写了但 tests/ 下没有 → 删那行或补文件。"""
+        msgs, sevs = self._run({"test_sync_here.py": 3},
+                               ["test_sync_here.py  # 3 例", "test_sync_gone.py  # 2 例"])
+        self.assertEqual(sevs, [RC.REQUIRED])
+        self.assertIn("test_sync_gone.py 不存在", msgs[0])
+
+    def test_state5_count_mismatch(self):
+        """状态 5：都提到了但数字不符 → 两个数都报出来。"""
+        msgs, sevs = self._run({"test_sync_wrong.py": 3}, ["test_sync_wrong.py  # 5 例"])
+        self.assertEqual(sevs, [RC.REQUIRED])
+        self.assertIn("写的 5 例，实际 3 例", msgs[0])
+
+    def test_total_mismatch_is_required(self):
+        """目录树 `tests/  # N 个用例` 那个总数也要对得上。"""
+        msgs, sevs = self._run({"test_sync_total.py": 3},
+                               ["test_sync_total.py  # 3 例"], total=99)
+        self.assertEqual(sevs, [RC.REQUIRED])
+        self.assertIn("目录树写的 99 个用例，实际 3 个", msgs[0])
+
+    def test_duplicate_count_lines_are_required(self):
+        """同一文件写了两处计数：留着就等于没有唯一答案，必须报。"""
+        msgs, sevs = self._run({"test_sync_dup.py": 3},
+                               ["test_sync_dup.py  # 3 例", "test_sync_dup.py  # 3 例"])
+        self.assertEqual(sevs, [RC.REQUIRED])
+        self.assertIn("2 处计数", msgs[0])
+
+    def test_messages_change_with_state(self):
+        """只改 README 那一行、磁盘上的文件不动：四态必须给出四条**互不相同**的文案。
+
+        这条是上面那些用例的总闸门：它们各断言本态的关键词，这条断言文案不重复，
+        防止有人把某一态又合并回「目录树里没有」那句老话。
+        """
+        cases = {
+            "格式错": ({"test_st_fmt.py": 3}, ["test_st_fmt.py  # 说明文字 3 例"]),
+            "没提到": ({"test_st_miss.py": 3}, []),
+            "文件不在": ({"test_st_disk.py": 3},
+                        ["test_st_disk.py  # 3 例", "test_st_ghost.py  # 2 例"]),
+            "数字错": ({"test_st_num.py": 3}, ["test_st_num.py  # 9 例"]),
+        }
+        got = {}
+        for label, (files, rows) in cases.items():
+            msgs, sevs = self._run(files, rows)
+            self.assertEqual(sevs, [RC.REQUIRED], "状态「%s」必须报必改" % label)
+            got[label] = msgs[0]
+        self.assertEqual(len(set(got.values())), len(got),
+                         "四态文案必须互不相同：%s" % got)
+
+
+class TestCountSyncOnRealRepo(unittest.TestCase):
+    """把**真实** README 喂进检查：仓库此刻必须全绿。
+
+    上面那些用例证明「检查会红」，这条证明「真实仓库没红」——
+    两者缺一就又回到「没人能证明参数变了」的老路。
+    """
+
+    def test_real_readme_counts_match(self):
+        rep = RC.Report()
+        RC.check_test_count_sync(rep)
+        self.assertEqual([r[3] for r in rep.rows], [],
+                         "README 目录树里的用例数与真实用例数不一致")
+
+
 class TestWorkflowSync(Sandbox):
     """H8 的另一半：workflow 里写的数字调参必须等于代码默认值。"""
 

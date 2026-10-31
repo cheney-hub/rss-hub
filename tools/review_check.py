@@ -356,6 +356,57 @@ def _count_cases(tests_dir, pattern):
         tests_dir, pattern=pattern, top_level_dir=tests_dir).countTestCases()
 
 
+# 目录树里每个用例文件的计数只认这一个形状：文件名后紧跟 `# N 例`。
+# 写成「# core 逻辑 68 例」就抽不出数字（见 check_test_count_sync 的状态 2）。
+_RE_CASE_COUNT = re.compile(r"(test[\w.]*\.py)\s*#\s*(\d+)\s*例")
+# 目录树里 tests/ 那一行（`├── tests/  # 166 个用例…`），用来切出 tests 子树
+_RE_TESTS_MARK = re.compile(r"^[│\s]*[├└]──\s+tests/\s*(?:#.*)?$")
+# 「还是目录树的一行」：以树形字符开头。用于判断 tests/ 子树到哪结束
+_RE_TREE_ROW = re.compile(r"^[│├└\s]*[├└]──")
+_RE_TOTAL_TREE = re.compile(r"tests/\s*#\s*(\d+)\s*个用例")
+_RE_TOTAL_PROSE = re.compile(r"单测：(\d+)\s*个用例")
+
+
+def _tests_tree_block(text):
+    """README 目录树里 `tests/` 那一段（**含标记行本身**），找不到就退回整篇。
+
+    为什么要切这一段：状态 2 与状态 3 都叫「没抽到计数」，区别只在于文件名
+    **在不在目录树里**——必须在树内部判断，否则正文里一句「详见 tests/test_core.py」
+    也会被当成「提到了」，报出来的「在目录树里出现了」就是假话。
+
+    两个坑：标记行自己带着「# N 个用例」的总数，切片必须带上它，否则树的总数
+    核对会随着标记样式一改就静默消失；反过来找不到标记时退回整篇——宁可放宽，
+    也不能因为样式变了就不查。返回 (切片文本, 切片首行的绝对行号)。
+    """
+    lines = text.splitlines()
+    for i, ln in enumerate(lines):
+        if not _RE_TESTS_MARK.match(ln):
+            continue
+        block = [ln]
+        for nxt in lines[i + 1:]:
+            if not _RE_TREE_ROW.match(nxt):
+                break
+            block.append(nxt)
+        return "\n".join(block), i + 1
+    return text, 1
+
+
+def _case_count_hits(block, base_line, name):
+    """目录树切片里 name 的每一处出现：[(行号, 计数)]，行尾没有 `# N 例` 时计数为 None。
+
+    行号取的是 README 里的**绝对行号**（切片起始行号 + 偏移），报告里要能直接跳过去。
+    """
+    mention = re.compile(r"(?<![\w.-])" + re.escape(name) + r"(?![\w.-])")
+    counted = re.compile(re.escape(name) + r"\s*#\s*(\d+)\s*例")
+    out = []
+    for i, ln in enumerate(block.splitlines(), base_line):
+        if not mention.search(ln):
+            continue
+        m = counted.search(ln)
+        out.append((i, int(m.group(1)) if m else None))
+    return out
+
+
 def check_test_count_sync(rep):
     """README 里写的用例数必须等于 `unittest discover` 实际数到的数。
 
@@ -364,6 +415,21 @@ def check_test_count_sync(rep):
     `tests/test_dedupe.py`。数字是手抄的，加一个文件就少同步一处；
     机器数得出来的东西不该让人抄（本项目栽过两次：`ROTATE_MAX_LAG`、`sim --seed`，
     都是「参数变了没人能证明」）。所以这里按实际数核对，写错就是必改。
+
+    它自己还栽过一次**文案**事故（第三次同类）：有人把行尾写成
+    `# core 逻辑 68 例`，计数正则抽不出数字，旧实现就报
+    「目录树里没有 test_core.py（实际 68 例）」——文件明明在树里，这条却叫人
+    再去加一行，照做就变成两行重复、数字各说各的。所以下面按五态分开给文案：
+
+      1. 树里有且计数一致          → 不报
+      2. 树里有但行尾不是 `# N 例` → 必改，**点名是格式问题**，不叫人加文件
+      3. 树里压根没提到            → 必改，请同步新增文件
+      4. 树里提到了、tests/ 下没有 → 必改，删掉那行或补上文件
+      5. 都提到了但数字不符        → 必改，两个数都报出来
+
+    状态 2 与 3 靠「文件名在目录树切片里有没有出现」区分，只看抽出来的数字
+    会把这两件事混成一个（那正是上面那次事故的原因）。同一文件被写了两处计数
+    也报必改：留着两行就等于没有唯一答案。
     """
     tests_dir = os.path.join(ROOT, "tests")
     readme = os.path.join(ROOT, "README.md")
@@ -379,28 +445,69 @@ def check_test_count_sync(rep):
     total = sum(actual.values())
 
     text = read(readme)
-    # 目录树里的两处：「tests/  # N 个用例」和各文件行尾的「# N 例」
-    declared = {}
-    for m in re.finditer(r"(test[\w.]*\.py)\s*#\s*(\d+)\s*例", text):
-        declared[m.group(1)] = int(m.group(2))
-    for n in sorted(set(names) | set(declared)):
-        if n not in declared:
+    block, base = _tests_tree_block(text)
+    _check_case_files(rep, names, actual, block, base)
+    _check_case_totals(rep, text, block, base, total, actual)
+
+
+def _declared_counts(block, base):
+    """目录树里声明过的用例文件：{名字: [(行号, 计数)]}，含 tests/ 下已没有的那些。"""
+    out = {}
+    for m in _RE_CASE_COUNT.finditer(block):
+        out.setdefault(m.group(1), []).append(
+            (base + block[:m.start()].count("\n"), int(m.group(2))))
+    return out
+
+
+def _check_case_files(rep, names, actual, block, base):
+    """状态 1–5：tests/ 下每个文件的计数行「有没有 / 格式对不对 / 数字对不对」。
+
+    拆出来是因为五种状态各有一套文案，全塞进 check_test_count_sync 会超过
+    单函数 60 行的上限——但拆分不能把某一种状态悄悄丢掉，每态都要能被造红。
+    """
+    declared = _declared_counts(block, base)
+    for n in names:                                          # 状态 1/2/3/5
+        hits = _case_count_hits(block, base, n)
+        if not hits:                                         # 状态 3
             rep.add(REQUIRED, "README.md", 0,
-                    "目录树里没有 %s（实际 %d 例），新增测试文件请同步" % (n, actual.get(n, 0)))
-        elif n not in actual:
-            rep.add(REQUIRED, "README.md", 0, "目录树里的 %s 不存在" % n)
-        elif declared[n] != actual[n]:
-            rep.add(REQUIRED, "README.md", 0,
-                    "%s 写的 %d 例，实际 %d 例" % (n, declared[n], actual[n]))
-    for m in re.finditer(r"tests/\s*#\s*(\d+)\s*个用例", text):
+                    "目录树里没有 %s（实际 %d 例），新增测试文件请同步" % (n, actual[n]))
+            continue
+        counted = [(ln, v) for ln, v in hits if v is not None]
+        if not counted:                                      # 状态 2
+            rep.add(REQUIRED, "README.md", hits[0][0],
+                    "%s 在目录树里出现了，但那一行的行尾不是「# N 例」计数格式"
+                    "（实际 %d 例）；数字必须能被机器抽出来，别写成散文"
+                    % (n, actual[n]))
+            continue
+        if len(counted) > 1:
+            rep.add(REQUIRED, "README.md", counted[0][0],
+                    "%s 在目录树里写了 %d 处计数（第 %s 行），只保留一处，"
+                    "否则以哪个为准说不清"
+                    % (n, len(counted), "、".join(str(ln) for ln, _ in counted)))
+        if counted[0][1] != actual[n]:                       # 状态 5
+            rep.add(REQUIRED, "README.md", counted[0][0],
+                    "%s 写的 %d 例，实际 %d 例" % (n, counted[0][1], actual[n]))
+
+    for n in sorted(set(declared) - set(names)):             # 状态 4
+        rep.add(REQUIRED, "README.md", declared[n][0][0],
+                "README 目录树里的 %s 不存在（tests/ 下没有）" % n)
+
+
+def _check_case_totals(rep, text, block, base, total, actual):
+    """用例总数：目录树 `tests/  # N 个用例` 与正文「单测：N 个用例」两处。
+
+    前者在树切片里找（标记行本身就在切片里），后者在正文里找；切片退化成整篇时
+    两处都还能找到——「标记样式变了」不能让总数核对静默消失。
+    """
+    for m in _RE_TOTAL_TREE.finditer(block):
         if int(m.group(1)) != total:
-            rep.add(REQUIRED, "README.md", 0,
+            rep.add(REQUIRED, "README.md", base + block[:m.start()].count("\n"),
                     "目录树写的 %s 个用例，实际 %d 个（%s）"
                     % (m.group(1), total,
                        " + ".join("%s %d" % (k, v) for k, v in sorted(actual.items()))))
-    for m in re.finditer(r"单测：(\d+)\s*个用例", text):
+    for m in _RE_TOTAL_PROSE.finditer(text):
         if int(m.group(1)) != total:
-            rep.add(REQUIRED, "README.md", 0,
+            rep.add(REQUIRED, "README.md", text[:m.start()].count("\n") + 1,
                     "「改动代码前后跑这三条」那行写的 %s 个用例，实际 %d 个"
                     % (m.group(1), total))
 

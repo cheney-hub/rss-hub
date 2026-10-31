@@ -97,11 +97,11 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── check_secrets.py         # 凭据扫描（本地与 CI 共用）
 │   ├── golden_snapshot.py       # 生成/更新行为基线
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 166 个用例，零依赖、不联网（数量由门禁核对，别手改）
+├── tests/                   # 175 个用例，零依赖、不联网（数量由门禁核对，别手改）
 │   ├── test_core.py         #   57 例：抓取与序列化的核心行为（清洗、去重、解析、轮播稳态、workflow 参数契约）
 │   ├── test_title_layout.py #   11 例：屏幕宽度折算与标题切点（数字不分家、不留行尾逗号）
 │   ├── test_rotate_edge.py  #   39 例：轮播边界（时钟错乱、池子挤兑、参数极值、屏显串防连播）
-│   ├── test_gate.py         #   44 例：门禁自身的正反用例（检查项必须能红，否则等于没有）
+│   ├── test_gate.py         #   53 例：门禁自身的正反用例（检查项必须能红，否则等于没有）
 │   ├── test_state_hygiene.py#   10 例：状态字段被写坏时的容错（列表与数值字段都不许把这一轮跑崩）
 │   ├── test_dedupe.py       #    4 例：跨源同题去重（标题身份、数字是否参与、字数门槛上下界）
 │   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 按行比对（换行已归一）
@@ -346,7 +346,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：166 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
+python3 -m unittest discover -s tests -v    # 单测：175 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
