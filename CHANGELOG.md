@@ -6,6 +6,53 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.7.4] - 2026-10-31
+
+上一版审计的收尾。没有改动运行时行为（`golden.txt` 逐字节不变），动的全是「验证能力」本身：
+自己的检查会说谎、自己的文件装不下。
+
+**修：门禁把格式问题说成「文件不存在」**
+
+1. `check_test_count_sync` 从 README 目录树抽用例数时，只要行尾不是 `# N 例` 这个格式
+   （比如写成 `# core 逻辑 68 例`），就会落到「目录树里没有 test_x.py」这条必改上 ——
+   文件明明在树里，文案却在骗人，照它去改会加出一堆重复记录。改成显式的五态判定：
+   一致 / 行尾无计数 / 树里没提到 / 文件不存在 / 数字不符，每态一条自己的文案。
+2. 顺手加一道同类守卫：**同一文件在目录树里写了两处计数也报必改**。留两行等于没有唯一答案，
+   和 `ROTATE_MAX_LAG`、`sim --seed` 是一类病 —— 参数在，但没人能证明它起作用。
+3. 五态各有反例，外加一条「四态文案互不相同」的总闸门：只断言「有没有输出」是假绿，
+   必须证明文案会随状态变。
+
+**重构：四项跨文件契约检查搬进 `tools/gate_contracts.py`**
+
+4. `check_version_sync` / `check_workflow_sync` / `check_rotate_timer_sync` / `check_test_count_sync`
+   连同专属 helper 搬出 `review_check.py`：892 → **599 行**（项目自设的提醒线是 750，
+   上一行长到 892 是因为一夜之间加了太多检查）。
+5. `code_defaults` / `as_number` / `_doc_table_values` / `_doc_lines` **留在原处**：grep 过调用方，
+   它们还被 `check_doc_sync` 和 `_check_hardcoded_urls` 用着，搬走就要让旧模块反向依赖新模块。
+   引用方向只有一条：`gate_contracts` → `review_check`，反向靠 `main()` 里的延迟 import；
+   import 失败会留一条必改，不让这四项静默消失。所有跨模块访问写成 `RC.xxx` 而不是
+   `from review_check import xxx` —— 绑成局部常量会让把 `RC.ROOT` 指向临时目录的用例全部假绿。
+6. 迁移是等价的：拆分前后跑门禁，报告逐行比对唯一差异是那条文件行数提示消失；
+   `main()` 里 26 项检查的调用顺序、扫描文件数 24 → 25（新模块进来了）——都没动。
+
+**测试与文档**
+
+7. `tests/test_core.py` 763 → 694 行：`TestWidth`(2) + `TestSplitTitle`(9) 迁到新的
+   `tests/test_title_layout.py`。总数 166 → 178（新增 12 条全在门禁自检上）。
+8. `OPERATIONS.md` §刷新节奏补一句：**改轮播节拍只能写 `rss-rotate.service` 的 `Environment=`**。
+   实测 systemd 报 `Unknown key 'Environment' in section [Timer], ignoring` —— 写在 `.timer` 上
+   不会传给被它拉起的服务，届时节拍还是 300 而 timer 每 10 分钟才推进一次，症状和上一条漂移一模一样且无报错。
+
+**真机验证（审计最后一环，在 Pi 上跑的）**
+
+9. `kindle-screen.path` 换成 `PathChanged` 后确实会触发：先用 rename 模拟 `_write()` 的 `os.replace`
+   （inode 133639 → 133192，2 秒内拉起），再跑一次真实构建闭环，`rss-build.service` 结束的同秒
+   `kindle-screen.service` 启动并重画 120 条。**不需要回退 `PathModified`，也不用加 15 分钟兜底 timer。**
+10. `Pi/serve.py` 的条件请求生效：`If-Modified-Since` 返回 **304**；`Server:` 头不再泄漏 Python 版本；
+    设备版三个 URL 全部 `cf-cache-status: DYNAMIC` + `access-control-allow-origin: *`（预览页跨域读取用得上）。
+11. `Pi/rotate_screen.py` 切到 `render.device_description()` 后连续 5 窗正常推进，
+    「内容未变跳过写入」也确实生效（SD 卡写入从每天 288 次降到有变化才写）。
+
 ## [1.7.3] - 2026-10-31
 
 用户要求「审核一次所有代码」。做了**三路独立审查**（引擎核心 / Pi 部署层 / 工具链与测试），

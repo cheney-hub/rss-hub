@@ -402,7 +402,7 @@ def code_defaults():
     return out
 
 
-def _as_number(s):
+def as_number(s):
     """把文档/代码里的取值解析成数字；解析不出返回 None。
 
     只接受「整串就是一个数字」或「数字后面跟括号说明」（如 `0（不限）`）两种形态。
@@ -459,7 +459,7 @@ def check_doc_sync(rep):
     for n in sorted(documented):
         if n not in defaults:
             continue
-        want, got = _as_number(defaults[n]), _as_number(documented[n])
+        want, got = as_number(defaults[n]), as_number(documented[n])
         if want is None or got is None or abs(want - got) < 1e-9:
             continue
         rep.add(REQUIRED, "OPERATIONS.md", 0,

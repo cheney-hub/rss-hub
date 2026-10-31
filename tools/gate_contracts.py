@@ -17,7 +17,7 @@
 
 引用方向只有一条：`import review_check as RC`，反过来由 review_check 在 main()
 里延迟 import 本模块，两边都在模块级 import 会成环。共享的取值解析
-（code_defaults / _as_number / _doc_table_values）留在 review_check ——
+（code_defaults / as_number / _doc_table_values）留在 review_check ——
 check_doc_sync 也在用它们，搬走就得让 review_check 反向依赖本模块。
 另外一律写成 `RC.xxx` 而不是 `from review_check import xxx`：tests 会把
 RC.ROOT 指到临时目录，绑成局部常量就失效了。
@@ -74,7 +74,7 @@ def check_workflow_sync(rep):
     Pi/services/*.service 里的值**不参与比对**：树莓派比 runner 弱，
     CONCURRENCY=10 / FETCH_TIMEOUT=15 是有意调低的；拿它跟 workflow 比只会制造假红。
     """
-    defaults = {k: RC._as_number(v) for k, v in RC.code_defaults().items()}
+    defaults = {k: RC.as_number(v) for k, v in RC.code_defaults().items()}
     defaults = {k: v for k, v in defaults.items() if v is not None}
     wf_dir = os.path.join(RC.ROOT, ".github", "workflows")
     if not defaults or not os.path.isdir(wf_dir):
@@ -151,7 +151,7 @@ def check_rotate_timer_sync(rep):
         rep.add(RC.INFO, ROTATE_TIMER, 0, "找不到 timer 文件，无法核对推进节拍，请人工确认")
         return
     text = RC.read(timer_p)
-    dwell = RC._as_number(dwell_txt)
+    dwell = RC.as_number(dwell_txt)
     for unit in (ROTATE_UNIT, ROTATE_TIMER):        # service 覆盖优先，其次 timer 里的写法
         p = os.path.join(RC.ROOT, *unit.split("/"))
         if not os.path.exists(p):
