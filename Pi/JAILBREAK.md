@@ -69,15 +69,24 @@ MobileRead Wiki 的 WatchThis 条目。
    ```
 5. **安全弹出** → 按 **Done** → 静默安装。
 6. 退出 demo 菜单。
-7. **PW2 专属：点「Store（商店）」按钮**。（其他机型才是搜 `;dsts`，KPW2 别走那条。）
-8. 进 **Help & User Guides → Get started**。
-9. 自动重启，越狱脚本在启动过程中执行完。
+7. **KPW2 / Kindle 7（我们是这个）：点「商店小车」图标。**
+8. 其他机型（KPW3/4/5、KO1/2/3、Kindle 8/10、KV）才是：搜 `;dsts` 进设置 →
+   **Help & User Guides → Get started**。
+
+   ⚠️ **第 7 和第 8 是二选一，不是先后两步。** 原笔记把它们串行写了，照着做会在点完商店
+   之后去找「Help」，而 **KPW2 上根本没有这个入口**（2026-10 现场确认）。MobileRead 原文
+   第 10 条就是 "If jailbreaking KT2 or PW2, select the store button *instead*"。
+9. 触发之后**设备自动重启**，越狱脚本在这次启动过程中跑完。
 
 **成功标志**：USB 连电脑，根目录出现 **`mkk`** 文件夹。
 
 **卡住了怎么办**
 - 弹 Application Error：长按电源 **15~40 秒**硬重启 → `;demo` → Sideload Content → Done → Exit，
   **不要再拷一遍文件**。
+- **点完商店没反应 / 找不到「Help & User Guides」**：KPW2 走的是第 7 条（商店小车），
+  第 8 条是别的机型的走法，**PW2 上没有这个入口**。判定标准是「设备有没有自己重启」——
+  重启了就算触发成功，直接看根目录有没有 `mkk`，有就进第 3 步。没重启就再点一次商店图标，
+  还不行就按上面那条硬重启重来一遍（同样别重拷文件）。
 - `;enter_demo` 进不去：根目录建一个空文件 `DONT_CHECK_BATTERY`，再输 `;demo` 试。
 - demo 里要重置：搜 `;uzb` 开 USB 存储 → 根目录建空文件 `DO_FACTORY_RESTORE` → 重启。
 
