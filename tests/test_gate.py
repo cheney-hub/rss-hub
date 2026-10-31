@@ -9,12 +9,15 @@ v1.7.20 能顶替 v1.7.2……门禁是质量门禁的门禁，它自己不能�
 写法约定：
   * 全部在临时目录里造最小仓库，绝不读写真实仓库（`RC.ROOT` 指向 tmp）；
   * 不联网、不跑真生成器、不依赖当前版本号/用例数这些会漂移的数字；
-  * 每条用例只断言「严重级 + 是否命中」，不断言整段文案（文案会改）。
+  * 每条用例只断言「严重级 + 是否命中」，不断言整段文案（文案会改）；
+  * 跨文件契约那四项（版本 / workflow / timer 节拍 / 用例数）住在 tools/gate_contracts.py，
+    用 `GC` 引用；`RC` 是门禁本体。
 
 跑法：
     python -m unittest tests.test_gate -v
 """
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -26,6 +29,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 import review_check as RC      # noqa: E402  ← 被测：门禁本体
+import gate_contracts as GC    # noqa: E402  ← 被测：四项跨文件契约检查
 import check_secrets as CS     # noqa: E402  ← 被测：凭据规则
 import gen_minute_workflow as GW   # noqa: E402  ← 被测：工作流生成器
 import golden_snapshot as GS   # noqa: E402  ← 被测：行为基线
@@ -156,20 +160,20 @@ class TestVersionSync(Sandbox):
     def test_exact_version_passes(self):
         self._setup()
         rep = RC.Report()
-        RC.check_version_sync(rep)
+        GC.check_version_sync(rep)
         self.assertEqual(rep.rows, [])
 
     def test_longer_version_does_not_count(self):
         """页脚写 v1.7.20 不能顶替 v1.7.2 —— 子串匹配会把错的那一位放过去。"""
         self._setup("rss-hub v1.7.20")
         rep = RC.Report()
-        RC.check_version_sync(rep)
+        GC.check_version_sync(rep)
         self.assertEqual([r[1] for r in rep.rows], ["docs/index.html", "docs/screen.html"])
         self.assertTrue(all(r[0] == RC.REQUIRED for r in rep.rows))
 
     def test_missing_version_file_is_required(self):
         rep = RC.Report()
-        RC.check_version_sync(rep)
+        GC.check_version_sync(rep)
         self.assertEqual([r[0] for r in rep.rows], [RC.REQUIRED])
         self.assertIn("version.py", rep.rows[0][1])
 
@@ -298,7 +302,7 @@ class TestCountSync(Sandbox):
         self._tests(**cases)
         self._readme(rows, sum(cases.values()) if total is None else total)
         rep = RC.Report()
-        RC.check_test_count_sync(rep)
+        GC.check_test_count_sync(rep)
         return [r[3] for r in rep.rows], [r[0] for r in rep.rows]
 
     def test_state1_matching_counts_passes(self):
@@ -380,9 +384,47 @@ class TestCountSyncOnRealRepo(unittest.TestCase):
 
     def test_real_readme_counts_match(self):
         rep = RC.Report()
-        RC.check_test_count_sync(rep)
+        GC.check_test_count_sync(rep)
         self.assertEqual([r[3] for r in rep.rows], [],
                          "README 目录树里的用例数与真实用例数不一致")
+
+
+class TestContractModule(Sandbox):
+    """契约模块本身：四项检查确实搬过去了，引用方向也只有一条。
+
+    这几条守的是「搬家」这件事本身：函数挪走但 review_check 里还留一份旧实现的话，
+    门禁会跑两份（或者干脆跑的是没人测的那份），而 gate_contracts 里那份永远绿。
+    """
+
+    CHECKS = ("check_test_count_sync", "check_version_sync",
+              "check_workflow_sync", "check_rotate_timer_sync")
+
+    def test_four_checks_live_in_gate_contracts(self):
+        for name in self.CHECKS:
+            self.assertTrue(callable(getattr(GC, name, None)),
+                            "%s 不在 gate_contracts 里" % name)
+            self.assertFalse(hasattr(RC, name),
+                             "%s 还留在 review_check 里，会跑两份" % name)
+
+    def test_contracts_follow_rc_root(self):
+        """沙箱把 RC.ROOT 指到临时目录后，契约检查必须跟着走。
+
+        若 gate_contracts 里写成 `from review_check import ROOT`（绑成局部常量），
+        ROOT 就永远是真实仓库——本文件里所有契约用例都会假绿，这才是真正的坑。
+        所以这里故意**不**写 version.py，看它是不是在临时目录里找不到。
+        """
+        rep = RC.Report()
+        GC.check_version_sync(rep)
+        self.assertEqual([r[0] for r in rep.rows], [RC.REQUIRED])
+        self.assertIn("version.py", rep.rows[0][1])
+
+    def test_no_module_level_circular_import(self):
+        """review_check 只能在 main() 里延迟 import gate_contracts，模块级 import 会成环。"""
+        with open(os.path.join(ROOT, "tools", "review_check.py"), encoding="utf-8") as f:
+            head = f.read().split("def main(")[0]
+        bad = [ln for ln in head.splitlines()
+               if re.search(r"^\s*(from\s+gate_contracts|import\s+gate_contracts)\b", ln)]
+        self.assertEqual(bad, [], "模块级 import gate_contracts 会与它 import 本模块成环")
 
 
 class TestWorkflowSync(Sandbox):
@@ -397,14 +439,14 @@ class TestWorkflowSync(Sandbox):
     def test_workflow_value_drift_is_required(self):
         self._setup("24")
         rep = RC.Report()
-        RC.check_workflow_sync(rep)
+        GC.check_workflow_sync(rep)
         self.assertEqual([r[0] for r in rep.rows], [RC.REQUIRED])
         self.assertIn("CONCURRENCY", rep.rows[0][3])
 
     def test_matching_workflow_passes(self):
         self._setup("12")
         rep = RC.Report()
-        RC.check_workflow_sync(rep)
+        GC.check_workflow_sync(rep)
         self.assertEqual(rep.rows, [])
 
     def test_pi_service_is_not_compared(self):
@@ -413,7 +455,7 @@ class TestWorkflowSync(Sandbox):
         self.write("Pi/services/rss-build.service",
                    "[Service]\nEnvironment=CONCURRENCY=10\n")
         rep = RC.Report()
-        RC.check_workflow_sync(rep)
+        GC.check_workflow_sync(rep)
         self.assertEqual(rep.rows, [])
 
 
@@ -487,12 +529,12 @@ class TestRotateTimerSync(Sandbox):
         """timer 5 分钟 + 代码 300 秒 → 通过；改成 10 分钟 → 必须报必改。"""
         self._setup(5, 300)
         rep = RC.Report()
-        RC.check_rotate_timer_sync(rep)
+        GC.check_rotate_timer_sync(rep)
         self.assertEqual(rep.rows, [], "5 分钟 = 300 秒，不该报")
 
         self._setup(10, 300)
         rep = RC.Report()
-        RC.check_rotate_timer_sync(rep)
+        GC.check_rotate_timer_sync(rep)
         self.assertEqual([r[0] for r in rep.rows], [RC.REQUIRED])
         self.assertIn("节拍不一致", rep.rows[0][3])
 
@@ -500,7 +542,7 @@ class TestRotateTimerSync(Sandbox):
         """单元里显式写的 ROTATE_SECONDS 优先于 rotate.py 默认值（Pi 就是这么部署的）。"""
         self._setup(10, 600)
         rep = RC.Report()
-        RC.check_rotate_timer_sync(rep)
+        GC.check_rotate_timer_sync(rep)
         self.assertEqual(rep.rows, [], "10 分钟与单元里的 600 秒一致，不该报")
 
     def test_unparsable_timer_is_info_not_failure(self):
@@ -508,7 +550,7 @@ class TestRotateTimerSync(Sandbox):
         self.write("Pi/services/rss-rotate.timer", "[Timer]\nOnCalendar=Mon *-*-* 08:00:00\n")
         self.write("rotate.py", self.ROTATE_PY)
         rep = RC.Report()
-        RC.check_rotate_timer_sync(rep)
+        GC.check_rotate_timer_sync(rep)
         self.assertEqual([r[0] for r in rep.rows], [RC.INFO])
 
 
