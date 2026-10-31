@@ -165,6 +165,12 @@ def wrap(draw, text, font, max_w, max_lines):
                 break
     if len(lines) < max_lines and cur.strip():
         lines.append(cur.strip())
+    # 上面的循环里两处 `lines.append()` 都在**追加之后**才数行数，所以放不下时最多可能
+    # 多出一行（max_lines + 1）。这里补一道硬截断：`max_lines` 对调用方是排版契约
+    # （_draw_list 按 len(lines) 预留高度），多给一行会把页脚或下一条挤掉。
+    # 截断后下面的分支会因为「末行不等于原文末尾」自动补上「…」。
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
     # 行首标点回挂
     fixed = []
     for ln in lines:
