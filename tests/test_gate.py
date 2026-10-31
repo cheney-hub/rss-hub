@@ -344,6 +344,51 @@ class TestPythonRules(Sandbox):
         self.assertEqual(rep.rows, [])
 
 
+class TestRotateTimerSync(Sandbox):
+    """`ROTATE_SECONDS` 与 `rss-rotate.timer` 的节拍必须一致（第三个「假旋钮」的守卫）。
+
+    这条检查是 2026-10-31 加的：只改代码里的 `ROTATE_SECONDS`、不改 timer，
+    屏幕推进节奏仍是旧的，而且没有任何现有用例会红。
+    """
+
+    TIMER = "[Timer]\nOnCalendar=*:0/%d\n\n[Install]\nWantedBy=timers.target\n"
+    ROTATE_PY = ('ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))\n')
+
+    def _setup(self, timer_min, seconds):
+        self.write("Pi/services/rss-rotate.timer", self.TIMER % timer_min)
+        self.write("Pi/services/rss-rotate.service",
+                   "[Service]\nEnvironment=ROTATE_SECONDS=%d\n" % seconds)
+        self.write("rotate.py", self.ROTATE_PY)
+
+    def test_mismatch_is_required(self):
+        """timer 5 分钟 + 代码 300 秒 → 通过；改成 10 分钟 → 必须报必改。"""
+        self._setup(5, 300)
+        rep = RC.Report()
+        RC.check_rotate_timer_sync(rep)
+        self.assertEqual(rep.rows, [], "5 分钟 = 300 秒，不该报")
+
+        self._setup(10, 300)
+        rep = RC.Report()
+        RC.check_rotate_timer_sync(rep)
+        self.assertEqual([r[0] for r in rep.rows], [RC.REQUIRED])
+        self.assertIn("节拍不一致", rep.rows[0][3])
+
+    def test_service_env_wins_over_code_default(self):
+        """单元里显式写的 ROTATE_SECONDS 优先于 rotate.py 默认值（Pi 就是这么部署的）。"""
+        self._setup(10, 600)
+        rep = RC.Report()
+        RC.check_rotate_timer_sync(rep)
+        self.assertEqual(rep.rows, [], "10 分钟与单元里的 600 秒一致，不该报")
+
+    def test_unparsable_timer_is_info_not_failure(self):
+        """解析不出节拍时只提示，不许拦提交 —— 否则换个 OnCalendar 写法就把人卡死。"""
+        self.write("Pi/services/rss-rotate.timer", "[Timer]\nOnCalendar=Mon *-*-* 08:00:00\n")
+        self.write("rotate.py", self.ROTATE_PY)
+        rep = RC.Report()
+        RC.check_rotate_timer_sync(rep)
+        self.assertEqual([r[0] for r in rep.rows], [RC.INFO])
+
+
 class TestSecretsRules(unittest.TestCase):
     """凭据规则：真凭据要命中，`os.environ` 写法不能误报。"""
 

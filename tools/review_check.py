@@ -585,6 +585,87 @@ def check_workflow_sync(rep):
                         % (k, seen[k], defaults[k]))
 
 
+# Pi 的 timer 单元：推进节拍与 ROTATE_SECONDS 是一份契约。只改一边就是第三个「假旋钮」——
+# 前两个（ROTATE_MAX_LAG、sim --seed）都栽在「参数变了没人能证明」上。
+# 节拍写在 timer，dwell 可能被同名的 service 用 Environment= 覆盖；两处都要看：
+# service 里的值真正进到 rotate_screen.py 的进程环境，timer 里的只是约定写法（systemd 忽略它），
+# 但两种写法都有人用，所以 service 优先、timer 次之、代码默认值兜底。
+ROTATE_TIMER = "Pi/services/rss-rotate.timer"
+ROTATE_UNIT = "Pi/services/rss-rotate.service"
+# `*:0/5`、`*-*-* 07..23:0/5:00`：只认「:00 起、步长 N 分钟」的写法，才能换算成「每 N 分钟」
+_RE_CAL_STEP = re.compile(r":(\d+)/(\d+)")
+_RE_ON_UNIT = re.compile(r"^\s*OnUnitActiveSec\s*=\s*(\d+)\s*(min|m|s)?\s*$", re.M)
+_RE_TIMER_DWELL = re.compile(
+    r"^\s*Environment\s*=\s*(?:\S+\s+)?ROTATE_SECONDS\s*=\s*(\d+)\s*$", re.M)
+
+
+def _timer_interval_minutes(text):
+    """从 systemd timer 文本里解析「每 N 分钟推进一次」，返回 (分钟, 依据, 行号)。
+
+    只认两种明确表示周期的写法：`OnCalendar=*:0/5`（含 `…:0/5:00`）与
+    `OnUnitActiveSec=5min`。`OnCalendar=hourly`、`*:00` 这类「整点」写法换算不出
+    「每 N 分钟」——返回 None 让调用方报提示，而不是猜一个数字。
+    解析不出不是错，静默放过才是。
+    """
+    m = _RE_ON_UNIT.search(text)
+    if m:
+        value = float(m.group(1))
+        unit = m.group(2) or "min"
+        lineno = text[:m.start()].count("\n") + 1
+        return (value if unit != "s" else value / 60.0), m.group(0).strip(), lineno
+    for m in re.finditer(r"^.*OnCalendar\s*=.*$", text, re.M):
+        step = _RE_CAL_STEP.search(m.group(0))
+        if step and int(step.group(1)) == 0:
+            lineno = text[:m.start()].count("\n") + 1
+            return float(step.group(2)), m.group(0).strip(), lineno
+    return None, "没有可解析的周期写法（如 OnCalendar=*:0/5 或 OnUnitActiveSec=5min）", 0
+
+
+def check_rotate_timer_sync(rep):
+    """`ROTATE_SECONDS` 与 Pi 的 `rss-rotate.timer` 必须表示同一个节拍。
+
+    两个值分散在两个仓库文件里（代码常量 / systemd 单元），谁都不会因为另一个改了而报错：
+    把 ROTATE_SECONDS 改成 60 想让屏上 1 分钟换一条，timer 仍 5 分钟敲一次 → 窗口一跳
+    就是 5 个，屏幕看起来照旧 5 分钟一换；反过来把 timer 调密而代码没动，则每次 tick 都
+    落在同一个窗里 → 「同窗保持」，屏幕不动而作业在空转。
+
+    dwell 以同名 service / timer 里的 `Environment=ROTATE_SECONDS=…` 为准（Pi 上确实这么
+    覆盖），两处都没有才用代码默认值。解析不出周期时只报提示：`OnCalendar=hourly` 这种写法换算不出「每 N 分钟」，
+    猜一个数字去比只会制造假红——但也不能静默放过，得留一行让人去人工确认。
+    """
+    timer_p = os.path.join(ROOT, *ROTATE_TIMER.split("/"))
+    dwell_txt = code_defaults().get("ROTATE_SECONDS")
+    if dwell_txt is None:
+        rep.add(INFO, ROTATE_TIMER, 0, "代码里没找到 ROTATE_SECONDS 默认值，跳过节拍核对")
+        return
+    if not os.path.exists(timer_p):
+        rep.add(INFO, ROTATE_TIMER, 0, "找不到 timer 文件，无法核对推进节拍，请人工确认")
+        return
+    text = read(timer_p)
+    dwell = _as_number(dwell_txt)
+    for unit in (ROTATE_UNIT, ROTATE_TIMER):        # service 覆盖优先，其次 timer 里的写法
+        p = os.path.join(ROOT, *unit.split("/"))
+        if not os.path.exists(p):
+            continue
+        override = _RE_TIMER_DWELL.search(read(p))
+        if override:
+            dwell = float(override.group(1))
+            break
+    if dwell is None:
+        rep.add(INFO, ROTATE_TIMER, 0, "ROTATE_SECONDS 默认值不是数字，跳过节拍核对")
+        return
+    minutes, why, lineno = _timer_interval_minutes(text)
+    if minutes is None:
+        rep.add(INFO, ROTATE_TIMER, lineno, "无法核对推进节拍（%s），请人工确认它与 "
+                "ROTATE_SECONDS=%g 秒一致" % (why, dwell))
+        return
+    if abs(minutes * 60 - dwell) > 1e-6:
+        rep.add(REQUIRED, ROTATE_TIMER, lineno,
+                "推进节拍 %s = 每 %g 分钟，与 ROTATE_SECONDS = %g 秒节拍不一致；"
+                "只改一边会让「一条待多久」与「多久推进一次」错位（跳条或重复）"
+                % (why, minutes, dwell))
+
+
 def check_site_html(rep):
     """docs/ 下真正发布的页面也要查 eval / document.write。
 
@@ -691,6 +772,7 @@ def main():
         check_test_count_sync(rep)
     check_doc_sync(rep)
     check_workflow_sync(rep)
+    check_rotate_timer_sync(rep)
     check_version_sync(rep)
     return print_report(rep, strict)
 
