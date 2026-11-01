@@ -491,11 +491,15 @@ def _item_lines(it, screen):
         lines.append("<link>%s</link>" % esc(link))
     if it.get("date_raw"):
         lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
-    elif it.get("ts"):
-        # fromtimestamp 在极端值上会抛：负时间戳在 Windows 上是 OSError，超大值是
-        # OverflowError。这一行在拼整份 XML 时跑，抛出去就是「这一轮一份文件都写不出来」，
-        # 所以这条宁可不带 <pubDate>（RSS 2.0 里它本来就是可选的，
-        # 与「没有链接就不发 <link>」同一口径），也不能为一个坏时间赔上整份产物。
+    elif (it.get("ts") or 0) > 0:
+        # 负时间戳一律不发 <pubDate>，而不是交给 fromtimestamp 去碰运气：
+        # 它在 Linux 上认负时间戳（返回 0001-01-01 这种假日期，产物看起来正常、
+        # 实则写了个错误时间），在 Windows 上却抛 OSError —— 同一份代码在两个平台上
+        # 一边静默出错、一边崩溃。统一按「没有可信时间」处理，与「没有链接就不发
+        # <link>」同一口径（RSS 2.0 里 pubDate 本来就是可选的）。
+        #
+        # try 是第二层，留给超大值（OverflowError）：这一行在拼整份 XML 时跑，
+        # 抛出去就是「这一轮一份文件都写不出来」，不能为一个坏时间赔上整份产物。
         try:
             lines.append("<pubDate>%s</pubDate>" % email.utils.format_datetime(
                 datetime.fromtimestamp(it["ts"], timezone.utc)))

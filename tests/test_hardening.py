@@ -128,6 +128,9 @@ class TestHardening(unittest.TestCase):
         it = {"title": "T", "link": "http://x/1", "src": "s", "ts": -62135596800}
         out = "\n".join(R._item_lines(it, screen=False))
         self.assertIn("<title>T</title>", out)
+        # 不发 <pubDate> 而不是碰运气：fromtimestamp 在 Linux 上认负时间戳
+        # （写出 0001-01-01 这种假日期，产物看着正常、实则是错的时间），
+        # 在 Windows 上抛 OSError。这条断言因此必须是平台无关的。
         self.assertNotIn("pubDate", out)
 
 
