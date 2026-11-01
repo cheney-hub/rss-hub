@@ -21,7 +21,9 @@ Environment=FEED_URL=https://moreaix.com/rss/feed.xml
 # 不该顺手替屏幕决定「现在播哪一条」（两者节奏不同，捆一起屏幕就会僵住）。
 Environment=SCREEN_OUT=/tmp/feed-wrap-build.xml
 Environment=ROTATE_STATE=/tmp/rotate-build.json
-Environment=ROTATE_STATE_URL=http://127.0.0.1:8080/rss/rotate.json
+# 线上状态的兜底地址：本地 rotate.json 丢了就从这儿取回游标。
+# 端口跟着 moreaix-site 走 —— 8080 那台静态服务已合并进 8081，别再指回去。
+Environment=ROTATE_STATE_URL=http://127.0.0.1:8081/rss/rotate.json
 Environment=PER_SOURCE=5
 Environment=ITEM_LIMIT=120
 # 必须与 rss-rotate.service 的同名项相等：池子大小不同，build 选条与屏幕选条

@@ -13,9 +13,9 @@ kindle-screen.path ──▶ kindle-screen.service
         ▼
 /home/user/kindle/kindle-<W>x<H>.png  ──复制──▶ rss-pw2.png（默认图，BOARD_PNG）
         │
-moreaix-site.service（8081，--alias /kindle=/home/user/kindle）与 rss-serve（8080，同一个别名）
-        │  为什么要挂两处：Tunnel 的 path 规则是非锚定正则，/rss 会命中任何含 /rss 的路径
-        │  （看板图叫 rss-pw2.png），落到哪台都能出图才稳
+moreaix-site.service（8081，--alias /kindle=… --alias /rss=…，Pi 上唯一一份 serve.py）
+        │  一份实例出三样：/ 主页、/rss feed、/kindle 看板；Tunnel 只需一条根域规则，
+        │  不再有 path 规则，也就没有顺序匹配/非锚定正则那些坑
         ▼
 公网取 moreaix.com/kindle/rss-pw2.png
         ▼
@@ -25,9 +25,8 @@ Kindle: wget → eips -g / fbink -g
 要点：
 
 - **8082 已停用**（单元保留，`systemctl enable --now kindle-serve` 可恢复）。它原本让局域网里的
-  Kindle 就近取图，但 Pi 把 wlan0 入站全 DROP，实测 24 小时零外部访问；公网那条改由 8080/8081 的
-  `--alias` 出图（见 [`TUNNEL.md`](TUNNEL.md) 6.2）。8080/8081 都只监听 `127.0.0.1`，
-  现在整台机器**没有任何监听 `0.0.0.0` 的服务**。
+  Kindle 就近取图，但 Pi 把 wlan0 入站全 DROP，实测 24 小时零外部访问；公网那条改由 8081 的
+  `--alias` 出图（见 [`TUNNEL.md`](TUNNEL.md) 6.1）。整台机器**没有任何监听 `0.0.0.0` 的服务**。
 - 出图用 **systemd path 单元**而不是 timer：不按固定节拍空跑。监视的是 `feed.xml`
   的 `PathChanged`（不是 `PathModified`，因为写方用的是「tmp + `os.replace`」，被换掉的
   inode 上不会产生 `IN_MODIFY`）。代价是：每轮构建都会原子替换一次 `feed.xml`，

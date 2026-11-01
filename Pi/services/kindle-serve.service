@@ -1,5 +1,5 @@
 [Unit]
-Description=Kindle board static server (serve.py on 8082, routed by tunnel as moreaix.com/kindle)
+Description=Kindle board static server on 8082 (RETIRED 2026-11-01; public path is moreaix.com/kindle via moreaix-site)
 After=network-online.target
 Wants=network-online.target
 
@@ -11,14 +11,13 @@ WorkingDirectory=/home/user/kindle
 # 还不存在，serve.py 会直接 exit。没有这一行，单元会一直 failed，
 # 要等人手动 restart 才能恢复（Restart=always 救不了「参数导致必然失败」）。
 ExecStartPre=/bin/mkdir -p /home/user/kindle
-# 绑 0.0.0.0 而不是只绑回环：三个来源都要够得到它 —— 局域网里的 Kindle 板子、
-# 本机上的 cloudflared（隧道把公网请求转发到 localhost:8082）、以及排障时的 curl。
-# 8080/8081 仍只监听 127.0.0.1，和这台互不影响。
-# --prefix=/kindle：公网上这张图挂在 https://moreaix.com/kindle/rss-pw2.png，
-# 而 Cloudflare 的路径转发会**原样**把 /kindle 带给后端（实测 /rss/rss/feed.xml 是 404，
-# 说明它不会替你剥前缀），所以这里必须显式声明同一层前缀。
-# 前缀是可选的：局域网里的 Kindle 直接取 /rss-pw2.png（不带前缀）也照样通，
-# 两边任意一个口径都能用，改的时候记得 board.sh 里的 URL 也要跟着改。
+# 【已停用】单元留着是为了方便恢复，平时不要 enable 它：
+#   - 公网那条已由 moreaix-site（8081）的 --alias /kindle 承担，Tunnel 不会再来 8082
+#   - 它原本唯一的用途是局域网里 Kindle 就近取图，而 Pi 把 wlan0 入站全 DROP 了，
+#     实测 24 小时零外部访问；绑 0.0.0.0 反而是全机唯一一个对外开放的端口
+#   - 恢复办法：sudo systemctl enable --now kindle-serve（比如局域网那堵墙修好之后）
+# --prefix=/kindle：一旦恢复，公网口径是 https://moreaix.com/kindle/rss-pw2.png，
+# 这层前缀由 serve.py 剥掉；局域网直接取 /rss-pw2.png（不带前缀）也照样通。
 ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/kindle --port 8082 --bind 0.0.0.0 --prefix=/kindle
 Restart=always
 RestartSec=5

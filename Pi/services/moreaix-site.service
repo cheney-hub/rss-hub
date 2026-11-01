@@ -8,14 +8,14 @@ Type=simple
 User=user
 # 主页产物（index.html + logo*.svg）放在 /home/user/site，serve.py 只读地发出去。
 WorkingDirectory=/home/user/site
-# 8081 与 8080 都只绑默认的 127.0.0.1：公网入口只有 Cloudflare Tunnel
-# （根域 / → 8081，/rss → 8080），本机不开任何公网端口。
-# --prefix= 表示不要 /rss 那层前缀 —— 根域主页就挂在 / 上。
-# --alias：顺带把 Kindle 看板图挂到 /kindle/* 上。为什么不用单独一条 Public Hostname：
-# Tunnel 的 ingress 是**顺序匹配、命中即停**，根域那条不带 path 的兜底规则会吃掉所有
-# 路径，后面追加的 /kindle 规则永远轮不到（实测：配置里有那条规则，请求照样进这台）。
-# 挂在兜底这台身上就不依赖 Tunnel 的路由顺序了。
-ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix= --alias /kindle=/home/user/kindle
+# 8081 只绑默认的 127.0.0.1：公网入口只有 Cloudflare Tunnel，本机不开任何公网端口。
+# --prefix= 表示根域主页挂在 / 上。
+# 两个 --alias 让它一台顶三台：
+#   /kindle → 看板图。Tunnel 的 ingress 是顺序匹配、命中即停，根域那条不带 path 的
+#             兜底规则会吃掉所有路径，单开一条 /kindle 的 Public Hostname 永远轮不到。
+#   /rss    → feed 目录。原先由独立的 rss-serve（8080）承担，但那就是同一个 serve.py
+#             换了参数；合并之后 Tunnel 只需要一条根域规则，顺序/正则那些坑一起消失。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix= --alias /kindle=/home/user/kindle --alias /rss=/home/user/rss-hub/docs
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
