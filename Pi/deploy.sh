@@ -2,7 +2,7 @@
 # 把 Pi 侧的脚本与 systemd 单元装到树莓派上（不搬引擎代码、不装 Python 依赖）。
 #
 # 上传什么：
-#   serve.py / rotate_screen.py / kindle_screen.py   → ${PI_USER}/pi-pipeline/
+#   serve.py / rotate_screen.py / kindle_screen.py / kindle_page.py → ${PI_USER}/pi-pipeline/
 #   services/*.service / *.path / *.timer            → /etc/systemd/system/（经 /tmp 中转）
 # 不覆盖什么：
 #   /home/user/rss-hub（引擎代码，来自 git clone）、/home/user/site（主页产物）、
@@ -61,7 +61,9 @@ echo "==> 目标 ${PI_USER}@${PI_HOST}"
   || { echo '缺少 ${HUB_ROOT}/build_feed.py：先把本仓库 clone 到 ${HUB_ROOT}'; exit 1; }"
 
 echo "==> 上传脚本"
-for f in serve.py rotate_screen.py kindle_screen.py; do
+# kindle_page.py 出网页看板，kindle-screen.service 的第二条 ExecStart 会调它；
+# 漏传的话那个单元每轮都有一半命令在「找不到文件」，图上得来、网页永远不更新。
+for f in serve.py rotate_screen.py kindle_screen.py kindle_page.py; do
     "${SCP[@]}" "${HERE}/${f}" "${PI_USER}@${PI_HOST}:${REMOTE_DIR}/${f}"
 done
 
