@@ -15,7 +15,7 @@ OUT=/mnt/us/probe-$L.txt
     echo "time : $(date '+%F %T')"
     echo "user : $(id 2>/dev/null)"
     echo "shell: $0 / $#"
-    echo "pwd  : $(pwd)"
+    echo "dir  : $(pwd)"
     echo "path : $PATH"
     echo "root : $(ls -ld /mnt/us 2>/dev/null)"
     echo "test : $(touch /mnt/us/.probe-write-test 2>&1 && echo writable || echo READ-ONLY)"
