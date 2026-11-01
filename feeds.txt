@@ -45,6 +45,7 @@ https://rss.dw.com/xml/rss-chi-all
 https://www.rfi.fr/cn/rss
 
 # 日经中文网·最新（官方，取代原先 4 条 quanwenrss 分栏镜像）
+# 注意：GitHub runner 上会返回 HTTP 202（机房 IP 被挡），只有 Pi 抓得到
 https://cn.nikkei.com/rss.html
 
 # 共同社（日本）中文网·最新（官方无 RSS）
@@ -72,6 +73,7 @@ https://news.ltn.com.tw/rss/all.xml
 https://news.ltn.com.tw/rss/business.xml
 
 # 中央广播电台 RTI（中国台湾，207 条大源，官方）
+# 注意：GitHub runner 上返回 403，会走「回退」用上一份产物里的条目
 https://www.rti.org.tw/rss
 
 # 东网（中国香港东方日报）·港澳新闻（官方无 RSS）
@@ -81,6 +83,7 @@ https://rsshub.rss.tips/oncc/hk
 https://rsshub.rss.tips/hk01/hot
 
 # 明报（中国香港）·要闻（官方，2026-11-01 实测 29 条）
+# 注意：GitHub runner 上返回 403（机房 IP 被挡），只有 Pi 抓得到
 https://news.mingpao.com/rss/pns/s00001.xml
 
 # ---------- 综合新闻 ----------
