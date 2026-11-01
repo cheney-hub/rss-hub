@@ -18,6 +18,7 @@
 依赖：Pillow（树莓派已装 9.4.0）+ 任一 CJK 字体（Noto Sans CJK SC 已装）。
 """
 import argparse
+import email.utils
 import glob
 import html
 import os
@@ -26,6 +27,7 @@ import shutil
 import sys
 import time
 import xml.etree.ElementTree as ET
+from datetime import timedelta, timezone
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -40,6 +42,12 @@ GRAY_META = 140
 BOARD_PNG = "rss-pw2.png"
 
 TAG_RE = re.compile(r"<[^>]+>")
+# 展示用的时区：单元里的 TZ、timer 的 OnCalendar、页眉那个时间戳，全都按东八区走，
+# 屏上的时间列也统一成它（否则混源时 UTC 的 04:45 会和北京的 12:45 并排出现）。
+LOCAL_TZ = timezone(timedelta(hours=8))
+HHMM_RE = re.compile(r"(\d{2}):(\d{2}):\d{2}")
+# 兜底路径用：日期串不合 RFC 822 时只求把 HH:MM 抠出来，秒可有可无
+HHMM_LOOSE = re.compile(r"(\d{2}):(\d{2})")
 NO_LINE_START = "、。，；：）】》」』！？%!?,.;:)]}"
 SPLIT_KEEP = re.compile(r"[A-Za-z0-9]+(?:[._%+-][A-Za-z0-9]+)*|\s+|.")
 
@@ -194,13 +202,34 @@ def wrap(draw, text, font, max_w, max_lines):
     return fixed
 
 
+def to_hhmm(pub):
+    """pubDate → 东八区的 HH:MM；解析不动就退回原串里的 HH:MM，再不行给空串。
+
+    为什么必须归一：feed 里各源的后缀是混的（+0800 / +0000 / GMT / +0900 都有，实测
+    一份 120 条的 feed 里 UTC 那类占了四成）。直接抄原串会出现「04:45」夹在一堆
+    「12:45」中间，看着像时间列乱序 —— 那其实是格林威治时间。不带后缀的按 +8 解释，
+    与 build_feed 的 SOURCE_TZ_OFFSET 是同一套口径。
+    """
+    raw = (pub or "").strip()
+    if not raw:
+        return ""
+    try:
+        dt = email.utils.parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        dt = None                        # 少数源的日期不合 RFC 822，走下面的兜底
+    if dt is not None:
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=LOCAL_TZ)
+        return dt.astimezone(LOCAL_TZ).strftime("%H:%M")
+    m = HHMM_LOOSE.search(raw)        # 兜底用宽松版：秒可能没有，比如 31/10/2026 13:07
+    return "%s:%s" % (m.group(1), m.group(2)) if m else ""
+
+
 def parse_feed(path):
     """返回 [(title, summary, hhmm, source)]，取不到就退成空列表而不是崩。
 
-    hhmm 是**直接从 pubDate 原串里正则抓的 HH:MM，不转时区**：feed 里各源的时间
-    带着各自的时区后缀（+0800 / +0000 / GMT 混着来），所以时间列在混源时可能
-    「非单调」（00:03 后面跟着 16:02）。要改成按 SOURCE_TZ 归一得先动 render 侧
-    的 date_raw 口径，别只在这里加转换。
+    hhmm 已统一成东八区的 HH:MM（见 to_hhmm）：源里给的是 UTC 或 +0900 的，这里
+    会换算过来，所以时间列是单调的、和页眉那个时间戳同一个时区口径。
 
     title 开头若带「【源名】」会剥掉：当前 render 不写这个前缀，留着是兼容更早的
     产物与个别仍然自带方括号标题的源。
@@ -221,11 +250,7 @@ def parse_feed(path):
         if not title:
             continue
         desc = g("description")
-        pub = g("pubDate")
-        hhmm = ""
-        m = re.search(r"(\d{2}):(\d{2}):\d{2}", pub)
-        if m:
-            hhmm = "%s:%s" % (m.group(1), m.group(2))
+        hhmm = to_hhmm(g("pubDate"))
         src = g("source") or g("category")
         if src and title.startswith("【%s】" % src):
             title = title[len(src) + 2:]

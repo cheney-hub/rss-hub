@@ -116,11 +116,27 @@ class TestParseFeed(unittest.TestCase):
         items = KS.parse_feed(self.feed)
         self.assertEqual(items[0][0], "甲国通过新的预算法案")
 
-    def test_hhmm_is_cut_from_pubdate_verbatim(self):
-        """时间列直接抓 pubDate 原串里的 HH:MM（不转时区，混源时时间序可能非单调）。"""
+    def test_hhmm_is_normalized_to_beijing_time(self):
+        """UTC 的 01:05 要显示成 09:05 —— 时间列和页眉那个时间戳同一个时区口径。"""
         items = KS.parse_feed(self.feed)
-        self.assertEqual(items[0][2], "01:05")
-        self.assertEqual(items[1][2], "23:59")
+        self.assertEqual(items[0][2], "09:05")      # GMT 01:05 → +8
+        self.assertEqual(items[1][2], "07:59")      # GMT 23:59 → 次日 07:59
+
+    def test_hhmm_falls_back_to_raw_when_date_is_unparsable(self):
+        """日期格式太野（不合 RFC 822）时退回原串 HH:MM，总比显示空格强。"""
+        self.assertEqual(KS.to_hhmm("31/10/2026 13:07"), "13:07")
+        self.assertEqual(KS.to_hhmm(""), "")
+        self.assertEqual(KS.to_hhmm("昨天下午"), "")
+
+    def test_hhmm_assumes_east8_when_date_has_no_zone(self):
+        """不带时区的按 +8 解释，和 build_feed 的 SOURCE_TZ_OFFSET 一致。"""
+        self.assertEqual(KS.to_hhmm("Sat, 31 Oct 2026 13:07:00"), "13:07")
+
+    def test_hhmm_converts_both_directions(self):
+        """UTC 与 +0900 都要换到东八区，别只处理一种后缀。"""
+        self.assertEqual(KS.to_hhmm("Sun, 01 Nov 2026 04:45:02 +0000"), "12:45")
+        self.assertEqual(KS.to_hhmm("Sun, 01 Nov 2026 12:00:00 +0900"), "11:00")
+        self.assertEqual(KS.to_hhmm("Sun, 01 Nov 2026 12:00:00 +0800"), "12:00")
 
     def test_source_falls_back_to_category(self):
         items = KS.parse_feed(self.feed)

@@ -31,6 +31,10 @@ Kindle: wget → eips -g / fbink -g
   的 `PathChanged`（不是 `PathModified`，因为写方用的是「tmp + `os.replace`」，被换掉的
   inode 上不会产生 `IN_MODIFY`）。代价是：每轮构建都会原子替换一次 `feed.xml`，
   于是每轮构建都会重画一次 —— 「内容没变」也照样重画，最多白天 288 次/天。
+- 条目左侧那个时间是**东八区**：`pubDate` 先按 RFC 822 解析再换算过来。feed 里各源的
+  时区是混的（`+0800` / `+0000` / `GMT` / `+0900` 都有，实测 UTC 那类约占四成），
+  直接抄原串会出现 `04:45` 夹在一排 `12:45` 中间——那是格林威治时间，不是乱序。
+  不带时区的按 `+8` 解释，和 `build_feed` 的 `SOURCE_TZ_OFFSET` 同一套口径。
 - PNG 走 `tmp + os.replace` 原子替换，Kindle 不会拉到半张图。
 - 目标机已确认：**Kindle Paperwhite 2（第 6 代，序列号前缀 `90D4`）**，固定 `1024x758`，
   同时复制成默认图 `rss-pw2.png`（`kindle_screen.py` 的 `BOARD_PNG`）。

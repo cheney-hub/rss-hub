@@ -106,6 +106,12 @@ class ParseItemsTest(unittest.TestCase):
         self.assertEqual(len(KP.parse_items(self.feed, 3)), 3)
         self.assertEqual(len(KP.parse_items(self.feed, 99)), 10)
 
+    def test_时间统一成东八区(self):
+        """网页上的时间要和 PNG 那屏一个口径：UTC 的 04:45 得显示成 12:45。"""
+        self.assertEqual(KP.to_hhmm("Sun, 01 Nov 2026 04:45:02 +0000"), "12:45")
+        self.assertEqual(KP.to_hhmm("Sun, 01 Nov 2026 12:00:00 +0800"), "12:00")
+        self.assertEqual(KP.to_hhmm("Sun, 01 Nov 2026 12:00:00"), "12:00")   # 无后缀按 +8
+
     def test_缺字段的条目不会让整份_feed_崩掉(self):
         """没有 pubDate / source 是常态（有些源就一点都不给），要退化而不是抛异常。"""
         self._write(

@@ -26,15 +26,21 @@
 javascript: 之类的伪协议直接丢掉 —— 这个页面是要放到公网上的。
 """
 import argparse
+import email.utils
 import html
 import os
 import re
 import sys
 import time
 import xml.etree.ElementTree as ET
+from datetime import timedelta, timezone
 
 TAG_RE = re.compile(r"<[^>]+>")
+# 展示时区统一东八区：和 kindle_screen.LOCAL_TZ 是同一套口径，两屏显示的时间要一致。
+LOCAL_TZ = timezone(timedelta(hours=8))
 HHMM_RE = re.compile(r"(\d{2}):(\d{2}):\d{2}")
+# 兜底路径用：日期串不合 RFC 822 时只求把 HH:MM 抠出来，秒可有可无
+HHMM_LOOSE = re.compile(r"(\d{2}):(\d{2})")
 OK_SCHEME = ("http://", "https://")
 
 
@@ -49,6 +55,31 @@ def clean_text(s):
     s = TAG_RE.sub(" ", s)
     s = html.unescape(s)
     return re.sub(r"\s+", " ", s).strip()
+
+
+def to_hhmm(pub):
+    """pubDate → 东八区的 HH:MM；解析不动就退回原串里的 HH:MM，再不行给空串。
+
+    和 kindle_screen.to_hhmm 同逻辑，这里复制一份而不是引用 —— 同样是为了不把
+    Pillow 依赖链拽进这个纯文本脚本。算法变了要同步改两处。
+
+    归一的原因：feed 里各源的后缀混着（+0800 / +0000 / GMT / +0900），直接抄原串会
+    把格林威治时间当北京时间显示，一排 12:45 中间冒出个 04:45。不带后缀按 +8 解释，
+    与 build_feed 的 SOURCE_TZ_OFFSET 一致。
+    """
+    raw = (pub or "").strip()
+    if not raw:
+        return ""
+    try:
+        dt = email.utils.parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        dt = None
+    if dt is not None:
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=LOCAL_TZ)
+        return dt.astimezone(LOCAL_TZ).strftime("%H:%M")
+    m = HHMM_LOOSE.search(raw)        # 兜底用宽松版：秒可能没有，比如 31/10/2026 13:07
+    return "%s:%s" % (m.group(1), m.group(2)) if m else ""
 
 
 def parse_items(path, limit):
@@ -79,10 +110,7 @@ def parse_items(path, limit):
         # 的链接会在这个页面上变成可点击的东西。
         if not link.lower().startswith(OK_SCHEME):
             link = ""
-        hhmm = ""
-        m = HHMM_RE.search(g("pubDate"))
-        if m:
-            hhmm = "%s:%s" % (m.group(1), m.group(2))
+        hhmm = to_hhmm(g("pubDate"))
         out.append((title, g("description"), hhmm, g("source") or g("category"), link))
     return out
 
