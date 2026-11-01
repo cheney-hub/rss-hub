@@ -189,8 +189,12 @@ MobileRead Wiki 的 WatchThis 条目。
 （`Pi/kindle/dist/rssboard-extension.zip`），把它的内容解压到 Kindle **根目录**：
 根上多一个 `board.sh`、`extensions/` 下多一个 `rssboard/`。
 之后打开 KUAL，会多出一组 **RSS Board** 菜单：立即刷新一次 / 启动常驻刷新 / 停止刷新 /
-查看状态（写屏）/ 自检 / 移除扩展。出问题先点「自检」，它会把 board.sh 在不在、
-有没有 wget、能不能取到图、循环在不在跑逐项 PASS/FAIL 画在屏上。菜单不出现就先查 `config.xml` 和 `menu.json` 有没有到位
+查看状态（写屏）/ 自检 / 移除扩展。
+
+> 拷脚本时留意**换行**：`.sh` 必须是 LF。CRLF 会让 Kindle 的 ash 报 `missing ]` /
+> `syntax error`，而且一行都跑不起来、屏上毫无提示。用 `build-extension-zip.sh`
+> 打的包已经强制转成 LF 了，手工拷的话自己确认一下。出问题先点「自检」，它把结果写成 `E://rssboard-diag.txt`
+（board.sh 在不在、wget、实际取图、循环 pid 逐项列出来），拔线插电脑直接看。菜单不出现就先查 `config.xml` 和 `menu.json` 有没有到位
 ——少一个 KUAL 只是静静地不显示，没有任何报错。
 
 **C. 打成 MRPI 安装包（要重装机器时才值得费这个事）**

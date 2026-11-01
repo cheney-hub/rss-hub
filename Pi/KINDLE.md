@@ -82,10 +82,22 @@ sh Pi/kindle/build-extension-zip.sh      # 产出 Pi/kindle/dist/rssboard-extens
 把那个 zip 解压到 **Kindle 根目录**（不要多套一层文件夹），得到 `board.sh` 与
 `extensions/rssboard/`。拔线后在书库打开 **KUAL**，会多出一组 **RSS Board**：
 立即刷新一次 / 启动常驻刷新 / 停止刷新 / 查看状态（写屏）/ **自检** / 移除扩展。
-「自检」会把 board.sh 在不在、有没有 wget、能不能真取到图、循环在不在跑逐项写成
-PASS/FAIL 画在屏上 —— 排查时先点它，不用连电脑。
+「自检」的结果**写成文件**放在 Kindle 根目录：拔线插电脑打开
+`E://rssboard-diag.txt` 就能看，屏上只有一行结论（eips 只能写 ASCII，塞不下细节）。
+报告里逐项列出：board.sh 在不在、wget 路径、能不能真取到图（会实际下载一次）、
+循环 pid、当前图的字节数与时间、扩展目录内容；wget 失败时还会带上它的报错原文。
+文件是「新报告在最前、旧内容接在后面」，跑几次都留档。
 
-两条菜单行为上的硬约束（KUAL 的规矩，踩过）：
+其余菜单动作也会往同一个文件追加一行事件（`refresh: rc=0`、`start: pid 1234` 之类），
+所以哪怕只是点了「启动常驻刷新」没生效，也能从文件里看出走到哪一步。
+
+三条硬约束（都是实测踩出来的）：
+
+- **拷到 Kindle 的 `.sh` 必须是 LF 换行**。CRLF 会让 Kindle 的 ash 把行尾 `\r` 当成
+  命令的一部分，症状是 `sh: missing ]`、`syntax error: unexpected end of file`，
+  **脚本一行都不执行，屏上却什么提示都没有**（2026-11-01 就因为这条白排查了一轮）。
+  `build-extension-zip.sh` 打包时已经强制转 LF，并在产物里逐文件打印 `CRLF=0`；
+  手工拷的话，务必确认编辑器没给你换成 CRLF。
 - `menu.json` 的 `internal` **必须**是 `"status <文字>"` 或 `"breadcrumb <文字>"`；
   直接塞一句说明文字会让 KUAL 当成未知内部命令，动作跑完照样弹「执行出错」。
 - eips 写屏只能用 ASCII：Kindle 自带点阵字体没有汉字，中文会变成空白/方块。

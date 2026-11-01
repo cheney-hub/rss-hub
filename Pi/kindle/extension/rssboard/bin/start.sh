@@ -7,7 +7,7 @@ need_board || exit 0
 
 pid=$(loop_pid)
 if [ -n "$pid" ]; then
-    echo "$(date '+%F %T') start: already running (pid $pid)" >> "$LOG"
+    diag "start: already running (pid $pid)"
     exit 0
 fi
 
@@ -17,22 +17,24 @@ rm -f "$LOCK"
 
 # nohup 在个别精简过的 busybox 上不存在：没有它就退回普通后台 + 忽略 HUP 的写法，
 # 不能因为这一条把整个循环停掉。
+# 输出统一追加到诊断文件：board.sh 里 wget 的报错会原样留在这里，正是排查要看的。
 if type nohup >/dev/null 2>&1; then
-    nohup sh "$BOARD" >> "$LOG" 2>&1 &
+    nohup sh "$BOARD" >> "$DIAG" 2>&1 &
 else
-    ( trap '' HUP; sh "$BOARD" >> "$LOG" 2>&1 & )
+    ( trap '' HUP; sh "$BOARD" >> "$DIAG" 2>&1 & )
 fi
 
-# 给 board.sh 一点时间拿到锁再报状态：起来得太快反而会误报「没跑」
+# 给 board.sh 一点时间拿到锁再下结论：查得太快会误判成「没跑」
 sleep 2
 pid=$(loop_pid)
 if [ -n "$pid" ]; then
-    echo "$(date '+%F %T') start: pid $pid, url $(board_url)" >> "$LOG"
+    diag "start: ok, pid $pid, url=$(board_url)"
+    eips -c
+    eips 1 1 "RSS Board: loop started (pid $pid)"
 else
-    # 起不来通常是 board.sh 缺、或 shell 直接报错；把 log 里的最后一行画到屏上
+    diag "start: FAILED to launch loop"
     eips -c
     eips 1 1 "RSS Board: loop did NOT start"
-    eips 1 3 "$(tail -n 1 "$LOG" 2>/dev/null)"
-    eips 1 5 "see /mnt/us/extensions/rssboard/log.txt"
+    eips 1 3 "see rssboard-diag.txt at Kindle root"
 fi
 exit 0

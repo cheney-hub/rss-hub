@@ -8,6 +8,11 @@
 # 为什么不用 MRPI 的 .bin：那个要 kindletool 且签名，适合「重装整机时一次装好」；
 # 日常只更新一个脚本，解压覆盖比 `;log mrpi` 快得多。两者产物内容完全一样。
 #
+# **打进去之前一律把 CRLF 转成 LF**：Kindle 的 ash 不认 CRLF，行尾那个 \r 会被
+# 当成命令的一部分，症状是 `sh: missing ]` / `syntax error: unexpected end of file`
+# —— 脚本一行都不执行，屏上却什么提示都没有（2026-11-01 实测踩过，排查了一轮）。
+# 工作区在 Windows 上很容易又变回 CRLF，所以这一步放在打包里做，别指望编辑器。
+#
 # 用法：sh Pi/kindle/build-extension-zip.sh
 # 注意：zip 里的 board.sh 是**当前工作区**那份，改完 URL 之类记得重跑一次。
 set -eu
@@ -32,10 +37,20 @@ for name in sorted(os.listdir(os.path.join(ext, "bin"))):
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
     for src, arc in files:
-        z.write(src, arc)
+        body = open(src, "rb").read()
+        if arc.endswith(".sh"):
+            body = body.replace(b"\r\n", b"\n")     # Kindle 的 ash 不认 CRLF
+        z.writestr(arc, body)
 
 print("打包完成: %s (%d 字节)" % (out, os.path.getsize(out)))
 with zipfile.ZipFile(out) as z:
+    bad = 0
     for i in z.infolist():
-        print("  %-38s %6d" % (i.filename, i.file_size))
+        crlf = 0
+        if i.filename.endswith(".sh"):
+            crlf = z.read(i.filename).count(b"\r\n")
+            bad += crlf
+        print("  %-38s %6d  CRLF=%d" % (i.filename, i.file_size, crlf))
+    if bad:
+        sys.exit("打包里有 %d 处 CRLF，Kindle 上会解析失败" % bad)
 PY
