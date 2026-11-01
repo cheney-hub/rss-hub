@@ -73,10 +73,19 @@ python3 /home/user/pi-pipeline/kindle_screen.py --help
 2. `sh /mnt/us/board.sh` 前台试跑，确认出图
 3. `nohup sh /mnt/us/board.sh >/dev/null 2>&1 &` 常驻（Kindle 没有 systemd，重启要重拉）
 
-**想用 KUAL 点着用**，就把 `kindle/extension/rssboard/` 整个目录放到 Kindle 的
-`/mnt/us/extensions/` 下面，书库里打开 KUAL 会多出一组 RSS Board 菜单：立即刷新一次 /
-启动常驻刷新 / 停止刷新 / 查看状态 / 移除扩展。装完如果不出现菜单，先看
-`config.xml`、`menu.json` 有没有真的到位——少一个文件 KUAL 只是静静地不显示。
+**想用 KUAL 点着用**（推荐），先打一个安装包：
+
+```bash
+sh Pi/kindle/build-extension-zip.sh      # 产出 Pi/kindle/dist/rssboard-extension.zip
+```
+
+把那个 zip 解压到 **Kindle 根目录**（不要多套一层文件夹），得到 `board.sh` 与
+`extensions/rssboard/`。拔线后在书库打开 **KUAL**，会多出一组 **RSS Board**：
+立即刷新一次 / 启动常驻刷新 / 停止刷新 / 查看状态（写屏）/ 移除扩展。
+
+装完不出现菜单，先看 `config.xml`、`menu.json` 有没有真的到位——少一个文件 KUAL
+只是静静地不显示，没有任何报错。zip 里的 `board.sh` 是**当前工作区**那份，改过
+地址或文件名记得重打一次，别拿旧包去覆盖。
 
 刷新策略：5 分钟拉一次图，**内容没变就不刷屏**（`cmp` 比对）；每真正刷新 10 次用
 `eips -c` 整屏闪一次清残影。e-ink 刷太勤既费电也留残影。

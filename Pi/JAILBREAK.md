@@ -185,8 +185,10 @@ MobileRead Wiki 的 WatchThis 条目。
 
 **B. KUAL 扩展（之后能在机器上点着用）**
 
-把 `Pi/kindle/extension/rssboard/` 整个目录放到 Kindle 的 `/mnt/us/extensions/` 下，
-KUAL 里会多出一组 **RSS Board** 菜单：立即刷新一次 / 启动常驻刷新 / 停止刷新 /
+先跑 `sh Pi/kindle/build-extension-zip.sh` 打出一个安装包
+（`Pi/kindle/dist/rssboard-extension.zip`），把它的内容解压到 Kindle **根目录**：
+根上多一个 `board.sh`、`extensions/` 下多一个 `rssboard/`。
+之后打开 KUAL，会多出一组 **RSS Board** 菜单：立即刷新一次 / 启动常驻刷新 / 停止刷新 /
 查看状态（写屏）/ 移除扩展。菜单不出现就先查 `config.xml` 和 `menu.json` 有没有到位
 ——少一个 KUAL 只是静静地不显示，没有任何报错。
 

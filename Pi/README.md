@@ -27,7 +27,8 @@
   - `kindle-screen.service` + `kindle-screen.path` — feed 一变就重画看板（**不轮询**）
 - `kindle/board.sh` — Kindle 端取图上屏脚本（需越狱后使用）
 - `kindle/extension/rssboard/` — KUAL 扩展：把上面那个脚本包成「立即刷新/启动/停止/看状态」菜单
-- `kindle/build-mrpackage.sh` — 把它俩打成 MRPI 的 `.bin`（需要先编一个 kindletool）
+- `kindle/build-extension-zip.sh` — 把它俩打成「解压到 Kindle 根目录即可」的 zip（日常用这个）
+- `kindle/build-mrpackage.sh` — 打成 MRPI 的 `.bin`（需要先编一个 kindletool，重装整机时才值）
 - `KINDLE.md` — 看板链路与上屏步骤
 - `JAILBREAK.md` — KPW2（90D4 / 5.12.2.2）完整越狱流程（WatchThis）
 - `site/` — 根域主页 `index.html` + logo（`logo.svg` / `logo-lockup.svg`）
