@@ -14,6 +14,30 @@ https://www.chinanews.com.cn/rss/scroll-news.xml
 # 新华社·要闻
 https://feed.quanwenrss.com/feed/xinhua-yw.xml
 
+# 央视新闻·要闻（RSSHub 镜像；2026-11-01 复测三轮稳定、80 条）
+https://rsshub.rssforever.com/cctv/news
+
+# 央视新闻·国际（同上）
+https://rsshub.rssforever.com/cctv/world
+
+# 人民日报·人民网评（评论，短评为主，观点比消息多）
+https://feed.quanwenrss.com/feed/people-pinglun.xml
+
+# 光明日报·版面（与上面的「光明网·热点」是两个口径：报纸正文 vs 网站热点）
+https://feed.quanwenrss.com/feed/gmw-gmrb.xml
+
+# 求是（党中央机关刊）·要闻
+https://feed.quanwenrss.com/feed/qiushi-yw.xml
+
+# 解放军报·要闻（中央军委机关报）
+https://feed.quanwenrss.com/feed/jfjb-yw.xml
+
+# 环球时报·要闻
+https://rsshub.rss.tips/huanqiu/news
+
+# 观察者网·头条
+https://rsshub.rss.tips/guancha/headline
+
 # 新京报·要闻
 https://feed.quanwenrss.com/feed/bjnews-yaowen.xml
 
@@ -31,6 +55,9 @@ https://feed.quanwenrss.com/feed/thepaper-latest.xml
 
 # 南方周末·最新
 https://feed.quanwenrss.com/feed/nfzm-latest.xml
+
+# 南方周末·观点
+https://feed.quanwenrss.com/feed/nfzm-guandian.xml
 
 # 界面新闻·快讯（滚动快讯，刷屏可注释掉）
 https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml
@@ -110,6 +137,15 @@ https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml
 
 # 财新网·最新（大源，120 条）
 https://feed.quanwenrss.com/feed/caixin-latest.xml
+
+# 新华社·财经
+https://feed.quanwenrss.com/feed/xinhua-cj.xml
+
+# 界面新闻·公司（成篇报道，不是快讯）
+https://feed.quanwenrss.com/feed/jiemian-company.xml
+
+# 财联社·深度（每天个位数，质量高于同站的电报流）
+https://feed.quanwenrss.com/feed/cailianshe-article.xml
 
 # 经济观察报·最新
 https://feed.quanwenrss.com/feed/eeo-latest.xml
@@ -192,3 +228,24 @@ https://rsshub.rss.tips/8world/news
 
 # 新华每日电讯·最新一期（镜像站已 404 下线）
 # https://feed.quanwenrss.com/feed/mrdx-latest.xml
+
+# ---------- 已探明不可用（2026-11-01 在 Pi 上逐个试过，别再白试）----------
+# 下面这些是「想加但加不了」的，连同原因留档，省得下次再摸一遍。
+#
+# 新华网·时政   http://www.xinhuanet.com/politics/news_politics.xml
+#   只有 title/author/link/description，**没有 pubDate**；300 条全无时间，
+#   进了看板也排不出先后，等于废条。
+# 人民网·时政   http://www.people.com.cn/rss/politics.xml
+#   pubDate 停在 2025-06-05，官方 RSS 早已停更（人民系只能走 quanwenrss 镜像）。
+# 中国日报·要闻 https://feed.quanwenrss.com/feed/chinadaily-main.xml
+#   能抓、也新（1.2h），但内容是**英文**（China Daily 英文版），中文看板不合适。
+# 人民日报·版面 https://feed.quanwenrss.com/feed/people-banmian.xml
+#   抓得到，但混着「本版责编 吴艳丽」这类版头，新闻价值低。
+# 经济观察报·快讯 https://feed.quanwenrss.com/feed/eeo-kuaixun.xml
+#   全是机器生成的「XX主力资金净流入」个股快讯，刷屏且无信息量。
+# 证券时报 / 上海证券报 / 中国证券报 / 每日经济新闻 / 21世纪经济报道
+#   三家 404 或 403，两家首页没有任何 RSS 入口；RSSHub 也没有对应路由。
+# 参考消息 / 经济日报 / 半月谈 / 中国青年报 / 中国政府网 / 中纪委
+#   要么首页无 RSS 入口，要么常见路径返回的是 HTML 而不是 feed。
+# hub.slarker.me（另一个 RSSHub 实例）
+#   能出央视 80 条，但**三轮里两轮 503/超时**，不够稳；同名路由改用 rssforever。
