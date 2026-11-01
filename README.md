@@ -1,6 +1,6 @@
 # rss-hub · RSS 聚合头条
 
-> 当前版本 **v1.9.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+> 当前版本 **v1.10.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
 >
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
@@ -69,6 +69,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 
 ```
 .
+├── arrival.py               # 时间戳失真源的排序修正：同一份 feed 共用时间戳时改用首次见到时间
 ├── feeds_sync.py            # 清单同步：Pi 上那份 feeds.txt 每轮对齐仓库，失败一律保留旧清单
 ├── feeds.txt                # 订阅源清单：注释行 = 中文源名，下一行 = 地址
 ├── version.py               # 版本号唯一真源（RSS 的 generator、页面页脚都取这里）
@@ -99,7 +100,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── golden_snapshot.py       # 生成/更新行为基线
 │   ├── gate_contracts.py        # 跨文件契约：版本 / workflow 调参 / timer 节拍 / 用例数 ↔ 文档
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 278 个用例，零依赖、不联网（数量由门禁核对，别手改）
+├── tests/                   # 290 个用例，零依赖、不联网（数量由门禁核对，别手改）
+│   ├── test_arrival.py      #   12 例：时间戳失真源的排序修正（谁算「首次见到」、记忆链不断）
 │   ├── test_core.py         #   57 例：抓取与序列化的核心行为（清洗、去重、解析、轮播稳态、workflow 参数契约）
 │   ├── test_feeds_sync.py   #   12 例：清单同步容错（拉不到/不是清单/写不进都必须用旧清单继续）
 │   ├── test_title_layout.py #   11 例：屏幕宽度折算与标题切点（数字不分家、不留行尾逗号）
@@ -353,7 +355,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：278 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
+python3 -m unittest discover -s tests -v    # 单测：290 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
@@ -401,7 +403,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.9.0` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.10.0` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

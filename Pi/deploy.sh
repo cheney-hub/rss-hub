@@ -65,7 +65,7 @@ echo "==> 目标 ${PI_USER}@${PI_HOST}"
 "${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' '${FEED_ROOT}' '${KINDLE_DIR}' && echo paths-ok"
 
 echo "==> 上传引擎代码（根目录那几个文件）"
-for f in build_feed.py render.py rotate.py version.py feeds_sync.py; do
+for f in build_feed.py render.py rotate.py version.py feeds_sync.py arrival.py; do
     "${SCP[@]}" "${HERE}/../${f}" "${PI_USER}@${PI_HOST}:${HUB_ROOT}/${f}"
 done
 

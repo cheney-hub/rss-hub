@@ -89,6 +89,9 @@ from datetime import datetime, timedelta, timezone
 
 # 清单同步住在 feeds_sync.py：Pi 上那份 feeds.txt 是仓库的副本，每轮构建前要对齐一次。
 import feeds_sync
+# 时间戳失真源的排序时间修正住在 arrival.py（整份 feed 共用一个时间戳的那种源），
+# 本文件只在排序前调一次。
+import arrival
 # 显示规则住在 render.py，build_feed 只负责抓取与编排。
 from render import (BODY_MAX, ENTITY_FIX, LINE_WIDTH, build_rss, clean_text,
                     dedupe, device_description, item_guid)
@@ -568,6 +571,10 @@ def run_once(entries, prev_items):
     池子顺序再漂就等于随机换台）。补上 guid 后，同一批数据只有一个池子顺序。
     """
     items, counts = _collect(entries, prev_items)
+    # 个别源给整份 feed 打同一个时间戳且每轮刷成当前时刻（日经、光明日报·版面），
+    # 那样它们会永远排在最新 —— 这里把它们的排序时间改回「首次见到那条的时间」。
+    # 依据是上一轮产物，所以第一次运行没有效果，从第二轮起才认得出来。
+    settled = arrival.settle(items, prev_items)
     items.sort(key=lambda x: (-(x.get("ts") or 0), item_guid(x)))
     items, dedup_dropped = dedupe(items)
     # 排序在前、裁剪在后，留下的一定是最新的那批（120 条 ≈ 4.3 小时产出）。
@@ -578,6 +585,7 @@ def run_once(entries, prev_items):
         items = items[:ITEM_LIMIT]
     # dedup_dropped 与 trimmed 分开统计：前者是「重复」，后者是「排在 120 名之外」，
     # 合成一个数字时日志会把「池子满了」误读成「重复变多了」
+    counts["settled"] = settled
     stats = {"total": len(entries), "items": len(items),
              "dedup_dropped": dedup_dropped, "trimmed": trimmed}
     stats.update(counts)
@@ -704,6 +712,9 @@ def main():
               "（重复 %d、超出上限裁掉 %d）耗时 %.1fs"
               % (rounds, stats["ok"], stats["stale"], stats["fail"],
                  stats["items"], stats["dedup_dropped"], stats["trimmed"], elapsed))
+        if stats.get("settled"):
+            print("       其中 %d 条按「首次见到」排序（源每轮刷新整个时间戳）"
+                  % stats["settled"])
         print("        上屏：%s ｜ %s"
               % (note, (pick.get("title") or "")[:36] if pick else "（设备版保持上一版）"))
 

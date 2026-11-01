@@ -1,0 +1,125 @@
+"""时间戳失真源的排序修正（stdlib unittest，零依赖、不联网）。
+
+要防的错是两类，都很难在现场看出来：
+  ① 把正常源误判成失真源 —— 条目凭空变旧，可能从池子里消失；
+  ② 改了排序用的时间戳却没改写进产物那个字符串 —— 下一轮读回来又是源标称的时钟，
+     记忆链断掉，等于白改（`_round_trip` 那几条就是盯这个的）。
+
+跑法：
+    python -m unittest discover -s tests -v
+"""
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import arrival as A  # noqa: E402
+import build_feed as B  # noqa: E402
+
+
+def mk(title, src="https://src/%d.xml", ts=1000):
+    """一条最小可用条目。src 默认按标题不同而不同，需要同源时显式传同一个值。"""
+    url = src % hash(title) if "%d" in src else src
+    return {"title": title, "link": "https://x/" + title, "ts": ts,
+            "date_raw": "n/a", "src": url, "src_name": "测试源"}
+
+
+def group(src, n, ts):
+    return [mk("t%d" % i, src=src, ts=ts) for i in range(n)]
+
+
+class TestClockStampedSources(unittest.TestCase):
+    """哪些源算「时间戳失真」：整份条目共用一个时间戳，且条目数够得上判断。"""
+
+    def test_shared_timestamp_is_flagged(self):
+        self.assertEqual(A.clock_stamped_sources(group("https://nk/rss", 5, 900)),
+                         {"https://nk/rss"})
+
+    def test_distinct_timestamps_are_untouched(self):
+        items = [mk("t%d" % i, src="https://good/rss", ts=900 + i) for i in range(5)]
+        self.assertEqual(A.clock_stamped_sources(items), set(),
+                         "时间戳逐条不同的源被误判成失真源")
+
+    def test_one_second_apart_is_still_normal(self):
+        # 差一秒就说明源在逐条标注发布时间，不能因为「这批凑巧很集中」就归成失真
+        items = [mk("t%d" % i, src="https://burst/rss", ts=900 + i) for i in range(5)]
+        self.assertEqual(A.clock_stamped_sources(items), set())
+
+    def test_too_few_items_to_judge(self):
+        # 只有 1~2 条时本来就可能同秒，证据不足不动它
+        for n in (1, 2):
+            with self.subTest(n=n):
+                self.assertEqual(
+                    A.clock_stamped_sources(group("https://tiny/rss", n, 900)), set())
+        self.assertEqual(A.clock_stamped_sources(group("https://tiny/rss", A.MIN_ITEMS, 900)),
+                         {"https://tiny/rss"})
+
+
+class TestSettle(unittest.TestCase):
+    """改成「首次见到时间」的那一步。"""
+
+    def prev(self, src, titles, ts):
+        return {src: [{"title": t, "link": "https://x/" + t, "ts": ts,
+                       "src": src, "date_raw": "n/a"} for t in titles]}
+
+    def test_keeps_earlier_first_seen(self):
+        items = group("https://nk/rss", 5, 2000)
+        prev = self.prev("https://nk/rss", ["t0", "t1", "t2"], 1000)
+        self.assertEqual(A.settle(items, prev), 3)
+        self.assertEqual(items[0]["ts"], 1000, "应回到上一轮认定的时间，而不是本轮标称")
+        self.assertEqual(items[4]["ts"], 2000, "上一轮没见过的条目不参与改写")
+
+    def test_rewrites_date_raw_so_next_round_can_remember(self):
+        # 只改 ts 不改写出去的字符串，下一轮从产物读回来还是源标称的时钟 —— 记忆链断了
+        items = group("https://nk/rss", 3, 2000)
+        A.settle(items, self.prev("https://nk/rss", ["t0", "t1", "t2"], 1000))
+        self.assertNotEqual(items[0]["date_raw"], "n/a")
+        self.assertEqual(B._parse_date(items[0]["date_raw"]), 1000,
+                         "改写后的 date_raw 必须能被自己解析回同一个时间戳")
+
+    def test_never_makes_an_item_younger(self):
+        # 源补发旧稿时，上一轮的时间比本轮标称更晚，取小值 —— 年龄只增不减
+        items = group("https://nk/rss", 3, 1000)
+        A.settle(items, self.prev("https://nk/rss", ["t0", "t1", "t2"], 2000))
+        self.assertTrue(all(it["ts"] == 1000 for it in items))
+
+    def test_normal_source_untouched(self):
+        items = [mk("t%d" % i, src="https://good/rss", ts=2000 + i) for i in range(5)]
+        prev = self.prev("https://good/rss", ["t0"], 1000)
+        self.assertEqual(A.settle(items, prev), 0)
+        self.assertEqual([it["ts"] for it in items], [2000, 2001, 2002, 2003, 2004])
+
+    def test_first_run_without_prev_is_noop(self):
+        items = group("https://nk/rss", 5, 2000)
+        self.assertEqual(A.settle(items, {}), 0)
+        self.assertTrue(all(it["ts"] == 2000 for it in items))
+
+    def test_only_flagged_source_is_adjusted(self):
+        items = group("https://nk/rss", 3, 5000) + \
+            [mk("g%d" % i, src="https://good/rss", ts=3000 + i) for i in range(3)]
+        prev = self.prev("https://nk/rss", ["t0", "t1", "t2"], 1000)
+        prev.update(self.prev("https://good/rss", ["g0", "g1", "g2"], 1000))
+        self.assertEqual(A.settle(items, prev), 3)
+        good = [it for it in items if it["src"] == "https://good/rss"]
+        self.assertEqual([it["ts"] for it in good], [3000, 3001, 3002])
+
+    def test_same_title_from_other_source_is_not_confused(self):
+        # 身份是「链接 + 源」，换了个源的同名条目不能拿来当首见记录
+        items = group("https://nk/rss", 3, 5000)
+        prev = {"https://other/rss": [{"title": "t0", "link": "https://x/t0",
+                                       "ts": 1000, "src": "https://other/rss"}]}
+        self.assertEqual(A.settle(items, prev), 0)
+
+    def test_round_trip_two_rounds_in_a_row(self):
+        """连跑两轮：时间必须稳定在第一轮那个值，不能跟着源一路往上漂。"""
+        prev = {}
+        for claimed in (1000, 7000, 9000):
+            items = group("https://nk/rss", 3, claimed)
+            A.settle(items, prev)
+            prev = {"https://nk/rss": [dict(it) for it in items]}
+        self.assertEqual(items[0]["ts"], 1000, "源每轮刷新时间戳，时间应停在首次见到")
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
