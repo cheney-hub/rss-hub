@@ -195,7 +195,7 @@ wget 失败时还会带上它的报错原文。
 | 现象 | 先看什么 |
 |---|---|
 | 屏幕停在旧画面不动 | 局域网 IP 已彻底作废（Pi 把 wlan0 入站全 DROP），图只能走公网 `moreaix.com` |
-| wget 报证书错误 | KPW2 那套根证书较旧；把 `board.sh` 的 URL 换成 `http://`（实测不跳转、直接 200） |
+| wget 报证书错误 | 不用管：`board.sh` 现在 https 失败会自动退到 http 同一地址。要看是不是这个原因，跑「自检」读 `fetch` 那行：`FAIL-https OK-http` 就是 TLS 不被信任 |
 | 点菜单毫无反应 | 先看 `.sh` 是不是 CRLF；再看 `rssboard-diag.txt` 有没有新增一行 |
 | 拔掉 USB 后不再刷新 | Kindle 没有 systemd，重启后要重拉；或改用 KUAL 的「启动常驻刷新」 |
 | 设备不休眠、一直在耗电 | 用 KUAL 的「恢复书库界面」或 `stop.sh` 释放 `preventScreenSaver` |

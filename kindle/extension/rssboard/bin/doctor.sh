@@ -29,14 +29,26 @@ else
 fi
 
 # ---- 3 真的取一次图（这一步顺带验证 DNS、TLS、Cloudflare 三层）----
+#
+# https 与 http **分开验**并分别记录：这样诊断文件能直接回答「是不是 TLS 的锅」——
+# KPW2 的根证书不认 Let's Encrypt 的新链（末端 ISRG Root X2，2026-11-01 实测），
+# 症状是 https 秒失败而同地址的 http 直接 200。两者一起报错才是真的没网。
 c3="SKIP (no url)"
 detail=""
 if [ -n "$URL" ] && [ "${c2#OK}" != "$c2" ]; then
     if wget -T 15 -O "$TMP" "$URL" 2>"$ERR"; then
-        c3="OK ($(wc -c < "$TMP" | tr -d ' ') bytes)"
+        c3="OK-https ($(wc -c < "$TMP" | tr -d ' ') bytes)"
     else
-        c3="FAIL"
-        detail=$(tail -n 2 "$ERR" 2>/dev/null | tr -d '\r' | cut -c1-160)
+        if [ -z "$detail" ]; then
+            detail=$(tail -n 2 "$ERR" 2>/dev/null | tr -d '\r' | cut -c1-160)
+        fi
+        ALT=$(printf '%s' "$URL" | sed 's#^https://#http://#')
+        if [ "$ALT" != "$URL" ] && wget -T 15 -O "$TMP" "$ALT" 2>>"$ERR"; then
+            c3="FAIL-https OK-http ($(wc -c < "$TMP" | tr -d ' ') bytes)"
+        else
+            c3="FAIL-both"
+            detail=$(tail -n 2 "$ERR" 2>/dev/null | tr -d '\r' | cut -c1-160)
+        fi
     fi
 fi
 rm -f "$TMP" "$ERR"
@@ -71,7 +83,10 @@ rm -f "$OLD"
 
 verdict="PASS"
 [ "$c1" = "OK" ] || verdict="FAIL: no board.sh"
-case "$c3" in FAIL*) verdict="FAIL: fetch";; esac
+case "$c3" in
+    FAIL-both*)   verdict="FAIL: fetch (no network)" ;;
+    FAIL-https*)  verdict="WARN: TLS not trusted, http works" ;;
+esac
 
 eips -c
 eips 1 1 "RSS Board doctor: $verdict"

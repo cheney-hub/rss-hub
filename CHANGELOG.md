@@ -6,6 +6,35 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.11.1] - 2026-11-01
+
+**修：Kindle 看板一张图都没出过屏——是 https 证书换了新链**
+
+现象是「KUAL 里点刷新毫无反应、屏上永远停在旧画面」。设备侧取证：根目录既没有
+`board.png` 也没有 `rssboard-diag.txt`，而这两样只要成功过一次就一定存在；
+`board.lock` 里残留的 pid 说明常驻循环今天 07:57 起来过，每轮 fetch 全败。
+
+真因在服务端：`moreaix.com` 的证书两天前（10-30）换到了 Let's Encrypt 的新链，
+末端是 **ISRG Root X2**，KPW2 那套 2019 年的根证书里没有它 —— Kindle 的 wget
+证书校验**秒失败**，而 wget 的错误原文连看都看不到，光盯屏幕永远分不清是 TLS 还是没网。
+同地址的 http 直连 200、不跳转。
+
+改动：
+
+- `kindle/board.sh`：`fetch()` 改成 https 先试（超时 8 秒）→ 失败自动退到同一地址的
+  http（25 秒）；抽象出一个 `http_url()` 用 sed 换协议，避免「两个地址变量各自漂移」。
+  **这条是为了让下一次证书轮换不再让看板哑掉**，而不是修一次就算。
+- `kindle/extension/rssboard/bin/doctor.sh`：自检把 https 与 http **分开验**，
+  `fetch` 行现在会直接给结论：`OK-https` / `FAIL-https OK-http` / `FAIL-both`；
+  屏上那行 verdict 相应变成 `WARN: TLS not trusted, http works`。TLS 与网络从此能当场分开。
+- `kindle/README.md`：排障表里「手动把 URL 改成 http」那条已过期，改成自动退让的说明。
+
+不动 `tests/golden.txt`：这次改的是 Kindle 设备端的 shell，渲染器输出逐字节未变。
+
+排查过程中还记一笔工具教训：**`grep -c $'\r'` 在这台 Windows 上的 Git Bash 里恒等于行数**
+（等于用空模式匹配了每一行），一度把不是 CRLF 的文件全报成 CRLF，白查一轮。
+查行尾要用 `od -An -tx1 f | tr ' ' '\n' | grep -c '^0d$'` 或 python 数 `\r\n`。
+
 ## [1.11.0] - 2026-11-01
 
 **新：Kindle 看板搬出 `Pi/`，成为与自己平级的独立子项目 `kindle/`**
