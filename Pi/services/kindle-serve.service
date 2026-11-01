@@ -1,5 +1,5 @@
 [Unit]
-Description=Kindle board static server (serve.py on 8082, routed by tunnel as board.moreaix.com)
+Description=Kindle board static server (serve.py on 8082, routed by tunnel as moreaix.com/kindle)
 After=network-online.target
 Wants=network-online.target
 
@@ -14,9 +14,12 @@ ExecStartPre=/bin/mkdir -p /home/user/kindle
 # 绑 0.0.0.0 而不是只绑回环：三个来源都要够得到它 —— 局域网里的 Kindle 板子、
 # 本机上的 cloudflared（隧道把公网请求转发到 localhost:8082）、以及排障时的 curl。
 # 8080/8081 仍只监听 127.0.0.1，和这台互不影响。
-# --prefix= 表示不要 /rss 那层前缀：板子上的 board.sh 直接取 /kindle.png，
-# 空路径会被 serve.py 兜成 index.html（也就是 kindle_page.py 产出的网页看板）。
-ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/kindle --port 8082 --bind 0.0.0.0 --prefix=
+# --prefix=/kindle：公网上这张图挂在 https://moreaix.com/kindle/rss-pw2.png，
+# 而 Cloudflare 的路径转发会**原样**把 /kindle 带给后端（实测 /rss/rss/feed.xml 是 404，
+# 说明它不会替你剥前缀），所以这里必须显式声明同一层前缀。
+# 前缀是可选的：局域网里的 Kindle 直接取 /rss-pw2.png（不带前缀）也照样通，
+# 两边任意一个口径都能用，改的时候记得 board.sh 里的 URL 也要跟着改。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/kindle --port 8082 --bind 0.0.0.0 --prefix=/kindle
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1

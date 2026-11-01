@@ -12,7 +12,7 @@ Environment=TZ=Asia/Shanghai
 # 1024x758 = Kindle Paperwhite 2（第 6 代）；换机型只改这一行
 #
 # 两条命令同一个 oneshot、同一个触发源（feed.xml 一变就跑）：
-#   kindle_screen.py -> kindle.png，eips 画屏那条路用；
+#   kindle_screen.py -> rss-pw2.png（BOARD_PNG 决定文件名），eips 画屏那条路用；
 #   kindle_page.py   -> index.html，浏览器 / 公网那条路用。
 # 第一条前面那个 "-" 是必须的：它俩读同一个 feed.xml，池子空的时候**两条都会**
 # 返回 1；没有前缀的话 systemd 一撞上第一条失败就不再往下执行，网页从此不再更新

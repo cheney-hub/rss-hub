@@ -178,7 +178,9 @@ MobileRead Wiki 的 WatchThis 条目。
 1. `scp Pi/kindle/board.sh root@<kindle-ip>:/mnt/us/board.sh`
 2. `ssh root@<kindle-ip> 'chmod +x /mnt/us/board.sh'`
 3. 先**前台试跑**：`ssh root@<kindle-ip> 'sh /mnt/us/board.sh'`，看屏幕有没有出图。
-   不出图就先在本机 curl `http://192.168.6.6:8082/kindle.png` 确认图床是好的，再排 Kindle 侧。
+   不出图就先在本机 curl `http://192.168.6.6:8082/kindle/rss-pw2.png` 确认图床是好的。
+   （局域网被防火墙挡住时排不掉这一步，可以直接 `curl https://moreaix.com/kindle/rss-pw2.png`
+   走公网验证；要让板子长期走公网则用 `BOARD_URL` 覆盖，见 [`TUNNEL.md`](TUNNEL.md) 6.7。）
 4. 确认 OK 后常驻：
    `ssh root@<kindle-ip> 'nohup sh /mnt/us/board.sh >/dev/null 2>&1 &'`
 
@@ -205,7 +207,7 @@ KUAL 里会多出一组 **RSS Board** 菜单：立即刷新一次 / 启动常驻
 
 ## 出问题时的检查顺序
 
-1. 图床：`curl -o /tmp/k.png http://192.168.6.6:8082/kindle.png` → 200 + PNG
+1. 图床：`curl -o /tmp/k.png http://192.168.6.6:8082/kindle/rss-pw2.png` → 200 + PNG
 2. Pi 侧渲染：`systemctl status kindle-screen.path`、`journalctl -u kindle-screen.service`
-3. Kindle 能拿到图吗：`ssh` 进去 `wget -O /mnt/us/t.png http://192.168.6.6:8082/kindle.png`
+3. Kindle 能拿到图吗：`ssh` 进去 `wget -O /mnt/us/t.png http://192.168.6.6:8082/kindle/rss-pw2.png`
 4. 能画到屏吗：`eips -g /mnt/us/t.png`

@@ -85,7 +85,7 @@ rss-build.timer rss-rotate.timer kindle-screen.path || true"
 echo "==> 本机自检（docs/ 里还没 feed.xml 时 404 属正常）"
 "${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8080/rss/feed.xml -> %{http_code}\n" \
 http://127.0.0.1:8080/rss/feed.xml || true'
-"${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8082/kindle.png -> %{http_code}\n" \
-http://127.0.0.1:8082/kindle.png || true'
+"${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8082/kindle/rss-pw2.png -> %{http_code}\n" \
+http://127.0.0.1:8082/kindle/rss-pw2.png || true'
 
 echo "完成：脚本已更新，单元已装好并设为开机自启。"

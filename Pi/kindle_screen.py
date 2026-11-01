@@ -6,7 +6,8 @@
     python3 kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml \
                              --out-dir /home/user/kindle --sizes 1024x758
 
-产出：每个尺寸一个 kindle-<W>x<H>.png，另外把第一个尺寸复制成 kindle.png（默认图）。
+产出：每个尺寸一个 kindle-<W>x<H>.png，另外把第一个尺寸复制成默认图
+（`BOARD_PNG`，当前是 rss-pw2.png —— 名字里带机型，将来给第二台设备出图不会撞名）。
 当前目标机是 Kindle Paperwhite 2（第 6 代，序列号前缀 90D4），固定 1024x758。
 图像为 8bit 灰度（"L" 模式），白底黑字，e-ink 直出无需再转。
 
@@ -33,6 +34,10 @@ from PIL import Image, ImageDraw, ImageFont
 WHITE = 255
 BLACK = 0
 GRAY_META = 140
+
+# 默认图文件名：外部只认这一个名字 —— serve.py 把它挂在 https://moreaix.com/kindle/
+# 下，Kindle 端的 board.sh 也写死它。换机型或给第二台设备出图时改这一处即可。
+BOARD_PNG = "rss-pw2.png"
 
 TAG_RE = re.compile(r"<[^>]+>")
 NO_LINE_START = "、。，；：）】》」』！？%!?,.;:)]}"
@@ -326,7 +331,7 @@ def draw_board(w, h, items, built_at):
 
 
 def render(feed_path, out_dir, sizes):
-    """把 feed 渲成每种尺寸一张 PNG，并把第一张复制成 kindle.png；返回进程退出码。
+    """把 feed 渲成每种尺寸一张 PNG，并把第一张复制成默认图 BOARD_PNG；返回进程退出码。
 
     built_at 取 feed.xml 的 mtime，所以页眉写的是「这份数据是什么时候抓的」，
     不是「这张图是什么时候画的」——两者差几分钟时前者更有意义。
@@ -353,7 +358,7 @@ def render(feed_path, out_dir, sizes):
         if first is None:
             first = p
     if first:
-        dst = os.path.join(out_dir, "kindle.png")
+        dst = os.path.join(out_dir, BOARD_PNG)
         shutil.copyfile(first, dst + ".tmp")
         os.replace(dst + ".tmp", dst)
     print("rendered %d items -> %s (%s)" % (
@@ -387,7 +392,7 @@ def main():
     ap.add_argument("--feed", default="/home/user/rss-hub/docs/feed.xml")
     ap.add_argument("--out-dir", default="/home/user/kindle")
     ap.add_argument("--sizes", default="1024x758",
-                    help="逗号分隔的 WxH 列表，第一个同时存为 kindle.png")
+                    help="逗号分隔的 WxH 列表，第一个同时存为 %s" % BOARD_PNG)
     args = ap.parse_args()
     if not os.path.isfile(args.feed):
         sys.exit("feed 不存在: %s" % args.feed)

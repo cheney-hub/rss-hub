@@ -14,11 +14,13 @@
 # 继续下一轮；加上 -e 会让整个看板因为一次网络抖动就停摆。
 
 # 图的来源。默认走家庭局域网直连 Pi；可用 BOARD_URL 覆盖成公网地址：
-#   BOARD_URL="https://board.moreaix.com/kindle.png" sh board.sh
+#   BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh
+# 路径上的 /kindle 是 serve.py 那一侧的 --prefix（不是目录），文件名由
+# kindle_screen.py 的 BOARD_PNG 决定 —— 改任一侧都要同步改这里。
 # 要不要覆盖看现场：局域网直连最快、也不依赖隧道与外网；但凡 Pi 侧的防火墙
 # （nft/ufw/Docker 改过策略时很常见）把入站 TCP 丢了 —— 表现为 ping 得通、
 # 所有端口一律超时 —— 就只能改走公网那条路，代价是每次取图都要绕 Cloudflare 一圈。
-URL="${BOARD_URL:-http://192.168.6.6:8082/kindle.png}"
+URL="${BOARD_URL:-http://192.168.6.6:8082/kindle/rss-pw2.png}"
 TMP="/mnt/us/board.png.new"
 IMG="/mnt/us/board.png"
 LOCK="/mnt/us/board.lock"

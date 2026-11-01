@@ -153,11 +153,13 @@ def build_page(items, built_at, desc_limit, refresh):
             parts.append('<p class="m">%s</p>' % esc(meta))
         parts.append('</li>')
         body.append("".join(parts))
+    # 「看板图」指向同一目录下的默认图，文件名要和 kindle_screen.py 的 BOARD_PNG 一致。
+    # 不直接 import kindle_screen 取常量：那边依赖 Pillow，而本脚本刻意保持零依赖。
     tail = [
         '</ol>',
         '<p class="foot">'
         '<a href="./">手动刷新</a> · '
-        '<a href="./kindle.png">看板图</a>'
+        '<a href="./rss-pw2.png">看板图</a>'
         '</p>',
         '</body>',
         '</html>',

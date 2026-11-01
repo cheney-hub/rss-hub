@@ -63,7 +63,8 @@
 `moreaix.com → <tunnel-id>.cfargotunnel.com`
 
 - 客户端地址即：`https://moreaix.com/rss/feed.xml` 和 `/rss/feed-wrap.xml`
-- `serve.py` 已做前缀兼容：即使 Cloudflare 把 `/rss` 剥掉再转发，也能找到文件。
+- `serve.py` 的前缀是**可选**的（见 `_target()`）：带 `/rss` 和不带都能找到文件。
+  不是因为 Cloudflare 会剥前缀 —— 实测它不会（下面 6.1 有证据）。
 
 ## 第 3 步：在树莓派安装 cloudflared
 
@@ -126,76 +127,110 @@ curl -s  https://moreaix.com/rss/feed.xml | head -n 20
 Pi **主动出站**连到 Cloudflare 的，不需要任何入站规则 —— 所以它恰好绕开了 Pi 那层
 让我们试不通的防火墙。
 
-### 6.1 加一条 Public Hostname
+对外地址是 **`https://moreaix.com/kindle/rss-pw2.png`**（根域 + 路径，不再单独开
+`board` 子域），网页版则是 **`https://moreaix.com/kindle/`**。
+
+### 6.1 Pi 侧：给 8082 加一层 `--prefix=/kindle`
+
+Cloudflare 的路径转发会把 Public Hostname 里那层 path **原样**带给后端，不会替你剥掉。
+证据就在现有那条路由上：那边配的是 `/rss`，所以请求 `moreaix.com/rss/feed.xml` 是 200，
+而 `moreaix.com/rss/rss/feed.xml` 是 404 —— 剥掉的话后者该命中才对。
+
+所以前端挂了 `/kindle`，后端就得认这层前缀，这正是 `serve.py` 的 `--prefix` 存在的理由。
+新版单元里已经写好，重装即可：
+
+```bash
+sudo install -m 644 Pi/services/kindle-serve.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl restart kindle-serve
+sudo systemctl is-active kindle-serve
+```
+
+手工改的话只有 ExecStart 末尾那个参数：`--prefix=` → `--prefix=/kindle`。
+
+这层前缀是**可选**的（`_target()` 里剥不剥都认），所以局域网里的 Kindle 直接取
+`/rss-pw2.png`（不带前缀）照样是 200 —— 公网、局域网两套口径并存，不用迁就任何一边。
+
+### 6.2 加一条 Public Hostname
 
 Zero Trust → Networks → Tunnels → 点开 `rss-pi` → **Public Hostname** → Add a public hostname
 
 | 字段 | 填 |
 |---|---|
-| Subdomain | `board` |
+| Subdomain | 留空（根域） |
 | Domain | `moreaix.com` |
-| Path | 留空 |
+| Path | `/kindle` |
 | Service · Type | `HTTP` |
 | Service · URL | `localhost:8082` |
 
-保存后 Cloudflare 会自动建 DNS 记录 `board.moreaix.com → <tunnel-id>.cfargotunnel.com`。
+根域上已经有一条 `/rss` 的记录了，两者不冲突：同一个 hostname 挂多条不同 path 是允许的，
+Cloudflare 按**最长路径**挑匹配的那条 —— `/kindle/...` 走 8082，`/rss/...` 走 8080。
 
-**别把它挂成 `moreaix.com/kindle` 这种路径**：8082 那台 `serve.py` 是 `--prefix=`
-（无前缀），后端期待的是 `/kindle.png`，而 Cloudflare 的路径转发**不会**替你剥掉前缀，
-挂上去只会拿到一排 404。专用子域一行代码都不用改。
+> 这一节早期版本写的是「别挂成 `moreaix.com/kindle` 路径」，理由是当时 8082 用的是
+> `--prefix=`（无前缀）。现在前缀已经在后端补上，那条限制作废；反过来，谁把
+> `--prefix` 改回空字符串，这一整节的配置就会重新变成一排 404。
 
-### 6.2 边缘缓存也要 bypass
+### 6.3 边缘缓存也要 bypass
 
 Cloudflare 默认会替静态扩展名（含 `.png`）在边缘存一份，优先级高过源站发的
-`Cache-Control`，结果是「图早就重画了、浏览器拿到的还是旧的」。所以沿用同类规矩：
+`Cache-Control`，结果是「图早就重画了、浏览器拿到的还是旧的」。沿用第 5 步那条按路径
+匹配的写法即可，不必改成按 hostname —— 本站的 cache rule 一直是路径口径，保持一致更好找：
 
 - **Caching → Cache Rules** 新建规则
-- 匹配：`Hostname` `equals` `board.moreaix.com`
+- 匹配：`URI Path` `starts_with "/kindle"`
 - 动作：**Bypass cache**
 
-### 6.3 Pi 侧先自证健康（隧道转发到 localhost，与外网无关）
+### 6.4 Pi 侧先自证健康（隧道转发到 localhost，与外网无关）
 
 ```bash
 sudo systemctl status kindle-serve.service
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/kindle.png   # 期望 200
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/            # 期望 200
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/kindle/rss-pw2.png  # 期望 200
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/kindle/             # 期望 200
 ```
 
-第二条是 `kindle_page.py` 写的网页看板（见下面 6.4）。它是 `kindle-screen.service`
+第二条是 `kindle_page.py` 写的网页看板（见下面 6.5）。它是 `kindle-screen.service`
 的第二条 ExecStart，跟着 feed.xml 的重建一起跑，不用单独装任何东西。
 
-### 6.4 两个地址，各管一摊
+### 6.5 两个地址，各管一摊
 
 | 地址 | 给谁用 |
 |---|---|
-| `https://board.moreaix.com/` | 网页看板：能滚动、能点开原文，条目远远多于一屏 |
-| `https://board.moreaix.com/kindle.png` | 单张 PNG：给 `board.sh` + `eips` 画屏那条路 |
+| `https://moreaix.com/kindle/` | 网页看板：能滚动、能点开原文，条目远远多于一屏 |
+| `https://moreaix.com/kindle/rss-pw2.png` | 单张 PNG：给 `board.sh` + `eips` 画屏那条路 |
 
 两者读同一份 `feed.xml`，互不依赖：删掉网页那一步，eips 那条路照常工作。
 
-### 6.5 Kindle 老浏览器可能不认 Cloudflare 的证书
+文件名 `rss-pw2.png` 由 `kindle_screen.py` 的 `BOARD_PNG` 决定（= 第一个尺寸的副本）；
+每个尺寸另有一份独立的 `kindle-<W>x<H>.png`。改名要同步三处：那个常量、`board.sh`
+里的 URL、`kindle_page.py` 页脚那个「看板图」链接。
+
+### 6.6 Kindle 老浏览器可能不认 Cloudflare 的证书
 
 KPW2 的实验性浏览器自带的根证书比较旧，遇到现代证书链有可能直接报证书错误
 （而不是「打不开」）。三条解决办法，按顺序试：
 
-1. 先试 `http://board.moreaix.com` —— Cloudflare 默认会重定向到 https，
+1. 先试 `http://moreaix.com/kindle/` —— Cloudflare 默认会重定向到 https，
    先不用管，看浏览器能不能过；
 2. 报证书错的：SSL/TLS → Edge Certificates → 关掉 **Always Use HTTPS**
    （可以只对这一个子域配 Configuration Rule，别全局关）；
 3. 还不行就让 `board.sh` 走非加密地址：
-   `BOARD_URL="http://board.moreaix.com/kindle.png" sh board.sh`
+   `BOARD_URL="http://moreaix.com/kindle/rss-pw2.png" sh board.sh`
 
 > 这一节我没能在真机上验过（这台机器够不到 Kindle），是预案不是结论。
 > 试出来哪一条可用，请回来把这一段改成实际结果。
 
-### 6.6 board.sh 要不要改走公网
+### 6.7 board.sh 要不要改走公网
 
 默认仍是局域网直连（最快，也不依赖隧道和外网）：
 
 ```bash
-sh board.sh                                            # 局域网
-BOARD_URL="https://board.moreaix.com/kindle.png" sh board.sh   # 走公网
+sh board.sh                                                    # 局域网
+BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh  # 走公网
 ```
+
+只有在「ping 通但所有端口一律超时」时才需要第二种 —— 代价是每 5 分钟的取图都要
+绕 Cloudflare 一圈。注意这是**进程级**环境变量：KUAL 菜单里的「启动常驻刷新」
+用的是默认地址，要长期走公网得改 `start.sh`（或在该脚本里 export）。
 
 只有在「ping 通但所有端口一律超时」时才需要第二种 —— 代价是每 5 分钟的取图都要
 绕 Cloudflare 一圈。注意这是**进程级**环境变量：KUAL 菜单里的「启动常驻刷新」

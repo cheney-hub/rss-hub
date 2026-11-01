@@ -25,7 +25,8 @@
   - `rss-rotate.service` + `rss-rotate.timer` — 轮播（设备版），**全天每 5 分钟推进一条**
   - `moreaix-site.service` — 根域主页静态服务（端口 8081）
   - `kindle-screen.service` + `kindle-screen.path` — feed 一变就重画看板（**不轮询**）
-  - `kindle-serve.service` — 看板图床（端口 8082，**唯一绑 `0.0.0.0` 的服务**，仅局域网可达）
+  - `kindle-serve.service` — 看板图床（端口 8082，**唯一绑 `0.0.0.0` 的服务**，
+    局域网可达；同时经 Tunnel 暴露为 `moreaix.com/kindle/`）
 - `kindle/board.sh` — Kindle 端取图上屏脚本（需越狱后使用）
 - `kindle/extension/rssboard/` — KUAL 扩展：把上面那个脚本包成「立即刷新/启动/停止/看状态」菜单
 - `kindle/build-mrpackage.sh` — 把它俩打成 MRPI 的 `.bin`（需要先编一个 kindletool）
@@ -44,9 +45,10 @@
 ## Pi 上的实际部署路径
 
 - 服务文件：`/etc/systemd/system/`（`rss-serve.service` 等）
-- 辅助脚本：`/home/user/pi-pipeline/`（`serve.py` / `rotate_screen.py` / `kindle_screen.py`）
+- 辅助脚本：`/home/user/pi-pipeline/`（`serve.py` / `rotate_screen.py` / `kindle_screen.py` / `kindle_page.py`）
 - 主页：`/home/user/site/`
-- 看板图输出：`/home/user/kindle/`（`kindle.png` = `kindle-1024x758.png`，KPW2 第 6 代）
+- 看板图输出：`/home/user/kindle/`（`rss-pw2.png` = `kindle-1024x758.png` 的副本，KPW2 第 6 代；
+  对外地址 `https://moreaix.com/kindle/rss-pw2.png`，网页版 `https://moreaix.com/kindle/`）
 - RSS 引擎：`/home/user/rss-hub/`（= 仓库根目录代码在 Pi 的本地副本）
 
 时区：`timedatectl set-timezone Asia/Shanghai`（并确认 `timedatectl` 输出里
@@ -60,7 +62,7 @@
 |---|---|---|---|
 | 8080 | `127.0.0.1` | feed 静态服务 | 经 Cloudflare Tunnel → `moreaix.com/rss/` |
 | 8081 | `127.0.0.1` | 根域主页 | 经 Cloudflare Tunnel → `moreaix.com/` |
-| 8082 | `0.0.0.0` | Kindle 看板图 | **仅局域网**，Tunnel 无此路由 |
+| 8082 | `0.0.0.0` | Kindle 看板图 | 局域网直连 + 经 Tunnel → `moreaix.com/kindle/` 两条入口 |
 
 ## 关于 GitHub Actions
 

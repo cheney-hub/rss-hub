@@ -248,7 +248,7 @@ class TestBoard(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_PIL, "需要 Pillow：%s" % _IMPORT_ERR)
 class TestRender(unittest.TestCase):
-    """落盘流程：原子替换 kindle.png，池子空时保留旧图。"""
+    """落盘流程：原子替换默认图 BOARD_PNG，池子空时保留旧图。"""
 
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="rss-render-")
@@ -262,19 +262,19 @@ class TestRender(unittest.TestCase):
 
     def test_writes_first_size_as_default_png(self):
         self.assertEqual(KS.render(self.feed, self.out, [(400, 300), (200, 150)]), 0)
-        for name in ("kindle-400x300.png", "kindle-200x150.png", "kindle.png"):
+        for name in ("kindle-400x300.png", "kindle-200x150.png", KS.BOARD_PNG):
             self.assertTrue(os.path.isfile(os.path.join(self.out, name)), name)
-        self.assertFalse(os.path.exists(os.path.join(self.out, "kindle.png.tmp")),
+        self.assertFalse(os.path.exists(os.path.join(self.out, KS.BOARD_PNG + ".tmp")),
                          "临时文件没 replace 干净")
 
     def test_png_magic(self):
         """设备端 wget 到半张图会直接画失败，所以必须是完整 PNG。"""
         KS.render(self.feed, self.out, [(400, 300)])
-        with open(os.path.join(self.out, "kindle.png"), "rb") as f:
+        with open(os.path.join(self.out, KS.BOARD_PNG), "rb") as f:
             self.assertEqual(f.read(8), b"\x89PNG\r\n\x1a\n")
 
     def test_empty_pool_keeps_previous_png(self):
-        old = os.path.join(self.out, "kindle.png")
+        old = os.path.join(self.out, KS.BOARD_PNG)
         os.makedirs(self.out)
         KS.render(self.feed, self.out, [(400, 300)])
         with open(old, "rb") as f:

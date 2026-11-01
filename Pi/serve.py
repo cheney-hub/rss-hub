@@ -155,7 +155,9 @@ def make_handler(root, prefix=""):
 
     每个服务实例各造一个子类，而不是把目录写死进 _StaticHandler：同一个进程将来
     同时服务多个目录时（比如 8080 的 feed 和 8082 的图合并），两边互不影响。
-    prefix 是「Tunnel 上那层路径前缀」，传空串表示不要前缀（8081/8082 用）。
+    prefix 是「Tunnel 上那层路径前缀」，传空串表示不要前缀（8081 用）。
+    8082 现在是 /kindle：公网那一头 `https://moreaix.com/kindle/rss-pw2.png` 的路径
+    是被 Cloudflare **原样**转发过来的，后端认同一层前缀才接得住。
     """
     class Handler(_StaticHandler):
         """某个 --root 实例专用的处理器。"""

@@ -11,9 +11,11 @@ rss-build.service（每 5 分 / 夜间每小时）
 kindle-screen.path ──▶ kindle-screen.service
         │  只在 feed.xml 变化时触发，不轮询
         ▼
-/home/user/kindle/kindle-<W>x<H>.png  （8bit 灰度，白底黑字）
+/home/user/kindle/kindle-<W>x<H>.png  ──复制──▶ rss-pw2.png（默认图，BOARD_PNG）
         │
-kindle-serve.service（8082，绑 0.0.0.0，仅局域网）
+kindle-serve.service（8082，绑 0.0.0.0，--prefix=/kindle）
+        ▼
+局域网取 /rss-pw2.png    或    公网取 moreaix.com/kindle/rss-pw2.png
         ▼
 Kindle: wget → eips -g / fbink -g
 ```
@@ -21,21 +23,24 @@ Kindle: wget → eips -g / fbink -g
 要点：
 
 - **8082 是唯一绑 `0.0.0.0` 的服务**。8080/8081 仍只监听 `127.0.0.1` 给 Cloudflare Tunnel 用，
-  看板这一套不进公网、不走 Tunnel，和原有两套系统完全隔离。
+  但 8082 现在也挂到公网了（`https://moreaix.com/kindle/`，见 [`TUNNEL.md`](TUNNEL.md) 第 6 步）——
+  局域网和公网两条入口并存，局域网那条一旦被防火墙挡住就切 `BOARD_URL` 走公网。
 - 出图用 **systemd path 单元**而不是 timer：不按固定节拍空跑。监视的是 `feed.xml`
   的 `PathChanged`（不是 `PathModified`，因为写方用的是「tmp + `os.replace`」，被换掉的
   inode 上不会产生 `IN_MODIFY`）。代价是：每轮构建都会原子替换一次 `feed.xml`，
   于是每轮构建都会重画一次 —— 「内容没变」也照样重画，最多白天 288 次/天。
 - PNG 走 `tmp + os.replace` 原子替换，Kindle 不会拉到半张图。
 - 目标机已确认：**Kindle Paperwhite 2（第 6 代，序列号前缀 `90D4`）**，固定 `1024x758`，
-  同时复制成 `kindle.png`。换机型只改 `kindle-screen.service` 的 `--sizes` 一行。
+  同时复制成默认图 `rss-pw2.png`（`kindle_screen.py` 的 `BOARD_PNG`）。
+  换机型只改 `kindle-screen.service` 的 `--sizes` 一行。
 
 ## 服务端（已完成，无需再动）
 
 ```bash
 systemctl is-active kindle-screen.path kindle-serve.service
-curl -o /tmp/k.png http://127.0.0.1:8082/kindle.png   # 应为 200 / image/png
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/   # 网页版，也应为 200
+curl -o /tmp/k.png http://127.0.0.1:8082/kindle/rss-pw2.png   # 应为 200 / image/png
+                                                              # 不带 /kindle 前缀也一样通
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8082/kindle/   # 网页版，也应为 200
 python3 /home/user/pi-pipeline/kindle_screen.py --help
 ```
 
