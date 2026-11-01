@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RSS 聚合头条 · 用 iPhone 订阅</title>
+<style>
+  /* 配色跟首页（docs/index.html）保持一致，深浅色都跟系统走 */
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --text:#1b1f24; --sub:#5f6b7a;
+    --line:#e6e9ee; --accent:#2f6fed; --accent-soft:#eaf1fe;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1216; --card:#171b21; --text:#e8eaed; --sub:#9aa4b2;
+           --line:#262c35; --accent:#6f9bff; --accent-soft:#1b2635; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+       padding:32px 16px 64px}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px}
+  .sub{color:var(--sub);font-size:14px;margin:0 0 22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+        padding:18px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 4px}
+  .meta{color:var(--sub);font-size:13px}
+  /* iPhone 上的主按钮：够大、够显眼，一步就能点 */
+  .btn{display:block;text-align:center;text-decoration:none;color:#fff;
+       background:var(--accent);border-radius:12px;padding:15px 18px;
+       font-size:16px;font-weight:600;margin-top:12px}
+  .btn:active{opacity:.85}
+  .btn.sec{background:transparent;color:var(--accent);border:1px solid var(--line)}
+  ul{margin:8px 0 0;padding-left:20px;color:var(--sub);font-size:13.5px}
+  li{margin:4px 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;
+       word-break:break-all;background:var(--accent-soft);color:var(--accent);
+       padding:2px 6px;border-radius:6px}
+  a.link{color:var(--accent)}
+  .foot{color:var(--sub);font-size:12px;text-align:center;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RSS 聚合头条</h1>
+  <div class="sub">iPhone 上没有内置的 RSS 阅读器，所以订阅要借任意一个阅读器 App 完成。
+      下面两条路二选一，第一条通常一步就完事。</div>
+
+  <div class="card">
+    <h2>办法一：直接交给阅读器 App</h2>
+    <div class="meta">点下面这个按钮，系统会跳到你 iPhone 上已装的 RSS 阅读器并带上这份订阅地址。
+        适用于 NetNewsWire、Reeder、Follow 等支持 <code>feed://</code> 的 App。</div>
+    <a class="btn" href="feed://cheney-hub.github.io/rss-hub/feed.xml">用阅读器打开并订阅</a>
+    <div class="meta" style="margin-top:10px">没反应＝你还没装这类 App，或者它没有认这个协议，那就走办法二。</div>
+  </div>
+
+  <div class="card">
+    <h2>办法二：复制地址，粘贴到阅读器里</h2>
+    <div class="meta">这条地址任何阅读器都认（包括 Inoreader、Feedly、阅读、Follow 的网页端）。</div>
+    <p style="margin:12px 0 0"><code id="u">https://cheney-hub.github.io/rss-hub/feed.xml</code></p>
+    <a class="btn" href="#" onclick="copyUrl();return false;">复制上面的订阅地址</a>
+    <ul>
+      <li>打开你的阅读器 → 「添加订阅 / Add Feed」</li>
+      <li>长按输入框 → 粘贴 → 保存</li>
+      <li>还没装 App？在 <a class="link" href="https://apps.apple.com/cn/search?term=rss%E9%98%85%E8%AF%BB%E5%99%A8">App Store 里搜「RSS 阅读器」</a>，免费的 NetNewsWire 就够用</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>你会收到什么</h2>
+    <div class="meta">多源国际中文媒体合并去重后的<b>最新 120 条</b>，正文全文不截断（每源最多取 5 条）；
+        白天约每 5 分钟重建一版，受 GitHub 定时器兑现率所限实际约 1~3 小时一版。
+        另有专供墨水屏的设备版（每 5 分钟换一条），见首页。</div>
+  </div>
+
+  <div class="foot">
+    <a class="link" href="./index.html">← 回项目首页</a> ·
+    <a class="link" href="./feed.xml">feed.xml</a> ·
+    <a class="link" href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
+  </div>
+</div>
+
+<script>
+function copyUrl(){
+  const url = document.getElementById('u').textContent.trim();
+  navigator.clipboard.writeText(url).then(() => alert('订阅地址已复制：\n' + url))
+    .catch(() => {
+      // iOS Safari 有时不给剪贴板权限，退回选中+提示手抄
+      const r = document.createRange(); r.selectNodeContents(document.getElementById('u'));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      alert('请手动复制选中内容：\n' + url);
+    });
+}
+</script>
+</body>
+</html>
