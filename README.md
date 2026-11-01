@@ -98,10 +98,12 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── review_check.py          # 审查门禁：把 CODE_REVIEW.md 的硬规则做成可执行检查
 │   ├── check_secrets.py         # 凭据扫描（本地与 CI 共用）
 │   ├── golden_snapshot.py       # 生成/更新行为基线
+│   ├── audit_source_dates.py   # 源时间戳体检：逐个源量它的发布时间能不能信
 │   ├── gate_contracts.py        # 跨文件契约：版本 / workflow 调参 / timer 节拍 / 用例数 ↔ 文档
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 290 个用例，零依赖、不联网（数量由门禁核对，别手改）
+├── tests/                   # 304 个用例，零依赖、不联网（数量由门禁核对，别手改）
 │   ├── test_arrival.py      #   12 例：时间戳失真源的排序修正（谁算「首次见到」、记忆链不断）
+│   ├── test_audit_source_dates.py # 14 例：源时间戳体检判据（共用时钟 / 逐条改时间 / 未来时间 / 时钟偏差容忍）
 │   ├── test_core.py         #   57 例：抓取与序列化的核心行为（清洗、去重、解析、轮播稳态、workflow 参数契约）
 │   ├── test_feeds_sync.py   #   12 例：清单同步容错（拉不到/不是清单/写不进都必须用旧清单继续）
 │   ├── test_title_layout.py #   11 例：屏幕宽度折算与标题切点（数字不分家、不留行尾逗号）
@@ -355,7 +357,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：290 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
+python3 -m unittest discover -s tests -v    # 单测：304 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
