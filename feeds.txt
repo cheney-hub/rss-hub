@@ -19,14 +19,8 @@
 # 联合早报（新加坡）·最新
 https://feed.quanwenrss.com/feed/zaobao-latest.xml
 
-# 联合早报·新加坡即时（RSSHub 镜像，分钟级更新）
-https://rsshub.rss.tips/zaobao/realtime/singapore
-
 # 8world（新加坡新传媒中文，官方无 RSS，RSSHub 镜像）
 https://rsshub.rss.tips/8world/news
-
-# BBC·国际（英文）
-https://feed.quanwenrss.com/feed/bbc-world.xml
 
 # BBC中文·国际（繁体，官方）
 https://feeds.bbci.co.uk/zhongwen/trad/rss.xml
@@ -37,16 +31,12 @@ https://cn.nytimes.com/rss.html
 # FT中文网·最新（官方）
 https://www.ftchinese.com/rss/news
 
-# 彭博社·要闻（官方，英文）
-https://www.bloomberg.com/feeds/news.rss
-
 # 德国之声·中文（官方）
 https://rss.dw.com/xml/rss-chi-all
 
 # 法广 RFI·中文（官方，2026-11-01 实测 30 条 / 8.5h）
 https://www.rfi.fr/cn/rss
 
-# 注意：GitHub runner 上会返回 HTTP 202（机房 IP 被挡），只有 Pi 抓得到
 # 日经中文网·最新（官方，取代原先 4 条 quanwenrss 分栏镜像）
 https://cn.nikkei.com/rss.html
 
@@ -62,9 +52,6 @@ https://feed.quanwenrss.com/feed/rci-zh-hans-latest.xml
 # 俄罗斯卫星通讯社中文·最新（官方无 RSS）
 https://feed.quanwenrss.com/feed/sputnik-latest.xml
 
-# 南华早报 SCMP（中国香港，官方，英文）
-https://www.scmp.com/rss/91/feed
-
 # 中央社 CNA（中国台湾）·即时（繁体，官方无 RSS）
 https://feed.quanwenrss.com/feed/cna-aall.xml
 
@@ -74,7 +61,6 @@ https://news.ltn.com.tw/rss/all.xml
 # 自由时报·财经（中国台湾，官方）
 https://news.ltn.com.tw/rss/business.xml
 
-# 注意：GitHub runner 上返回 403，会走「回退」用上一份产物里的条目
 # 中央广播电台 RTI（中国台湾，207 条大源，官方）
 https://www.rti.org.tw/rss
 
@@ -84,7 +70,7 @@ https://rsshub.rss.tips/oncc/hk
 # 香港01（中国香港）·热榜（官方无 RSS）
 https://rsshub.rss.tips/hk01/hot
 
-# 注意：GitHub runner 上返回 403（机房 IP 被挡），只有 Pi 抓得到
+
 # 明报（中国香港）·要闻（官方，2026-11-01 实测 29 条）
 https://news.mingpao.com/rss/pns/s00001.xml
 
@@ -166,9 +152,6 @@ https://feed.quanwenrss.com/feed/eeo-latest.xml
 # 哈佛商业评论中文版·最新
 https://feed.quanwenrss.com/feed/hbrchina-latest.xml
 
-# 财联社·电报滚动（1000 条，刷屏可注释掉）
-https://feed.quanwenrss.com/feed/cailianshe-roll.xml
-
 # 雪球·实时快讯（1000 条，刷屏可注释掉）
 https://feed.quanwenrss.com/feed/xueqiu-livenews.xml
 
@@ -234,30 +217,17 @@ https://feed.quanwenrss.com/feed/ifeng-mil-latest.xml
 # 澎湃（anyfeeder 镜像，与上面澎湃重复，也能直连，仅作备份）
 # https://plink.anyfeeder.com/thepaper
 
-# 新华每日电讯·最新一期（镜像站已 404 下线）
-# https://feed.quanwenrss.com/feed/mrdx-latest.xml
+# 联合早报·新加坡即时（RSSHub 镜像，分钟级更新）
+# https://rsshub.rss.tips/zaobao/realtime/singapore
 
-# ---------- 已探明不可用（2026-11-01 在 Pi 上逐个试过，别再白试）----------
-# 下面这些是「想加但加不了」的，连同原因留档，省得下次再摸一遍。
-#
-# 新华网·时政   http://www.xinhuanet.com/politics/news_politics.xml
-#   只有 title/author/link/description，**没有 pubDate**；300 条全无时间，
-#   进了看板也排不出先后，等于废条。新华网财经同理（300 条、无日期）。
-# 人民网·时政   http://www.people.com.cn/rss/politics.xml
-#   pubDate 停在 2025-06-05，官方 RSS 早已停更（人民系只能走 quanwenrss 镜像）。
-# 中国日报·要闻 https://feed.quanwenrss.com/feed/chinadaily-main.xml
-#   能抓、也新（1.2h），但内容是**英文**（China Daily 英文版），中文看板不合适。
-# 人民日报·版面 https://feed.quanwenrss.com/feed/people-banmian.xml
-#   抓得到，但混着「本版责编 吴艳丽」这类版头，新闻价值低。
-# 经济观察报·快讯 https://feed.quanwenrss.com/feed/eeo-kuaixun.xml
-#   全是机器生成的「XX主力资金净流入」个股快讯，刷屏且无信息量。
-# 证券时报 / 上海证券报 / 中国证券报 / 每日经济新闻 / 21世纪经济报道
-#   三家 404 或 403，两家首页没有任何 RSS 入口；RSSHub 也没有对应路由。
-# 参考消息 / 经济日报 / 半月谈 / 中国青年报 / 中国政府网 / 中纪委 / 财联社
-#   要么首页无 RSS 入口，要么常见路径返回的是 HTML 而不是 feed。
-# 星岛头条网     https://www.stheadline.com/rss
-#   能出 100 条，但 pubDate 出现**次日时间**（比现在晚 15 小时），会把整块看板顶到未来。
-# NHK 中文 / 共同社中文 / 联合早报 / ABC 中文 / SBS 中文 / 瑞士资讯 / 中央社官方
-#   官方 rss 路径要么返回 HTML，要么解析失败——所以上面那几家仍用 quanwenrss。
-# hub.slarker.me（另一个 RSSHub 实例）
-#   能出央视 80 条，但**三轮里两轮 503/超时**，不够稳；同名路由改用 rssforever。
+# BBC·国际（英文）
+# https://feed.quanwenrss.com/feed/bbc-world.xml
+
+# 彭博社·要闻（官方，英文）
+https://www.bloomberg.com/feeds/news.rss
+
+# 南华早报 SCMP（中国香港，官方，英文）
+https://www.scmp.com/rss/91/feed
+
+# 财联社·电报滚动（1000 条，刷屏可注释掉）
+# https://feed.quanwenrss.com/feed/cailianshe-roll.xml
