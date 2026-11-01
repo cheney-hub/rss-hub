@@ -54,6 +54,13 @@
 			"status": false
 		},
 		{
+			"name": "恢复书库界面（停刷新）",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/restore.sh",
+			"priority": -894,
+			"exitmenu": true,
+			"status": false
+		},
+		{
 			"name": "移除本扩展（保留 board.sh）",
 			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/uninstall.sh",
 			"priority": -895,

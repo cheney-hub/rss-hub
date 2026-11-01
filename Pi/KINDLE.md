@@ -82,6 +82,13 @@ sh Pi/kindle/build-extension-zip.sh      # 产出 Pi/kindle/dist/rssboard-extens
 把那个 zip 解压到 **Kindle 根目录**（不要多套一层文件夹），得到 `board.sh` 与
 `extensions/rssboard/`。拔线后在书库打开 **KUAL**，会多出一组 **RSS Board**：
 立即刷新一次 / 启动常驻刷新 / 停止刷新 / 查看状态（写屏）/ **自检** / 移除扩展。
+**怎么退出看板**（两级，别混）：
+
+- **临时回去**：轻点一下屏幕。系统收到触摸就会重绘书库，看板被盖掉；循环还在跑，
+  5 分钟后又会盖回来。
+- **真退出**：KUAL → RSS Board → 「恢复书库界面（停刷新）」。它同时做三件事：
+  停循环、把 `preventScreenSaver` 释放（否则设备再也不休眠、一直耗电）、让书库重画。
+
 「自检」的结果**写成文件**放在 Kindle 根目录：拔线插电脑打开
 `E://rssboard-diag.txt` 就能看，屏上只有一行结论（eips 只能写 ASCII，塞不下细节）。
 报告里逐项列出：board.sh 在不在、wget 路径、能不能真取到图（会实际下载一次）、
