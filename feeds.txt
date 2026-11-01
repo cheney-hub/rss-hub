@@ -38,7 +38,10 @@ https://feed.quanwenrss.com/feed/jiemian-kuaixun.xml
 # 财经杂志·最新
 https://feed.quanwenrss.com/feed/caijing-latest.xml
 
-# ---------- 国际媒体中文版（quanwenrss 镜像，沙箱可达）----------
+# ---------- 国际媒体中文版 ----------
+# 注意区分「谁在抓」：GitHub Actions 那边网络受限，官方源基本不通；Pi 上没有这个限制，
+# 下面 FT / 纽约时报 / BBC中文 / 彭博 四个官方源都是 2026-11-01 在 Pi 上实测 200 且有内容的。
+# 它们的 quanwenrss 镜像挪到了文末「备用」区——官方源哪天抽风，把镜像换回来即可。
 
 # 联合早报（新加坡）·最新
 https://feed.quanwenrss.com/feed/zaobao-latest.xml
@@ -46,11 +49,17 @@ https://feed.quanwenrss.com/feed/zaobao-latest.xml
 # BBC·国际（英文）
 https://feed.quanwenrss.com/feed/bbc-world.xml
 
-# 纽约时报·最新（大源，300 条）
-https://feed.quanwenrss.com/feed/nytimes-latest.xml
+# BBC中文·国际（繁体，官方源）
+https://feeds.bbci.co.uk/zhongwen/trad/rss.xml
 
-# FT中文网·全部（镜像，官方源沙箱不可达）
-https://feed.quanwenrss.com/feed/ftchinese-all.xml
+# 纽约时报·国际纵览（官方源，中文，20 条）
+https://cn.nytimes.com/rss.html
+
+# FT中文网·最新（官方源，20 条）
+https://www.ftchinese.com/rss/news
+
+# 彭博社·要闻（英文，20 条）
+https://www.bloomberg.com/feeds/news.rss
 
 # 日经中文网·最新
 https://feed.quanwenrss.com/feed/nikkei-latest.xml
@@ -172,20 +181,14 @@ https://rsshub.rss.tips/8world/news
 
 # ---------- 备用（沙箱不可达或重复，勿启用）----------
 
-# 彭博社（境内无可用镜像）
-# https://www.bloomberg.com/feeds/news.rss
+# 国际媒体镜像备份（官方源已可直连，仅在官方源失效时换回来）
+# FT中文网·全部（quanwenrss 镜像）
+# https://feed.quanwenrss.com/feed/ftchinese-all.xml
+# 纽约时报·最新（quanwenrss 镜像，300 条）
+# https://feed.quanwenrss.com/feed/nytimes-latest.xml
 
-# 澎湃（anyfeeder 镜像，与上面澎湃重复）
+# 澎湃（anyfeeder 镜像，与上面澎湃重复，也能直连，仅作备份）
 # https://plink.anyfeeder.com/thepaper
-
-# FT中文网官方源（沙箱不可达，已用 quanwenrss 镜像）
-# https://www.ftchinese.com/rss/news
-
-# BBC中文官方源（沙箱不可达，已用 quanwenrss 镜像）
-# https://feeds.bbci.co.uk/zhongwen/trad/rss.xml
-
-# 纽约时报中文网官方源（沙箱不可达，已用 quanwenrss 镜像）
-# https://cn.nytimes.com/rss.html
 
 # 新华每日电讯·最新一期（镜像站已 404 下线）
 # https://feed.quanwenrss.com/feed/mrdx-latest.xml

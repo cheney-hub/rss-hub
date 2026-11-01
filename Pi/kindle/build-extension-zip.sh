@@ -38,7 +38,7 @@ os.makedirs(os.path.dirname(out), exist_ok=True)
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
     for src, arc in files:
         body = open(src, "rb").read()
-        if arc.endswith(".sh"):
+        if arc.endswith((".sh", ".json", ".xml")):
             body = body.replace(b"\r\n", b"\n")     # Kindle 的 ash 不认 CRLF
         z.writestr(arc, body)
 
