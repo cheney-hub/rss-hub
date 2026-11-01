@@ -46,7 +46,7 @@
 - 服务文件：`/etc/systemd/system/`（`moreaix-site.service` 等）
 - 辅助脚本：`/home/user/pi-pipeline/`（`serve.py` / `rotate_screen.py` / `kindle_screen.py` / `kindle_page.py`）
 - 主页：`/home/user/site/`
-- 看板图输出：`/home/user/kindle/`（`rss-pw2.png` = `kindle-1024x758.png` 的副本，KPW2 第 6 代；
+- 看板图输出：`/home/user/kindle/`（`rss-pw2.png` = `kindle-758x1024.png` 的副本，KPW2 第 6 代竖屏；
   对外地址 `https://moreaix.com/kindle/rss-pw2.png`，网页版 `https://moreaix.com/kindle/`）
 - RSS 引擎：`/home/user/rss-hub/`（= 仓库根目录代码在 Pi 的本地副本）
 

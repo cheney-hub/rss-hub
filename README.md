@@ -82,7 +82,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │                            #     它们由树莓派写到 /home/user/rss-hub/docs/ 并发布在 moreaix.com
 ├── Pi/                      # 树莓派部署（设备版 + Kindle 看板；与上面这套 Cloud 链路隔离）
 │   ├── rotate_screen.py     #   显示时间线：读 feed.xml → 选一条 → 写 feed-wrap.xml（不联网、不抓源）
-│   ├── kindle_screen.py     #   feed.xml → 1024×758 灰度看板 PNG（Pillow）
+│   ├── kindle_screen.py     #   feed.xml → 758×1024 灰度看板 PNG（Pillow）
 │   ├── serve.py             #   静态服务：一份实例（8081）走 Tunnel，--alias 分流 / /rss /kindle
 │   ├── services/            #   systemd 单元（抓取 / 轮播 / 看板重绘 / 静态服务）
 │   └── README.md            #   端口归属、两条时间线、部署与排障

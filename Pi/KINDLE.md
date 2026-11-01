@@ -36,7 +36,8 @@ Kindle: wget → eips -g / fbink -g
   直接抄原串会出现 `04:45` 夹在一排 `12:45` 中间——那是格林威治时间，不是乱序。
   不带时区的按 `+8` 解释，和 `build_feed` 的 `SOURCE_TZ_OFFSET` 同一套口径。
 - PNG 走 `tmp + os.replace` 原子替换，Kindle 不会拉到半张图。
-- 目标机已确认：**Kindle Paperwhite 2（第 6 代，序列号前缀 `90D4`）**，固定 `1024x758`，
+- 目标机已确认：**Kindle Paperwhite 2（第 6 代，序列号前缀 `90D4`）**，固定 `758x1024`
+  （竖屏帧缓冲；面板参数写 1024×758 指的是横过来看，别拿它当 `--sizes`），
   同时复制成默认图 `rss-pw2.png`（`kindle_screen.py` 的 `BOARD_PNG`）。
   换机型只改 `kindle-screen.service` 的 `--sizes` 一行。
 

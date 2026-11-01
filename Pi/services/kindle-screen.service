@@ -9,7 +9,9 @@ Environment=PYTHONUNBUFFERED=1
 # 页眉右上角那个「更新时间」取 feed.xml 的 mtime 再过 localtime，时区不固定就会
 # 和条目里的时间差一个时区，所以和另外两个单元写同一个 TZ。
 Environment=TZ=Asia/Shanghai
-# 1024x758 = Kindle Paperwhite 2（第 6 代）；换机型只改这一行
+# 758x1024 = Kindle Paperwhite 2（第 6 代）**竖屏的原生帧缓冲尺寸**。
+# 别写成 1024x758：那是把机器横过来看的尺寸，eips -g 既不旋转也不缩放，
+# 宽出来的 266 px 会被直接裁掉，看起来「长宽都不对」（2026-11-01 实测）。
 #
 # 两条命令同一个 oneshot、同一个触发源（feed.xml 一变就跑）：
 #   kindle_screen.py -> rss-pw2.png（BOARD_PNG 决定文件名），eips 画屏那条路用；
@@ -18,7 +20,7 @@ Environment=TZ=Asia/Shanghai
 # 返回 1；没有前缀的话 systemd 一撞上第一条失败就不再往下执行，网页从此不再更新
 # （表现为「屏上是旧图、网页也永远是旧页」这种很难归位的症状）。
 # 由第二条决定单元成败：语义和从前一样（空池 -> journal 里标 failed）。
-ExecStart=-/usr/bin/python3 /home/user/pi-pipeline/kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle --sizes 1024x758
+ExecStart=-/usr/bin/python3 /home/user/pi-pipeline/kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle --sizes 758x1024
 ExecStart=/usr/bin/python3 /home/user/pi-pipeline/kindle_page.py --feed /home/user/rss-hub/docs/feed.xml --out-dir /home/user/kindle
 
 # 故意没有 [Install]：本单元只由 kindle-screen.path 在 feed.xml 变化时触发，

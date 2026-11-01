@@ -4,11 +4,12 @@
 
 用法：
     python3 kindle_screen.py --feed /home/user/rss-hub/docs/feed.xml \
-                             --out-dir /home/user/kindle --sizes 1024x758
+                             --out-dir /home/user/kindle --sizes 758x1024
 
 产出：每个尺寸一个 kindle-<W>x<H>.png，另外把第一个尺寸复制成默认图
 （`BOARD_PNG`，当前是 rss-pw2.png —— 名字里带机型，将来给第二台设备出图不会撞名）。
-当前目标机是 Kindle Paperwhite 2（第 6 代，序列号前缀 90D4），固定 1024x758。
+当前目标机是 Kindle Paperwhite 2（第 6 代，序列号前缀 90D4），固定 758x1024
+（竖屏的帧缓冲尺寸；它的面板是 6 吋 1024x758，横过来才是那个数）。
 图像为 8bit 灰度（"L" 模式），白底黑字，e-ink 直出无需再转。
 
 为什么不做成网页而要做 PNG：Kindle 原生不支持常驻网页，越狱后只有 eips/FBInk 能往
@@ -392,7 +393,7 @@ def render(feed_path, out_dir, sizes):
 
 
 def parse_sizes(text):
-    """把 "1024x758,800x600" 解析成 [(w, h), ...]；格式不对直接 sys.exit。
+    """把 "758x1024,800x600" 解析成 [(w, h), ...]；格式不对直接 sys.exit。
 
     故意用 sys.exit 而不是抛异常：尺寸是 systemd 单元里写死的参数，写错就该在启动
     那一下失败并让 journal 记下原因，而不是带着错参数跑出一堆怪图。
@@ -402,7 +403,7 @@ def parse_sizes(text):
         part = part.strip().lower()
         m = re.match(r"^(\d+)\s*x\s*(\d+)$", part)
         if not m:
-            sys.exit("尺寸格式不对: %r（应形如 1024x758）" % part)
+            sys.exit("尺寸格式不对: %r（应形如 758x1024）" % part)
         out.append((int(m.group(1)), int(m.group(2))))
     return out
 
@@ -416,7 +417,7 @@ def main():
     ap = argparse.ArgumentParser(description="feed.xml -> Kindle 灰度 PNG")
     ap.add_argument("--feed", default="/home/user/rss-hub/docs/feed.xml")
     ap.add_argument("--out-dir", default="/home/user/kindle")
-    ap.add_argument("--sizes", default="1024x758",
+    ap.add_argument("--sizes", default="758x1024",
                     help="逗号分隔的 WxH 列表，第一个同时存为 %s" % BOARD_PNG)
     args = ap.parse_args()
     if not os.path.isfile(args.feed):
