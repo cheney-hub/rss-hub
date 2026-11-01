@@ -163,8 +163,36 @@ Zero Trust → Networks → Tunnels → 点开 `rss-pi` → **Public Hostname** 
 | Service · Type | `HTTP` |
 | Service · URL | `localhost:8082` |
 
-根域上已经有一条 `/rss` 的记录了，两者不冲突：同一个 hostname 挂多条不同 path 是允许的，
-Cloudflare 按**最长路径**挑匹配的那条 —— `/kindle/...` 走 8082，`/rss/...` 走 8080。
+根域上已经有一条 `/rss`，再加一条 `/kindle` 不冲突，但**顺序会咬人**：
+
+> cloudflared 的 ingress 是**顺序匹配、首个命中就停**，不是「最长路径优先」。
+> 而根域上本来就有一条**不带 path** 的 `hostname: moreaix.com`（指到 8081 根域主页），
+> 它匹配这个 hostname 的**所有**路径。新加的 `/kindle` 是**追加在列表末尾**的，
+> 于是永远轮不到它 —— 请求全被前面那条兜底捞走，回你一个 404（还是我们自己的
+> serve.py 吐的，带着 CORS 头，特别容易误判成「服务端目录不对」）。
+
+正确顺序：`/rss` → `/kindle` → **兜底（不带 path）放最后**。
+
+**怎么改**：Public Hostname 列表如果能拖动，把 `/kindle` 拖到兜底那行上面。
+不能拖的话就走「删掉重加」——把根域那条 **Path 留空** 的删掉再原样加回去，
+新条目会追加到末尾，顺序自然变成 `/rss` → `/kindle` → 兜底。
+删的那十几秒里 `moreaix.com/` 会 404，加回去立刻恢复。
+
+**怎么确认**：在 Pi 上看来真实下发的配置，一眼就能看到排位（这是最可靠的验收方式，
+比在浏览器里猜 404 强得多）：
+
+```bash
+sudo journalctl -u cloudflared | grep "Updated to new configuration" | tail -1
+```
+
+正常应该长这样（`path` 是 `/kindle` 的那条排在**没有 path 的那条之前**）：
+
+```
+{"ingress":[{"hostname":"moreaix.com","path":"/rss","service":"http://localhost:8080"},
+            {"hostname":"moreaix.com","path":"/kindle","service":"http://localhost:8082"},
+            {"hostname":"moreaix.com","service":"http://localhost:8081"},
+            {"service":"http_status:404"}]}
+```
 
 > 这一节早期版本写的是「别挂成 `moreaix.com/kindle` 路径」，理由是当时 8082 用的是
 > `--prefix=`（无前缀）。现在前缀已经在后端补上，那条限制作废；反过来，谁把
@@ -239,7 +267,7 @@ BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh  # 走公网
 | 530 / 1033 | tunnel 没连上：`systemctl status cloudflared`，看 token 是否正确、Pi 出网是否正常 |
 | 502 | cloudflared 到了 Pi，但 `localhost:8080` 没人听：`systemctl status rss-serve` |
 | 404 | serve.py 的 `--root` 指错了目录，或 `docs/` 里还没生成 feed.xml（等 rss-build.timer 跑一轮） |
-| `/kindle/*` 在 Pi 本地 200、公网一直 404 | Public Hostname 那条 `/kindle` 没配，请求落到了根域那条**兜底**路由（即根域主页，8081）。定位办法：拿一个不存在的文件名去请求，再同时 `journalctl -u kindle-serve` 与 `journalctl -u moreaix-site`，请求打在谁头上谁就有那条日志（2026-11-01 就是这么查出来的） |
+| `/kindle/*` 在 Pi 本地 200、公网一直 404 | 两种可能，且都常见：① Public Hostname 那条 `/kindle` 没配；② 配了但**排在根域兜底规则后面**（ingress 顺序匹配、首个命中即停，兜底那条不带 path，会吃掉所有路径）。区分办法见 6.2 末尾的 `journalctl` 验收；确认落在哪台后端则用「请求一个不存在的文件名，再看 `journalctl -u kindle-serve` 与 `-u moreaix-site` 谁有这条日志」（2026-11-01 就是这么查出来的） |
 | 配好了还是旧 404 | 边缘把 404 也缓存了（`.png` 默认 4 小时）。配完 Bypass cache 仍不生效就手动清一次：Caching → Configuration → Custom Purge，填那个 URL |
 | 拿到的总是旧内容 | 边缘缓存：见上面「关掉边缘缓存」 |
 | 客户端跨域被拦 | serve.py 对所有响应（含 404）都带 `Access-Control-Allow-Origin: *`，若仍不行检查是否有别的代理层 |
