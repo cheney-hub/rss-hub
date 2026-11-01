@@ -5,20 +5,6 @@
 		"priority": -900,
 		"items": [
 		{
-			"name": "探测A（/bin/sh 调用）",
-			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/probe.sh A",
-			"priority": -999,
-			"exitmenu": true,
-			"status": true
-		},
-		{
-			"name": "探测B（直接执行）",
-			"action": "/mnt/us/extensions/rssboard/bin/probe.sh B",
-			"priority": -998,
-			"exitmenu": true,
-			"status": true
-		},
-		{
 			"name": "立即刷新一次",
 			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/refresh.sh",
 			"priority": -900,

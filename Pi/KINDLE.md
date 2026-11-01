@@ -90,6 +90,11 @@ sh Pi/kindle/build-extension-zip.sh      # 产出 Pi/kindle/dist/rssboard-extens
 - **真退出**：KUAL → RSS Board → 「恢复书库界面（停刷新）」。它同时做三件事：
   停循环、把 `preventScreenSaver` 释放（否则设备再也不休眠、一直耗电）、让书库重画。
 
+排查「点了菜单一点反应都没有」时有个通用办法：临时加一个**只写文件、不做别的事**的
+菜单项（写完 `E://probe.txt` 就退出）。文件出现了＝KUAL 能执行、问题在脚本内部；
+没出现＝动作压根没跑（这招 2026-11-01 用来把「CRLF 解析失败」和「/bin/sh 解析不到」
+两个原因分开）。排查完记得把那一项删掉。
+
 「自检」的结果**写成文件**放在 Kindle 根目录：拔线插电脑打开
 `E://rssboard-diag.txt` 就能看，屏上只有一行结论（eips 只能写 ASCII，塞不下细节）。
 报告里逐项列出：board.sh 在不在、wget 路径、能不能真取到图（会实际下载一次）、
