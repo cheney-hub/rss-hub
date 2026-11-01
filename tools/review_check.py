@@ -353,32 +353,50 @@ def check_tests(rep):
 
 # ---- 环境变量 / 文档参数值 ----
 
+# 「读环境变量并带回落值」的 helper。空串 / 非数字不当成报错（见 build_feed._int_env），
+# 所以数值型参数已经改成走这些 helper 而不是裸 `os.environ.get`；这里必须跟着认，
+# 否则那些参数会从参数表契约里**静默消失** —— 门禁不报红，只是从此不再核对
+# （ROTATE_SECONDS 与 Pi timer 的节拍契约就是这样变成空转的）。
+_ENV_HELPERS = {"_int_env", "_num_env"}
+
+
 def _env_calls(tree):
-    """一个模块里所有 `os.environ.get("NAME", "默认值")` 的 (名字, 默认值)。
+    """一个模块里所有环境参数的 (名字, 默认值)，认两种写法：
+
+      * `os.environ.get("NAME", "默认值")`
+      * `_int_env("NAME", 300, lo=60)` / `_num_env(...)` —— 数值型参数走这个
 
     走 AST 而不是正则：正则会把注释/文档字符串里的示例
     （`os.environ.get("NAME", "默认值")` 这种写法在说明文字里很常见）当成真实变量，
     于是文档里凭空多出一个「没出现过的环境变量」。AST 只看真实调用，天然免疫。
-    默认值不是字符串字面量的（`os.path.join(...)`）拿不到值，跳过——宁可少查一个，
+    默认值不是字面量的（`os.path.join(...)`）拿不到值，跳过——宁可少查一个，
     也不要把路径拼进检查里。
     """
     out = []
-    for node in ast.walk(tree):
-        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-                and node.func.attr == "get"):
-            continue
-        owner = node.func.value
-        if not (isinstance(owner, ast.Attribute) and owner.attr == "environ"):
-            continue
-        if len(node.args) < 2:
-            continue
-        name, default = node.args[0], node.args[1]
+
+    def take(name, default):
         if not (isinstance(name, ast.Constant) and isinstance(name.value, str)):
-            continue
-        if not (isinstance(default, ast.Constant) and isinstance(default.value, str)):
-            continue
+            return None
+        if not isinstance(default, ast.Constant):
+            return None
         if re.fullmatch(r"[A-Z][A-Z0-9_]+", name.value):
-            out.append((name.value, default.value))
+            return (name.value, str(default.value))
+        return None
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or len(node.args) < 2:
+            continue
+        got = None
+        if (isinstance(node.func, ast.Attribute) and node.func.attr == "get"
+                and isinstance(node.func.value, ast.Attribute)
+                and node.func.value.attr == "environ"):
+            # helper 内部那句 `os.environ.get(name, "")` 的 name 是变量、不是常量，
+            # 会被 take() 自然挡掉，不会把 helper 自己当成一个参数登记进来。
+            got = take(node.args[0], node.args[1])
+        elif isinstance(node.func, ast.Name) and node.func.id in _ENV_HELPERS:
+            got = take(node.args[0], node.args[1])
+        if got:
+            out.append(got)
     return out
 
 

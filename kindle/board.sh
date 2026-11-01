@@ -23,7 +23,10 @@
 # 若 Kindle 的 wget 报证书错（KPW2 那套根证书是 2019 年的，未必认 Let's Encrypt
 # 现在这条链），自动退到 http 重试一次 —— 见 fetch()。
 URL="${BOARD_URL:-https://moreaix.com/kindle/rss-pw2.png}"
-TMP="/mnt/us/board.png.new"
+# 临时文件按 pid 命名：常驻循环与「立即刷新一次」是**并发**的（refresh.sh 的设计就是
+# 循环正在跑也能点），而两者都用 wget -O 写同一个文件的话，交错写出来的必然是半张图；
+# 更要命的是循环那边的 rm -f 会在 --once 的 wget 与 mv 之间把文件删掉。
+TMP="/mnt/us/board.png.new.$$"
 IMG="/mnt/us/board.png"
 LOCK="/mnt/us/board.lock"
 INTERVAL=300          # 秒。墨水屏别刷太勤，3~5 分钟一次够了
@@ -66,11 +69,16 @@ fetch() {
     wget -q -T 25 -O "$TMP" "$alt" 2>/dev/null && [ -s "$TMP" ] && is_png "$TMP"
 }
 
-# 必须是 PNG 才往下走：服务端的 404/500 会带一段 HTML body，wget -O 有可能把它落盘，
-# 直接 mv 上去就会把 board.png 写坏（eips 打不开，屏幕停在上一版，而且下一轮会
-# 拿这张坏图做比对）。
+# 必须是**完整**的 PNG 才往下走：服务端的 404/500 会带一段 HTML body，wget -O 有可能
+# 把它落盘，直接 mv 上去就会把 board.png 写坏（eips 打不开，屏幕停在上一版）。
+# 只验开头 4 字节还不够：wget 超时或被服务端掐断时留下的是**半张图**，而它的文件头
+# 完好 —— 放行之后 eips 打不开，屏幕停在上一版，而下一轮 cmp 又会拿这张坏图当基准，
+# 症状变成「一直在刷新、画面却再也不动」。所以末尾也验：PNG 一定以 IEND 块收尾
+# （00 00 00 00 | I E N D | AE 42 60 82）。
 is_png() {
-    [ "$(head -c 4 "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')" = "89504e47" ]
+    [ "$(head -c 4 "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')" = "89504e47" ] || return 1
+    [ "$(tail -c 12 "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')" \
+        = "0000000049454e44ae426082" ]
 }
 
 # 单帧模式：不看「图有没有变」，用户点这一下就是想立刻看到画面。
@@ -83,13 +91,31 @@ if [ "$1" = "--once" ]; then
     else
         rm -f "$TMP"
         log "board: once fetch failed"
+        # 必须退出非 0：refresh.sh 靠返回码在屏上提示失败。成败都 exit 0 的话，
+        # 失败时它仍会去画上一张旧图（画面「动了一下」像是刷新成功了），
+        # 而诊断文件里记的 rc 永远是 0 —— 排障时唯一的线索就成了假证据。
+        exit 1
     fi
     exit 0
 fi
 
+# 锁里的 pid 是不是**本脚本**的实例。
+# 只判 kill -0 是不够的：锁文件留在 /mnt/us 上跨重启保留，而 pid 会被复用，
+# kill -0 只能证明「现在有个进程占着这个号」，证明不了它是 board.sh。哪天这个号
+# 落到任何常驻进程上，脚本就永远打印 already running 然后安静退出 —— 屏上一动不动，
+# 而日志里分明写着「已在运行」，这是最难归位的一类故障。
+lock_is_ours() {
+    pid=$(cat "$LOCK" 2>/dev/null)
+    [ -n "$pid" ] || return 1
+    kill -0 "$pid" 2>/dev/null || return 1
+    # 读不到 /proc 就退回「信 kill -0」（没有 procfs 的极端环境）
+    [ -r "/proc/$pid/cmdline" ] || return 0
+    grep -q "board.sh" "/proc/$pid/cmdline" 2>/dev/null
+}
+
 # 单实例：文档教「先前台试跑、确认后再 nohup」，忘了 kill 前台那个，两个进程就会
 # 抢着刷屏（画面来回跳）。发现已有实例就安静退出。
-if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK" 2>/dev/null)" 2>/dev/null; then
+if lock_is_ours; then
     log "board: already running (pid $(cat "$LOCK")), skip"
     exit 0
 fi

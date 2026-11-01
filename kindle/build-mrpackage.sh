@@ -68,11 +68,23 @@ for f in "$STAGE"/extensions/rssboard/bin/*.sh \
     to_lf "$f"
 done
 
-# 数字不为 0 就别往下走了 —— 打包后再发现，只会变成设备上那次没有线索的失效
-bad=$({ od -An -tx1 -v "$STAGE/board.sh" "$STAGE"/extensions/rssboard/bin/*.sh 2>/dev/null \
-        || true; } | tr ' ' '\n' | grep -c '^0d$' || true)
+# 数字不为 0 就别往下走了 —— 打包后再发现，只会变成设备上那次没有线索的失效。
+#
+# 两步写而不是一句 `bad=$(od ... | grep -c ... || true)`，是因为那样做**无法区分
+# 「od 没跑起来」和「真的 0 个 CR」**：od 不存在时 bad 是空串，`${bad:-0}` 取 0，
+# 自检通过并打印「残留 CR 0 处」。这道关卡防的就是上面那句「最容易踩的坑正在这儿
+# 等着」，能被静默绕过等于没设。（grep -c 数到 0 时退出码是 1，所以也不能反过来
+# 拿退出码当判据 —— 计数和可用性得分开看。）
+#
+# 文件清单与上面 to_lf 的清单一致：KUAL 的 menu.json / config.xml 若是 CRLF，
+# 菜单会静默不显示，跟 .sh 的 CRLF 一样没有任何线索。
+hex=$(od -An -tx1 -v "$STAGE/board.sh" "$STAGE"/extensions/rssboard/bin/*.sh \
+      "$STAGE/extensions/rssboard/config.xml" \
+      "$STAGE/extensions/rssboard/menu.json" 2>/dev/null) || {
+    echo "换行自检跑不起来（缺 od？）—— 不能当作通过" >&2; exit 1; }
+bad=$(printf '%s' "$hex" | tr ' ' '\n' | grep -c '^0d$' || true)
 echo "  换行自检：残留 CR  $bad 处"
-[ "${bad:-0}" -eq 0 ] || { echo "staging 里还有 $bad 个 CR，Kindle 上会解析失败" >&2; exit 1; }
+[ "$bad" -eq 0 ] || { echo "staging 里还有 $bad 个 CR，Kindle 上会解析失败" >&2; exit 1; }
 
 mkdir -p "$DIST"
 # 必须 cd 进去再喂 "."：kindletool 默认把参数路径原样存档，给绝对路径的话包里会带上

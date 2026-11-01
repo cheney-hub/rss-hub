@@ -53,15 +53,29 @@ from datetime import datetime, timezone
 
 from render import item_guid, split_title, strip_dateline
 
+def _int_env(name, default, lo=None):
+    """读一个整数环境变量；不存在 / 空串 / 非数字一律回落 default。
+
+    与 build_feed._int_env 同一口径（本模块不能 import 它：build_feed 单向依赖这里）。
+    为什么不能写成 `int(os.environ.get(name, str(default)))` 见那边的注释 ——
+    下面这两个都是**模块级**取值，异常发生在 import 期，连 --version 都打不出来。
+    """
+    try:
+        v = int(os.environ.get(name, "") or default)
+    except (TypeError, ValueError):
+        v = default
+    return v if lo is None else max(lo, v)
+
+
 # 每条在屏上驻留多少秒（= 设备刷新周期）。调大等于放慢轮播。
 # Pages CDN 缓存 600 秒，若真机上出现「同一条连显两次」，把它改成 600。
 # 下限 60：比 1 分钟更短的节拍既追不上设备刷新，也会让 window 号涨得飞快（状态全是噪点）。
-ROTATE_SECONDS = max(60, int(os.environ.get("ROTATE_SECONDS", "300")))
+ROTATE_SECONDS = _int_env("ROTATE_SECONDS", 300, lo=60)
 # 轮播池上限：设备端只消费「最新 120 条」。池子越深，被挤出池子的旧条目越多
 # （按条轮之后每条入池就有候选资格，能不能轮到只取决于它离场前来不来得及排到）。
 # 0 = 不限，1.2.x 时代的默认值。两个参数要一起调：完整版条数看 ITEM_LIMIT（默认 120），
 # 只放大 ITEM_LIMIT 不会改变上屏节奏。
-ROTATE_POOL_MAX = max(0, int(os.environ.get("ROTATE_POOL_MAX", "120")))
+ROTATE_POOL_MAX = _int_env("ROTATE_POOL_MAX", 120, lo=0)
 
 ROTATE_STATE_VERSION = 4      # 状态结构版本，改了就自动丢弃旧状态（宁可重复一条，不能乱序）
 # 容忍的墙钟回拨窗数（1 窗 = ROTATE_SECONDS，2 窗 = 10 分钟）：NTP 校正会往回跳几十秒，
@@ -363,9 +377,15 @@ def _fmt_at(item):
     「pubDate 缺失」而非「1970 年发布的老条目」，两者处置完全不同。
     """
     ts = int(item.get("ts") or 0)
-    if not ts:
+    if ts <= 0:
         return "发布时间未知"
-    return datetime.fromtimestamp(ts, timezone.utc).strftime("%m-%d %H:%M") + " UTC"
+    try:
+        return datetime.fromtimestamp(ts, timezone.utc).strftime("%m-%d %H:%M") + " UTC"
+    except (OSError, OverflowError, ValueError):
+        # 负时间戳在 Windows 上抛 OSError（[Errno 22]）、超大值抛 OverflowError ——
+        # 而这里是 `_build_state()` 的一环，抛出去就是这一轮 feed 不更新、
+        # rotate.json 不落盘（main() 没有 try）。宁可显示占位串。
+        return "发布时间未知"
 
 
 def _build_state(w, pick, shown, recent, cycle, dwell, back, n_pool, n_items):

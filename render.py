@@ -30,13 +30,27 @@ from datetime import datetime, timezone
 
 from version import __version__
 
+def _num_env(name, default, lo=None):
+    """读一个数值环境变量；不存在 / 空串 / 非数字一律回落 default。
+
+    与 build_feed._int_env 同一口径（本模块不能 import 它：build_feed 单向依赖这里）。
+    为什么不能写成 `float(os.environ.get(name, str(default)))` 见那边的注释 ——
+    下面这几个都是**模块级**取值，异常发生在 import 期，进程连一行日志都打不出来。
+    """
+    try:
+        v = float(os.environ.get(name, "") or default)
+    except (TypeError, ValueError):
+        v = float(default)
+    return v if lo is None else max(lo, v)
+
+
 # 屏幕参数走环境变量，其余显示规则都是常量。
-LINE_WIDTH = float(os.environ.get("SCREEN_LINE_WIDTH", "13"))
-BODY_MAX = max(0.0, float(os.environ.get("SCREEN_BODY_MAX", "90")))
+LINE_WIDTH = _num_env("SCREEN_LINE_WIDTH", 13)
+BODY_MAX = _num_env("SCREEN_BODY_MAX", 90, lo=0.0)
 # 完整版（给电脑 / 手机阅读器）的正文上限，和屏宽无关。
 # 0 = 不限（完整版全文照发，用户要能在阅读器里读到全文；1.3.0 起默认 0）；
 # 正数才是「防止单条摘要把整份文件撑大」的保险丝。
-FEED_BODY_MAX = max(0.0, float(os.environ.get("FEED_BODY_MAX", "0")))
+FEED_BODY_MAX = _num_env("FEED_BODY_MAX", 0, lo=0.0)
 
 # channel 一级的版权声明。条目里的 <source> 只标「这条来自哪家」，说明不了整份聚合的归属；
 # 聚合别人标题与摘要时这句是必须的，也顺带把「看全文点 link」讲清楚。
@@ -478,8 +492,15 @@ def _item_lines(it, screen):
     if it.get("date_raw"):
         lines.append("<pubDate>%s</pubDate>" % esc(it["date_raw"]))
     elif it.get("ts"):
-        lines.append("<pubDate>%s</pubDate>" % email.utils.format_datetime(
-            datetime.fromtimestamp(it["ts"], timezone.utc)))
+        # fromtimestamp 在极端值上会抛：负时间戳在 Windows 上是 OSError，超大值是
+        # OverflowError。这一行在拼整份 XML 时跑，抛出去就是「这一轮一份文件都写不出来」，
+        # 所以这条宁可不带 <pubDate>（RSS 2.0 里它本来就是可选的，
+        # 与「没有链接就不发 <link>」同一口径），也不能为一个坏时间赔上整份产物。
+        try:
+            lines.append("<pubDate>%s</pubDate>" % email.utils.format_datetime(
+                datetime.fromtimestamp(it["ts"], timezone.utc)))
+        except (OSError, OverflowError, ValueError):
+            pass
     if screen:
         # 原来是把「链接|源地址」整串当 guid，动辄上百字节，小屏完全用不上。
         # 换成短哈希，稳定、唯一，体积降到十几字节；也是轮播判断「是否已展示」的键。

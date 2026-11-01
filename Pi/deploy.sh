@@ -43,6 +43,8 @@ PI_HOST="${PI_HOST:-100.88.176.80}"
 REMOTE_DIR="/home/${PI_USER}/pi-pipeline"
 HUB_ROOT="/home/${PI_USER}/rss-hub"
 FEED_ROOT="${HUB_ROOT}/docs"
+# 主页产物目录（moreaix-site.service 的 --root，也是公网根域指向的地方）
+SITE_DIR="/home/${PI_USER}/site"
 
 SSH_OPTS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
 SSH=(ssh "${SSH_OPTS[@]}" "${PI_USER}@${PI_HOST}")
@@ -68,7 +70,12 @@ ENABLE_UNITS="rss-build.timer rss-rotate.timer \
 moreaix-site.service"
 
 echo "==> 目标 ${PI_USER}@${PI_HOST}"
-"${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' '${FEED_ROOT}' && echo paths-ok"
+# ${SITE_DIR} 一定要一起建：moreaix-site.service 的 WorkingDirectory 与
+# serve.py 的 --root 都指它，目录不存在时单元以 status=200/CHDIR 直接失败，
+# 而 Restart=always 会让它每 5 秒重启一次 —— 连带 --alias /rss 与 /kindle
+# 两个别名一起挂掉（公网出口全断），systemctl status 看上去却只是「不停重启」。
+# 现在这台机器上的目录是当初手工建的，脚本里没有这一步就是换机部署时的坑。
+"${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' '${FEED_ROOT}' '${SITE_DIR}' && echo paths-ok"
 
 echo "==> 上传引擎代码（根目录那几个文件）"
 for f in build_feed.py render.py rotate.py version.py feeds_sync.py arrival.py; do
@@ -80,6 +87,14 @@ echo "==> 上传脚本"
 # 但归 kindle/deploy.sh 传 —— 两套 pipeline 各管一半，不会互相覆盖对方的成果。
 for f in serve.py rotate_screen.py; do
     "${SCP[@]}" "${HERE}/${f}" "${PI_USER}@${PI_HOST}:${REMOTE_DIR}/${f}"
+done
+
+echo "==> 上传主页静态文件（site/ → ${SITE_DIR}）"
+# 只补不删：站点里可能还有手工放上去的东西，这里不做清理。
+# 目录已经在上面 mkdir 建好，serve.py 不会因为根目录不存在而退出。
+for f in "${HERE}"/site/*; do
+    [ -f "$f" ] || continue
+    "${SCP[@]}" "$f" "${PI_USER}@${PI_HOST}:${SITE_DIR}/$(basename "$f")"
 done
 
 echo "==> 上传并安装 systemd 单元"

@@ -64,11 +64,47 @@ class TestSettle(unittest.TestCase):
                        "src": src, "date_raw": "n/a"} for t in titles]}
 
     def test_keeps_earlier_first_seen(self):
+        # 失真源的判据是「整批条目共用一个时间戳」，所以整个源也共用一个认定时间：
+        # 上一轮没见过的那两条（新稿）同样拿到上一轮那个时钟，而不是本轮标称的 2000。
+        # 只按条目记的话，源每轮换稿、新稿就拿到最新时刻 → 每轮都是它霸榜，
+        # 那正是这个模块要治的现象（取舍见 prev_source_index 的注释）。
         items = group("https://nk/rss", 5, 2000)
         prev = self.prev("https://nk/rss", ["t0", "t1", "t2"], 1000)
+        self.assertEqual(A.settle(items, prev), 5)
+        self.assertEqual([it["ts"] for it in items], [1000] * 5,
+                         "整批都应回到上一轮认定的时间，而不是本轮标称")
+
+    def test_item_that_fell_out_of_the_window_stays_old(self):
+        """掉出产物窗口后重新入池的条目不能变年轻。
+
+        产物只留 ITEM_LIMIT 条，条目一旦被裁出去，它的「首见时间」就随产物消失了。
+        只有条目级记忆时，它下一轮带着源刷新的新时钟回来、又查不到旧记录，
+        于是把新时钟当成首见时间永久锁定 —— 条目真的变年轻、排到全池最前，
+        「怎么老是这条」隔几小时复发一次就是这么来的（用 ITEM_LIMIT=3 复现过）。
+        """
+        src = "https://nk/rss"
+        # 上一轮产物里这个源只剩**另一条**（老条目本身已被裁掉）
+        prev = {src: [{"title": "t9", "link": "https://x/t9", "ts": 1000,
+                       "src": src, "date_raw": "n/a"}]}
+        items = group(src, 3, 5000)          # 本轮源把整批刷成 5000
         self.assertEqual(A.settle(items, prev), 3)
-        self.assertEqual(items[0]["ts"], 1000, "应回到上一轮认定的时间，而不是本轮标称")
-        self.assertEqual(items[4]["ts"], 2000, "上一轮没见过的条目不参与改写")
+        self.assertTrue(all(it["ts"] == 1000 for it in items),
+                        "老条目掉出窗口后重新入池，不能拿本轮的新时钟当首见时间")
+
+    def test_entry_level_memory_wins_over_source_level(self):
+        # 源级记忆只是兜底：条目自己有记录时必须用条目自己的（更精确的那个），
+        # 不能被源里更早的另一条盖掉。
+        src = "https://nk/rss"
+        prev = {src: [
+            {"title": "t0", "link": "https://x/t0", "ts": 3000, "src": src, "date_raw": "n/a"},
+            {"title": "t1", "link": "https://x/t1", "ts": 1000, "src": src, "date_raw": "n/a"},
+            {"title": "t2", "link": "https://x/t2", "ts": 1000, "src": src, "date_raw": "n/a"},
+        ]}
+        items = group(src, 3, 9000)
+        A.settle(items, prev)
+        by_title = {it["title"]: it["ts"] for it in items}
+        self.assertEqual(by_title["t0"], 3000, "条目级记录优先于源级兜底")
+        self.assertEqual(by_title["t1"], 1000)
 
     def test_rewrites_date_raw_so_next_round_can_remember(self):
         # 只改 ts 不改写出去的字符串，下一轮从产物读回来还是源标称的时钟 —— 记忆链断了

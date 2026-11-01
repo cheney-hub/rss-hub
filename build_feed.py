@@ -112,13 +112,38 @@ __all__ = ["__version__", "read_feed_entries", "parse_items", "run_once", "write
            "main", "rotate_pick", "_pick_item", "ROTATE_SECONDS",
            "ROTATE_STATE_VERSION", "CLOCK_SKEW_WINDOWS"]
 
+def _int_env(name, default, lo=None):
+    """读一个整数环境变量；不存在 / 空串 / 非数字一律回落到 default。
+
+    不能写成 `int(os.environ.get(name, str(default)))`：`.get` 只在变量**不存在**时
+    才给默认值，变量被写成空串（`FETCH_TIMEOUT=""`，systemd 与 Actions 里把变量声明
+    成空值是常见操作）时拿到的是 `""`，`int("")` 抛 ValueError。
+    而下面这些全是**模块级**取值——异常发生在 import 期，`main()` 根本进不去，
+    连 `--version` 都打不出来，CI 上只剩一行 traceback 和一份没更新的 feed。
+    `lo` 是下界：并发数、每源条数这类参数取 0 或负数没有意义。
+    """
+    try:
+        v = int(os.environ.get(name, "") or default)
+    except (TypeError, ValueError):
+        v = default
+    return v if lo is None else max(lo, v)
+
+
+def _num_env(name, default):
+    """读一个浮点数环境变量，回落规则同 `_int_env`（空串 / 非数字不当成报错）。"""
+    try:
+        return float(os.environ.get(name, "") or default)
+    except (TypeError, ValueError):
+        return float(default)
+
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FEEDS_FILE = os.environ.get("FEEDS_FILE", os.path.join(BASE_DIR, "feeds.txt"))
 OUT_FILE = os.environ.get("OUT_FILE", os.path.join(BASE_DIR, "docs", "feed.xml"))
 FEED_URL = os.environ.get("FEED_URL", "https://cheney-hub.github.io/rss-hub/feed.xml")
-REFRESH_SECONDS = int(os.environ.get("REFRESH_SECONDS", "0"))
-FETCH_TIMEOUT = int(os.environ.get("FETCH_TIMEOUT", "20"))
-CONCURRENCY = max(1, int(os.environ.get("CONCURRENCY", "12")))   # 并发上限（下限 1）
+REFRESH_SECONDS = _int_env("REFRESH_SECONDS", 0)
+FETCH_TIMEOUT = _int_env("FETCH_TIMEOUT", 20, lo=1)     # 0 秒等于每次必超时
+CONCURRENCY = _int_env("CONCURRENCY", 12, lo=1)         # 并发上限（下限 1）
 
 # 设备版（Dot Quote/0）：标题截到屏宽，余下文字进正文，交给 Dot 云端渲染成位图
 SCREEN_OUT = os.environ.get(
@@ -131,7 +156,7 @@ ROTATE_STATE = os.environ.get(
 
 # 源没写时区时按这个时区解释（默认北京 +08）。写死时区而不是用运行机本地时区，
 # 否则本地（+08）与 GitHub runner（UTC）会把同一份数据排出两套顺序。
-SOURCE_TZ = timezone(timedelta(hours=float(os.environ.get("SOURCE_TZ_OFFSET", "8"))))
+SOURCE_TZ = timezone(timedelta(hours=_num_env("SOURCE_TZ_OFFSET", 8)))
 
 # 伪装成桌面 Chrome：不少源站对 urllib 的默认 UA 直接回 403，换 UA 是最省事的兼容手段
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -152,8 +177,8 @@ def _cap(body):
                            % (len(body) >> 20, MAX_BODY_BYTES >> 20))
     return body
 
-PER_SOURCE = max(1, int(os.environ.get("PER_SOURCE", "5")))   # 每源取几条（下限 1）
-ITEM_LIMIT = max(0, int(os.environ.get("ITEM_LIMIT", "120")))   # 去重后上限，默认 120（0 = 不限）
+PER_SOURCE = _int_env("PER_SOURCE", 5, lo=1)      # 每源取几条（下限 1）
+ITEM_LIMIT = _int_env("ITEM_LIMIT", 120, lo=0)    # 去重后上限，默认 120（0 = 不限）
 
 
 # ---------------- feeds.txt 解析 ----------------
@@ -169,7 +194,16 @@ def read_feed_entries(path=None, skipped=None):
     """
     path = path or FEEDS_FILE
     entries, pending = [], ""
-    with open(path, "r", encoding="utf-8") as f:
+    # 清单是**手工维护**的文件：被记事本存成 GBK、被误删、路径写错都可能发生。
+    # 这里不 try 的话异常会一路穿出 main()，表现为 traceback + CI 红，
+    # 而排障的人会当成代码 bug 去查——它其实是配置问题。坏字节用 replace 退化成
+    # 几个乱码源名（这一轮少抓几个源），也好过整轮构建死掉、feed 停在上一版。
+    try:
+        f = open(path, "r", encoding="utf-8", errors="replace")
+    except OSError as exc:
+        print("[清单] feeds.txt 读不到（%s）" % exc)
+        return []
+    with f:
         for lineno, line in enumerate(f, 1):
             raw = line.strip()
             if not raw:
@@ -245,16 +279,30 @@ def http_get(url):
         return resp.status, body, resp.headers.get_content_charset()
 
 
+# 「怎么解都能解出来」的编码：单字节、没有非法字节序列，因此永远不会抛
+# UnicodeDecodeError。把它们当可信声明等于关掉整条兜底链 —— 见 decode_body。
+_DECODE_ANYTHING = {"iso-8859-1", "iso8859-1", "latin-1", "latin1", "latin_1",
+                    "cp1252", "windows-1252", "ascii", "us-ascii", "iso646-us"}
+
+
 def decode_body(body, charset=None):
     """字节串 → 文本。顺序：HTTP 头声明的编码 → UTF-8 → GB18030 → 带替换的 UTF-8。
 
     以前不看 HTTP 头，全靠 UTF-8/GB18030 两个候选去试。GBK 系站点碰对了，
     但声明为 Big5 / Shift-JIS 的源会静默解成乱码（解码不报错，只是字全错）。
-    先信声明，声明不对再按中文站的两个常见编码兜底。
+    先信声明，声明不对再按中文站的两个常见编码兜底 ——
+    前提是「声明错了会抛异常」，所以 `_DECODE_ANYTHING` 里的那批要先剔掉。
     """
     cands = []
     if charset:
-        cands.append(charset.split(";")[0].strip().strip('"').lower())
+        c = charset.split(";")[0].strip().strip('"').lower()
+        # 单字节编码必须排除在「可信声明」之外：latin-1 / cp1252 之流能解码**任意**
+        # 字节序列、永不抛 UnicodeDecodeError，一旦排进候选就必然命中，
+        # 后面的 utf-8 / gb18030 兜底永远不会被执行。中文站挂着
+        # `charset=ISO-8859-1`（老模板或 CGI 默认值）时，整源的标题与摘要会静默变成
+        # 「ÖÐÎÄ±êÌâ」这类乱码，而日志里它算抓取成功——比源失败难查得多。
+        if c and c not in _DECODE_ANYTHING:
+            cands.append(c)
     cands += ["utf-8", "gb18030"]
     for enc in cands:
         if not enc:
@@ -328,7 +376,17 @@ def _parse_date(s):
             return None
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=SOURCE_TZ)
-    return dt.timestamp()
+    # 1970 年之前的时间戳必须钳住。典型来源是 .NET 系模板把 default(DateTime) 序列化
+    # 成 `0001-01-01T00:00:00Z`（epoch -6.2e10），下游 render._item_lines 与
+    # rotate._fmt_at 都要调 datetime.fromtimestamp，在负区间上它抛的是 OSError
+    # （Windows 上是 [Errno 22]，Linux 上是 ValueError）——两处都在写盘之前，
+    # 一抛就是「feed 不更新、状态不落盘」，且没有任何报错线索。
+    # 这种值不是「1970 年前发的老稿」，而是源的时间字段坏了，与解析失败同一口径：
+    # 沉到池底、照常上屏（见 rotate._pickable 的注释）。
+    try:
+        return max(0.0, dt.timestamp())
+    except (OSError, OverflowError, ValueError):
+        return None
 
 
 def _sanitize(xml_text):
@@ -353,12 +411,20 @@ def _sanitize(xml_text):
     # DOCTYPE 显式剥掉：内部实体展开（billion laughs）没有任何正当用途，
     # 而本文件原先对它其实是「偶然防住」的 —— 下面那条实体正则只匹配 2~9 字符的
     # 实体名，名字更长的照样展开（实测 805 字节的输入能放出 10 万字符）。
-    xml_text = re.sub(r"<!DOCTYPE[^\[>]*(\[[\s\S]*?\])?[^>]*>", "", xml_text, flags=re.I)
-    # 只处理「&amp;」这类命名实体；数字实体（&#8212;）正则匹配不到，ET 自己能处理
-    xml_text = re.sub(r"&[a-zA-Z][a-zA-Z0-9]{1,8};", fix, xml_text)
+    # 内部子集要吃到 `]>` 而不是第一个 `]`：实体值里带 `]`（`<!ENTITY a "b]c">`）时，
+    # 按 `]` 收尾会剥到一半、留下一个孤零零的 `]>`，ET 随即 ParseError，
+    # 一个长得合法的 DOCTYPE 就把整源打进了丢字段的正则兜底通路。
+    xml_text = re.sub(r"<!DOCTYPE[^\[>]*(\[[\s\S]*?\]\s*>)?[^>]*>", "", xml_text, flags=re.I)
+    # 只处理「&amp;」这类命名实体；数字实体（&#8212;）正则匹配不到，ET 自己能处理。
+    # 长度上限放到 31：{1,8} 时 `&x;`（1 字符）与超长实体名都匹配不到，
+    # 于是原样留在文本里、ET 报未定义实体，同样是整源降级——而 fix() 的注释
+    # 声称「未知实体换成空格」，匹配不到就等于那句承诺是空的。
+    xml_text = re.sub(r"&[a-zA-Z][a-zA-Z0-9]{0,31};", fix, xml_text)
     xml_text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", xml_text)
-    # 去掉声明里的 encoding，避免 ET 对 str 报错或按错误编码解码
-    return re.sub(r'(<\?xml[^>]*?)\s+encoding="[^"]*"', r"\1", xml_text, count=1)
+    # 去掉声明里的 encoding，避免 ET 对 str 报错或按错误编码解码。
+    # 单引号的 encoding='UTF-8' 也是合法 XML，只认双引号会漏掉它。
+    return re.sub(r'''(<\?xml[^>]*?)\s+encoding=("[^"]*"|'[^']*')''', r"\1",
+                  xml_text, count=1)
 
 
 def _rx(raw, pattern):
@@ -403,8 +469,13 @@ def _entry_of(node):
         title = _rx(raw, r"<title\b[^>]*>(.*?)</title>")
         # 两条正则的顺序就是优先级：先试 href 属性（Atom 的写法），
         # 再退回元素文本（RSS 2.0 的写法）。反过来的话 Atom 会拿到空串。
-        link = (_rx(raw, r"<link\b[^>]*href=\"([^\"]+)\"")
-                or _rx(raw, r"<link\b[^>]*>(.*?)</link>"))
+        # href 的值单引号也要认（`<link href='...'/>` 合法且确实有源这么发）：
+        # 只认双引号时 link 是空串 → render 不发 <link>、item_guid 退化成「标题|源」，
+        # 阅读器里这条**打不开原文**，而日志上看不出任何异常。
+        link = (_rx(raw, r"""<link\b[^>]*href=["']([^"']+)["']""")
+                # `[^<]*` 而不是 `.*?`：后者会越过 </link> 一路吃到下一个标签，
+                # 块里有多个 link 时把后面的标签名也卷进链接里。
+                or _rx(raw, r"<link\b[^>]*>([^<]*)</link>"))
         date_raw = (_rx(raw, r"<pubDate\b[^>]*>(.*?)</pubDate>")
                     or _rx(raw, r"<published\b[^>]*>(.*?)</published>")
                     or _rx(raw, r"<updated\b[^>]*>(.*?)</updated>"))
@@ -429,13 +500,19 @@ def _entry_of(node):
             "summary": clean_text(summary)}
 
 
-def parse_items(xml_text, source_url, limit=PER_SOURCE):
+def parse_items(xml_text, source_url, limit=None):
     """解析一个源，按发布时间倒序取前 limit 条；每条都带摘要原文（summary）。
 
     **消毒在入口做，两条通路共用**：兜底通路以前直接拿原始文本抽字段，
     源里的控制字符（如 U+0001）会原样进 feed.xml，让整份 XML 对所有订阅端非法
     （`ET.fromstring` 报 invalid token）。`_sanitize` 幂等，ET 通路照旧安全。
+
+    limit 默认 None（= 取 PER_SOURCE）而不是写进默认参数：默认参数在函数定义那一刻
+    就绑定了值，测试与工具在运行期改 `build_feed.PER_SOURCE` 时它不跟着变，
+    于是「改了参数却没生效」——tests/test_core.py 里已经踩过一次（用 lambda 绕开的）。
     """
+    if limit is None:
+        limit = PER_SOURCE
     items = [_entry_of(n) for n in _item_nodes(_sanitize(xml_text))]
     for it in items:
         it["src"] = source_url
@@ -668,6 +745,45 @@ def _one_round(entries):
     return pick, note, stats, time.time() - t0
 
 
+def _harden_stdout():
+    """让 print 不再因为编码问题把整轮构建打死。
+
+    日志里有源名（中文），源报错的原文可能是任意字符。运行环境的 stdout 不是 UTF-8 时
+    （Windows 英文 locale 下重定向到文件就是 cp1252），任何一次 print 都会抛
+    UnicodeEncodeError —— 为了一句提示把 feed 搞停更不值。够不着的字符换成 ?，
+    不影响排障真正要看的那部分。
+    """
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except Exception:
+        pass                      # 被重定向成非 TextIOWrapper 时没有这个方法
+
+
+def _log_start(entries):
+    """打印这次运行的参数：排障时第一行就看它（版本、源数、产物路径、显示口径）。"""
+    print("rss-hub %s · 订阅源 %d 个，输出 %s / %s"
+          "（标题 %g 全角、正文最多 %g 全角、每 %d 秒轮换一条）"
+          % (__version__, len(entries), OUT_FILE, SCREEN_OUT, LINE_WIDTH, BODY_MAX,
+             ROTATE_SECONDS))
+
+
+def _log_round(rounds, pick, note, stats, elapsed):
+    """打印一轮的结果：这一行是「源抓得怎么样、屏上放了哪条」唯一的对外出口。"""
+    # 「失败」里含「回退」（回退的源本轮也是失败的，只是有旧条目顶上），
+    # 并列打印会让三个数加起来超过源总数，把排障的人引向「清单里有重复源」。
+    # 这里打出的是「失败且没得回退」的源数，它才是真正少了内容的那些。
+    print("[第 %d 轮] 成功 %d / 回退 %d / 失败 %d → 条目 %d"
+          "（重复 %d、超出上限裁掉 %d）耗时 %.1fs"
+          % (rounds, stats["ok"], stats["stale"],
+             stats["fail"] - stats["stale"],
+             stats["items"], stats["dedup_dropped"], stats["trimmed"], elapsed))
+    if stats.get("settled"):
+        print("       其中 %d 条按「首次见到」排序（源每轮刷新整个时间戳）"
+              % stats["settled"])
+    print("        上屏：%s ｜ %s"
+          % (note, (pick.get("title") or "")[:36] if pick else "（设备版保持上一版）"))
+
+
 def main():
     """跑一轮（或按 REFRESH_SECONDS 连跑多轮）：采集 → 选条 → 写两份 → 落状态。
 
@@ -681,6 +797,7 @@ def main():
     """
     if _check_version_arg(sys.argv[1:]):
         return 0
+    _harden_stdout()
     # 先对齐清单再读它：Pi 上这份是仓库副本，不先同步就会一直用旧源。
     # 没配 FEEDS_SYNC_URL 时是空操作（CI 走这条）；同步失败也只返回 kept，不阻断构建。
     feeds_sync.sync(FEEDS_FILE, UA)
@@ -695,10 +812,7 @@ def main():
     if not entries:
         print("feeds.txt 中没有有效地址")
         return 1
-    print("rss-hub %s · 订阅源 %d 个，输出 %s / %s"
-          "（标题 %g 全角、正文最多 %g 全角、每 %d 秒轮换一条）"
-          % (__version__, len(entries), OUT_FILE, SCREEN_OUT, LINE_WIDTH, BODY_MAX,
-             ROTATE_SECONDS))
+    _log_start(entries)
 
     deadline = time.time() + REFRESH_SECONDS
     rounds = 0
@@ -708,15 +822,7 @@ def main():
             print("本轮无任何条目，保留旧 feed 不覆盖")
             return 1
         rounds += 1
-        print("[第 %d 轮] 成功 %d / 回退 %d / 失败 %d → 条目 %d"
-              "（重复 %d、超出上限裁掉 %d）耗时 %.1fs"
-              % (rounds, stats["ok"], stats["stale"], stats["fail"],
-                 stats["items"], stats["dedup_dropped"], stats["trimmed"], elapsed))
-        if stats.get("settled"):
-            print("       其中 %d 条按「首次见到」排序（源每轮刷新整个时间戳）"
-                  % stats["settled"])
-        print("        上屏：%s ｜ %s"
-              % (note, (pick.get("title") or "")[:36] if pick else "（设备版保持上一版）"))
+        _log_round(rounds, pick, note, stats, elapsed)
 
         left = deadline - time.time()
         # 45 秒的来历：一轮正常 15~25 秒（49 源 / 12 并发），留一倍余量。

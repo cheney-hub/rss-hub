@@ -44,7 +44,13 @@ def clock_stamped_sources(items):
     """
     buckets = {}
     for it in items:
-        buckets.setdefault(it.get("src") or "", []).append(it.get("ts") or 0)
+        ts = it.get("ts") or 0
+        # 时间戳解析失败的条目 ts 一律是 0，一堆 0 不代表「源给整份 feed 打了同一个
+        # 时钟」——那是解析层的事，归不到失真源头上。把它们算进来会让
+        # clock_stamped_sources() 的返回值混进「其实是没时间」的源。
+        if not ts:
+            continue
+        buckets.setdefault(it.get("src") or "", []).append(ts)
     return {src for src, stamps in buckets.items()
             if len(stamps) >= MIN_ITEMS and len(set(stamps)) == 1}
 
@@ -69,6 +75,37 @@ def prev_seen_index(prev_items):
     return out
 
 
+def prev_source_index(prev_items):
+    """把 load_prev_items() 压成 源地址 → 上一轮该源条目里**最早**的时间戳。
+
+    为什么除了条目级的 `prev_seen_index` 还要按源记一份：那份索引以 guid 为键，
+    而条目会被 `ITEM_LIMIT`（默认 120）裁出产物 —— 一旦掉出这 120 条，它的
+    「首次见到」记录就随产物消失了。下一轮它带着源刷新的新时钟重新入池，
+    条目级索引查不到它，`settle` 于是把这个新时钟当成首见时间永久锁定：
+    **条目真的变年轻了**，排到全池最前。这不是推演出来的，是「怎么老是这条」
+    隔几小时复发一次的成因（用 ITEM_LIMIT=3 加速复现过：条目 ts 逐轮往上爬）。
+
+    失真源的整批条目共用一个时间戳，所以「上一轮该源任何一条的时间」就等于
+    「上一轮这个源的时钟」，拿它兜底正好补上这个洞。
+    取最早而不是最新：产物里可能同时留着被 settle 改写过的旧值与源刷出来的新值，
+    取小值才符合「年龄只增不减」。
+
+    代价要说清楚：该源**换新稿**时，新稿也会拿到上一轮那个时间、显得偏老。
+    失真源的时间本就不可信（它们的排序整个是靠这个模块撑着的），
+    「偶发排得偏后」比「周期性霸榜」轻得多。
+    """
+    out = {}
+    for bucket in (prev_items or {}).values():
+        for it in bucket:
+            ts = it.get("ts") or 0
+            src = it.get("src") or ""
+            if not ts or not src:
+                continue
+            if src not in out or ts < out[src]:
+                out[src] = ts
+    return out
+
+
 def settle(items, prev_items):
     """把失真源条目的时间改成「首次见到时间」，返回改写条数。
 
@@ -82,13 +119,15 @@ def settle(items, prev_items):
     if not clocked:
         return 0
     prev = prev_seen_index(prev_items)
-    if not prev:
+    prev_src = prev_source_index(prev_items)
+    if not prev and not prev_src:
         return 0
     changed = 0
     for it in items:
         if (it.get("src") or "") not in clocked:
             continue
-        was = prev.get(_guid(it))
+        # 条目级记忆优先，查不到才退到源级（为什么需要源级见 prev_source_index）
+        was = prev.get(_guid(it)) or prev_src.get(it.get("src") or "")
         if not was or was >= (it.get("ts") or 0):
             continue
         it["ts"] = was

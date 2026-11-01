@@ -9,6 +9,7 @@
 import glob
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -677,6 +678,29 @@ class TestWorkflowParams(unittest.TestCase):
                         "%s 里的 %s=%s 与代码默认值 %s 不一致"
                         % (os.path.basename(path), key, m.group(1), getter()))
 
+    def test_env_defaults_still_visible_to_the_gate(self):
+        """改成 helper 取值之后，门禁仍要能从代码里读到这些默认值。
+
+        门禁的「参数表 ↔ 文档」与「timer 节拍 ↔ ROTATE_SECONDS」两项契约都靠
+        `os.environ.get("NAME", "默认值")` 这一种写法来提取。数值型参数为了容错
+        改走 `_int_env` 之后，如果门禁不跟着认，那些参数会从契约里**静默消失** ——
+        门禁不报红，只是从此不再核对（节拍契约就是这样变成空转的）。
+        """
+        import ast
+
+        import tools.review_check as RC
+        src = {}
+        for name in ("build_feed.py", "rotate.py", "render.py", "feeds_sync.py"):
+            with open(name, encoding="utf-8") as fh:
+                tree = ast.parse(fh.read())
+            for k, v in RC._env_calls(tree):
+                src.setdefault(k, v)
+        for key, want in (("ROTATE_SECONDS", "300"), ("ROTATE_POOL_MAX", "120"),
+                          ("ITEM_LIMIT", "120"), ("PER_SOURCE", "5"),
+                          ("SOURCE_TZ_OFFSET", "8")):
+            self.assertEqual(src.get(key), want,
+                             "%s 没被门禁读到（%r），相关契约会静默失效" % (key, src.get(key)))
+
     def test_handwritten_workflows_carry_all_tuned_params(self):
         tuned = {k: v for k, v in self._env_values(self._read(self.GENERATED)).items()
                  if k not in self.PER_CYCLE}
@@ -688,6 +712,9 @@ class TestWorkflowParams(unittest.TestCase):
                 self.assertEqual(got[key], want,
                                  "%s 的 %s=%s 与 %s 的 %s 不一致"
                                  % (name, key, got[key], self.GENERATED, want))
+
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 if __name__ == "__main__":

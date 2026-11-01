@@ -38,7 +38,6 @@ from datetime import timedelta, timezone
 TAG_RE = re.compile(r"<[^>]+>")
 # 展示时区统一东八区：和 kindle_screen.LOCAL_TZ 是同一套口径，两屏显示的时间要一致。
 LOCAL_TZ = timezone(timedelta(hours=8))
-HHMM_RE = re.compile(r"(\d{2}):(\d{2}):\d{2}")
 # 兜底路径用：日期串不合 RFC 822 时只求把 HH:MM 抠出来，秒可有可无
 HHMM_LOOSE = re.compile(r"(\d{2}):(\d{2})")
 OK_SCHEME = ("http://", "https://")

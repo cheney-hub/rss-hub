@@ -58,8 +58,11 @@ class TestFeedsSync(unittest.TestCase):
             def __init__(self):
                 self.status = status
 
-            def read(self, _n=-1):
-                return body
+            def read(self, n=-1):
+                # 必须尊重 n：真实的 read(n) 是「最多读 n 字节」。假实现若忽略它、
+                # 一律返回全文，「截断成半份」与「超限熔断」在测试里就没有区别了 ——
+                # 而那条修复靠的正是「多读 1 个字节才能分辨超限」这个语义。
+                return body if n is None or n < 0 else body[:n]
 
             def __enter__(self):
                 return self
@@ -142,6 +145,23 @@ class TestFeedsSync(unittest.TestCase):
         p = self._path()
         self.assertEqual(S.sync(p, UA, url="http://x/f"), "kept")
         self.assertEqual(open(p, "rb").read(), self.OLD)
+
+    def test_oversized_body_is_rejected_not_truncated(self):
+        """超过上限必须整份拒掉，不能截断成半份落盘。
+
+        `resp.read(n)` 是「最多读 n 字节」而不是「超过 n 就报错」。只写 read(上限) 的话，
+        一个超大的响应会被**静默切成半份清单** —— 半份照样过条数校验、照样原子替换掉
+        本地那份；更糟的是下一轮本地已等于这份截断体、判定为 same，
+        从此再也回不到完整清单。上限必须是熔断，不是截断。
+        """
+        pad = b"http://x/pad\n"
+        big = _list_text(12, "big").encode("utf-8") + pad * (S.MAX_LIST_BYTES // len(pad) + 40)
+        self.assertGreater(len(big), S.MAX_LIST_BYTES, "测试数据没超过上限，用例是假的")
+        p = self._path()
+        self._patch(body=big)
+        self.assertEqual(S.sync(p, "ua", "http://x/list"), "kept")
+        with open(p, "rb") as f:
+            self.assertEqual(f.read(), self.OLD, "超限的清单绝不能落盘（半份也不行）")
 
     def test_missing_local_file_is_created(self):
         new = _list_text(S.FEEDS_SYNC_MIN_SOURCES + 1).encode()

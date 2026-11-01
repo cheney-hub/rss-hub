@@ -29,12 +29,17 @@ board_url() {
     grep '^URL=' "$BOARD" 2>/dev/null | grep -o 'https\?://[^}"[:space:]]*' | head -n 1
 }
 
-# 循环到底在不在跑：锁文件里的 pid 还活着才算
+# 循环到底在不在跑：锁文件里的 pid 还活着**并且确实是我们这个脚本**才算。
+# 与 board.sh 的 lock_is_ours 同一口径（不抽成共用函数是因为两个脚本各自独立拷到
+# 设备上，谁都可能被单独替换）——只看 kill -0 的话，锁文件跨重启留着、pid 又被
+# 复用时，状态/菜单会指着一个不相干的进程说「正在运行」，而屏幕其实一动不动。
 loop_pid() {
     [ -f "$LOCK" ] || return 1
     pid=$(cat "$LOCK" 2>/dev/null)
     [ -n "$pid" ] || return 1
     kill -0 "$pid" 2>/dev/null || return 1
+    [ -r "/proc/$pid/cmdline" ] || { echo "$pid"; return 0; }
+    grep -q "board.sh" "/proc/$pid/cmdline" 2>/dev/null || return 1
     echo "$pid"
 }
 

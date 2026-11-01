@@ -25,6 +25,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 
 # 路径写死而不是做成环境变量：这是 Pi 上唯一部署位置的专用脚本，
@@ -94,13 +95,29 @@ def wrap_url_of(feed_url):
 def _write_atomic(path, text):
     """写临时文件再 os.replace：读的一方永远看到完整文件，不会读到写了一半的 XML。
 
+    临时文件名必须唯一（`mkstemp`）而不是固定 `path + ".tmp"`，两个理由：
+      * 固定名时两个写者会互相踩（B 打开旧 tmp、A 先 replace、B 的写入落进已经被
+        替换掉的 inode，读者看到半份内容）——build_feed._write 与 rotate.save_rotate_state
+        都是这么写的，这里没理由例外；
+      * 这两个产物所在目录被 moreaix-site 的 `--alias /rss` 整个挂在公网上，
+        固定名等于一个可以 `GET /rss/feed-wrap.xml.tmp` 直接取到的半成品。
+
     只保证「替换」这一瞬间的原子性，不 fsync 目录——断电最坏是丢这一版，
     上一版仍然完整，对「大不了重复一条」的轮播来说够用。
     """
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
-    os.replace(tmp, path)
+    d = os.path.dirname(path) or "."
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=os.path.basename(path) + ".", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+        os.chmod(tmp, 0o644)      # mkstemp 建的是 0600，这些文件是要发布出去的
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def _write_if_changed(path, text):

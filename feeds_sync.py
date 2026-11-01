@@ -18,6 +18,7 @@ CI 不需要：那里的 feeds.txt 本来就是 checkout 出来的，多一次�
 """
 import os
 import sys
+import tempfile
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -26,11 +27,25 @@ import version  # noqa: E402  （版本号唯一真源）
 
 __version__ = version.__version__
 
+
+def _int_env(name, default, lo=None):
+    """读整数环境变量，不存在 / 空串 / 非数字都回落 default。
+
+    与 build_feed._int_env 同一口径（本模块不能 import 它：build_feed 单向依赖这里）。
+    为什么必须自己吞掉这个错见那里的注释 —— 这里是模块级取值，异常发生在 import 期。
+    """
+    try:
+        v = int(os.environ.get(name, "") or default)
+    except (TypeError, ValueError):
+        v = default
+    return v if lo is None else max(lo, v)
+
+
 FEEDS_SYNC_URL = os.environ.get("FEEDS_SYNC_URL", "")
-FEEDS_SYNC_TIMEOUT = max(3, int(os.environ.get("FEEDS_SYNC_TIMEOUT", "20")))
+FEEDS_SYNC_TIMEOUT = _int_env("FEEDS_SYNC_TIMEOUT", 20, lo=3)
 # 「少得不像清单」用地址条数判：404 页、跳转页、WAF 拦截页都过不了这关，
 # 而正常清单有几十条，余量很大。
-FEEDS_SYNC_MIN_SOURCES = max(1, int(os.environ.get("FEEDS_SYNC_MIN_SOURCES", "10")))
+FEEDS_SYNC_MIN_SOURCES = _int_env("FEEDS_SYNC_MIN_SOURCES", 10, lo=1)
 
 MAX_LIST_BYTES = 2 * 1024 * 1024          # 清单再大也要有上限，别让人喂一个 GB 进来
 
@@ -50,12 +65,22 @@ def looks_like_feeds(text):
 def write_list(path, body):
     """原子替换清单；写不进去返回 False，调用方继续用旧的。
 
-    先写同名 + `.new` 再 `os.replace`：读到一半的清单会让这一轮少抓几十个源，
+    先写临时文件再 `os.replace`：读到一半的清单会让这一轮少抓几十个源，
     而 replace 在同一文件系统上是原子的，读方只会看到旧内容或新内容。
+
+    临时文件名必须唯一（`mkstemp`）而不是固定 `path + ".new"`：同步在每轮构建前跑，
+    白天节拍 5 分钟，某一轮卡在网络上时两轮会重叠，固定名就是两个进程往同一个文件
+    里写（先写完的那个被后写完的截断，落盘的是半份清单）。
     """
-    tmp = path + ".new"
+    d = os.path.dirname(path) or "."
     try:
-        with open(tmp, "wb") as f:
+        fd, tmp = tempfile.mkstemp(dir=d, prefix=os.path.basename(path) + ".",
+                                   suffix=".new")
+    except OSError as exc:
+        print("[同步] feeds.txt 写不进去，沿用本地那份（%s）" % exc)
+        return False
+    try:
+        with os.fdopen(fd, "wb") as f:
             f.write(body)
         os.replace(tmp, path)
     except OSError as exc:
@@ -93,7 +118,15 @@ def sync(feeds_file, ua, url=None):
         with urllib.request.urlopen(req, timeout=FEEDS_SYNC_TIMEOUT) as resp:
             if getattr(resp, "status", 200) != 200:
                 return "kept"
-            body = resp.read(MAX_LIST_BYTES)
+            # +1 让「刚好等于上限」与「超过上限」可区分（与 build_feed.http_get 同一写法）：
+            # `read(n)` 是「最多读 n 字节」，不是「超过 n 就报错」。只写 read(上限) 的话，
+            # 超大的响应会被**静默截断成半份清单** —— 半份照样过 looks_like_feeds 的
+            # 条数判据、照样原子落盘，而下一次本地已等于这份截断体、判定为 same，
+            # 再也回不到完整清单。上限必须是熔断，不是截断。
+            body = resp.read(MAX_LIST_BYTES + 1)
+            if len(body) > MAX_LIST_BYTES:
+                print("[同步] feeds.txt 超过 %d 字节上限，沿用本地那份" % MAX_LIST_BYTES)
+                return "kept"
     except Exception as exc:                                 # noqa: BLE001
         # 网络问题连日志都不必刷屏：每 5 分钟一轮，断了会一直打
         print("[同步] feeds.txt 取不到，沿用本地那份（%s）" % exc)

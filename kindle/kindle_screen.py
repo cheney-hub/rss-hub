@@ -46,7 +46,6 @@ TAG_RE = re.compile(r"<[^>]+>")
 # 展示用的时区：单元里的 TZ、timer 的 OnCalendar、页眉那个时间戳，全都按东八区走，
 # 屏上的时间列也统一成它（否则混源时 UTC 的 04:45 会和北京的 12:45 并排出现）。
 LOCAL_TZ = timezone(timedelta(hours=8))
-HHMM_RE = re.compile(r"(\d{2}):(\d{2}):\d{2}")
 # 兜底路径用：日期串不合 RFC 822 时只求把 HH:MM 抠出来，秒可有可无
 HHMM_LOOSE = re.compile(r"(\d{2}):(\d{2})")
 NO_LINE_START = "、。，；：）】》」』！？%!?,.;:)]}"

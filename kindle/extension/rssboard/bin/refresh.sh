@@ -10,7 +10,11 @@
 need_board || exit 0
 
 diag "refresh: start, url=$(board_url)"
-/bin/sh "$BOARD" --once
+# stdout/stderr 必须接进 $DIAG：KUAL 不显示脚本输出（见 common.sh 第 1 条），
+# 而 wget 的报错原文是 board.sh 用 echo 打到 stdout 的 —— 不接的话，失败时这里
+# 只剩两行 refresh: start / rc=N，看不出是 TLS、DNS 还是 404。这个菜单项恰恰是
+# 文档里指定用来确认链路的那一招，断了它等于断了排障主路径。
+/bin/sh "$BOARD" --once >> "$DIAG" 2>&1
 rc=$?
 diag "refresh: board.sh --once rc=$rc"
 

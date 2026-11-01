@@ -99,7 +99,10 @@ class _StaticHandler(BaseHTTPRequestHandler):
             return None
         try:
             dt = email.utils.parsedate_to_datetime(raw)
-        except (TypeError, ValueError):
+        except Exception:
+            # 不只 TypeError/ValueError：parsedate_to_datetime 对畸形输入还能抛
+            # OverflowError 之类，而这里是请求处理链上唯一没有兜底的一处 ——
+            # 漏一种异常就是整个请求 500（看板拉图失败），比多发一次文件贵得多。
             return None
         if dt is None:
             return None
