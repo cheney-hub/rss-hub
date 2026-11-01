@@ -9,10 +9,11 @@
 （Tunnel 的 path 前缀无论是否被剥掉，serve.py 都能正确找到文件）
 
 同一份代码还兼了两个静态站：8081 根域主页（--root /home/user/site）与
-8082 Kindle 看板图（--root /home/user/kindle，唯一绑 0.0.0.0 的实例）。
-8081 那台另用 `--alias /kindle=/home/user/kindle` 顺带把看板图也挂出去 ——
-因为 Tunnel 的 ingress 是顺序匹配，根域那条不带 path 的兜底规则会吃掉所有路径，
-另开一条 /kindle 的 Public Hostname 排在它后面就永远轮不到（见 TUNNEL.md 6.2）。
+现在 Pi 上**只跑一份**：moreaix-site 用 `--root /home/user/site` 加两个别名
+（`/rss` → feed 目录、`/kindle` → 看板图），一台出三样东西。
+曾经的 8080（只出 feed）与 8082（只出看板图、绑 0.0.0.0）都已下线：
+同一份 serve.py 换参数跑三遍没有任何收益，而 Tunnel 只为它多担了两条 path 规则
+（顺序匹配 + 非锚定正则两个坑，见 TUNNEL.md 6.2）。
 
 设计要点：
 - 只读、只服务静态文件，防目录穿越（root 用 realpath，符号链接也穿不出去）。
@@ -167,10 +168,10 @@ def make_handler(root, prefix="", aliases=None):
     """造一个绑定了 root/prefix 的 Handler 类。
 
     每个服务实例各造一个子类，而不是把目录写死进 _StaticHandler：同一个进程将来
-    同时服务多个目录时（比如 8080 的 feed 和 8082 的图合并），两边互不影响。
+    同时服务多个目录时（用 aliases 把 /rss、/kindle 挂到同一台），两边互不影响。
     prefix 是「Tunnel 上那层路径前缀」，传空串表示不要前缀（8081 用）。
-    8082 现在是 /kindle：公网那一头 `https://moreaix.com/kindle/rss-pw2.png` 的路径
-    是被 Cloudflare **原样**转发过来的，后端认同一层前缀才接得住。
+    prefix 与 alias 的区别：prefix 只在一台实例上剥一层（历史用法），alias 可以挂多组
+    「路径 → 目录」，更适合一台实例服务多个目录。
 
     aliases 是 [(路径前缀, 目录)] 的列表，用于「一台实例顺带服务另一个目录」。
     按路径长度降序匹配，所以 /kindle 与 /kindle/live 这种嵌套关系不会互相盖住。

@@ -25,8 +25,6 @@
   - `rss-rotate.service` + `rss-rotate.timer` — 轮播（设备版），**全天每 5 分钟推进一条**
   - `moreaix-site.service` — **唯一**的静态服务（端口 8081）：根域主页 + `/rss/*` + `/kindle/*`
   - `kindle-screen.service` + `kindle-screen.path` — feed 一变就重画看板（**不轮询**）
-  - `kindle-serve.service` — 看板图床（端口 8082，**已停用**）。保留文件是为了将来局域网
-    修好后一条 `systemctl enable --now` 就能回来；公网已由 8081 的 `--alias /kindle` 承担
 - `kindle/board.sh` — Kindle 端取图上屏脚本（需越狱后使用）
 - `kindle/extension/rssboard/` — KUAL 扩展：把上面那个脚本包成「立即刷新/启动/停止/看状态」菜单
 - `kindle/build-mrpackage.sh` — 把它俩打成 MRPI 的 `.bin`（需要先编一个 kindletool）
@@ -60,8 +58,9 @@
 
 | 端口 | 绑定 | 用途 | 对外暴露 |
 |---|---|---|---|
-| 8081 | `127.0.0.1` | 全部静态内容（主页 / `/rss` / `/kindle`） | 经 Cloudflare Tunnel → `moreaix.com/` 一条规则全覆盖 |
-| 8082 | `0.0.0.0` | Kindle 看板图（**已停用**） | 无。单元还在，`systemctl enable --now kindle-serve` 可恢复 |
+| 8081 | `127.0.0.1` | **唯一**的静态服务：主页 / `/rss` / `/kindle` 全由它出 | 经 Cloudflare Tunnel → `moreaix.com/` 一条规则全覆盖 |
+
+整台 Pi 上**只有这一个监听端口，且只绑回环**；没有任何 `0.0.0.0` 上的服务。
 
 **8080 去哪了**（2026-11-01 合并）：它原来是独立的 `rss-serve`，跑的是**同一个 `serve.py`**，
 只是 `--root` 指向 feed 目录。加一个 `--alias /rss=…` 之后 8081 一台就能同时出主页、feed 和
@@ -71,10 +70,11 @@
 - Tunnel 只剩**一条**根域规则，`/rss` 那条 path 规则没了 —— 顺序匹配、非锚定正则那两个坑
   从此不会再出现（它们都是 path 规则特有的毛病）
 
-**8082 为什么停了**（2026-11-01）：它的设计用途是让局域网里的 Kindle 就近取图、不绕
+**8082 为什么删了**（2026-11-01）：它当时的设计用途是让局域网里的 Kindle 就近取图、不绕
 Cloudflare。但 Pi 把 wlan0 的入站 TCP 全 DROP 了（22/53/139/445/8082 一律超时，手机与
-本机都试过），这条路实际是废的 —— 24 小时内零外部访问。公网改由 8081 出图之后，
-它就是纯多余的攻击面。`deploy.sh` 也不再 enable 它。
+本机都试过），实测 24 小时内零外部访问 —— 这条路是废的。公网改由 8081 出图之后，它就只剩
+「一个绑在 `0.0.0.0` 上的端口」这点用处了，于是连单元文件一起删掉（不是停用）。
+真要恢复局域网取图，把 `serve.py --port 8082 --bind 0.0.0.0` 重新写成单元即可，代码现成。
 
 ## 关于 GitHub Actions
 

@@ -13,14 +13,18 @@
 # 刻意不写 set -e：这是一个永不退出的循环，一次 wget 失败或 eips 报错都只该记一笔、
 # 继续下一轮；加上 -e 会让整个看板因为一次网络抖动就停摆。
 
-# 图的来源。默认走家庭局域网直连 Pi；可用 BOARD_URL 覆盖成公网地址：
-#   BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh
-# 路径上的 /kindle 是 serve.py 那一侧的 --prefix（不是目录），文件名由
-# kindle_screen.py 的 BOARD_PNG 决定 —— 改任一侧都要同步改这里。
-# 要不要覆盖看现场：局域网直连最快、也不依赖隧道与外网；但凡 Pi 侧的防火墙
-# （nft/ufw/Docker 改过策略时很常见）把入站 TCP 丢了 —— 表现为 ping 得通、
-# 所有端口一律超时 —— 就只能改走公网那条路，代价是每次取图都要绕 Cloudflare 一圈。
-URL="${BOARD_URL:-http://192.168.6.6:8082/kindle/rss-pw2.png}"
+# 图的来源：默认直接走公网（Cloudflare Tunnel 出去的那条）。
+# 曾经默认是局域网直连 http://192.168.6.6:8082/…，但 Pi 把 wlan0 入站全 DROP 了
+# （22/53/139/445/8082 一律超时），且那个 8082 服务已删除 —— 局域网这条口径不复存在。
+# 要临时换源仍可用 BOARD_URL 覆盖，例如指向另一台机器：
+#   BOARD_URL="http://192.168.1.20/board.png" sh board.sh
+# 两处细节：路径里的 /kindle 是 serve.py 的 --alias（不是磁盘目录）；文件名
+# rss-pw2.png 由 kindle_screen.py 的 BOARD_PNG 决定 —— 改任一侧都要同步改这里。
+# 若 Kindle 的 wget 报证书错（KPW2 那套根证书是 2019 年的，未必认 Let's Encrypt
+# 现在这条链），把 https 换成 http 即可：实测 Always Use HTTPS 没开，
+# http://moreaix.com/kindle/rss-pw2.png 直接 200，不跳转。内容本来就是公开新闻，
+# 这一步的取舍只是「能不能刷出来」。
+URL="${BOARD_URL:-https://moreaix.com/kindle/rss-pw2.png}"
 TMP="/mnt/us/board.png.new"
 IMG="/mnt/us/board.png"
 LOCK="/mnt/us/board.lock"

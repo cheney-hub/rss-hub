@@ -50,13 +50,9 @@ done
 
 # 要装的单元清单（加新单元记得同步这里，否则会漏装）
 UNITS="rss-build.service rss-build.timer \
-rss-rotate.service rss-rotate.timer kindle-screen.service kindle-screen.path \
-kindle-serve.service moreaix-site.service"
+rss-rotate.service rss-rotate.timer kindle-screen.service kindle-screen.path moreaix-site.service"
 # 只有带 [Install] 的才能 enable：三个 oneshot（rss-build / rss-rotate / kindle-screen）
 # 分别由 timer 与 path 触发，enable 它们会直接报「no installation config」。
-# kindle-serve（8082）**刻意不 enable**：公网那条已经由 8081 的 --alias /kindle 出图，
-# 它原本唯一的用途（局域网里 Kindle 就近取图）因为 Pi 把 wlan0 入站全 DROP 而废了
-# —— 实测 24 小时零外部访问。单元文件仍然安装，需要时 `systemctl enable --now` 即可。
 ENABLE_UNITS="rss-build.timer rss-rotate.timer kindle-screen.path \
 moreaix-site.service"
 
@@ -92,7 +88,7 @@ rss-build.timer rss-rotate.timer kindle-screen.path || true"
 echo "==> 本机自检（docs/ 里还没 feed.xml 时 404 属正常）"
 "${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8081/rss/feed.xml -> %{http_code}\n" \
 http://127.0.0.1:8081/rss/feed.xml || true'
-# 看板图现在由 8081 的 --alias 出（公网也是这条路），不再查 8082
+# 看板图由 8081 的 --alias /kindle 出（8082 那台已彻底删除）
 "${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8081/kindle/rss-pw2.png -> %{http_code}\n" \
 http://127.0.0.1:8081/kindle/rss-pw2.png || true'
 
