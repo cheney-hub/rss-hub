@@ -40,7 +40,10 @@ FEED="/home/${PI_USER}/rss-hub/docs/feed.xml"
 KINDLE_DIR="/home/${PI_USER}/kindle"
 
 SSH_OPTS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
-SSH=(ssh "${SSH_OPTS[@]}")
+# **目标地址写在数组里**（和 Pi/deploy.sh 一个写法），后面每条命令就不必再抄一遍。
+# 别把它挪到调用处：漏写一个参数，ssh 会把远程命令当成主机名，报
+# "hostname contains invalid characters" —— 而且是在第一条命令上才炸，很容易误判成网络问题。
+SSH=(ssh "${SSH_OPTS[@]}" "${PI_USER}@${PI_HOST}")
 SCP=(scp "${SSH_OPTS[@]}")
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
