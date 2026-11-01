@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# 把 Pi 侧的脚本与 systemd 单元装到树莓派上（不搬引擎代码、不装 Python 依赖）。
+# 把 Pi 侧的脚本、systemd 单元与 RSS 引擎代码装到树莓派上（不装 Python 依赖）。
 #
 # 上传什么：
+#   build_feed.py / render.py / rotate.py / version.py / feeds_sync.py → ${HUB_ROOT}（引擎）
 #   serve.py / rotate_screen.py / kindle_screen.py / kindle_page.py → ${PI_USER}/pi-pipeline/
 #   services/*.service / *.path / *.timer            → /etc/systemd/system/（经 /tmp 中转）
-# 不覆盖什么：
-#   /home/user/rss-hub（引擎代码：build_feed.py 等几个文件的扁平副本，由人工维护，
-#   本仓库里它就是仓库根目录的那几个文件）、/home/user/site（主页产物）、
-#   /home/user/kindle（看板图，由 kindle-screen 渲染生成）——这些都不归本脚本管，
-#   脚本只保证目录存在，缺引擎时直接报错停下，不往下装半套。
+# 不上传什么：
+#   feeds.txt —— Pi 那份由引擎每轮构建前自己去仓库拉（见 rss-build.service 的
+#   FEEDS_SYNC_URL）。这里再传一份等于两条路同时管同一个文件，迟早打架。
+#   /home/user/site（主页产物）、/home/user/kindle（看板图，由 kindle-screen 渲染生成）
+#   ——这两个是运行产物，只在下面保证目录存在。
+#
+# 为什么连引擎一起传：2026-11-01 实测过一次漂移 —— 仓库改了代码没同步到 Pi，
+# 两边各出一版 feed，屏幕上完全看不出来（这正是那次事故里唯一可怕的地方）。
+# 所以这里不再「缺引擎就报错退出」，而是直接把根目录那份传上去补平。
 #
 # 幂等：重复跑只是把同样内容再传一遍。已在运行的单元用 try-restart 重启 ——
 # `enable --now` 对 active 单元不会重启，传了新 serve.py 却还在跑旧进程（踩过）。
@@ -59,9 +64,10 @@ moreaix-site.service"
 echo "==> 目标 ${PI_USER}@${PI_HOST}"
 "${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' '${FEED_ROOT}' '${KINDLE_DIR}' && echo paths-ok"
 
-# 没有引擎就别装了：装完 rss-build 也只会以「找不到 build_feed.py」失败
-"${SSH[@]}" "test -f '${HUB_ROOT}/build_feed.py' \
-  || { echo '缺少 ${HUB_ROOT}/build_feed.py：先把本仓库 clone 到 ${HUB_ROOT}'; exit 1; }"
+echo "==> 上传引擎代码（根目录那几个文件）"
+for f in build_feed.py render.py rotate.py version.py feeds_sync.py; do
+    "${SCP[@]}" "${HERE}/../${f}" "${PI_USER}@${PI_HOST}:${HUB_ROOT}/${f}"
+done
 
 echo "==> 上传脚本"
 # kindle_page.py 出网页看板，kindle-screen.service 的第二条 ExecStart 会调它；

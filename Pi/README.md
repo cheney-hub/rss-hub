@@ -7,7 +7,7 @@
 
 | 系统 | 位置 | 谁驱动 | 是否变动 |
 |---|---|---|---|
-| RSS 聚合引擎 | 仓库**根目录**（`build_feed.py` / `render.py` / `rotate.py` / `version.py` / `feeds.txt` …） | GitHub Actions（`minute.yml` / `rss.yml` / `nightly.yml` / `review.yml`） | **不变** |
+| RSS 聚合引擎 | 仓库**根目录**（`build_feed.py` / `render.py` / `rotate.py` / `version.py` / `feeds_sync.py` / `feeds.txt` …） | GitHub Actions（`minute.yml` / `rss.yml` / `nightly.yml` / `review.yml`） | **不变** |
 | Pi 本地部署 | 本目录 `Pi/` | 树莓派 systemd 自管（7×24） | 本次新增，无 Actions |
 
 根目录的 Actions 只管根目录的 RSS 引擎；`Pi/` 不依赖 GitHub Actions，也不会被它们运行。
@@ -34,7 +34,9 @@
 - `site/` — 根域主页 `index.html` + logo（`logo.svg` / `logo-lockup.svg`）
 - `sshd-99-hardening.conf` — SSH 加固 drop-in（关密码、仅公钥）
 - `TUNNEL.md` — Cloudflare Tunnel 接入指引
-- `deploy.sh` — 部署脚本：只上传本目录的三个 `.py` 与 `services/*`，不搬引擎代码
+- `deploy.sh` — 部署脚本：上传本目录的四个 `.py`、`services/*`，**以及根目录的引擎代码**
+  （含 `feeds_sync.py`）。`feeds.txt` 不在上传清单里 —— 它由引擎每轮构建前自己去仓库拉
+  （`FEEDS_SYNC_URL`，见 `services/rss-build.service`），不需要 `deploy.sh` 代劳
 
 > **抓取时间线 ≠ 显示时间线**（这是本目录最容易搞错的一点）：
 > `rss-build.timer` 决定「多久去源站抓一次」（白天 5 分钟 / 夜间整点），
@@ -48,7 +50,7 @@
 - 主页：`/home/user/site/`
 - 看板图输出：`/home/user/kindle/`（`rss-pw2.png` = `kindle-758x1024.png` 的副本，KPW2 第 6 代竖屏；
   对外地址 `https://moreaix.com/kindle/rss-pw2.png`，网页版 `https://moreaix.com/kindle/`）
-- RSS 引擎：`/home/user/rss-hub/`（= 仓库根目录代码在 Pi 的本地副本）
+- RSS 引擎：`/home/user/rss-hub/`（= 仓库根目录代码在 Pi 的本地副本，由 `deploy.sh` 覆盖过去）
 
 时区：`timedatectl set-timezone Asia/Shanghai`（并确认 `timedatectl` 输出里
 `Time zone: Asia/Shanghai`）。原因：`rss-build.timer` 的 `07..23` 与 `00..06` 两条

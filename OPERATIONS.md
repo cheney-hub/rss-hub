@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.8.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.9.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -56,6 +56,9 @@ python3 tools/gen_minute_workflow.py 13
 | `ROTATE_POOL_MAX` | `120` | 轮播池上限，`0` = 不限。**显式钉 120**：池子越深、「排到之前就被挤出池子」的条目越多；1.7.0 起按条轮后它管的是「有多少条能在离场前排到」，设备端仍只消费「最新 120 条」 |
 | `SOURCE_TZ_OFFSET` | `8` | 源没写时区时按哪个时区解释（默认北京 +08）。不要依赖运行机本地时区，否则本地与 CI 排序不一致 |
 | `FEEDS_FILE` | `./feeds.txt` | 订阅源清单，注释行写中文名、下一行写地址 |
+| `FEEDS_SYNC_URL` | 空 | 每轮构建前从这个地址拉一份清单覆盖本地（`FEEDS_SYNC_URL` 为空 = 不同步）。**只有树莓派要配**（指仓库 raw 那份），CI 上 feeds.txt 本来就是 checkout 出来的，配了纯属多一次网络往返。拉不到/不像清单就沿用本地那份，构建照常跑 |
+| `FEEDS_SYNC_TIMEOUT` | `20` | 拉清单的超时秒数 |
+| `FEEDS_SYNC_MIN_SOURCES` | `10` | 拉到的文件至少有几个地址行才算清单。用来挡 404 页、跳转页、WAF 拦截页 |
 | `OUT_FILE` | `./docs/feed.xml` | 完整版输出路径 |
 | `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-wrap.xml` | 设备版输出路径。**GitHub 三个 workflow 都把它改指 `${{ runner.temp }}`，即本仓库不再发布设备版**；设备版只由树莓派发布在 `moreaix.com/rss/feed-wrap.xml`，Dot App 订阅那一个 |
 | `ROTATE_STATE` | 与 `OUT_FILE` 同目录的 `rotate.json` | 轮播游标状态。**GitHub 侧指到 `${{ runner.temp }}`（不发布、不提交）**；树莓派侧是 `/home/user/rss-hub/docs/rotate.json`，发布在 `moreaix.com/rss/rotate.json` |

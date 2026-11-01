@@ -87,6 +87,8 @@ import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 
+# 清单同步住在 feeds_sync.py：Pi 上那份 feeds.txt 是仓库的副本，每轮构建前要对齐一次。
+import feeds_sync
 # 显示规则住在 render.py，build_feed 只负责抓取与编排。
 from render import (BODY_MAX, ENTITY_FIX, LINE_WIDTH, build_rss, clean_text,
                     dedupe, device_description, item_guid)
@@ -671,6 +673,9 @@ def main():
     """
     if _check_version_arg(sys.argv[1:]):
         return 0
+    # 先对齐清单再读它：Pi 上这份是仓库副本，不先同步就会一直用旧源。
+    # 没配 FEEDS_SYNC_URL 时是空操作（CI 走这条）；同步失败也只返回 kept，不阻断构建。
+    feeds_sync.sync(FEEDS_FILE, UA)
     skipped = []
     entries = read_feed_entries(skipped=skipped)
     if skipped:

@@ -15,7 +15,8 @@ on:
     paths:
       - "feeds.txt"
       - "build_feed.py"
-      - "render.py"          # 改排版规则也要立刻重建，否则要等下一个整点
+      - "feeds_sync.py"       # 清单同步跑在构建第一步（读取清单之前），改了它也要立刻重建
+      - "render.py"           # 改排版规则也要立刻重建，否则要等下一个整点
       - "rotate.py"          # 改轮播规则同理：不重建就还是旧规则在发设备版
       - "version.py"
       - ".github/workflows/rss.yml"
