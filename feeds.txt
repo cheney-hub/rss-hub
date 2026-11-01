@@ -4,6 +4,8 @@
 # 说明：GitHub Actions 重建 feed——北京时间 06:00–24:00 每 5 分钟一次，00:00–06:00 每小时一次；
 #       本文件被改动推送到 main 后会立即重建一次（改完即生效，无需其它操作）
 # 注意：注释会被写成条目里的 <source> 源名，建议用「媒体名·栏目」格式
+#       **源名取的是紧贴地址上方的那一行**——中间再插一行注释（比如「注意：…」），
+#       它会顶替源名，屏上就会显示那行说明文字。要把说明写在源名行的**上面**。
 #
 # 两条排序原则（2026-11-01）：
 #   ① 国际中文媒体放在最前——这部分是首选内容，加源优先加这一类；
@@ -44,8 +46,8 @@ https://rss.dw.com/xml/rss-chi-all
 # 法广 RFI·中文（官方，2026-11-01 实测 30 条 / 8.5h）
 https://www.rfi.fr/cn/rss
 
-# 日经中文网·最新（官方，取代原先 4 条 quanwenrss 分栏镜像）
 # 注意：GitHub runner 上会返回 HTTP 202（机房 IP 被挡），只有 Pi 抓得到
+# 日经中文网·最新（官方，取代原先 4 条 quanwenrss 分栏镜像）
 https://cn.nikkei.com/rss.html
 
 # 共同社（日本）中文网·最新（官方无 RSS）
@@ -72,8 +74,8 @@ https://news.ltn.com.tw/rss/all.xml
 # 自由时报·财经（中国台湾，官方）
 https://news.ltn.com.tw/rss/business.xml
 
-# 中央广播电台 RTI（中国台湾，207 条大源，官方）
 # 注意：GitHub runner 上返回 403，会走「回退」用上一份产物里的条目
+# 中央广播电台 RTI（中国台湾，207 条大源，官方）
 https://www.rti.org.tw/rss
 
 # 东网（中国香港东方日报）·港澳新闻（官方无 RSS）
@@ -82,8 +84,8 @@ https://rsshub.rss.tips/oncc/hk
 # 香港01（中国香港）·热榜（官方无 RSS）
 https://rsshub.rss.tips/hk01/hot
 
-# 明报（中国香港）·要闻（官方，2026-11-01 实测 29 条）
 # 注意：GitHub runner 上返回 403（机房 IP 被挡），只有 Pi 抓得到
+# 明报（中国香港）·要闻（官方，2026-11-01 实测 29 条）
 https://news.mingpao.com/rss/pns/s00001.xml
 
 # ---------- 综合新闻 ----------
