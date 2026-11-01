@@ -11,7 +11,7 @@
 			"exitmenu": true,
 			"refresh": false,
 			"status": false,
-			"internal": "Fetching one frame"
+			"internal": "status 拉一张图并上屏"
 		},
 		{
 			"name": "启动常驻刷新",
@@ -20,7 +20,7 @@
 			"exitmenu": true,
 			"refresh": false,
 			"status": false,
-			"internal": "Starting board loop"
+			"internal": "status 启动后台循环"
 		},
 		{
 			"name": "停止刷新",
@@ -29,25 +29,34 @@
 			"exitmenu": true,
 			"refresh": false,
 			"status": false,
-			"internal": "Stopping board loop"
+			"internal": "status 停止后台循环"
 		},
 		{
-			"name": "查看状态（画在屏幕上）",
+			"name": "查看状态（写屏）",
 			"action": "sh /mnt/us/extensions/rssboard/bin/status.sh",
 			"priority": -897,
 			"exitmenu": true,
 			"refresh": false,
 			"status": false,
-			"internal": "Printing status"
+			"internal": "status 正在收集状态"
 		},
 		{
-			"name": "移除本扩展（保留 board.sh）",
-			"action": "sh /mnt/us/extensions/rssboard/bin/uninstall.sh",
+			"name": "自检（把问题画出来）",
+			"action": "sh /mnt/us/extensions/rssboard/bin/doctor.sh",
 			"priority": -896,
 			"exitmenu": true,
 			"refresh": false,
 			"status": false,
-			"internal": "Removing extension only"
+			"internal": "status 逐项自检"
+		},
+		{
+			"name": "移除本扩展（保留 board.sh）",
+			"action": "sh /mnt/us/extensions/rssboard/bin/uninstall.sh",
+			"priority": -895,
+			"exitmenu": true,
+			"refresh": false,
+			"status": false,
+			"internal": "status 移除扩展"
 		}
 		]
 	}

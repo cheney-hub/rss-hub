@@ -1,23 +1,34 @@
 #!/bin/sh
-# 状态写屏：循环在不在、当前这张图什么时候拉的、最后一次日志说了什么。
-# 注意常驻循环跑着的时候，这一屏最多活 INTERVAL（默认 5 分钟）就会被下一帧盖掉。
+# 状态写屏：循环在不在、board.sh 在不在、图多大、用的是哪个地址、日志最后一行。
+# 常驻循环跑着的时候，这一屏最多活 INTERVAL（默认 5 分钟）就会被下一帧盖掉。
 . /mnt/us/extensions/rssboard/bin/common.sh
 
-if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK" 2>/dev/null)" 2>/dev/null; then
-    running="loop running, pid $(cat "$LOCK")"
+pid=$(loop_pid)
+if [ -n "$pid" ]; then
+    running="loop: running (pid $pid)"
 else
-    running="loop not running"
+    running="loop: NOT running"
+fi
+
+if [ -f "$BOARD" ]; then
+    board="board.sh: ok"
+else
+    board="board.sh: MISSING  <- extract zip to root"
 fi
 
 if [ -s "$IMG" ]; then
-    picture="image $(date -r "$IMG" '+%F %T') $(wc -c < "$IMG" | tr -d ' ') bytes"
+    picture="image: $(wc -c < "$IMG" | tr -d ' ') bytes"
+    when=$(stat -c %y "$IMG" 2>/dev/null | cut -c1-16)
+    [ -n "$when" ] && picture="$picture   $when"
 else
-    picture="no image yet"
+    picture="image: none yet"
 fi
 
 eips -c
-eips 1 1 "RSS board status"
+eips 1 1 "RSS Board status"
 eips 1 3 "$running"
-eips 1 4 "$picture"
-eips 1 6 "$(tail -n 1 "$LOG" 2>/dev/null)"
+eips 1 4 "$board"
+eips 1 5 "$picture"
+eips 1 7 "url: $(board_url)"
+eips 1 9 "log: $(tail -n 1 "$LOG" 2>/dev/null)"
 exit 0

@@ -81,7 +81,14 @@ sh Pi/kindle/build-extension-zip.sh      # 产出 Pi/kindle/dist/rssboard-extens
 
 把那个 zip 解压到 **Kindle 根目录**（不要多套一层文件夹），得到 `board.sh` 与
 `extensions/rssboard/`。拔线后在书库打开 **KUAL**，会多出一组 **RSS Board**：
-立即刷新一次 / 启动常驻刷新 / 停止刷新 / 查看状态（写屏）/ 移除扩展。
+立即刷新一次 / 启动常驻刷新 / 停止刷新 / 查看状态（写屏）/ **自检** / 移除扩展。
+「自检」会把 board.sh 在不在、有没有 wget、能不能真取到图、循环在不在跑逐项写成
+PASS/FAIL 画在屏上 —— 排查时先点它，不用连电脑。
+
+两条菜单行为上的硬约束（KUAL 的规矩，踩过）：
+- `menu.json` 的 `internal` **必须**是 `"status <文字>"` 或 `"breadcrumb <文字>"`；
+  直接塞一句说明文字会让 KUAL 当成未知内部命令，动作跑完照样弹「执行出错」。
+- eips 写屏只能用 ASCII：Kindle 自带点阵字体没有汉字，中文会变成空白/方块。
 
 装完不出现菜单，先看 `config.xml`、`menu.json` 有没有真的到位——少一个文件 KUAL
 只是静静地不显示，没有任何报错。zip 里的 `board.sh` 是**当前工作区**那份，改过
