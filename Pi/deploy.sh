@@ -5,7 +5,8 @@
 #   serve.py / rotate_screen.py / kindle_screen.py / kindle_page.py → ${PI_USER}/pi-pipeline/
 #   services/*.service / *.path / *.timer            → /etc/systemd/system/（经 /tmp 中转）
 # 不覆盖什么：
-#   /home/user/rss-hub（引擎代码，来自 git clone）、/home/user/site（主页产物）、
+#   /home/user/rss-hub（引擎代码：build_feed.py 等几个文件的扁平副本，由人工维护，
+#   本仓库里它就是仓库根目录的那几个文件）、/home/user/site（主页产物）、
 #   /home/user/kindle（看板图，由 kindle-screen 渲染生成）——这些都不归本脚本管，
 #   脚本只保证目录存在，缺引擎时直接报错停下，不往下装半套。
 #
@@ -19,6 +20,9 @@
 # 前提：
 #   1. Pi 已开启 SSH，且本机对该用户是**免密（密钥）**登录 —— BatchMode 下不会弹密码，
 #      只有密码时先 ssh-copy-id 把公钥推上去。
+#      密钥文件名不是 id_* 那几种默认名时（比如 pi_deploy_ed25519），ssh 不会自动试它，
+#      直接跑会报 Permission denied (publickey)。先把它喂给 agent：
+#        eval "$(ssh-agent -s)" && ssh-add ~/.ssh/pi_deploy_ed25519
 #   2. 该用户能免密 sudo（安装单元、daemon-reload、restart 都要 root）。
 set -euo pipefail
 

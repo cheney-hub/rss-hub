@@ -232,10 +232,6 @@ BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh  # 走公网
 绕 Cloudflare 一圈。注意这是**进程级**环境变量：KUAL 菜单里的「启动常驻刷新」
 用的是默认地址，要长期走公网得改 `start.sh`（或在该脚本里 export）。
 
-只有在「ping 通但所有端口一律超时」时才需要第二种 —— 代价是每 5 分钟的取图都要
-绕 Cloudflare 一圈。注意这是**进程级**环境变量：KUAL 菜单里的「启动常驻刷新」
-用的是默认地址，要长期走公网得改 `start.sh`（或在该脚本里 export）。
-
 ## 常见故障
 
 | 现象 | 原因 / 处理 |
@@ -243,6 +239,8 @@ BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh  # 走公网
 | 530 / 1033 | tunnel 没连上：`systemctl status cloudflared`，看 token 是否正确、Pi 出网是否正常 |
 | 502 | cloudflared 到了 Pi，但 `localhost:8080` 没人听：`systemctl status rss-serve` |
 | 404 | serve.py 的 `--root` 指错了目录，或 `docs/` 里还没生成 feed.xml（等 rss-build.timer 跑一轮） |
+| `/kindle/*` 在 Pi 本地 200、公网一直 404 | Public Hostname 那条 `/kindle` 没配，请求落到了根域那条**兜底**路由（即根域主页，8081）。定位办法：拿一个不存在的文件名去请求，再同时 `journalctl -u kindle-serve` 与 `journalctl -u moreaix-site`，请求打在谁头上谁就有那条日志（2026-11-01 就是这么查出来的） |
+| 配好了还是旧 404 | 边缘把 404 也缓存了（`.png` 默认 4 小时）。配完 Bypass cache 仍不生效就手动清一次：Caching → Configuration → Custom Purge，填那个 URL |
 | 拿到的总是旧内容 | 边缘缓存：见上面「关掉边缘缓存」 |
 | 客户端跨域被拦 | serve.py 对所有响应（含 404）都带 `Access-Control-Allow-Origin: *`，若仍不行检查是否有别的代理层 |
 | 夜里 feed 不更新 | 夜间节拍是每小时整点（`rss-build.timer`），不是故障；先 `journalctl -u rss-build` 看有没有跑 |
