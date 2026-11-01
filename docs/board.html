@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1216" media="(prefers-color-scheme: dark)">
+<title>RSS 看板 · 每 5 分钟自动刷新</title>
+<style>
+  /* 配色与首页（docs/index.html）、订阅页保持一致，深浅色都跟系统走 */
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --text:#1b1f24; --sub:#5f6b7a;
+    --line:#e6e9ee; --accent:#2f6fed; --accent-soft:#eaf1fe; --warn:#b4530a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1216; --card:#171b21; --text:#e8eaed; --sub:#9aa4b2;
+           --line:#262c35; --accent:#6f9bff; --accent-soft:#1b2635; --warn:#e0a458; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+       padding:20px 14px 56px}
+  .wrap{max-width:720px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:13.5px;margin:0 0 14px}
+  .bar{background:var(--card);border:1px solid var(--line);border-radius:12px;
+       padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;
+       gap:12px;flex-wrap:wrap;font-size:13.5px}
+  .bar .grow{flex:1 1 auto;min-width:180px;color:var(--sub)}
+  .bar b{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+  button{font:inherit;font-size:14px;font-weight:600;color:var(--accent);
+         background:transparent;border:1px solid var(--line);border-radius:9px;
+         padding:7px 14px;cursor:pointer}
+  button:active{opacity:.75}
+  button[disabled]{opacity:.45;cursor:default}
+  /* 看板图本体：竖向 758x1024，手机上宽度撑满、高度自适应 */
+  .board{background:var(--card);border:1px solid var(--line);border-radius:12px;
+         padding:8px;text-align:center;min-height:200px}
+  .board img{display:block;width:100%;height:auto;border-radius:6px;
+             image-rendering:auto}
+  .err{color:var(--warn);font-size:13.5px;padding:26px 12px;text-align:left}
+  .foot{color:var(--sub);font-size:12.5px;text-align:center;margin-top:18px;line-height:1.8}
+  .foot a{color:var(--accent);text-decoration:none}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+       background:var(--sub);margin-right:6px;vertical-align:1px}
+  .dot.on{background:#2e9e5b}
+  .dot.bad{background:#c0392b}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RSS 聚合看板</h1>
+  <p class="sub">每 5 分钟自动取一次最新画面 · 与看板设备的刷新节拍一致</p>
+
+  <div class="bar">
+    <span class="grow"><span class="dot" id="dot"></span><span id="status">正在载入…</span></span>
+    <button id="reload" type="button" disabled>立即刷新</button>
+  </div>
+
+  <div class="board"><img id="img" alt="RSS 看板" width="758" height="1024"></div>
+
+  <p class="foot">
+    图片来自树莓派上的看板渲染服务，直接看原图：<br>
+    <a href="https://moreaix.com/kindle/rss-pw2.png">moreaix.com/kindle/rss-pw2.png</a><br>
+    手机锁屏或切到后台时系统会把定时器挂起，回到本页会立刻补刷一次。
+  </p>
+</div>
+
+<script>
+(function () {
+  // 原图地址。响应头带 max-age=14400，同一个 URL 浏览器 4 小时内不会重新请求，
+  // 所以每次取图都必须换一个 t= 参数（不同 URL = 不同缓存键，Cloudflare 也会回源）。
+  var SRC  = "https://moreaix.com/kindle/rss-pw2.png";
+  var MS   = 300000;          // 5 分钟，与 rss-rotate.timer 的节拍一致
+  var MAXN = 3;               // 连续失败最多重试几次，之后停下来等人点
+
+  var img = document.getElementById("img");
+  var dot = document.getElementById("dot");
+  var st  = document.getElementById("status");
+  var btn = document.getElementById("reload");
+
+  var timer = null, countdown = null;
+  var nextAt = 0, fails = 0, busy = false;
+
+  function stamp() {                       // 每次都不同的查询串
+    return SRC + (SRC.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
+  }
+
+  function hhmm(d) {                       // 东八区显示，与看板上那行时间同口径
+    var s = new Date(d.getTime() + 8 * 3600 * 1000).toISOString();
+    return s.slice(11, 16);
+  }
+
+  function say(cls, text) {
+    dot.className = "dot" + (cls ? " " + cls : "");
+    st.textContent = text;
+  }
+
+  function tick() {                        // 倒计时一秒一次
+    var left = Math.max(0, Math.round((nextAt - Date.now()) / 1000));
+    if (busy) return;
+    if (left > 0) {
+      say("on", "已更新 " + hhmm(new Date()) + " · " + left + " 秒后再取");
+    }
+  }
+
+  // 先在新 Image 上把图下完，成功再替换 src。
+  // 直接改 img.src 会先清空旧图，网速慢时用户看见的是一块空白。
+  function refresh(manual) {
+    if (busy) return;
+    busy = true;
+    btn.disabled = true;
+    say("", "正在刷新…");
+
+    var probe = new Image();
+    var done = false;
+
+    probe.onload = function () {
+      if (done) return;
+      done = true;
+      img.src = probe.src;                 // 下完了才换，画面不会闪
+      fails = 0;
+      busy = false;
+      btn.disabled = false;
+      nextAt = Date.now() + MS;
+      say("on", "已更新 " + hhmm(new Date()) + " · " + Math.round(MS / 1000) + " 秒后再取");
+      schedule();
+    };
+
+    probe.onerror = function () {
+      if (done) return;
+      done = true;
+      fails += 1;
+      busy = false;
+      btn.disabled = false;
+      if (fails >= MAXN) {
+        say("bad", "取图失败 " + fails + " 次，已暂停自动刷新 · 点右侧按钮重试");
+        scheduleStop();
+      } else {
+        say("bad", "取图失败（第 " + fails + " 次），60 秒后重试");
+        nextAt = Date.now() + 60000;
+        schedule(60000);
+      }
+    };
+
+    probe.src = stamp();
+  }
+
+  function schedule(delay) {
+    clearTimeout(timer);
+    timer = setTimeout(function () { refresh(false); }, delay || MS);
+    nextAt = Date.now() + (delay || MS);
+  }
+
+  function scheduleStop() {
+    clearTimeout(timer);
+    clearInterval(countdown);
+  }
+
+  // iOS 在锁屏/切后台时会冻结定时器，回到前台时可能已经过去很久了。
+  // 所以页面重新可见时立刻补刷一次，而不是干等原定的时间点。
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") return;
+    if (busy) return;
+    if (fails >= MAXN) return;
+    if (Date.now() >= nextAt - 1000) { refresh(false); }
+  });
+
+  btn.addEventListener("click", function () { fails = 0; refresh(true); });
+
+  // 首屏：先把监听器挂上再赋 src —— 命中缓存时 load 可能同步派发，
+  // 顺序反了就会漏掉这一次，页面永远停在「正在载入」。
+  img.addEventListener("load", function () {
+    if (busy) return;                    // 自动刷新已经接手了，别把状态改回去
+    nextAt = Date.now() + MS;
+    say("on", "已更新 " + hhmm(new Date()) + " · " + Math.round(MS / 1000) + " 秒后再取");
+    schedule();
+  });
+  img.addEventListener("error", function () {
+    if (busy) return;
+    say("bad", "首次取图失败，正在重试…");
+    refresh(true);
+  });
+  img.src = stamp();                     // 走带参数的地址，直接拿最新那张
+
+  countdown = setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
