@@ -62,7 +62,12 @@
 |---|---|---|---|
 | 8080 | `127.0.0.1` | feed 静态服务 | 经 Cloudflare Tunnel → `moreaix.com/rss/`；另带 `--alias` 顺带出 `/kindle/*` |
 | 8081 | `127.0.0.1` | 根域主页 | 经 Cloudflare Tunnel → `moreaix.com/`；另带 `--alias` 顺带出 `/kindle/*` |
-| 8082 | `0.0.0.0` | Kindle 看板图 | 局域网直连 + 经 Tunnel → `moreaix.com/kindle/` 两条入口 |
+| 8082 | `0.0.0.0` | Kindle 看板图（**已停用**） | 无。单元还在，`systemctl enable --now kindle-serve` 可恢复 |
+
+**8082 为什么停了**（2026-11-01）：它的设计用途是让局域网里的 Kindle 就近取图、不绕
+Cloudflare。但 Pi 把 wlan0 的入站 TCP 全 DROP 了（22/53/139/445/8082 一律超时，手机与
+本机都试过），这条路实际是废的 —— 24 小时内零外部访问。改为由 8080/8081 的
+`--alias /kindle=…` 出图之后，它就是纯多余的攻击面。`deploy.sh` 也不再 enable 它。
 
 8080/8081 都挂 `/kindle` 不是冗余：Tunnel 的 path 规则是非锚定正则，`/rss` 会命中任何
 含 `/rss` 的路径（看板图叫 `rss-pw2.png`，正好中招）。两台都能出图，落到谁都不怕。
