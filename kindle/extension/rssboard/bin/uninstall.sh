@@ -3,7 +3,8 @@
 # 删干净以后的复盘材料比省那点空间值钱。真要连图一起删，手动删这几个文件即可。
 . /mnt/us/extensions/rssboard/bin/common.sh
 
-sh /mnt/us/extensions/rssboard/bin/stop.sh
+# 用 $EXT 而不是把路径再抄一遍：restore.sh 已经这么写，两处各写一套迟早只改一处
+sh "$EXT/bin/stop.sh"
 
 diag "uninstall: removing $EXT (board.sh / board.png / this file are kept)"
 

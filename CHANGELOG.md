@@ -6,6 +6,65 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.11.0] - 2026-11-01
+
+**新：Kindle 看板搬出 `Pi/`，成为与自己平级的独立子项目 `kindle/`**
+
+以前 Kindle 那一摊藏在 `Pi/kindle/` 里，而它里面的东西**一件都不跑在树莓派上**
+（`board.sh` 与 KUAL 扩展跑在 Kindle 设备上），另外两个渲染器虽然跑在树莓派上，却要
+靠 `Pi/deploy.sh` 顺手带上——改 Kindle 一个参数就得跑一遍 Pi 的全套部署。两者的划分
+标准也因此混乱。
+
+现在按「谁的设备谁的代码」重新归位，**两个目录各自具备完整的生命周期**：
+
+| | 之前 | 现在 |
+|---|---|---|
+| 设备端客户端 + KUAL 扩展 | `Pi/kindle/board.sh`、`Pi/kindle/extension/` | `kindle/board.sh`、`kindle/extension/` |
+| 两个渲染器 | `Pi/kindle_screen.py`、`Pi/kindle_page.py` | `kindle/kindle_screen.py`、`kindle/kindle_page.py` |
+| 看板的两个 systemd 单元 | `Pi/services/kindle-screen.{path,service}` | `kindle/services/` 下同名两个 |
+| 部署入口 | 混在 `Pi/deploy.sh` 一条循环里 | **`kindle/deploy.sh`**（新的，与 `Pi/deploy.sh` 平级、互不引用） |
+| 文档 | `Pi/KINDLE.md`、`Pi/JAILBREAK.md` | `kindle/README.md`、`kindle/JAILBREAK.md` |
+
+三条边界，写在这里以免以后又糊在一起：
+
+1. **两个 `deploy.sh` 互不引用、互不安装对方的单元**。`Pi/deploy.sh` 现在只管静态服务与
+   轮播；Kindle 那边断掉也不会拖累设备版。
+2. **树莓派上的路径一个都没变**（仍是 `/home/user/pi-pipeline/` 与 `/home/user/kindle/`），
+   线上不用迁移、不用停机，只是由哪个脚本传过去的差别。
+3. **仍然共用同一台机器与同一个公网出口**：`Pi/` 的 `serve.py` 继续负责把 `--alias /kindle`
+   发出去。这条是刻意的——它是运行时的合作，不是代码上的依赖。
+
+配套改掉的：
+- CI 的语法检查加上新目录；门禁的「模块要有测试」把 `kindle/*.py` 列为必改（它有两个渲染器
+  的 47 例配套用例，比 `Pi/*.py` 那种「只能靠部署验证」的状态齐全得多）
+- 两个 Kindle 测试从 `test_pi_kindle_*.py` 改名 `test_kindle_*.py`
+- 根 README 的架构图与目录树补上 `kindle/` 这条分支，并写明两个项目平级
+- `OPERATIONS.md` / `Pi/README.md` / `Pi/TUNNEL.md` 里所有指向旧路径的描述一并更正；
+  `Pi/README.md` 的边界表从「两套系统」扩成「三套」，并写明两者只是恰好同一台机器
+
+### 顺带做掉的代码审核（找到了三个真缺陷）
+
+搬之前把 12 个文件逐个读了一遍，顺手修掉的问题按严重度排：
+
+1. **`build-mrpackage.sh` 少了 LF 转换**（最严重）。`build-extension-zip.sh` 打包时会把
+   CRLF 转成 LF，但这条路径**没有** —— 而它恰恰是最容易踩的那条：重装整机才用一次，
+   平时根本没人碰，一旦工作区在 Windows 上变回 CRLF，产出的 `.bin` 装上去就是
+   「脚本一行都不执行、屏上毫无提示」，正是本项目最想防的那种失效。现已补上
+   全量转换 + 打完自查，并实测过正反两面：喂一个 CRLF 文件它会拦下（数到 3 个 CR），
+   转换后放行（0 处）。
+2. **`board.sh` 的清屏工具写死成了 `eips -c`**，而画图用的是 `$DRAW`。把 DRAW 改成
+   `fbink -g` 之后，清屏仍然走 eips —— 两者没报错、只是不生效：fbink 有自己的显存
+   快照，它记着的还是 eips 画的内容，于是清屏清到别的帧、残影越积越多。现已抽出
+   `$CLEAR`，注释里写明两个变量必须是同一个工具。
+3. **`common.sh` 里的 `$LOG` 是死变量**：定义了 `$EXT/log.txt`，但没有一个脚本写它；
+   而 `board.sh` 的注释却写着「输出重定向到扩展目录的 log.txt」。实际所有人都往
+   `$DIAG`（根目录的 `rssboard-diag.txt`）写。删掉死变量、把注释改成事实。
+
+另外修了 `uninstall.sh` 里一笔抄死的绝对路径（改用 `$EXT`，与 `restore.sh` 一致），
+以及 `common.sh` 首行混进去的一个多余英文词。
+
+**RSS 输出不受影响**（引擎代码没动），304 例全绿，门禁 0/0/0。
+
 ## [1.10.0] - 2026-11-01
 
 **修：时间戳失真的源会永远排在最前（「为什么老是三星那条」）**

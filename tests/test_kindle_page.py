@@ -1,4 +1,4 @@
-"""Pi/kindle_page.py 的行为测试。
+"""kindle/kindle_page.py 的行为测试。
 
 页面上要放的是**外部 RSS 源的内容**，而它会被放到公网上 —— 所以这里锁死的主要是
 安全边界，而不是排版细节（排版交给浏览器；精算像素的是 PNG 那条路）：
@@ -22,7 +22,7 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-sys.path.insert(0, os.path.join(ROOT, "Pi"))
+sys.path.insert(0, os.path.join(ROOT, "kindle"))
 
 import kindle_page as KP
 

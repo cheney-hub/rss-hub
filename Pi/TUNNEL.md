@@ -212,7 +212,8 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8081/kindle/          
 ```
 
 第二条是 `kindle_page.py` 写的网页看板（见下面 6.5）。它是 `kindle-screen.service`
-的第二条 ExecStart，跟着 feed.xml 的重建一起跑，不用单独装任何东西。
+的第二条 ExecStart，跟着 feed.xml 的重建一起跑 —— 那个单元与那两个渲染器都在
+`../kindle/` 下，归 `../kindle/deploy.sh` 装，本目录不负责。
 
 ### 6.5 两个地址，各管一摊
 
@@ -222,6 +223,7 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8081/kindle/          
 | `https://moreaix.com/kindle/rss-pw2.png` | 单张 PNG：给 `board.sh` + `eips` 画屏那条路 |
 
 两者读同一份 `feed.xml`，互不依赖：删掉网页那一步，eips 那条路照常工作。
+内容产出归 [../kindle/README.md](../kindle/README.md) 管，本文件只讲**怎么走到网外**。
 
 文件名 `rss-pw2.png` 由 `kindle_screen.py` 的 `BOARD_PNG` 决定（= 第一个尺寸的副本）；
 每个尺寸另有一份独立的 `kindle-<W>x<H>.png`。改名要同步三处：那个常量、`board.sh`

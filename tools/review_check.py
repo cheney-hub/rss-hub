@@ -324,12 +324,14 @@ def _imported_modules(paths):
 def check_tests(rep):
     """每个模块至少被一个测试 import 过 —— 没有测试的改动无法验证。
 
-    三个范围，严格程度不同：
+    两个范围，严格程度不同：
       * 根目录模块：必改。它们是线上真正跑的那几个文件。
       * tools/：必改。门禁脚本自身也在里面——「门禁没人测」正是它自己出过 7 类
         假绿却不被发现的原因，所以不给它开后门。
-      * Pi/*.py：只提示。它们是拷到树莓派上当成独立脚本跑的，不属于可 import 的
-        仓库模块（Pi 侧的正确性由 Pi 的部署验证负责）。
+      * Pi/*.py：只提示。它们是拷到树莓派上当成独立脚本跑的，不由本仓库的测试
+        负责。
+      * kindle/*.py：必改。和根目录模块一样有配套用例（tests/test_kindle_*.py），
+        两个渲染器画错的话 Kind 屏上也只是显示一张缺字/错位的图，看不见报错。
     """
     tests_dir = os.path.join(ROOT, "tests")
     imported = set()
@@ -338,7 +340,7 @@ def check_tests(rep):
                                       for f in os.listdir(tests_dir) if f.endswith(".py")])
     targets = [(f, REQUIRED) for f in sorted(os.listdir(ROOT))
                if f.endswith(".py") and not f.startswith("_")]
-    for sub, sev in (("tools", REQUIRED), ("Pi", INFO)):
+    for sub, sev in (("tools", REQUIRED), ("kindle", REQUIRED), ("Pi", INFO)):
         d = os.path.join(ROOT, sub)
         if os.path.isdir(d):
             targets += [("%s/%s" % (sub, f), sev) for f in sorted(os.listdir(d))

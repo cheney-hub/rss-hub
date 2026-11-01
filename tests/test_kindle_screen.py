@@ -1,4 +1,4 @@
-"""Pi/kindle_screen.py 的行为测试。
+"""kindle/kindle_screen.py 的行为测试。
 
 这台机器上可能没装 Pillow（kindle_screen 依赖它，Pi 上有），没装就整文件跳过；
 下面的大部分用例用的是**自己写的假 draw**（只实现 `textlength`），所以不依赖字体。
@@ -21,7 +21,7 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-sys.path.insert(0, os.path.join(ROOT, "Pi"))
+sys.path.insert(0, os.path.join(ROOT, "kindle"))
 
 try:
     import kindle_screen as KS

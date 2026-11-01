@@ -27,4 +27,4 @@ credentials.json
 secrets.json
 
 # Kindle 打包产物（kindletool 出的 .bin 和对外分发用的 zip，都能现场重建）
-Pi/kindle/dist/
+kindle/dist/

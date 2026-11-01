@@ -31,11 +31,16 @@ LOCK="/mnt/us/board.lock"
 INTERVAL=300          # 秒。墨水屏别刷太勤，3~5 分钟一次够了
 FULL_EVERY=10         # 每 N 次刷新清一次残影
 
-# 画图的工具。默认用系统自带的 eips；装了 FBInk 的话改成 "fbink -g" 效果更好（有抖动和缩放）
+# 画图与清屏的工具。两者必须是**同一个**（eips ↔ fbink），混用没有报错、只是不生效：
+# fbink 有自己的显存快照，它记着的还是 eips 画的内容，于是清屏清成别的帧、残影越积越多。
+# 默认用系统自带的 eips；装了 FBInk 的话两个一起改成 "fbink -g" / "fbink -c"（有抖动和缩放）。
 DRAW="eips -g"
+CLEAR="eips -c"
 
-# 日志写两处：系统 syslog（logger），和标准输出。后者是给「停下来看」的场景用的——
-# KUAL 起常驻进程时会把输出重定向到扩展目录的 log.txt，状态页 tail 的就是它。
+# 日志写两处：系统 syslog（logger），和标准输出。后者是给「拔线看文件」用的——
+# start.sh 起常驻循环时把这里的 stdout/stderr 一并追加到 /mnt/us/rssboard-diag.txt
+# （见 extension/rssboard/bin/common.sh 里的 $DIAG），所以 wget 的报错原文会留在那个
+# 文件里，排查时看的也是它。前台试跑则直接打到终端上。
 log() {
     logger "$1"
     echo "$(date '+%F %T') $1"
@@ -57,7 +62,7 @@ is_png() {
 if [ "$1" = "--once" ]; then
     if fetch; then
         mv "$TMP" "$IMG"
-        eips -c
+        $CLEAR
         $DRAW "$IMG"
         log "board: once ok"
     else
@@ -90,10 +95,10 @@ while true; do
             log "board: unchanged, skip refresh"
         else
             mv "$TMP" "$IMG"
-            # eips -c 会整屏闪一次并清屏，紧接着重画 —— 这是清残影最稳的做法。
+            # 整屏闪一次并清屏，紧接着重画 —— 这是清残影最稳的做法。
             # n 从 0 开始，所以第一轮必然清一次屏（首次上屏本来就该整屏刷）。
             if [ $((n % FULL_EVERY)) -eq 0 ]; then
-                eips -c
+                $CLEAR
             fi
             $DRAW "$IMG"
             n=$((n + 1))

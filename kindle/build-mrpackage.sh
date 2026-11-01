@@ -2,7 +2,7 @@
 # 把「看板客户端 + KUAL 扩展」打包成 Update_rssboard_install.bin，丢进 Kindle 根目录的
 # mrpackages/ 再 ;log mrpi 就能装上，省掉 scp + chmod 那几步。
 #
-# 用法：  sh Pi/kindle/build-mrpackage.sh [kindletool 的路径] [设备代号]
+# 用法：  sh kindle/build-mrpackage.sh [kindletool 的路径] [设备代号]
 # 默认：  kindletool 在 PATH 里，设备代号 pw2（Kindle Paperwhite 2，和 JAILBREAK.md 一致）
 #
 # kindletool 要自己编译（没有官方的 Windows 成品，树莓派上最省事）：
@@ -33,6 +33,22 @@ command -v "$KINDLETOOL" >/dev/null || {
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
 
+# **打进去之前一律把 CRLF 转成 LF**，和 build-extension-zip.sh 同一个口径。
+# 这条路径其实更危险：它不像打 zip 那样天天用（重装整机才走这条路），而一旦工作区在
+# Windows 上变回 CRLF，产出的 .bin 装上去是「脚本一行都不执行、屏上毫无提示」——
+# 那条最容易踩的坑正在这儿等着。所以补全套：转换 + 打完自查 + 有残留直接退出。
+to_lf() {
+    if type python3 >/dev/null 2>&1; then
+        python3 -c 'import sys
+p, = sys.argv[1:]
+d = open(p, "rb").read().replace(b"\r\n", b"\n")
+open(p, "wb").write(d)' "$1"
+    else
+        # 走到这里也能编译出 kindletool 的机器基本都带 sed，不留后路
+        sed -i 's/\r$//' "$1"
+    fi
+}
+
 # 这种包是把内容解压到用户区根目录的，所以 staging 目录的结构必须和装好之后的
 # /mnt/us 一模一样：board.sh 在根上，扩展在 extensions/ 底下。
 mkdir -p "$STAGE/extensions"
@@ -44,6 +60,19 @@ chmod +x "$STAGE/board.sh" "$STAGE/extensions/rssboard"/bin/*.sh
 for f in board.sh extensions/rssboard/config.xml extensions/rssboard/menu.json; do
     [ -f "$STAGE/$f" ] || { echo "staging 缺文件：$f" >&2; exit 1; }
 done
+
+to_lf "$STAGE/board.sh"
+for f in "$STAGE"/extensions/rssboard/bin/*.sh \
+         "$STAGE/extensions/rssboard/config.xml" \
+         "$STAGE/extensions/rssboard/menu.json"; do
+    to_lf "$f"
+done
+
+# 数字不为 0 就别往下走了 —— 打包后再发现，只会变成设备上那次没有线索的失效
+bad=$({ od -An -tx1 -v "$STAGE/board.sh" "$STAGE"/extensions/rssboard/bin/*.sh 2>/dev/null \
+        || true; } | tr ' ' '\n' | grep -c '^0d$' || true)
+echo "  换行自检：残留 CR  $bad 处"
+[ "${bad:-0}" -eq 0 ] || { echo "staging 里还有 $bad 个 CR，Kindle 上会解析失败" >&2; exit 1; }
 
 mkdir -p "$DIST"
 # 必须 cd 进去再喂 "."：kindletool 默认把参数路径原样存档，给绝对路径的话包里会带上

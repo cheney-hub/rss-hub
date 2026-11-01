@@ -1,5 +1,5 @@
 #!/bin/sh
-# look 一眼就能改的路径集中在这里，六个菜单脚本共用。
+# 一眼就能改的路径集中在这里，六个菜单脚本共用。
 #
 # 三条约定：
 # 1) KUAL 里看不到脚本的 stdout。要给人看的东西写两处：
@@ -13,8 +13,12 @@ EXT=/mnt/us/extensions/rssboard
 BOARD=/mnt/us/board.sh
 LOCK=/mnt/us/board.lock
 IMG=/mnt/us/board.png
-LOG="$EXT/log.txt"
-# 诊断报告：放在根目录而不是扩展目录里，方便在 E 盘上一眼看到
+# 诊断报告：放在根目录而不是扩展目录里，方便在 E 盘上一眼看到。
+#
+# 它就是**唯一的日志文件**：所有菜单动作往这里追加一行，start.sh 起常驻循环时把
+# board.sh 的 stdout/stderr 也接到这里（见 board.sh 的 log），所以 wget 的报错原文
+# 会原样留下。以前这里还定义过一个 $LOG（扩展目录下的 log.txt），但没有任何脚本写它，
+# 属于徒有其表的死变量 —— 留着只会让人去错地方找日志，已删。
 DIAG=/mnt/us/rssboard-diag.txt
 
 # 从 board.sh 的 URL= 那一行把地址抠出来（改了 BOARD_URL 也跟得上）。

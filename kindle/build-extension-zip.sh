@@ -13,7 +13,7 @@
 # —— 脚本一行都不执行，屏上却什么提示都没有（2026-11-01 实测踩过，排查了一轮）。
 # 工作区在 Windows 上很容易又变回 CRLF，所以这一步放在打包里做，别指望编辑器。
 #
-# 用法：sh Pi/kindle/build-extension-zip.sh
+# 用法：sh kindle/build-extension-zip.sh
 # 注意：zip 里的 board.sh 是**当前工作区**那份，改完 URL 之类记得重跑一次。
 set -eu
 

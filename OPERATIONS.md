@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.10.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.11.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -143,7 +143,11 @@ git commit -m "revert feed" && git push
 | 部署 | 抓取（多久去源站拿一次） | 显示（屏上多久换一条） |
 |---|---|---|
 | **GitHub**（只发完整版 `feed.xml`） | `rss.yml`，每天 3 次：北京 08:00 / 13:00 / 18:00（UTC `0 0,5,10`） | 不适用（GitHub 不发设备版） |
-| **树莓派**（发设备版 `feed-wrap.xml` + Kindle 看板） | `rss-build.timer`：白天 07:00–23:59 每 5 分钟、夜间每小时 | `rss-rotate.timer`：**全天每 5 分钟** |
+| **树莓派**（发设备版 `feed-wrap.xml`） | `rss-build.timer`：白天 07:00–23:59 每 5 分钟、夜间每小时 | `rss-rotate.timer`：**全天每 5 分钟** |
+
+> 上表只说 `Pi/` 这一套。**Kindle 看板是另一个项目**（`kindle/`，有自己独立的 `deploy.sh`
+> 与 `kindle-screen.{path,service}`），它不参与这条轮播节拍，只在 `feed.xml` 被重写时
+> 重画一张图。它的入口、三条硬约束与排障见 [kindle/README.md](kindle/README.md)。
 
 **为什么 GitHub 只剩每天 3 次**：`minute.yml`（作业内 13 轮 × 5 分钟）与 `nightly.yml`（每小时）的
 `schedule` 都已停用。原因不是设计变了，而是 GitHub 的 cron 在这台仓库**兑现率太低**：

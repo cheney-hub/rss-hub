@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
-# 把 Pi 侧的脚本、systemd 单元与 RSS 引擎代码装到树莓派上（不装 Python 依赖）。
+# 把 Pi 侧的脚本与 systemd 单元装到树莓派上（不装 Python 依赖）。
 #
 # 上传什么：
-#   build_feed.py / render.py / rotate.py / version.py / feeds_sync.py → ${HUB_ROOT}（引擎）
-#   serve.py / rotate_screen.py / kindle_screen.py / kindle_page.py → ${PI_USER}/pi-pipeline/
-#   services/*.service / *.path / *.timer            → /etc/systemd/system/（经 /tmp 中转）
+#   serve.py / rotate_screen.py                       → ${PI_USER}/pi-pipeline/
+#   build_feed.py / render.py / rotate.py / version.py / feeds_sync.py / arrival.py
+#                                                     → ${HUB_ROOT}（根目录的引擎）
+#   services/*.service / *.path / *.timer             → /etc/systemd/system/（经 /tmp 中转）
+# **不管 Kindle**：那个是自己独立的一套（board.sh 跑在设备上、两个渲染器虽机身同名但
+# 由 kindle/deploy.sh 负责），本脚本不再上传它，也不安装 kindle-screen.* 那两个单元
+# —— 以前混在一起，改 Kindle 一个参数就得跑一遍 Pi 的全套部署。
+# 网页版看板的 index.html 由 kindle_page.py 出，同样不归这里。
+#
 # 不上传什么：
 #   feeds.txt —— Pi 那份由引擎每轮构建前自己去仓库拉（见 rss-build.service 的
 #   FEEDS_SYNC_URL）。这里再传一份等于两条路同时管同一个文件，迟早打架。
-#   /home/user/site（主页产物）、/home/user/kindle（看板图，由 kindle-screen 渲染生成）
-#   ——这两个是运行产物，只在下面保证目录存在。
+#   /home/user/site（主页产物）—— 运行产物，只在下面保证目录存在。
+#   /home/user/kindle（出图目录）—— 归 kindle/ 那套管，这里**不**去动它：
+#   本脚本连目录都不建，免得两边重复着 daemon-reload。
 #
 # 为什么连引擎一起传：2026-11-01 实测过一次漂移 —— 仓库改了代码没同步到 Pi，
 # 两边各出一版 feed，屏幕上完全看不出来（这正是那次事故里唯一可怕的地方）。
@@ -36,7 +43,6 @@ PI_HOST="${PI_HOST:-100.88.176.80}"
 REMOTE_DIR="/home/${PI_USER}/pi-pipeline"
 HUB_ROOT="/home/${PI_USER}/rss-hub"
 FEED_ROOT="${HUB_ROOT}/docs"
-KINDLE_DIR="/home/${PI_USER}/kindle"
 
 SSH_OPTS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
 SSH=(ssh "${SSH_OPTS[@]}" "${PI_USER}@${PI_HOST}")
@@ -55,14 +61,14 @@ done
 
 # 要装的单元清单（加新单元记得同步这里，否则会漏装）
 UNITS="rss-build.service rss-build.timer \
-rss-rotate.service rss-rotate.timer kindle-screen.service kindle-screen.path moreaix-site.service"
-# 只有带 [Install] 的才能 enable：三个 oneshot（rss-build / rss-rotate / kindle-screen）
-# 分别由 timer 与 path 触发，enable 它们会直接报「no installation config」。
-ENABLE_UNITS="rss-build.timer rss-rotate.timer kindle-screen.path \
+rss-rotate.service rss-rotate.timer moreaix-site.service"
+# 只有带 [Install] 的才能 enable：两个 oneshot（rss-build / rss-rotate）
+# 分别由 timer 触发，enable 它们会直接报「no installation config」。
+ENABLE_UNITS="rss-build.timer rss-rotate.timer \
 moreaix-site.service"
 
 echo "==> 目标 ${PI_USER}@${PI_HOST}"
-"${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' '${FEED_ROOT}' '${KINDLE_DIR}' && echo paths-ok"
+"${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' '${FEED_ROOT}' && echo paths-ok"
 
 echo "==> 上传引擎代码（根目录那几个文件）"
 for f in build_feed.py render.py rotate.py version.py feeds_sync.py arrival.py; do
@@ -70,9 +76,9 @@ for f in build_feed.py render.py rotate.py version.py feeds_sync.py arrival.py; 
 done
 
 echo "==> 上传脚本"
-# kindle_page.py 出网页看板，kindle-screen.service 的第二条 ExecStart 会调它；
-# 漏传的话那个单元每轮都有一半命令在「找不到文件」，图上得来、网页永远不更新。
-for f in serve.py rotate_screen.py kindle_screen.py kindle_page.py; do
+# 只剩两个：静态服务与轮播。Kindle 那两个渲染器虽然也落在同一个远程目录，
+# 但归 kindle/deploy.sh 传 —— 两套 pipeline 各管一半，不会互相覆盖对方的成果。
+for f in serve.py rotate_screen.py; do
     "${SCP[@]}" "${HERE}/${f}" "${PI_USER}@${PI_HOST}:${REMOTE_DIR}/${f}"
 done
 
@@ -84,18 +90,16 @@ sudo systemctl daemon-reload"
 
 echo "==> 启用并重启"
 "${SSH[@]}" "sudo systemctl enable --now ${ENABLE_UNITS}"
-"${SSH[@]}" "sudo systemctl try-restart moreaix-site.service \
-kindle-screen.path || true"
+"${SSH[@]}" "sudo systemctl try-restart moreaix-site.service || true"
 
 echo "==> 状态"
 "${SSH[@]}" "systemctl is-active moreaix-site.service \
-rss-build.timer rss-rotate.timer kindle-screen.path || true"
+rss-build.timer rss-rotate.timer || true"
 
 echo "==> 本机自检（docs/ 里还没 feed.xml 时 404 属正常）"
 "${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8081/rss/feed.xml -> %{http_code}\n" \
 http://127.0.0.1:8081/rss/feed.xml || true'
-# 看板图由 8081 的 --alias /kindle 出（8082 那台已彻底删除）
-"${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8081/kindle/rss-pw2.png -> %{http_code}\n" \
-http://127.0.0.1:8081/kindle/rss-pw2.png || true'
+# 看板图那条路由（--alias /kindle）是 Pi 这台 serve.py 出、但内容归 kindle/ 管，
+# 端到端是否通请跑 kindle/deploy.sh 自检，这里不再重复。
 
 echo "完成：脚本已更新，单元已装好并设为开机自启。"

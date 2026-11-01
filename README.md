@@ -1,6 +1,6 @@
 # rss-hub · RSS 聚合头条
 
-> 当前版本 **v1.10.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+> 当前版本 **v1.11.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
 >
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
@@ -15,13 +15,18 @@
 ```
 feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages ──► RSS 阅读器（完整版）
 （源清单）    （Actions 里跑）        │
-                                    └──────────► 树莓派（Pi/）──► moreaix.com ──► Dot 设备（设备版，一条一轮播）
+                                    ├──────────► 树莓派（Pi/）  ──► moreaix.com ──► Dot 设备（设备版，一条一轮播）
+                                    └──────────► 树莓派（kindle/）──► Kindle      （看板，一屏一张图）
 ```
 
 **两份产物、两条发布链路**：GitHub Actions 只发**完整版** `feed.xml`；
 **设备版** `feed-wrap.xml` 由树莓派上的 `Pi/rotate_screen.py` 每 5 分钟选一条写出来，发布在
 `moreaix.com/rss/`（GitHub 不再发这一份，旧地址已 404）。抓取与显示是**两条独立时间线**，
 细节见 [Pi/README.md](Pi/README.md)。
+
+> `Pi/` 与 `kindle/` 是**两个相互独立的项目**，各自有自己的 `deploy.sh` 与 systemd 单元，
+> 互不引用。它们只是恰好都在同一台树莓派上运行 —— 改 Kindle 不需要跑 Pi 的部署，反之亦然。
+> 看板那一路见 [kindle/README.md](kindle/README.md)。
 
 ## 订阅地址
 
@@ -82,12 +87,25 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   └── screen.html          #   屏幕效果预览（跨域读树莓派那份 feed-wrap.xml）
 │                            #   ⚠ 设备版 feed-wrap.xml 与轮播游标 rotate.json 已不在本仓库：
 │                            #     它们由树莓派写到 /home/user/rss-hub/docs/ 并发布在 moreaix.com
-├── Pi/                      # 树莓派部署（设备版 + Kindle 看板；与上面这套 Cloud 链路隔离）
+├── Pi/                      # 树莓派部署（设备版 + 静态服务）。**与 kindle/ 是两个独立项目**，各自有 deploy.sh
 │   ├── rotate_screen.py     #   显示时间线：读 feed.xml → 选一条 → 写 feed-wrap.xml（不联网、不抓源）
-│   ├── kindle_screen.py     #   feed.xml → 758×1024 灰度看板 PNG（Pillow）
 │   ├── serve.py             #   静态服务：一份实例（8081）走 Tunnel，--alias 分流 / /rss /kindle
-│   ├── services/            #   systemd 单元（抓取 / 轮播 / 看板重绘 / 静态服务）
-│   └── README.md            #   端口归属、两条时间线、部署与排障
+│   ├── deploy.sh            #   只装本目录的脚本与单元，不碰 Kindle
+│   ├── services/            #   systemd 单元（抓取 / 轮播 / 静态服务）
+│   ├── site/                #   主页产物（index.html + logo）
+│   ├── README.md            #   端口归属、两条时间线、部署与排障
+│   └── TUNNEL.md            #   Cloudflare Tunnel 接入指引
+├── kindle/                  # Kindle 看板（**独立项目**：设备端跑在 Kindle 上，渲染端跑在树莓派上）
+│   ├── board.sh             #   设备端客户端：定时 wget 看图 → eips 画屏（跑在 Kindle 上，不上传树莓派）
+│   ├── kindle_screen.py     #   feed.xml → 758×1024 灰度看板 PNG（Pillow）
+│   ├── kindle_page.py       #   feed.xml → index.html 网页看板（能滚动、能点原文，零第三方依赖）
+│   ├── build-extension-zip.sh   # 打 KUAL 扩展安装包：解压到 Kindle 根目录即可用
+│   ├── build-mrpackage.sh   #   打成 MRPI 的 .bin（要先在树莓派上编 kindletool）
+│   ├── extension/rssboard/  #   KUAL 扩展本体：menu.json + config.xml + bin/*.sh
+│   ├── services/            #   kindle-screen.{path,service}：feed 一变就重画（不轮询）
+│   ├── deploy.sh            #   与 Pi/deploy.sh 平级互不引用：只装看板的渲染器与单元
+│   ├── README.md            #   看板链路、上屏步骤、三条硬约束、排障
+│   └── JAILBREAK.md         #   KPW2（90D4 / 5.12.2.2）完整越狱流程（WatchThis）
 ├── .github/workflows/
 │   ├── minute.yml           #   白天：每小时 13 轮 × 5 分钟（脚本生成）
 │   ├── nightly.yml          #   夜间 00:00–05:59：每小时一轮
@@ -114,8 +132,8 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 按行比对（换行已归一）
 │   ├── test_pi_serve.py     #   20 例：Pi 静态服务（目录穿越、前缀、别名目录、304、CORS 与无 Python 版本）
 │   ├── test_pi_rotate_screen.py # 21 例：显示时间线（按需落盘、坏状态自愈、地址不写死）
-│   ├── test_pi_kindle_screen.py # 31 例：Kindle 排版（折行硬上限、只画一遍列表、PNG 原子替换、时间归一到东八区）
-│   ├── test_pi_kindle_page.py   # 16 例：网页看板（伪协议过滤、HTML 转义、空池子不砸旧页、时间归一）
+│   ├── test_kindle_screen.py # 31 例：Kindle 排版（折行硬上限、只画一遍列表、PNG 原子替换、时间归一到东八区）
+│   ├── test_kindle_page.py   # 16 例：网页看板（伪协议过滤、HTML 转义、空池子不砸旧页、时间归一）
 │   └── golden.txt           #   行为基线（脚本生成，不手改）
 ├── CHANGELOG.md             # 版本历史与行为变更记录
 ├── CODE_REVIEW.md           # 代码审查标准与流程（提交前必读）
@@ -405,7 +423,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.10.0` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.11.0` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

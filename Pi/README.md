@@ -3,40 +3,39 @@
 本目录保存**在树莓派上独立运行 rss-hub 的部署代码**，与仓库**根目录的 GitHub Actions 发布系统**
 严格分离，**互不影响、互不触发**。
 
-## 两套系统的边界（请勿搞乱）
+## 三套系统的边界（请勿搞乱）
 
-| 系统 | 位置 | 谁驱动 | 是否变动 |
+| 系统 | 位置 | 谁驱动 | 职责 |
 |---|---|---|---|
-| RSS 聚合引擎 | 仓库**根目录**（`build_feed.py` / `render.py` / `rotate.py` / `version.py` / `feeds_sync.py` / `feeds.txt` …） | GitHub Actions（`minute.yml` / `rss.yml` / `nightly.yml` / `review.yml`） | **不变** |
-| Pi 本地部署 | 本目录 `Pi/` | 树莓派 systemd 自管（7×24） | 本次新增，无 Actions |
+| RSS 聚合引擎 | 仓库**根目录**（`build_feed.py` / `render.py` / `rotate.py` / `version.py` / `feeds_sync.py` / `arrival.py` / `feeds.txt` …） | GitHub Actions（`minute.yml` / `rss.yml` / `nightly.yml` / `review.yml`） | 出 `feed.xml` |
+| Pi 本地部署 | 本目录 `Pi/` | 树莓派 systemd 自管（7×24） | 设备版 `feed-wrap.xml` + 静态服务 |
+| Kindle 看板 | 兄弟目录 `kindle/`（**不是子目录**） | 树莓派 systemd + Kindle 客户端 | 出看板图、设备上屏 |
 
 根目录的 Actions 只管根目录的 RSS 引擎；`Pi/` 不依赖 GitHub Actions，也不会被它们运行。
-两者共用同一份 RSS 引擎代码（根目录那份），但部署链路完全独立。
+
+**`Pi/` 与 `kindle/` 相互独立**：两个目录都有自己的 `deploy.sh` 与 `services/`，脚本之间互不
+引用、互不安装对方的单元。它们只是**恰好在同一台树莓派上跑**（共用 `/home/user/pi-pipeline`
+这个部署目录与同一个 Cloudflare Tunnel 出口），改 Kindle 跑 `kindle/deploy.sh` 就够，
+不必也不应该牵动 Pi 这一套。任何一方删掉，另一方照样正常工作 —— 这是划分的目的。
 
 ## 本目录内容
 
 - `serve.py` — 零依赖静态服务，给 Cloudflare Tunnel 拉取（只绑 `127.0.0.1`）。
   **Pi 上只跑一份**：`--root` 是根域主页，再用两个 `--alias` 把 `/rss`（feed 目录）
-  与 `/kindle`（看板图）挂到同一台实例上。
-- `kindle_screen.py` — 把 `feed.xml` 渲染成 Kindle 用的灰度 PNG 看板（依赖 Pillow）。
+  与 `/kindle`（看板图）挂到同一台实例上。`/kindle` 的内容由 `kindle/` 那边产出，
+  这里只负责把它发出去。
 - `rotate_screen.py` — 显示时间线：只读 `feed.xml`，每 5 分钟挑一条写 `feed-wrap.xml`。
 - `services/`
   - `rss-build.service` + `rss-build.timer` — Pi 本地构建（池子），白天 5 分钟一档 / 夜间整点
   - `rss-rotate.service` + `rss-rotate.timer` — 轮播（设备版），**全天每 5 分钟推进一条**
   - `moreaix-site.service` — **唯一**的静态服务（端口 8081）：根域主页 + `/rss/*` + `/kindle/*`
-  - `kindle-screen.service` + `kindle-screen.path` — feed 一变就重画看板（**不轮询**）
-- `kindle/board.sh` — Kindle 端取图上屏脚本（需越狱后使用）
-- `kindle/extension/rssboard/` — KUAL 扩展：把上面那个脚本包成「立即刷新/启动/停止/看状态」菜单
-- `kindle/build-extension-zip.sh` — 把它俩打成「解压到 Kindle 根目录即可」的 zip（日常用这个）
-- `kindle/build-mrpackage.sh` — 打成 MRPI 的 `.bin`（需要先编一个 kindletool，重装整机时才值）
-- `KINDLE.md` — 看板链路与上屏步骤
-- `JAILBREAK.md` — KPW2（90D4 / 5.12.2.2）完整越狱流程（WatchThis）
 - `site/` — 根域主页 `index.html` + logo（`logo.svg` / `logo-lockup.svg`）
 - `sshd-99-hardening.conf` — SSH 加固 drop-in（关密码、仅公钥）
 - `TUNNEL.md` — Cloudflare Tunnel 接入指引
-- `deploy.sh` — 部署脚本：上传本目录的四个 `.py`、`services/*`，**以及根目录的引擎代码**
-  （含 `feeds_sync.py`）。`feeds.txt` 不在上传清单里 —— 它由引擎每轮构建前自己去仓库拉
-  （`FEEDS_SYNC_URL`，见 `services/rss-build.service`），不需要 `deploy.sh` 代劳
+- `deploy.sh` — 部署脚本：上传本目录的两个 `.py`、`services/*`，**以及根目录的引擎代码**
+  （含 `feeds_sync.py` / `arrival.py`）。`feeds.txt` 不在上传清单里 —— 它由引擎每轮构建前
+  自己去仓库拉（`FEEDS_SYNC_URL`，见 `services/rss-build.service`），不需要 `deploy.sh` 代劳。
+  **不管 Kindle**：那两个渲染器与 `kindle-screen.*` 单元归 `../kindle/deploy.sh` 管
 
 > **抓取时间线 ≠ 显示时间线**（这是本目录最容易搞错的一点）：
 > `rss-build.timer` 决定「多久去源站抓一次」（白天 5 分钟 / 夜间整点），
@@ -46,10 +45,12 @@
 ## Pi 上的实际部署路径
 
 - 服务文件：`/etc/systemd/system/`（`moreaix-site.service` 等）
-- 辅助脚本：`/home/user/pi-pipeline/`（`serve.py` / `rotate_screen.py` / `kindle_screen.py` / `kindle_page.py`）
+- 辅助脚本：`/home/user/pi-pipeline/` —— `serve.py` / `rotate_screen.py`（本目录上传）+
+  `kindle_screen.py` / `kindle_page.py`（`../kindle/deploy.sh` 上传）
 - 主页：`/home/user/site/`
-- 看板图输出：`/home/user/kindle/`（`rss-pw2.png` = `kindle-758x1024.png` 的副本，KPW2 第 6 代竖屏；
-  对外地址 `https://moreaix.com/kindle/rss-pw2.png`，网页版 `https://moreaix.com/kindle/`）
+- 看板图输出：`/home/user/kindle/`（`rss-pw2.png` 等，由 `kindle/` 那边的渲染器写；
+  对外地址 `https://moreaix.com/kindle/rss-pw2.png`，网页版 `https://moreaix.com/kindle/`。
+  本目录只负责把它发出去，内容归 [../kindle/README.md](../kindle/README.md)）
 - RSS 引擎：`/home/user/rss-hub/`（= 仓库根目录代码在 Pi 的本地副本，由 `deploy.sh` 覆盖过去）
 
 时区：`timedatectl set-timezone Asia/Shanghai`（并确认 `timedatectl` 输出里

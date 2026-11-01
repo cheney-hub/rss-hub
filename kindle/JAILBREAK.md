@@ -175,7 +175,7 @@ MobileRead Wiki 的 WatchThis 条目。
 
 **A. scp（最省事，改脚本方便）**
 
-1. `scp Pi/kindle/board.sh root@<kindle-ip>:/mnt/us/board.sh`
+1. `scp kindle/board.sh root@<kindle-ip>:/mnt/us/board.sh`
 2. `ssh root@<kindle-ip> 'chmod +x /mnt/us/board.sh'`
 3. 先**前台试跑**：`ssh root@<kindle-ip> 'sh /mnt/us/board.sh'`，看屏幕有没有出图。
    不出图就先确认图床是好的：`curl -o /tmp/k.png https://moreaix.com/kindle/rss-pw2.png`
@@ -185,8 +185,8 @@ MobileRead Wiki 的 WatchThis 条目。
 
 **B. KUAL 扩展（之后能在机器上点着用）**
 
-先跑 `sh Pi/kindle/build-extension-zip.sh` 打出一个安装包
-（`Pi/kindle/dist/rssboard-extension.zip`），把它的内容解压到 Kindle **根目录**：
+先跑 `sh kindle/build-extension-zip.sh` 打出一个安装包
+（`kindle/dist/rssboard-extension.zip`），把它的内容解压到 Kindle **根目录**：
 根上多一个 `board.sh`、`extensions/` 下多一个 `rssboard/`。
 之后打开 KUAL，会多出一组 **RSS Board** 菜单：立即刷新一次 / 启动常驻刷新 / 停止刷新 /
 查看状态（写屏）/ 自检 / 移除扩展。
@@ -199,7 +199,7 @@ MobileRead Wiki 的 WatchThis 条目。
 
 **C. 打成 MRPI 安装包（要重装机器时才值得费这个事）**
 
-`Pi/kindle/build-mrpackage.sh` 会把 `board.sh` + 扩展一起包成
+`kindle/build-mrpackage.sh` 会把 `board.sh` + 扩展一起包成
 `Update_rssboard_install.bin`，丢进根目录 `mrpackages/` 后 `;log mrpi` 即可安装。
 它需要一台能编 `kindletool` 的 Linux（树莓派就行），详见脚本头注释。
 
@@ -214,6 +214,7 @@ MobileRead Wiki 的 WatchThis 条目。
 ## 出问题时的检查顺序
 
 1. 图床：`curl -o /tmp/k.png https://moreaix.com/kindle/rss-pw2.png` → 200 + PNG
-2. Pi 侧渲染：`systemctl status kindle-screen.path`、`journalctl -u kindle-screen.service`
+2. 渲染端（同一台树莓派，属本目录）：`systemctl status kindle-screen.path`、
+   `journalctl -u kindle-screen.service`。重装的入口是 `sh kindle/deploy.sh`
 3. Kindle 能拿到图吗：`ssh` 进去 `wget -O /mnt/us/t.png https://moreaix.com/kindle/rss-pw2.png`
 4. 能画到屏吗：`eips -g /mnt/us/t.png`
