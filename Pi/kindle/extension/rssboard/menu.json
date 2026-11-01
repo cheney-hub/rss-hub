@@ -5,58 +5,60 @@
 		"priority": -900,
 		"items": [
 		{
+			"name": "探测A（/bin/sh 调用）",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/probe.sh A",
+			"priority": -999,
+			"exitmenu": true,
+			"status": true
+		},
+		{
+			"name": "探测B（直接执行）",
+			"action": "/mnt/us/extensions/rssboard/bin/probe.sh B",
+			"priority": -998,
+			"exitmenu": true,
+			"status": true
+		},
+		{
 			"name": "立即刷新一次",
-			"action": "sh /mnt/us/extensions/rssboard/bin/refresh.sh",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/refresh.sh",
 			"priority": -900,
 			"exitmenu": true,
-			"refresh": false,
-			"status": false,
-			"internal": "status 拉一张图并上屏"
+			"status": false
 		},
 		{
 			"name": "启动常驻刷新",
-			"action": "sh /mnt/us/extensions/rssboard/bin/start.sh",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/start.sh",
 			"priority": -899,
 			"exitmenu": true,
-			"refresh": false,
-			"status": false,
-			"internal": "status 启动后台循环"
+			"status": false
 		},
 		{
 			"name": "停止刷新",
-			"action": "sh /mnt/us/extensions/rssboard/bin/stop.sh",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/stop.sh",
 			"priority": -898,
 			"exitmenu": true,
-			"refresh": false,
-			"status": false,
-			"internal": "status 停止后台循环"
+			"status": false
 		},
 		{
 			"name": "查看状态（写屏）",
-			"action": "sh /mnt/us/extensions/rssboard/bin/status.sh",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/status.sh",
 			"priority": -897,
 			"exitmenu": true,
-			"refresh": false,
-			"status": false,
-			"internal": "status 正在收集状态"
+			"status": false
 		},
 		{
-			"name": "自检（把问题画出来）",
-			"action": "sh /mnt/us/extensions/rssboard/bin/doctor.sh",
+			"name": "自检（写 diag 文件）",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/doctor.sh",
 			"priority": -896,
 			"exitmenu": true,
-			"refresh": false,
-			"status": false,
-			"internal": "status 逐项自检"
+			"status": false
 		},
 		{
 			"name": "移除本扩展（保留 board.sh）",
-			"action": "sh /mnt/us/extensions/rssboard/bin/uninstall.sh",
+			"action": "/bin/sh /mnt/us/extensions/rssboard/bin/uninstall.sh",
 			"priority": -895,
 			"exitmenu": true,
-			"refresh": false,
-			"status": false,
-			"internal": "status 移除扩展"
+			"status": false
 		}
 		]
 	}
