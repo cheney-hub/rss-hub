@@ -191,6 +191,8 @@ class TestTargetMapping(unittest.TestCase):
     """不必起服务也能验的映射逻辑（realpath 判定 + 前缀剥离）。"""
 
     class _Dummy:
+        aliases = ()            # 没有别名，走最朴素的单根映射
+
         def __init__(self, root, prefix, path):
             self.root, self.prefix, self.path = root, prefix, path
 
@@ -211,6 +213,79 @@ class TestTargetMapping(unittest.TestCase):
             root = serve.make_handler(real_root, "").root
             t = self._Dummy(root, "", "/link")
             self.assertIsNone(t._target(), "符号链接穿出去了")
+
+
+class TestAlias(unittest.TestCase):
+    """一台实例顺带服务第二个目录（--alias /kindle=…）。
+
+    这条能力是为了绕开 Tunnel 的路由顺序：根域那条不带 path 的兜底规则会吃掉
+    所有路径，另配的 /kindle Public Hostname 排在它后面永远轮不到。把看板图挂到
+    兜底那台身上之后，公网怎么排都不影响结果。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="rss-alias-")
+        cls.site = os.path.join(cls.tmp, "site")
+        cls.board = os.path.join(cls.tmp, "kindle")
+        os.makedirs(cls.site)
+        os.makedirs(cls.board)
+        for d, name, body in ((cls.site, "index.html", "<h1>HOME</h1>"),
+                              (cls.site, "logo.svg", "<svg/>"),
+                              (cls.board, "index.html", "<h1>BOARD</h1>")):
+            with open(os.path.join(d, name), "w", encoding="utf-8") as f:
+                f.write(body)
+        # PNG 必须按二进制写：用文本模式会把 \x89 编成 UTF-8 的两个字节，
+        # 后面断言魔数就对不上了（这个坑当场踩过一次）
+        with open(os.path.join(cls.board, "rss-pw2.png"), "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\nIMG")
+
+        cls.httpd = ThreadingHTTPServer(
+            ("127.0.0.1", 0),
+            serve.make_handler(cls.site, "", [("/kindle/", cls.board)]))
+        cls.base = "http://127.0.0.1:%d" % cls.httpd.server_address[1]
+        threading.Thread(target=cls.httpd.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.httpd.shutdown()
+        cls.httpd.server_close()
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_alias_dir_url_falls_back_to_its_own_index(self):
+        """/kindle 与 /kindle/ 要落到**别名目录**的 index.html，不是根目录那份。"""
+        for path in ("/kindle", "/kindle/"):
+            with ask(self.base + path) as r:
+                self.assertEqual(r.status, 200, path)
+                self.assertIn(b"BOARD", r.read(), path)
+
+    def test_alias_serves_files_under_that_prefix(self):
+        with ask(self.base + "/kindle/rss-pw2.png") as r:
+            self.assertEqual(r.status, 200)
+            self.assertEqual(r.headers.get("Content-Type"), "image/png")
+            self.assertEqual(r.read(), b"\x89PNG\r\n\x1a\nIMG")
+
+    def test_root_still_serves_its_own_files(self):
+        """加了别名不能把根目录挤掉。"""
+        with ask(self.base + "/") as r:
+            self.assertIn(b"HOME", r.read())
+        with ask(self.base + "/logo.svg") as r:
+            self.assertEqual(r.status, 200)
+
+    def test_alias_does_not_leak_into_other_prefixes(self):
+        """别名只在它自己那层前缀下生效：/kindle/logo.svg 不该拿到根目录的文件。"""
+        with self.assertRaises(urllib.error.HTTPError) as c:
+            ask(self.base + "/kindle/logo.svg")
+        self.assertEqual(c.exception.code, 404)
+        with self.assertRaises(urllib.error.HTTPError) as c:
+            ask(self.base + "/other/rss-pw2.png")
+        self.assertEqual(c.exception.code, 404)
+
+    def test_alias_still_blocks_traversal(self):
+        """切到别名目录之后，越界检查比的必须是别名那个根。"""
+        with self.assertRaises(urllib.error.HTTPError) as c:
+            ask(self.base + "/kindle/../index.html")
+        self.assertEqual(c.exception.code, 404)
 
 
 if __name__ == "__main__":

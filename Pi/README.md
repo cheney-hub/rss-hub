@@ -60,9 +60,12 @@
 
 | 端口 | 绑定 | 用途 | 对外暴露 |
 |---|---|---|---|
-| 8080 | `127.0.0.1` | feed 静态服务 | 经 Cloudflare Tunnel → `moreaix.com/rss/` |
-| 8081 | `127.0.0.1` | 根域主页 | 经 Cloudflare Tunnel → `moreaix.com/` |
+| 8080 | `127.0.0.1` | feed 静态服务 | 经 Cloudflare Tunnel → `moreaix.com/rss/`；另带 `--alias` 顺带出 `/kindle/*` |
+| 8081 | `127.0.0.1` | 根域主页 | 经 Cloudflare Tunnel → `moreaix.com/`；另带 `--alias` 顺带出 `/kindle/*` |
 | 8082 | `0.0.0.0` | Kindle 看板图 | 局域网直连 + 经 Tunnel → `moreaix.com/kindle/` 两条入口 |
+
+8080/8081 都挂 `/kindle` 不是冗余：Tunnel 的 path 规则是非锚定正则，`/rss` 会命中任何
+含 `/rss` 的路径（看板图叫 `rss-pw2.png`，正好中招）。两台都能出图，落到谁都不怕。
 
 ## 关于 GitHub Actions
 

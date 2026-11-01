@@ -10,6 +10,9 @@
 
 同一份代码还兼了两个静态站：8081 根域主页（--root /home/user/site）与
 8082 Kindle 看板图（--root /home/user/kindle，唯一绑 0.0.0.0 的实例）。
+8081 那台另用 `--alias /kindle=/home/user/kindle` 顺带把看板图也挂出去 ——
+因为 Tunnel 的 ingress 是顺序匹配，根域那条不带 path 的兜底规则会吃掉所有路径，
+另开一条 /kindle 的 Public Hostname 排在它后面就永远轮不到（见 TUNNEL.md 6.2）。
 
 设计要点：
 - 只读、只服务静态文件，防目录穿越（root 用 realpath，符号链接也穿不出去）。
@@ -50,6 +53,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
 
     root = ""
     prefix = ""
+    aliases = ()
     server_version = "rss-serve/1.0"
     # 默认会把 "Python/3.13.x" 拼进 Server 头。8080 是公网（走 Tunnel），
     # 没必要告诉扫描器这台机器跑的是哪个小版本。
@@ -66,11 +70,20 @@ class _StaticHandler(BaseHTTPRequestHandler):
         # 兼容 Tunnel 的 path 前缀：/rss/feed.xml 与 /feed.xml 都指到同一文件
         if self.prefix and (rel == self.prefix or rel.startswith(self.prefix + "/")):
             rel = rel[len(self.prefix):].lstrip("/")
+        # 别名：同一台实例顺带服务另一个目录（根域那台用它出 /kindle/*，
+        # 绕开 Tunnel 里「兜底规则排在前面、path 规则永远轮不到」的坑）。
+        root = self.root
+        for apath, aroot in self.aliases:
+            if rel == apath or rel.startswith(apath + "/"):
+                rel = rel[len(apath):].lstrip("/")
+                root = aroot
+                break
         rel = rel or "index.html"
         # realpath 而不是 abspath：root 里放一个指向外部的符号链接，abspath 判定
         # 会放行、realpath 会把链接解开后再比，穿不出去。
-        target = os.path.realpath(os.path.join(self.root, rel))
-        if target != self.root and not target.startswith(self.root + os.sep):
+        # 注意这里比的是**实际生效的** root（可能是别名目录），不是 self.root。
+        target = os.path.realpath(os.path.join(root, rel))
+        if target != root and not target.startswith(root + os.sep):
             return None
         return target
 
@@ -150,7 +163,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - %s\n" % (self.client_address[0], fmt % args))
 
 
-def make_handler(root, prefix=""):
+def make_handler(root, prefix="", aliases=None):
     """造一个绑定了 root/prefix 的 Handler 类。
 
     每个服务实例各造一个子类，而不是把目录写死进 _StaticHandler：同一个进程将来
@@ -158,13 +171,34 @@ def make_handler(root, prefix=""):
     prefix 是「Tunnel 上那层路径前缀」，传空串表示不要前缀（8081 用）。
     8082 现在是 /kindle：公网那一头 `https://moreaix.com/kindle/rss-pw2.png` 的路径
     是被 Cloudflare **原样**转发过来的，后端认同一层前缀才接得住。
+
+    aliases 是 [(路径前缀, 目录)] 的列表，用于「一台实例顺带服务另一个目录」。
+    按路径长度降序匹配，所以 /kindle 与 /kindle/live 这种嵌套关系不会互相盖住。
     """
     class Handler(_StaticHandler):
         """某个 --root 实例专用的处理器。"""
 
     Handler.root = os.path.realpath(root)
     Handler.prefix = prefix
+    pairs = [(_norm_slash(p), os.path.realpath(d)) for p, d in (aliases or [])]
+    Handler.aliases = tuple(sorted(pairs, key=lambda x: len(x[0]), reverse=True))
     return Handler
+
+
+def _norm_slash(s):
+    """把 "/kindle/" 这类写法压成 "kindle"，与 _target 里已去掉前导斜杠的 rel 对齐。"""
+    return s.strip("/")
+
+
+def parse_alias(text):
+    """解析 --alias 参数：只接受 "PREFIX=DIR" 这种形如 /kindle=/home/user/kindle 的写法。
+
+    写错就直接退出：这是 systemd 单元里的固定参数，含糊地跳过只会让 404 更难查。
+    """
+    left, sep, right = text.partition("=")
+    if not sep or not _norm_slash(left) or not right:
+        sys.exit("--alias 格式不对: %r（应形如 /kindle=/home/user/kindle）" % text)
+    return _norm_slash(left), right
 
 
 def main():
@@ -176,6 +210,8 @@ def main():
                     help="监听地址（Tunnel 用 127.0.0.1 即可；局域网调试用 0.0.0.0）")
     ap.add_argument("--prefix", default="/rss",
                     help="URL 前缀（Tunnel path 用 /rss；传空字符串则不要前缀）")
+    ap.add_argument("--alias", action="append", default=[], metavar="PATH=DIR",
+                    help="额外把某个 URL 前缀映射到另一个目录，可重复；如 /kindle=/home/user/kindle")
     args = ap.parse_args()
 
     if not os.path.isdir(args.root):
@@ -184,7 +220,9 @@ def main():
         sys.exit("根目录不存在: %s" % args.root)
 
     httpd = ThreadingHTTPServer(
-        (args.bind, args.port), make_handler(args.root, args.prefix.strip("/"))
+        (args.bind, args.port),
+        make_handler(args.root, args.prefix.strip("/"),
+                     [parse_alias(a) for a in args.alias])
     )
     root_show = os.path.abspath(args.root)
     print("serving %s -> http://%s:%d" % (root_show, args.bind, args.port), flush=True)

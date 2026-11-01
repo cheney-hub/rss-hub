@@ -14,6 +14,8 @@ kindle-screen.path ──▶ kindle-screen.service
 /home/user/kindle/kindle-<W>x<H>.png  ──复制──▶ rss-pw2.png（默认图，BOARD_PNG）
         │
 kindle-serve.service（8082，绑 0.0.0.0，--prefix=/kindle）
+        │  同一份目录也被 8080/8081 用 --alias 挂着（Tunnel 的 path 规则是非锚定正则，
+        │  /rss 会命中任何含 /rss 的路径，所以不能只靠一条路）
         ▼
 局域网取 /rss-pw2.png    或    公网取 moreaix.com/kindle/rss-pw2.png
         ▼

@@ -10,8 +10,12 @@ WorkingDirectory=/home/user/rss-hub
 # --bind 走默认的 127.0.0.1：公网入口只有 Cloudflare Tunnel，cloudflared 从本机回连。
 # 全套服务里只有 kindle-serve（8082）绑 0.0.0.0，那是给局域网里的 Kindle 取图用的。
 # --prefix /rss：对外是 moreaix.com/rss/feed.xml，磁盘上就是 docs/feed.xml，
-# 这一层前缀由 serve.py 剥掉（Tunnel 剥没剥它都认，两种路径都能命中）。
-ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/rss-hub/docs --port 8080 --prefix /rss
+# 这一层前缀由 serve.py 剥掉（Tunnel 剥没它都认，两种路径都命中）。
+# --alias：这台也会收到 /kindle/* 的请求。原因很坑 —— Tunnel 里 /rss 那条 path 规则是
+# **非锚定正则**，任何包含 "/rss" 的路径都会命中它；看板图叫 rss-pw2.png，路径
+# /kindle/rss-pw2.png 里正好有 "/rss"（来自文件名），于是被这条规则截到这里。
+# 给这台加同样的别名，落到 8080 还是 8081 都能出图，不必去动 Tunnel 的路由顺序。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/rss-hub/docs --port 8080 --prefix /rss --alias /kindle=/home/user/kindle
 # 无状态只读服务，挂了就重启（5 秒退避）。用 always 而不是 on-failure：
 # docs/ 还没生成时 serve.py 会直接 exit，这类失败必须能自己爬起来，
 # 否则 Tunnel 会一直 502 到有人登录手动 start。

@@ -151,52 +151,49 @@ sudo systemctl is-active kindle-serve
 这层前缀是**可选**的（`_target()` 里剥不剥都认），所以局域网里的 Kindle 直接取
 `/rss-pw2.png`（不带前缀）照样是 200 —— 公网、局域网两套口径并存，不用迁就任何一边。
 
-### 6.2 加一条 Public Hostname
+### 6.2 让 `moreaix.com/kindle/*` 出图
 
-Zero Trust → Networks → Tunnels → 点开 `rss-pi` → **Public Hostname** → Add a public hostname
+**结论先说：不用再加任何 Public Hostname 了。** 看板图挂在已有的两台后端上
+（8080 与 8081 都带了 `--alias /kindle=/home/user/kindle`），公网走的是根域那条
+兜底路由，与 Tunnel 的路由顺序无关。2026-11-01 实测：
 
-| 字段 | 填 |
+```
+https://moreaix.com/kindle/rss-pw2.png  -> 200 image/png  73,004B
+https://moreaix.com/kindle/             -> 200 text/html  80 条
+```
+
+下面是踩过的两个坑，留着当你以后再往根域挂 path 时的前车之鉴。
+
+**坑一：ingress 是顺序匹配，兜底会吃掉一切。**
+cloudflared 自上而下逐条求值、**首个命中即停**，不是「最长路径优先」。根域上本来就有一条
+**不带 path** 的 `hostname: moreaix.com`（指到 8081 根域主页），它匹配这个 hostname 的
+**所有**路径；新加的 `/kindle` 是**追加在列表末尾**的，于是永远轮不到。表现是「Pi 本地
+200、公网 404」，而且那个 404 还是我们自己的 serve.py 吐的（带 CORS 头），很容易误判成
+「服务端目录不对」。
+
+**坑二：path 字段是非锚定正则，不是前缀匹配。**
+`/rss` 这条规则会命中**任何包含 `/rss` 的路径**，位置不限。看板图叫 `rss-pw2.png`，路径
+`/kindle/rss-pw2.png` 里正好有 `/rss`（来自文件名），于是被这条规则截到了 8080 ——
+同一目录下 `/kindle/` 是 200、`/kindle/rss-pw2.png` 却是 404，就是这么来的。实测对照：
+
+| 请求 | 落到 |
 |---|---|
-| Subdomain | 留空（根域） |
-| Domain | `moreaix.com` |
-| Path | `/kindle` |
-| Service · Type | `HTTP` |
-| Service · URL | `localhost:8082` |
+| `/kindle/rsschk12.png`（含 `/rss`） | 8080 |
+| `/kindle/xrsschk2238.png`（只有 `-rss`） | 8081 |
 
-根域上已经有一条 `/rss`，再加一条 `/kindle` 不冲突，但**顺序会咬人**：
+所以「给 8080 也加同一个别名」是最省事的解法：落到哪台都能出图。想从根上治，就把那条
+path 改成锚定的写法 `^/rss(/|$)`，再顺手把 `/kindle` 挪到兜底之前——但要动 Dashboard，
+且收益仅限「路由表更干净」，功能上已经不需要了。
 
-> cloudflared 的 ingress 是**顺序匹配、首个命中就停**，不是「最长路径优先」。
-> 而根域上本来就有一条**不带 path** 的 `hostname: moreaix.com`（指到 8081 根域主页），
-> 它匹配这个 hostname 的**所有**路径。新加的 `/kindle` 是**追加在列表末尾**的，
-> 于是永远轮不到它 —— 请求全被前面那条兜底捞走，回你一个 404（还是我们自己的
-> serve.py 吐的，带着 CORS 头，特别容易误判成「服务端目录不对」）。
-
-正确顺序：`/rss` → `/kindle` → **兜底（不带 path）放最后**。
-
-**怎么改**：Public Hostname 列表如果能拖动，把 `/kindle` 拖到兜底那行上面。
-不能拖的话就走「删掉重加」——把根域那条 **Path 留空** 的删掉再原样加回去，
-新条目会追加到末尾，顺序自然变成 `/rss` → `/kindle` → 兜底。
-删的那十几秒里 `moreaix.com/` 会 404，加回去立刻恢复。
-
-**怎么确认**：在 Pi 上看来真实下发的配置，一眼就能看到排位（这是最可靠的验收方式，
-比在浏览器里猜 404 强得多）：
+**看实际下发的配置**（比在浏览器里猜 404 强得多）：
 
 ```bash
 sudo journalctl -u cloudflared | grep "Updated to new configuration" | tail -1
 ```
 
-正常应该长这样（`path` 是 `/kindle` 的那条排在**没有 path 的那条之前**）：
-
-```
-{"ingress":[{"hostname":"moreaix.com","path":"/rss","service":"http://localhost:8080"},
-            {"hostname":"moreaix.com","path":"/kindle","service":"http://localhost:8082"},
-            {"hostname":"moreaix.com","service":"http://localhost:8081"},
-            {"service":"http_status:404"}]}
-```
-
 > 这一节早期版本写的是「别挂成 `moreaix.com/kindle` 路径」，理由是当时 8082 用的是
 > `--prefix=`（无前缀）。现在前缀已经在后端补上，那条限制作废；反过来，谁把
-> `--prefix` 改回空字符串，这一整节的配置就会重新变成一排 404。
+> `--prefix` 改回空字符串，8082 那台就会重新变成一排 404（8080/8081 有别名，不受影响）。
 
 ### 6.3 边缘缓存也要 bypass
 
@@ -267,7 +264,7 @@ BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh  # 走公网
 | 530 / 1033 | tunnel 没连上：`systemctl status cloudflared`，看 token 是否正确、Pi 出网是否正常 |
 | 502 | cloudflared 到了 Pi，但 `localhost:8080` 没人听：`systemctl status rss-serve` |
 | 404 | serve.py 的 `--root` 指错了目录，或 `docs/` 里还没生成 feed.xml（等 rss-build.timer 跑一轮） |
-| `/kindle/*` 在 Pi 本地 200、公网一直 404 | 两种可能，且都常见：① Public Hostname 那条 `/kindle` 没配；② 配了但**排在根域兜底规则后面**（ingress 顺序匹配、首个命中即停，兜底那条不带 path，会吃掉所有路径）。区分办法见 6.2 末尾的 `journalctl` 验收；确认落在哪台后端则用「请求一个不存在的文件名，再看 `journalctl -u kindle-serve` 与 `-u moreaix-site` 谁有这条日志」（2026-11-01 就是这么查出来的） |
+| `/kindle/*` 在 Pi 本地 200、公网一直 404 | 多半是 Tunnel 的两个坑之一：① 配的 `/kindle` 规则排在根域兜底之后（顺序匹配、首个命中即停）；② 路径里含 `/rss` 被那条非锚定正则截到 8080。现在 8080/8081 都带了 `--alias /kindle=…`，两台都能出图，正常情况下不会再遇到。定位落到哪台：请求一个不存在的文件名，再看 `journalctl -u kindle-serve`、`-u moreaix-site`、`-u rss-serve` 谁的访问日志里有它 |
 | 配好了还是旧 404 | 边缘把 404 也缓存了（`.png` 默认 4 小时）。配完 Bypass cache 仍不生效就手动清一次：Caching → Configuration → Custom Purge，填那个 URL |
 | 拿到的总是旧内容 | 边缘缓存：见上面「关掉边缘缓存」 |
 | 客户端跨域被拦 | serve.py 对所有响应（含 404）都带 `Access-Control-Allow-Origin: *`，若仍不行检查是否有别的代理层 |

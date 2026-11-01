@@ -11,7 +11,11 @@ WorkingDirectory=/home/user/site
 # 8081 与 8080 都只绑默认的 127.0.0.1：公网入口只有 Cloudflare Tunnel
 # （根域 / → 8081，/rss → 8080），本机不开任何公网端口。
 # --prefix= 表示不要 /rss 那层前缀 —— 根域主页就挂在 / 上。
-ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix=
+# --alias：顺带把 Kindle 看板图挂到 /kindle/* 上。为什么不用单独一条 Public Hostname：
+# Tunnel 的 ingress 是**顺序匹配、命中即停**，根域那条不带 path 的兜底规则会吃掉所有
+# 路径，后面追加的 /kindle 规则永远轮不到（实测：配置里有那条规则，请求照样进这台）。
+# 挂在兜底这台身上就不依赖 Tunnel 的路由顺序了。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix= --alias /kindle=/home/user/kindle
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
