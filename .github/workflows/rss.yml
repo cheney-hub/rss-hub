@@ -3,7 +3,9 @@ name: RSS 聚合（改源即时发布）
 # 日常更新的唯一节拍在这里：北京时间每天 08:00 / 13:00 / 18:00 各发一版
 # （GitHub cron 用 UTC，即 00/05/10 点）。minute.yml 与 nightly.yml 的 schedule 都已停用，
 # 要临时高频时手动 dispatch 那两份。
-# 另外 feeds.txt / 引擎代码被改动时立刻重建发布一次，免得等下一个整点。
+# 另外 feeds.txt / 引擎代码 / docs 静态页被改动时立刻重建发布一次，免得等下一个整点。
+# 静态页也列进 paths：Pages 发的是整个 docs/ 目录，只改 HTML 却不触发构建的话，
+# 新页面一直躺在 git 里、线上还是旧文案（2026-11-06 校正首页说明时发现）。
 
 on:
   schedule:
@@ -19,6 +21,10 @@ on:
       - "render.py"           # 改排版规则也要立刻重建，否则要等下一个整点
       - "rotate.py"          # 改轮播规则同理：不重建就还是旧规则在发设备版
       - "version.py"
+      - "docs/index.html"     # 静态页改动也要重新部署 Pages，否则线上停在旧版
+      - "docs/screen.html"
+      - "docs/board.html"
+      - "docs/subscribe.html"
       - ".github/workflows/rss.yml"
 
 concurrency:

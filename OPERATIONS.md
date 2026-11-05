@@ -368,6 +368,48 @@ curl -s https://cheney-hub.github.io/rss-hub/feed.xml | grep -c "<item>"
 
 - 接第三方监控（UptimeRobot / Cronitor）只监控 200 状态，别用「内容关键字」判据（标题天天变）。
 
+### 上线验收记录
+
+2026-11-06 02:10（东八区）对设备版滚动与整机做了一次全链路复核，结论 **全部正常、可以结案**。
+以下是当时实测，不是设计指标。
+
+**设备版滚动**（跨一个完整的 5 分钟窗口）：
+
+| 时刻 | `guid` | `lastBuildDate` | 说明 |
+|---|---|---|---|
+| 02:05 | `f55804349a49` | 18:05 UTC | 已播 9 条，`back=0` |
+| 02:10 | `53aae45e2197` | 18:10 UTC | 已播 10 条，`back=1` |
+
+公网 `Last-Modified` 与 `lastBuildDate` 同步跳到 18:10 GMT；Pi 上
+`/dev/shm/rss-hub/rotate.json` 的 `window` 加 1、`shown` 从 9 条增到 10 条、
+`current` 与新 `guid` 一致，`dwell=300`、`cycle=1`、`pool=120`。
+`rss-rotate.service` 日志里 01:55 / 02:00 / 02:05 连续三拍都是「新窗推进」，
+无重复、无跳窗。
+
+**Pi 运行态**：`rss-build.service`、`rss-rotate.service`、`kindle-screen.service`、
+`journal-snapshot.service`、`moreaix-site.service`、`cloudflared.service` 六个单元
+都是 `Result=success`、`NRestarts=0`；`systemctl --failed` 为 0；近 1 小时
+`journalctl -p err` 无条目。四个定时与路径单元 `rss-build.timer`、`rss-rotate.timer`、
+`journal-snapshot.timer`、`kindle-screen.path` 全为 active。02:00 那轮抓取
+「成功 61 / 回退 1 / 失败 0」，产出 120 条，`generator` 为 1.19.0。
+
+**落盘快照**：`/var/log/journal-archive/` 里一份 `journal-2026-11-06.log.gz`，
+20,449 字节 / 1317 行纯文本，`zcat` 可读，目录 700、文件 600，`df -T` 确认在
+`/dev/mmcblk0p2` 的 ext4 持久分区；常态（不触发快照）60 秒整卡写入 155,648 字节。
+
+**对外页面**：moreaix.com 与 GitHub Pages 的首页、screen、board、subscribe 四页全部 200，
+两侧完整版 `feed.xml` 200 且 `generator` 都是 1.19.0，设备版 `feed-wrap.xml` 200
+且只有 1 个 `<item>`，Kindle 看板 PNG 200。Pages 上的 `feed-wrap.xml` 仍为 404，
+属预期 —— 设备版只在树莓派上发。
+
+复核命令（可照抄）：
+
+```bash
+curl -s https://moreaix.com/rss/feed-wrap.xml | grep -E '<guid|<lastBuildDate>'
+ssh user@100.88.176.80 'cat /dev/shm/rss-hub/rotate.json; systemctl --failed --no-pager'
+curl -s https://moreaix.com/rss/feed.xml | grep -o '<generator>[^<]*'
+```
+
 ## 成本与备份
 
 | 项目 | 费用 |

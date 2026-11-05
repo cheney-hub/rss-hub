@@ -63,6 +63,19 @@
 复核，HEAD 同样如此。本次未改动 `render.py` / `tests/test_hardening.py`，这个既有
 H11 缺口不在本版范围内。
 
+**上线验收与文档校正（2026-11-06 02:10，不升版本）**：在 Pi 上跨一个完整的
+5 分钟窗口复验设备版滚动 —— `feed-wrap.xml` 的 `guid` 从 02:05 的
+`f55804349a49` 换成 02:10 的 `53aae45e2197`，`lastBuildDate` 与公网
+`Last-Modified` 同步跳档，`rotate.json` 的 `window` 加 1、`shown` 从 9 条增到
+10 条、`current` 与新 `guid` 一致；六个服务单元都是 `Result=success`、
+`NRestarts=0`，`systemctl --failed` 为 0，近 1 小时无错误日志。完整记录见
+OPERATIONS.md「上线验收记录」。顺带校正三处与实际脱节的说明：README 的订阅源
+61 改成 62（含单轮耗时、抓取算式和「49 × 5 = 245 条」的旧写法）、首页仍写着
+「实际约 1~3 小时一版」的旧说明（GitHub 早已改成每天 3 次）、以及 `rss.yml` 的
+push 白名单漏掉 `docs/*.html`（改静态页不触发构建，Pages 会一直停在旧文案）。
+仓库补上首个版本标签 `v1.19.0`。以上只改文档与 workflow 触发条件，feed 内容、
+设备版输出、PNG 与所有运行产物逐字节未变。
+
 ## [1.18.0] - 2026-11-06
 
 **日志按天留存到内存盘：一天一份快照、只留 3 份、3 天以上自动清除**
