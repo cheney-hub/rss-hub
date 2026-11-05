@@ -1,0 +1,19 @@
+[Unit]
+Description=Snapshot the last 24h of journald logs into tmpfs (keep 3 days)
+# 只读本机日志，不联网；journalctl 读的是 /run/log/journal（volatile）。
+After=systemd-journald.service
+
+[Service]
+Type=oneshot
+User=user
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=Asia/Shanghai
+# 快照目录与保留份数在这里显式写死：脚本里的默认值只是没配单元时的兜底，
+# 两处一起改，OPERATIONS.md 的参数表是它们的契约。
+Environment=JOURNAL_SNAPSHOT_DIR=/dev/shm/journal-archive
+Environment=JOURNAL_SNAPSHOT_KEEP_DAYS=3
+# 脚本只写 /dev/shm、只读 /run/log/journal，给一层最小约束挡住误操作。
+# 不用 ProtectSystem=strict：它会把 /dev/shm 也设成只读，快照就写不进去。
+NoNewPrivileges=yes
+ProtectHome=read-only
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/journal_snapshot.py

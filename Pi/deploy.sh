@@ -2,7 +2,7 @@
 # 把 Pi 侧的脚本与 systemd 单元装到树莓派上（不装 Python 依赖）。
 #
 # 上传什么：
-#   serve.py / rotate_screen.py                       → ${PI_USER}/pi-pipeline/
+#   serve.py / rotate_screen.py / journal_snapshot.py → ${PI_USER}/pi-pipeline/
 #   build_feed.py / render.py / rotate.py / version.py / feeds_sync.py / arrival.py
 #                                                     → ${HUB_ROOT}（根目录的引擎）
 #   services/*.service / *.path / *.timer             → /etc/systemd/system/（经 /tmp 中转）
@@ -64,11 +64,12 @@ done
 
 # 要装的单元清单（加新单元记得同步这里，否则会漏装）
 UNITS="rss-build.service rss-build.timer \
-rss-rotate.service rss-rotate.timer moreaix-site.service"
-# 只有带 [Install] 的才能 enable：两个 oneshot（rss-build / rss-rotate）
-# 分别由 timer 触发，enable 它们会直接报「no installation config」。
+rss-rotate.service rss-rotate.timer moreaix-site.service \
+journal-snapshot.service journal-snapshot.timer"
+# 只有带 [Install] 的才能 enable：三个 oneshot（rss-build / rss-rotate /
+# journal-snapshot）都由 timer 触发，enable 它们会直接报「no installation config」。
 ENABLE_UNITS="rss-build.timer rss-rotate.timer \
-moreaix-site.service"
+moreaix-site.service journal-snapshot.timer"
 
 echo "==> 目标 ${PI_USER}@${PI_HOST}"
 # ${SITE_DIR} 一定要一起建：moreaix-site.service 的 WorkingDirectory 与
@@ -84,9 +85,9 @@ for f in build_feed.py render.py rotate.py version.py feeds_sync.py arrival.py; 
 done
 
 echo "==> 上传脚本"
-# 只剩两个：静态服务与轮播。Kindle 那两个渲染器虽然也落在同一个远程目录，
-# 但归 kindle/deploy.sh 传 —— 两套 pipeline 各管一半，不会互相覆盖对方的成果。
-for f in serve.py rotate_screen.py; do
+# 三个 Pi 侧脚本：静态服务、轮播、每日日志快照。Kindle 那两个渲染器虽然也落在
+# 同一个远程目录，但归 kindle/deploy.sh 传 —— 两套 pipeline 各管一半，不会互相覆盖。
+for f in serve.py rotate_screen.py journal_snapshot.py; do
     "${SCP[@]}" "${HERE}/${f}" "${PI_USER}@${PI_HOST}:${REMOTE_DIR}/${f}"
 done
 
@@ -118,7 +119,7 @@ echo "==> 启用并重启"
 
 echo "==> 状态"
 "${SSH[@]}" "systemctl is-active moreaix-site.service \
-rss-build.timer rss-rotate.timer || true"
+rss-build.timer rss-rotate.timer journal-snapshot.timer || true"
 
 echo "==> 本机自检（docs/ 里还没 feed.xml 时 404 属正常）"
 "${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8081/rss/feed.xml -> %{http_code}\n" \

@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.17.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.18.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -64,6 +64,8 @@ python3 tools/gen_minute_workflow.py 13
 | `ROTATE_STATE` | 与 `OUT_FILE` 同目录的 `rotate.json` | 轮播游标状态。**GitHub 侧指到 `${{ runner.temp }}`（不发布、不提交）**；树莓派侧是 `/home/user/rss-hub/docs/rotate.json`，发布在 `moreaix.com/rss/rotate.json` |
 | `CF_BEACON_TOKEN` | 空 | Cloudflare Web Analytics 站点 token。**只有树莓派配**，写在 `/home/user/site/analytics.env`（不进仓库），空 = 不注入 beacon。值从控制台 Web Analytics → Manage site 的 JS Snippet 里复制 |
 | `CF_BEACON_JS` | 控制台 snippet 固定 | beacon 脚本地址，一般不用改。写成环境变量默认值是因为门禁不许源码里出现带真实域名的裸地址 |
+| `JOURNAL_SNAPSHOT_DIR` | `/dev/shm/journal-archive` | **只有树莓派**：每日日志快照目录，tmpfs，不写 SD 卡。改这里要同步 `journal-snapshot.service` 的同名 `Environment=` |
+| `JOURNAL_SNAPSHOT_KEEP_DAYS` | `3` | 快照只留最近 3 份（今天 + 前 2 天），第 4 份起每天 00:05 自动清除 |
 
 
 设备版还自动做了三件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、
@@ -197,15 +199,17 @@ Storage=volatile
 RuntimeMaxUse=96M
 RuntimeKeepFree=64M
 RuntimeMaxFileSize=8M
-MaxRetentionSec=7d
+MaxFileSec=1day
+MaxRetentionSec=3d
 ForwardToSyslog=no
 ```
 
 日志落在 `/run/log/journal/`（tmpfs，空闲约 181M），`journalctl` 的查法不变。
-`MaxRetentionSec=7d` 是**上限**：96M 容量先到就按容量淘汰最旧的，两者都不会
-撑爆 `/run`。要改周期就改 `MaxRetentionSec`，改完
-`sudo systemctl restart systemd-journald`；用 `journalctl --disk-usage` 看占用。
-`ForwardToSyslog=no` 是防止以后装了 rsyslog 又把文本日志写回磁盘。
+`MaxFileSec=1day` 让它**每天轮换出一个文件**，`MaxRetentionSec=3d` 让 3 天前的
+自动淘汰；96M 容量先到就按容量淘汰更旧的，两者都不会撑爆 `/run`。要改周期就改
+`MaxRetentionSec`，改完 `sudo systemctl restart systemd-journald`；用
+`journalctl --disk-usage` 看占用。`ForwardToSyslog=no` 是防止以后装了 rsyslog
+又把文本日志写回磁盘。
 
 首次切换要先清掉旧的持久归档，否则 `journalctl` 仍会读到 SD 卡上的文件：
 
@@ -214,6 +218,22 @@ sudo journalctl --rotate
 sudo journalctl --vacuum-time=1s
 sudo rm -f /var/log/journal/*/*.journal
 ```
+
+**每天一份可读快照（只留 3 份）**：`journal-snapshot.timer` 每天 00:05 把过去
+24 小时的日志导成纯文本 gz，写到
+`/dev/shm/journal-archive/journal-YYYY-MM-DD.log.gz`（同样是 tmpfs，一天约
+10KB，物理上不碰 SD 卡）。`zcat 文件名` 就能看，也能 scp 下来；journald 自己的
+`.journal` 是二进制文件，读不了也拿不走。脚本按**文件名里的日期**清理：只留
+今天与前 2 天共 3 份，第 4 份起自动删除，不认识的文件一律不碰。手动跑一次：
+
+```bash
+sudo systemctl start journal-snapshot.service
+ls -l /dev/shm/journal-archive/
+```
+
+刻意没给 timer 加 `Persistent=true`：那会在 `/var/lib/systemd/timers/` 写 stamp
+文件（又落 SD 卡），而且 volatile 日志重启即空，补跑也导不出东西。错过这一拍
+就等下一天。参数见上面调参表的 `JOURNAL_SNAPSHOT_*` 两行。
 
 **代价（必须知道）**：`/run` 是 tmpfs，重启或断电后日志全部清空 ——
 「保留 7 天」实际是「单次开机期间最多 7 天」。要跨重启留日志只能落盘，

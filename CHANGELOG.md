@@ -6,6 +6,35 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.18.0] - 2026-11-06
+
+**日志按天留存到内存盘：一天一份快照、只留 3 份、3 天以上自动清除**
+
+承接产物内存化与 11-06 的 journald volatile 改造：日志已不写 SD 卡，代价是
+`/run` 是 tmpfs、重启即全清，而 journald 自己轮换出的 `.journal` 是二进制文件，
+既不能直接读也拿不走。这次补上「每天一份可读的快照」：
+
+- 新增 `Pi/journal_snapshot.py` 与 `journal-snapshot.service` / `.timer`：每天
+  00:05 把过去 24 小时日志（`journalctl --since -24h -o short-iso`）导成 gzip
+  纯文本，写到 `/dev/shm/journal-archive/journal-YYYY-MM-DD.log.gz`，`zcat`
+  可读、可 scp。物理上仍在 tmpfs，一天约 10KB，**SD 卡写入不增加**。
+- 清理按**文件名里的日期**而不是 mtime：只留今天与前 2 天共 3 份，第 4 份起
+  自动删；不符合 `journal-YYYY-MM-DD.log.gz` 形状的文件一律不碰。写 gz 用
+  `.tmp` + `os.replace` 原子替换，写失败时清掉 `.tmp` 且不破坏上一份。
+- journald 的整机配置同步收紧：`MaxRetentionSec=7d → 3d`，并显式写
+  `MaxFileSec=1day`（原来靠默认值），让「一天一个文件」和「3 天自动清除」
+  在配置里看得见。配置在 Pi `/etc/systemd/journald.conf.d/10-volatile.conf`，
+  **不进仓库**，改法与代价见 OPERATIONS.md。
+- `Pi/deploy.sh` 的上传清单、单元清单、enable 清单与状态自检一起加新单元；
+  门禁参数表补 `JOURNAL_SNAPSHOT_DIR` / `JOURNAL_SNAPSHOT_KEEP_DAYS`。
+
+刻意没给 timer 加 `Persistent=true`：它会在 `/var/lib/systemd/timers/` 落一个
+stamp 文件（又写回 SD 卡），且重启后 volatile 日志本来就是空的，补跑没有内容。
+**代价不变**：重启或断电，内存日志与这 3 份快照一起清空；要跨重启只能外发或
+落盘，两者都与当前目标冲突，没有擅自做。
+
+用例 360 → 372（新增 `tests/test_journal_snapshot.py` 12 例）。
+
 ## [1.17.0] - 2026-11-05
 
 **安全审计：补齐服务端缺口；边缘层缺口移交给 Cloudflare 控制台**
