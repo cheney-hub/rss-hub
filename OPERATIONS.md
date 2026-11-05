@@ -171,6 +171,12 @@ systemctl status kindle-screen.path                # path 有没有在盯内存�
 **所有**状态码的访问日志按分钟汇总一行，正常 GET 也指挥不动 journald 写盘；
 排障代价是丢掉逐条 IP/路径明细，被扫时看 `journalctl -u moreaix-site.service`。
 
+限流按 `CF-Connecting-IP` 分访客。这个头由 Cloudflare 边缘注入 —— 官方文档里
+Tunnel FAQ 说的「不向源站发送访客 IP」指网络层源 IP（源站只看到 cloudflared），
+HTTP 头仍按文档用它取客户端 IP；公网响应有 `CF-RAY`、`/cdn-cgi/trace` 也可用，
+都说明请求确实经过边缘。若哪天绕过 Tunnel 直连 8081，所有请求会回退到同一个
+回环桶（600 次/分钟），那是可用性风险而不是防护失效。
+
 **边缘层仍归 Cloudflare 控制台**（仓库与 Pi 都改不了）：实测公网响应缺 HSTS、
 缺完整 CSP，也没给大文件配速率限制。站点强制 `no-cache`，400KB 的 feed 每次
 都回源，是最容易被拿来放大流量的目标。至少应开启 HSTS、WAF 托管规则、
