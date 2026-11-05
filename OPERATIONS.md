@@ -410,6 +410,14 @@ ssh user@100.88.176.80 'cat /dev/shm/rss-hub/rotate.json; systemctl --failed --n
 curl -s https://moreaix.com/rss/feed.xml | grep -o '<generator>[^<]*'
 ```
 
+**一个容易误判的现象**：02:14 部署时 `moreaix-site.service` 的
+`Wants=rss-build.service` 连带触发了一次抓源重建（62 源全成功、池子换成新的 120 条），
+02:15 那一拍 `rotate.json` 的 `shown` 便从 10 条回落到 5 条。这是 `_trim_shown`
+按「还在池子里」裁掉离场条目的预期行为，不是游标被重置：`window` 仍连续加 1、
+`cycle` 仍为 1、`recent` 仍是最近三窗、`current` 与新池里的最新条目一致。
+判断滚动是否健康要看 **guid 每窗是否变化、`window` 是否连续、`current` 是否等于
+`feed-wrap.xml` 里的 guid**，不要拿 `shown` 的长度当单调计数器。
+
 ## 成本与备份
 
 | 项目 | 费用 |
