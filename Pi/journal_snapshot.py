@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""把过去 24 小时的 journald 日志导成一份 gzip 快照，留在内存盘上。
+"""把过去 24 小时的 journald 日志导成一份 gzip 快照，写到磁盘上持久保存。
 
-由 journal-snapshot.timer 每天 00:05 触发一次。存在的理由：journald 已经改成
-volatile，日志只在 /run/log/journal（tmpfs），重启即全清；而 journald 自己按
+由 journal-snapshot.timer 每天 00:05 触发一次。存在的理由：journald 仍是
+volatile，实时日志只在 /run/log/journal（tmpfs），重启即全清；而 journald 自己按
 MaxFileSec=1day 轮换出来的 .journal 是二进制文件，既不能直接读，也不能单独
 取走。这里出的是纯文本 gz，zcat 就能看，也能 scp 下来。
 
-快照目录 /dev/shm/journal-archive 仍是 tmpfs：一天约写 10KB，物理上不碰
-SD 卡（用户明确要求日志不再落 SD 卡）。代价是重启后连快照一起消失 —— 这是
-Storage=volatile 的既有取舍，不在这里偷偷改回去；要跨重启只能另接云端。
+快照目录 /var/log/journal-archive 在 SD 卡上：每天只写一次 gz 快照加一点目录
+元数据，体积随当天日志量波动（1.18.0 样本约 10KB，1.19.0 实测 20,449 B），
+实时日志仍全程留在内存。这份快照能跨重启查到，是「每天只写一次盘」换来的；
+它同样只留 3 份，所以可回溯的上限仍是 3 天。目录由单元的
+LogsDirectory=journal-archive 预先建好并赋权给 User=user；父目录 /var/log 是
+root:root 755，普通用户建不了，脚本里的 os.makedirs(..., exist_ok=True) 在目录
+已存在时只是空操作、不会改动已有目录的权限，本地要直接跑得自己先建好目录或用 sudo。
 
-清理按**文件名里的日期**，不按 mtime：tmpfs 上的文件被读过、被复制过都可能
-改变时间属性，用 find -mtime +3 会把很旧的日志一直留着。只删符合
-journal-YYYY-MM-DD.log.gz 这一形状的文件，同目录里别的东西一律不动。
+清理按**文件名里的日期**，不按 mtime：备份还原、整目录复制或改过系统时钟都可能
+让 mtime 与文件名里的日期对不上，用 find -mtime +3 会留着该删的、删掉该留的。
+只删符合 journal-YYYY-MM-DD.log.gz 这一形状的文件，同目录里别的东西一律不动。
 """
 import datetime as dt
 import gzip
@@ -22,7 +26,7 @@ import re
 import subprocess
 import sys
 
-SNAPSHOT_DIR = os.environ.get("JOURNAL_SNAPSHOT_DIR", "/dev/shm/journal-archive")
+SNAPSHOT_DIR = os.environ.get("JOURNAL_SNAPSHOT_DIR", "/var/log/journal-archive")
 # 只留最近 3 份（今天 + 前 2 天）；第 4 份起自动清除
 KEEP_DAYS = int(os.environ.get("JOURNAL_SNAPSHOT_KEEP_DAYS", "3"))
 WINDOW = "-24h"

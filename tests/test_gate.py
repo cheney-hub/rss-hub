@@ -10,8 +10,8 @@ v1.7.20 能顶替 v1.7.2……门禁是质量门禁的门禁，它自己不能�
   * 全部在临时目录里造最小仓库，绝不读写真实仓库（`RC.ROOT` 指向 tmp）；
   * 不联网、不跑真生成器、不依赖当前版本号/用例数这些会漂移的数字；
   * 每条用例只断言「严重级 + 是否命中」，不断言整段文案（文案会改）；
-  * 跨文件契约那四项（版本 / workflow / timer 节拍 / 用例数）住在 tools/gate_contracts.py，
-    用 `GC` 引用；`RC` 是门禁本体。
+  * 跨文件契约那五项（版本 / workflow / timer 节拍 / 用例数 / 快照目录）住在
+    tools/gate_contracts.py，用 `GC` 引用；`RC` 是门禁本体。
 
 跑法：
     python -m unittest tests.test_gate -v
@@ -390,10 +390,11 @@ class TestCountSyncOnRealRepo(unittest.TestCase):
 
 
 class TestContractModule(Sandbox):
-    """契约模块本身：四项检查确实搬过去了，引用方向也只有一条。
+    """契约模块本身：最先搬过去的四项检查确实住在那边，引用方向也只有一条。
 
     这几条守的是「搬家」这件事本身：函数挪走但 review_check 里还留一份旧实现的话，
     门禁会跑两份（或者干脆跑的是没人测的那份），而 gate_contracts 里那份永远绿。
+    1.19.0 新增的快照目录检查是第五条，由 TestJournalSnapshotDir 单独覆盖。
     """
 
     CHECKS = ("check_test_count_sync", "check_version_sync",
@@ -552,6 +553,64 @@ class TestRotateTimerSync(Sandbox):
         rep = RC.Report()
         GC.check_rotate_timer_sync(rep)
         self.assertEqual([r[0] for r in rep.rows], [RC.INFO])
+
+
+class TestJournalSnapshotDir(Sandbox):
+    """1.19.0 的落盘契约：两处取值相等且都是持久路径，每种缺陷都要能报必改。
+
+    在临时仓库里造最小脚本 + systemd 单元，逐种退化写法跑同一条检查；正常写法
+    必须不报（防「检查永远红」）。这同时证明检查跟着 RC.ROOT 走，不读真实仓库。
+    """
+
+    PY = 'SNAPSHOT_DIR = os.environ.get("JOURNAL_SNAPSHOT_DIR", "%s")\n'
+    UNIT = "[Service]\nEnvironment=JOURNAL_SNAPSHOT_DIR=%s\n"
+
+    def _setup(self, default, unit_value, unit_line=True, env_style=True):
+        py_text = (self.PY % default if env_style
+                   else "SNAPSHOT_DIR = %r\n" % default)
+        self.write("Pi/journal_snapshot.py", py_text)
+        unit_text = (self.UNIT % unit_value if unit_line
+                     else "[Service]\nType=oneshot\n")
+        self.write("Pi/services/journal-snapshot.service", unit_text)
+
+    def _run(self):
+        rep = RC.Report()
+        GC.check_journal_snapshot_dir(rep)
+        return rep
+
+    def test_matching_persistent_dir_passes(self):
+        self._setup("/var/log/journal-archive", "/var/log/journal-archive")
+        self.assertEqual(self._run().rows, [])
+
+    def test_tmpfs_default_is_required(self):
+        self._setup("/dev/shm/journal-archive", "/dev/shm/journal-archive")
+        rep = self._run()
+        self.assertTrue(any(r[0] == RC.REQUIRED and "JOURNAL_SNAPSHOT_DIR" in r[3]
+                            for r in rep.rows))
+        self.assertIn("Pi/journal_snapshot.py", [r[1] for r in rep.rows])
+
+    def test_tmpfs_unit_value_is_required(self):
+        self._setup("/var/log/journal-archive", "/run/log/journal-archive")
+        rep = self._run()
+        self.assertTrue(any(r[0] == RC.REQUIRED and "JOURNAL_SNAPSHOT_DIR" in r[3]
+                            for r in rep.rows))
+
+    def test_mismatch_is_required(self):
+        self._setup("/var/log/journal-archive", "/var/log/journal-archive-2")
+        rep = self._run()
+        self.assertTrue(any(r[0] == RC.REQUIRED and "不一致" in r[3]
+                            for r in rep.rows))
+
+    def test_missing_unit_env_is_required(self):
+        self._setup("/var/log/journal-archive", "", unit_line=False)
+        self.assertEqual([r[0] for r in self._run().rows], [RC.REQUIRED])
+
+    def test_changed_env_style_is_required(self):
+        self._setup("/var/log/journal-archive", "/var/log/journal-archive",
+                    env_style=False)
+        rep = self._run()
+        self.assertEqual([r[0] for r in rep.rows], [RC.REQUIRED])
+        self.assertIn("JOURNAL_SNAPSHOT_DIR", rep.rows[0][3])
 
 
 class TestSecretsRules(unittest.TestCase):

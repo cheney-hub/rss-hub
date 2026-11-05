@@ -1,5 +1,5 @@
 [Unit]
-Description=Snapshot the last 24h of journald logs into tmpfs (keep 3 days)
+Description=Snapshot the last 24h of journald logs to disk once a day (keep 3 days)
 # 只读本机日志，不联网；journalctl 读的是 /run/log/journal（volatile）。
 After=systemd-journald.service
 
@@ -9,11 +9,24 @@ User=user
 Environment=PYTHONUNBUFFERED=1
 Environment=TZ=Asia/Shanghai
 # 快照目录与保留份数在这里显式写死：脚本里的默认值只是没配单元时的兜底，
-# 两处一起改，OPERATIONS.md 的参数表是它们的契约。
-Environment=JOURNAL_SNAPSHOT_DIR=/dev/shm/journal-archive
+# 两处一起改，OPERATIONS.md 的参数表是它们的契约；门禁还会核对两处相等、
+# 且都不是 /dev/shm、/run 这类 tmpfs 路径。
+Environment=JOURNAL_SNAPSHOT_DIR=/var/log/journal-archive
 Environment=JOURNAL_SNAPSHOT_KEEP_DAYS=3
-# 脚本只写 /dev/shm、只读 /run/log/journal，给一层最小约束挡住误操作。
-# 不用 ProtectSystem=strict：它会把 /dev/shm 也设成只读，快照就写不进去。
+# 目录与权限交给 systemd：LogsDirectory= 在 /var/log 下建好 journal-archive 并
+# 赋权给 User=user（/var/log 是 root:root 755，User=user 自己 mkdir 不了），
+# deploy.sh 不用手工 mkdir/chown，脚本也不需要跑 sudo。
+# LogsDirectory= 默认建 0755，而旧 tmpfs 目录是 0700；gz 里是完整系统日志，所以
+# LogsDirectoryMode=0700 把目录收回仅属主可进，UMask=0077 让写出的 .tmp / .gz
+# 都是 0600（脚本的写文件逻辑不动）。两条在 systemd 252 的 systemd.exec 里都支持。
+# 实时日志仍只读 /run/log/journal，快照写 /var/log/journal-archive，两处都不在
+# /home 下，所以保留 ProtectHome=read-only。
+# 不加 ProtectSystem=strict：它会把 /var/log、/run 一并设成只读，虽然 LogsDirectory=
+# 建出来的目录按 systemd 文档仍可写，但这套组合没在 Pi 上实测过，不拿没验证过的
+# 沙箱行为换「看起来更严」。
+LogsDirectory=journal-archive
+LogsDirectoryMode=0700
+UMask=0077
 NoNewPrivileges=yes
 ProtectHome=read-only
 ExecStart=/usr/bin/python3 /home/user/pi-pipeline/journal_snapshot.py

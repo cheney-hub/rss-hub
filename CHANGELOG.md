@@ -6,6 +6,63 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.19.0] - 2026-11-06
+
+**每日日志快照改为落盘持久化：每天只写一次盘，重启后仍可查**
+
+用户明确要求「每天落盘一次」。1.18.0 那份每天 00:05 的快照原本在
+`/dev/shm/journal-archive`（tmpfs，重启即清），这次把它定向放开到 SD 卡上的
+`/var/log/journal-archive`：
+
+- `Pi/journal_snapshot.py` 的 `SNAPSHOT_DIR` 默认值（仍保留 `os.environ.get`
+  写法，参数表靠它提取）、`journal-snapshot.service` 的
+  `Environment=JOURNAL_SNAPSHOT_DIR=`、`OPERATIONS.md` 参数表三处一起改到
+  `/var/log/journal-archive`。新增跨文件契约检查
+  `check_journal_snapshot_dir`：两处必须相等，且都不得是 `/dev/shm` / `/run`
+  这类 tmpfs 路径；解析不出来（文件缺失、写法换了、Environment= 被删）一律报必改。
+- 目录与权限交给 systemd 的 `LogsDirectory=journal-archive`：`/var/log` 是
+  root:root 755，`User=user` 自己建不了目录，由 systemd 建好并赋权，不需要
+  `deploy.sh` 手工 mkdir/chown，也不需要 sudo 脚本。它默认建 0755、旧 tmpfs 是
+  0700，gz 里又是完整系统日志，所以单元补 `LogsDirectoryMode=0700` +
+  `UMask=0077`：目录 0700、写出的 `.tmp` / `.gz` 0600，仅属主可读；脚本写文件
+  逻辑一字未动（两条指令在 systemd 252 的 systemd.exec 里都支持）。
+  `ProtectHome=read-only` 保留（写入已不在 `/home` 下）；没有启用
+  `ProtectSystem=strict`，这套组合没在 Pi 上实测过，单元注释写明了依据与取舍。
+- timer 仍是 `OnCalendar=*-*-* 00:05:00` / `AccuracySec=1min`、仍不写
+  `Persistent=true`。单元注释与运维文档改成真实理由：重启后 volatile 日志为空，
+  补跑会导出一份空内容并按当天日期覆盖掉已有的好快照，所以错过这一拍就等下一天，
+  不再拿「不往 SD 卡写 stamp 文件」当理由（本来就要落盘了）。
+- 清理逻辑一字未动：仍按文件名里的日期只删 `journal-YYYY-MM-DD.log.gz` 形状、
+  只留最近 3 份、不认识的文件不碰、`.tmp` + `os.replace` 原子写。
+- **一次性切换代价**：改目录不搬旧数据。Pi 上 1.18.0 留在
+  `/dev/shm/journal-archive/` 的当天快照仍在 tmpfs、重启即清，脚本不做迁移；
+  部署后手动触发一次 `journal-snapshot.service` 即可把当天这份补成落盘快照。
+  OPERATIONS.md「日志存储」已写明，`deploy.sh` 不需要加迁移步骤。
+- 脚本头注释、运维手册参数表 / 每日快照段 / 代价段 / 写盘实测段、测试模块说明里的
+  旧说法逐处改掉。`Pi/serve.py`、`build_feed.py`、`render.py`、`rotate.py` 与
+  feed 内容一律未动；journald 仍是 `Storage=volatile`（`/run/log/journal`，内存）。
+
+**口径（2026-11-06 01:50 Pi 实测）**：实时日志仍在内存、重启即清；每天 00:05 只有
+一次 gz 快照落到 SD 卡，体积随当天日志量波动 —— 「约 10KB」是 1.18.0 的样本、不是
+固定值，本次手动触发实测 20,449 B / 1317 行纯文本、`zcat` 可读，目录 700、文件
+600，`df -T` 确认在 `/dev/mmcblk0p2` ext4 持久分区。快照能跨重启但**只留 3 天**。
+常态（不触发快照）60 秒窗口整卡写入 155,648 B ≈ 2.53 KB/s，部署前同口径基线
+176,128 B ≈ 2.87 KB/s，同量级；手动触发一次的前后 3 秒窗口整卡写入
+126,976 B ≈ 124 KB（含首次建目录、服务启动记录、`jbd2` 元数据提交），快照文件
+本身 20 KB —— 那是一天一次的那一拍，不是常态速率。两者同量级，说明除每天
+00:05 那一次外没有新增持续写盘。
+
+用例 372 → 382（`tests/test_journal_snapshot.py` 12 → 16 例、
+`tests/test_gate.py` 56 → 62 例）。H11 反例：`.qa-tmp/red_check_snapshot.py`
+新增四条契约反例（单条检查与整轮门禁一起验红）、`.qa-tmp/red_check.py` 新增
+一条，这两处**新增条目**均实跑确认变红；入库的反例用例是 `tests/test_gate.py`
+里 6 个 Sandbox 用例。
+
+**已知遗留（与本次无关）**：`.qa-tmp/red_check.py` 里改动前既有的「pubDate 极端值」
+条目退回缺陷后仍绿，使该脚本整体退出码为 1；QA 已在 `git archive HEAD` 干净副本上
+复核，HEAD 同样如此。本次未改动 `render.py` / `tests/test_hardening.py`，这个既有
+H11 缺口不在本版范围内。
+
 ## [1.18.0] - 2026-11-06
 
 **日志按天留存到内存盘：一天一份快照、只留 3 份、3 天以上自动清除**

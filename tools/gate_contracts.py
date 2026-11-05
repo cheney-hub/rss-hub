@@ -2,18 +2,21 @@
 # -*- coding: utf-8 -*-
 """跨文件契约检查：真源分散在两个文件里的那些约定，由这个模块核对。
 
-从 tools/review_check.py 拆出来的四项（那个文件 892 行，超过它自己定的
-750 行提醒线；这四项搬走后回到 600 行以内）：
+从 tools/review_check.py 拆出来的四项，加上 1.19.0 新加的一项，共五项：当初那个
+文件超过它自己定的 750 行提醒线才拆，前四项搬走后回到提醒线以内（当前具体行数
+以 `tools/review_check.py` 为准，别在这里写死）：
 
-  * check_version_sync      —— version.py ↔ README/OPERATIONS/页面上的版本号
-  * check_workflow_sync     —— .github/workflows 里的调参 ↔ 代码默认值
-  * check_rotate_timer_sync —— Pi 的 systemd timer 节拍 ↔ ROTATE_SECONDS
-  * check_test_count_sync   —— README 目录树的用例数 ↔ tests/ 下实际用例数
+  * check_version_sync        —— version.py ↔ README/OPERATIONS/页面上的版本号
+  * check_workflow_sync       —— .github/workflows 里的调参 ↔ 代码默认值
+  * check_rotate_timer_sync   —— Pi 的 systemd timer 节拍 ↔ ROTATE_SECONDS
+  * check_test_count_sync     —— README 目录树的用例数 ↔ tests/ 下实际用例数
+  * check_journal_snapshot_dir—— 每日快照目录：单元 Environment ↔ 脚本默认值，且必须持久
 
-为什么按「跨文件契约」这条线切，而不是按行随便切：这四项查的都是**两份文件
-有没有对上**，改哪一条都能一眼看出该放哪边；它们还有一个共性——解析不出来就
+为什么按「跨文件契约」这条线切，而不是按行随便切：这几项查的都是**两份文件
+有没有对上**，改哪一条都能一眼看出该放哪边；前四项还有一个共性——解析不出来就
 跳过并留痕（说明性取值、`OnCalendar=hourly` 这种换算不出「每 N 分钟」的写法），
-宁可少查一个也不猜数字制造假红。
+宁可少查一个也不猜数字制造假红。第五项反过来：解析不出来必须报必改，因为
+「单元里少了这行」正是最该被抓到的漂移，静默跳过等于这条契约消失。
 
 引用方向只有一条：`import review_check as RC`，反过来由 review_check 在 main()
 里延迟 import 本模块，两边都在模块级 import 会成环。共享的取值解析
@@ -335,5 +338,71 @@ def _check_case_totals(rep, text, block, base, total, actual):
             rep.add(RC.REQUIRED, "README.md", text[:m.start()].count("\n") + 1,
                     "「改动代码前后跑这三条」那行写的 %s 个用例，实际 %d 个"
                     % (m.group(1), total))
+
+
+# ---- 1.19.0：每日日志快照的落盘位置 ----
+
+# 两份真源：脚本默认值只是没配单元时的兜底，单元里的 Environment= 才真正进到
+# 进程环境；1.19.0 之前这两处各写各的，没有任何检查会拦「只改一边」。
+JOURNAL_SNAPSHOT_PY = "Pi/journal_snapshot.py"
+JOURNAL_SNAPSHOT_UNIT = "Pi/services/journal-snapshot.service"
+# 认准 os.environ.get 这个写法：review_check._env_calls 靠它把参数收进参数表，
+# 换成别的写法会让 JOURNAL_SNAPSHOT_DIR 静默消失，这里必须报必改。
+_RE_SNAPSHOT_DEFAULT = re.compile(
+    r'^\s*SNAPSHOT_DIR\s*=\s*os\.environ\.get\('
+    r'\s*"JOURNAL_SNAPSHOT_DIR"\s*,\s*"([^"]+)"\s*\)', re.M)
+_RE_SNAPSHOT_UNIT_ENV = re.compile(
+    r'^\s*Environment\s*=\s*JOURNAL_SNAPSHOT_DIR\s*=\s*(\S+)\s*$', re.M)
+# tmpfs / 易失目录：写进去等于重启即丢，与「落盘持久化、重启后仍可查」相悖
+_SNAPSHOT_TMPFS = ("/dev/shm", "/run", "/var/run", "/tmp", "/dev/tmp")
+
+
+def _is_tmpfs_path(value):
+    """目录是否落在 tmpfs / 易失路径上；按路径段比，/run-archive 不会被误判。"""
+    return any(value == p or value.startswith(p + "/") for p in _SNAPSHOT_TMPFS)
+
+
+def check_journal_snapshot_dir(rep):
+    """`JOURNAL_SNAPSHOT_DIR` 的两处取值必须相等，且都必须是持久目录。
+
+    1.19.0 把每日快照从 /dev/shm/journal-archive 改到 SD 卡上的
+    /var/log/journal-archive，换的是「每天只写一次盘、重启后仍可查」。这份约定
+    散在脚本默认值与 systemd 单元两处：单元的值真正生效，脚本默认值只是兜底，
+    改一边看不出问题（本地跑与 Pi 上跑会落在不同地方）。更要紧的是防止以后有人
+    「为了省写盘」把任一边改回 /dev/shm 或 /run —— 那就退回重启即清了。
+
+    解析不出来（文件缺失、写法换了、Environment= 被删）一律报必改：检查没法
+    完成不能静默变成通过，这是本门禁的设计底线。
+    """
+    py_path = os.path.join(RC.ROOT, *JOURNAL_SNAPSHOT_PY.split("/"))
+    unit_path = os.path.join(RC.ROOT, *JOURNAL_SNAPSHOT_UNIT.split("/"))
+    for path, label in ((py_path, JOURNAL_SNAPSHOT_PY),
+                        (unit_path, JOURNAL_SNAPSHOT_UNIT)):
+        if not os.path.exists(path):
+            rep.add(RC.REQUIRED, label, 0,
+                    "找不到 %s，无法核对 JOURNAL_SNAPSHOT_DIR 落盘契约" % label)
+            return
+    m_py = _RE_SNAPSHOT_DEFAULT.search(RC.read(py_path))
+    m_unit = _RE_SNAPSHOT_UNIT_ENV.search(RC.read(unit_path))
+    if not m_py:
+        rep.add(RC.REQUIRED, JOURNAL_SNAPSHOT_PY, 0,
+                "找不到 SNAPSHOT_DIR = os.environ.get(\"JOURNAL_SNAPSHOT_DIR\", \"…\")；"
+                "JOURNAL_SNAPSHOT_DIR 的默认值取不到，落盘契约无法核对")
+        return
+    if not m_unit:
+        rep.add(RC.REQUIRED, JOURNAL_SNAPSHOT_UNIT, 0,
+                "找不到 Environment=JOURNAL_SNAPSHOT_DIR=…；单元里的值才真正进到进程环境")
+        return
+    default, unit_val = m_py.group(1), m_unit.group(1)
+    for label, value in ((JOURNAL_SNAPSHOT_PY, default),
+                         (JOURNAL_SNAPSHOT_UNIT, unit_val)):
+        if _is_tmpfs_path(value):
+            rep.add(RC.REQUIRED, label, 0,
+                    "JOURNAL_SNAPSHOT_DIR=%s 是 tmpfs/易失目录，每日快照必须落在持久磁盘上"
+                    "（重启后仍可查），不能改回内存盘" % value)
+    if default != unit_val:
+        rep.add(RC.REQUIRED, JOURNAL_SNAPSHOT_UNIT, 0,
+                "Environment=JOURNAL_SNAPSHOT_DIR=%s 与脚本默认值 %s 不一致；"
+                "只改一边会让本地与 Pi 上的落盘位置对不上" % (unit_val, default))
 
 

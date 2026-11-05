@@ -20,7 +20,7 @@
 设计上的一条硬要求：**任何检查失败都不能静默变成通过**。生成器崩了、PyYAML 没装、
 目标文件不见了，都要留下可见的记录——"结论行写全部通过"是最坏的一种失败方式。
 
-四项「跨文件契约」检查（版本号 / workflow / timer 节拍 / 用例数 ↔ 文档）在 tools/gate_contracts.py。
+五项「跨文件契约」检查（版本号 / workflow / timer 节拍 / 用例数 ↔ 文档 / 快照目录）在 tools/gate_contracts.py。
 """
 
 import ast
@@ -578,9 +578,9 @@ def main():
     它是给「只想快速看风格」的场景用的，跳过哪三项写在用法里，别让人以为
     它只跳过生成物那一条（以前注释就是这么写的，理由还错：生成物检查根本不用 git）。
 
-    四项「跨文件契约」检查在 tools/gate_contracts.py（文档↔代码↔CI/单元文件），
+    五项「跨文件契约」检查在 tools/gate_contracts.py（文档↔代码↔CI/单元文件），
     那里反过来要用本模块的 Report / read / ROOT，所以只能**延迟 import**：
-    两边都在模块级 import 会成环。import 失败要留一条必改，不能让这四项静默消失。
+    两边都在模块级 import 会成环。import 失败要留一条必改，不能让这五项静默消失。
     """
     args = sys.argv[1:]
     strict = "--strict" in args
@@ -590,7 +590,7 @@ def main():
     except Exception as e:
         GC = None
         rep.add(REQUIRED, "tools/gate_contracts.py", 0,
-                "契约检查模块加载失败（%s: %s），版本/workflow/节拍/用例数四项没查"
+                "契约检查模块加载失败（%s: %s），版本/workflow/节拍/用例数/快照目录五项没查"
                 % (type(e).__name__, e))
 
     count, total_lines = scan_sources(rep)
@@ -608,6 +608,7 @@ def main():
         GC.check_workflow_sync(rep)
         GC.check_rotate_timer_sync(rep)
         GC.check_version_sync(rep)
+        GC.check_journal_snapshot_dir(rep)
     return print_report(rep, strict)
 
 

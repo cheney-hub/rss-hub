@@ -3,9 +3,9 @@ Description=Daily journal snapshot at 00:05
 
 [Timer]
 # 一天一次，导出过去 24 小时；快照只留最近 3 份，由脚本清理。
-# 刻意不写 Persistent=true：那会在 /var/lib/systemd/timers/ 落一个 stamp 文件，
-# 等于为了存快照又重新往 SD 卡写东西；而且 volatile 日志重启即空，
-# 补跑也导不出有意义的内容。错过这一拍就等下一天。
+# 刻意不写 Persistent=true：重启后 volatile 日志本来就是空的，补跑会导出一份空
+# 内容，再按当天日期用 os.replace 覆盖掉当天已经写好的那份好快照，等于把有用的
+# 快照抹掉。所以错过这一拍就等下一天，不要拿「每天一份」当理由把 Persistent 打开。
 OnCalendar=*-*-* 00:05:00
 AccuracySec=1min
 Unit=journal-snapshot.service

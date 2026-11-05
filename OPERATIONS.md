@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.18.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.19.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -64,7 +64,7 @@ python3 tools/gen_minute_workflow.py 13
 | `ROTATE_STATE` | 与 `OUT_FILE` 同目录的 `rotate.json` | 轮播游标状态。**GitHub 侧指到 `${{ runner.temp }}`（不发布、不提交）**；树莓派侧是 `/home/user/rss-hub/docs/rotate.json`，发布在 `moreaix.com/rss/rotate.json` |
 | `CF_BEACON_TOKEN` | 空 | Cloudflare Web Analytics 站点 token。**只有树莓派配**，写在 `/home/user/site/analytics.env`（不进仓库），空 = 不注入 beacon。值从控制台 Web Analytics → Manage site 的 JS Snippet 里复制 |
 | `CF_BEACON_JS` | 控制台 snippet 固定 | beacon 脚本地址，一般不用改。写成环境变量默认值是因为门禁不许源码里出现带真实域名的裸地址 |
-| `JOURNAL_SNAPSHOT_DIR` | `/dev/shm/journal-archive` | **只有树莓派**：每日日志快照目录，tmpfs，不写 SD 卡。改这里要同步 `journal-snapshot.service` 的同名 `Environment=` |
+| `JOURNAL_SNAPSHOT_DIR` | `/var/log/journal-archive` | **只有树莓派**：每日日志快照目录，在 SD 卡上，每天只写一次 gz（体积随日志量波动，2026-11-06 实测 20,449 B，不是固定 10KB）；目录由单元的 `LogsDirectory=` 建好（`LogsDirectoryMode=0700` + `UMask=0077`，文件仅属主可读）。改这里要同步 `journal-snapshot.service` 的同名 `Environment=`（门禁核对两者相等且都不是 tmpfs 路径） |
 | `JOURNAL_SNAPSHOT_KEEP_DAYS` | `3` | 快照只留最近 3 份（今天 + 前 2 天），第 4 份起每天 00:05 自动清除 |
 
 
@@ -142,13 +142,14 @@ git commit -m "revert feed" && git push
 
 ## 内存盘产物（只影响树莓派）
 
-1.16.0 起，Pi 上**所有运行产物都在 `/dev/shm/rss-hub`（tmpfs）**，不落 SD 卡：
+1.16.0 起，Pi 上**除每天 00:05 那份日志快照外的运行产物都在 `/dev/shm/rss-hub`（tmpfs）**，不落 SD 卡（快照的例外见下「日志存储」一节）：
 
 - `feed.xml`（完整版）、`feed-wrap.xml`（设备版）、`rotate.json`（显示游标）、
   `kindle/rss-pw2.png` 与 `kindle/index.html` 全在这一个目录下；
 - `moreaix-site` 用 `--alias /rss`、`--alias /kindle` 直接读内存盘；
   `rss-build` / `rss-rotate` / `kindle-screen` 三个单元也都写这里；
-- SD 卡上只留 `feeds.txt`（配置副本，内容不变就不写）、站点主页 `/home/user/site`
+- SD 卡上还留 `feeds.txt`（配置副本，内容不变就不写）、每天 00:05 那份日志快照
+  （`/var/log/journal-archive`，见下「日志存储」）、站点主页 `/home/user/site`
   和 `/home/user/rss-hub/docs/` 里那两个静态页**源文件**（`index.html` /
   `screen.html`，部署时上传、`moreaix-site` 启动时复制进内存盘）。
 
@@ -186,9 +187,10 @@ Bot Fight，并对 `/rss/feed.xml*`、`/kindle/*.png` 配每 IP 60 次/分钟的
 
 ## 日志存储（只影响树莓派，整机配置）
 
-2026-11-06 起，Pi 的 `systemd-journald` 改成 **volatile**：日志只进内存，
-不再写 SD 卡。全机只有它在持续写日志（rsyslog / syslog-ng 都没装），
-所以这一处改完，日志类写入就归零了。
+2026-11-06 起，Pi 的 `systemd-journald` 改成 **volatile**：实时日志只进内存，
+不再持续写 SD 卡。全机只有它在持续写日志（rsyslog / syslog-ng 都没装），
+所以这一处改完，持续的日志类写入就归零了；1.19.0 起另外**每天 00:05** 把一份
+gz 快照写到 SD 卡（见下），那是唯一一次定时的日志落盘。
 
 配置文件在 Pi `/etc/systemd/journald.conf.d/10-volatile.conf`，**不进仓库**
 （整机配置，重跑 `Pi/deploy.sh` 不会覆盖也不会重建）：
@@ -221,32 +223,63 @@ sudo rm -f /var/log/journal/*/*.journal
 
 **每天一份可读快照（只留 3 份）**：`journal-snapshot.timer` 每天 00:05 把过去
 24 小时的日志导成纯文本 gz，写到
-`/dev/shm/journal-archive/journal-YYYY-MM-DD.log.gz`（同样是 tmpfs，一天约
-10KB，物理上不碰 SD 卡）。`zcat 文件名` 就能看，也能 scp 下来；journald 自己的
-`.journal` 是二进制文件，读不了也拿不走。脚本按**文件名里的日期**清理：只留
-今天与前 2 天共 3 份，第 4 份起自动删除，不认识的文件一律不碰。手动跑一次：
+`/var/log/journal-archive/journal-YYYY-MM-DD.log.gz`。**journald 日志每天只在这里
+落一次盘**：一份 gz 加一点目录元数据，实时日志仍全程在 `/run/log/journal`（内存），
+重启即空。gz 体积随当天日志量波动，「约 10KB」是 1.18.0 的样本、不是固定值：
+2026-11-06 01:50 在 Pi 上部署后手动触发一次，实测 20,449 B / 1317 行纯文本、
+`zcat` 可读，目录 `drwx------ 700 user:user`、文件 `600 user:user`，`df -T` 确认
+落在 `/dev/mmcblk0p2` ext4 持久分区（重启不丢），服务 `Result=success` /
+`ExecMainStatus=0`。快照能跨重启查到，代价就是每天一次写盘（常态整机写盘的实测
+数字见下）。`zcat 文件名` 就能看，也能 scp 下来；
+journald 自己的 `.journal` 是二进制文件，读不了也拿不走。目录由单元的
+`LogsDirectory=journal-archive` 自动建好并赋权（`/var/log` 是 root:root 755，
+`User=user` 自己建不了目录），不用手工 mkdir/chown；单元另配
+`LogsDirectoryMode=0700` + `UMask=0077`，让目录 0700、写出的 `.tmp` / `.gz` 都是
+0600，gz 里的完整系统日志只有属主可读，脚本的写文件逻辑不变。脚本按
+**文件名里的日期**清理：只留今天与前 2 天共 3 份，第 4 份起自动删除，不认识的
+文件一律不碰。所以快照能跨重启，但**只留 3 天**。手动跑一次：
 
 ```bash
 sudo systemctl start journal-snapshot.service
-ls -l /dev/shm/journal-archive/
+ls -l /var/log/journal-archive/
 ```
 
-刻意没给 timer 加 `Persistent=true`：那会在 `/var/lib/systemd/timers/` 写 stamp
-文件（又落 SD 卡），而且 volatile 日志重启即空，补跑也导不出东西。错过这一拍
-就等下一天。参数见上面调参表的 `JOURNAL_SNAPSHOT_*` 两行。
+**一次性切换代价**：改目录不搬旧数据。1.18.0 写下的
+`/dev/shm/journal-archive/journal-YYYY-MM-DD.log.gz` 仍在 tmpfs、重启即清，脚本
+不会把它迁到新目录；切换当天旧内存盘里已有的那一份，也不会自动出现在
+`/var/log/journal-archive`。部署后手动触发一次上面的 service，就能把当天这份补成
+落盘快照；除此之外不需要任何迁移步骤，也不需要脚本或 `deploy.sh` 加迁移逻辑。
 
-**代价（必须知道）**：`/run` 是 tmpfs，重启或断电后日志全部清空 ——
-「保留 7 天」实际是「单次开机期间最多 7 天」。要跨重启留日志只能落盘，
-与零写盘目标冲突，别指望它当长期审计。回退只需删掉这个 drop-in 并重启
-journald，就回到默认的 `Storage=auto`（`/var/log/journal` 目录还在，会自动
-重新持久化）。
+刻意没给 timer 加 `Persistent=true`：重启后 volatile 日志是空的，补跑会导出一份
+空内容，再按当天日期用 `os.replace` 覆盖掉当天已经写好的那份好快照，等于把有用的
+快照抹掉。所以错过这一拍就等下一天，别为了「每天一份」把它打开。参数见上面调参表
+的 `JOURNAL_SNAPSHOT_*` 两行。
+
+**代价（必须知道）**：实时日志在 `/run`（tmpfs），重启或断电后当场清空 ——
+`MaxRetentionSec=3d` 的「最多 3 天」实际是「单次开机期间最多 3 天」。每天 00:05
+那份 gz 快照能跨重启，但同样只留 3 份，所以可回溯的上限仍是 3 天，别指望它当长期
+审计。回退 journald 只需删掉这个 drop-in 并重启，就回到默认的 `Storage=auto`
+（`/var/log/journal` 目录还在，会自动重新持久化）；回退快照则停掉
+`journal-snapshot.timer` 即可。
 
 SD 卡仍有极低频的非 journald 写入：`btmp` / `wtmp`（登录记录，按用户要求保留
 `btmp.1` 审计文件）、apt/dpkg 安装日志、`fake-hwclock`，以及 ext4 自身的
-`jbd2` 元数据提交。实测切换后 60 秒窗口：journald 块写 0 KB、
-`/var/log` 零文件变动，整机块层写入从之前约 21 KB/s 降到 2.53 KB/s
-（30 秒短窗口约 6.7 KB/s，波动来自 `jbd2` 周期性提交；进程归因只有
-`jbd2` 与 `tailscaled`，没有日志类进程）。
+`jbd2` 元数据提交。下面第一组是**切换 volatile 时**的历史实测，不是本次测量：
+60 秒窗口 journald 块写 0 KB、`/var/log` 零文件变动，整机块层写入从之前约
+21 KB/s 降到 2.53 KB/s（30 秒短窗口约 6.7 KB/s，波动来自 `jbd2` 周期性提交；
+进程归因只有 `jbd2` 与 `tailscaled`，没有日志类进程）。
+
+**1.19.0 落盘后的整机实测**（2026-11-06 01:50，Pi 上同口径，两端各 `sync`）：
+
+- **常态、不触发快照**：60 秒窗口整卡写入 155,648 B ≈ 2.53 KB/s；部署前同口径
+  基线 176,128 B ≈ 2.87 KB/s。两者同量级，说明除每天 00:05 那一次外没有新增
+  持续写盘。
+- **手动触发一次快照**：触发前后 3 秒窗口整卡写入 126,976 B ≈ 124 KB，其中含
+  systemd 首次创建目录、服务启动记录与 `jbd2` 元数据提交；快照文件本身 20 KB。
+  这是一天一次的那一拍，不是常态速率。
+- `systemctl list-timers` 实测下次触发 `Sat 2026-11-07 00:05:00 HKT`、
+  `LAST = -`（当天 00:05 已过），所以 2026-11-06 这份是手动补的；旧
+  `/dev/shm/journal-archive/` 那份与目录已手工清掉，新目录目前只有 1 份。
 
 ## 刷新节奏
 

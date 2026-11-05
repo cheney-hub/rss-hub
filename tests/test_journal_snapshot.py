@@ -1,20 +1,24 @@
-"""Pi/journal_snapshot.py 的行为测试：一天一份、只留 3 份、按文件名清理。
+"""Pi/journal_snapshot.py 的行为测试：一天一份、只留 3 份、按文件名清理、落盘位置。
 
-三处容易改坏、改坏了短时间内又看不出来的地方：
+四处容易改坏、改坏了短时间内又看不出来的地方：
 
 1. **保留份数**：「只保存三天」是 3 份（今天 + 前 2 天），不是 4 份；边界差一天
    平时无感，跑上一个月才看出目录里多躺了一份。
 2. **清理依据**：按文件名里的日期，不按 mtime，也绝不碰不认识的文件 ——
-   快照目录在 /dev/shm，里面可能还有别的临时文件，误删没法恢复。
+   快照目录是持久目录 /var/log/journal-archive，里面也可能有别的文件，误删没法恢复。
 3. **原子写**：写到一半失败时，不能留下截断的 gz，更不能把上一份好快照覆盖掉。
+4. **落盘位置**：1.19.0 起必须在持久磁盘（不能是 /dev/shm、/run 这类 tmpfs），
+   且 systemd 单元的 Environment= 必须与脚本默认值相等；只改一边不会报错，
+   但本地与 Pi 上会落到不同地方，重启后也就查不到了。
 
-全部落在临时目录里，不联网、不碰真实的 journald。
+全部落在临时目录里，不联网、不碰真实的 journald、不依赖平台差异行为。
 """
 import contextlib
 import datetime as dt
 import gzip
 import io
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -22,6 +26,7 @@ import unittest
 from unittest import mock
 
 _PI = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Pi")
+_SERVICES = os.path.join(_PI, "services")
 sys.path.insert(0, _PI)
 import journal_snapshot as JS                                  # noqa: E402
 
@@ -158,6 +163,58 @@ class SnapshotTest(unittest.TestCase):
                 contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(JS.main(), 1)
         self.assertEqual(os.listdir(self.dir), [])
+
+
+class SnapshotStorageContractTest(unittest.TestCase):
+    """1.19.0 的落盘契约：默认目录是持久路径，单元与脚本默认值一致、timer 不变。
+
+    只对仓库里的常量与单元文本做断言：不执行 systemd、不查权限、不看文件系统类型，
+    所以 Windows 本机与 Linux CI 跑出来是同一个结论。
+    """
+
+    @staticmethod
+    def _unit(name):
+        """读仓库里真实的 systemd 单元文本，只拼路径、不做平台相关判断。"""
+        with io.open(os.path.join(_SERVICES, name), "r", encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_default_dir_is_persistent_not_tmpfs(self):
+        path = JS.SNAPSHOT_DIR
+        self.assertEqual(path, "/var/log/journal-archive")
+        self.assertTrue(path.startswith("/"))
+        for tmpfs in ("/dev/shm", "/run", "/var/run", "/tmp", "/dev/tmp"):
+            self.assertFalse(path == tmpfs or path.startswith(tmpfs + "/"),
+                             "默认目录不能落在 %s（tmpfs，重启即清）" % tmpfs)
+
+    def test_env_var_style_is_preserved(self):
+        """默认值必须仍走 os.environ.get：参数表靠 _env_calls 提取，换写法会静默消失。"""
+        with io.open(os.path.join(_PI, "journal_snapshot.py"),
+                     "r", encoding="utf-8") as fh:
+            src = fh.read()
+        self.assertIn('SNAPSHOT_DIR = os.environ.get("JOURNAL_SNAPSHOT_DIR", '
+                      '"/var/log/journal-archive")', src)
+
+    def test_service_dir_matches_script_default(self):
+        m = re.search(r"^\s*Environment=JOURNAL_SNAPSHOT_DIR=(\S+)\s*$",
+                      self._unit("journal-snapshot.service"), re.M)
+        self.assertIsNotNone(m, "单元里必须有 Environment=JOURNAL_SNAPSHOT_DIR=")
+        self.assertEqual(m.group(1), JS.SNAPSHOT_DIR)
+
+    def test_service_and_timer_keep_the_daily_disk_setup(self):
+        service = self._unit("journal-snapshot.service")
+        timer = self._unit("journal-snapshot.timer")
+        # 只检查非注释行：注释里的说明文字（比如「不写 Persistent=true」的理由）
+        # 不该被当成真的配置指令。
+        svc_directives = [ln.strip() for ln in service.splitlines()
+                          if ln.strip() and not ln.lstrip().startswith("#")]
+        for line in ("LogsDirectory=journal-archive", "LogsDirectoryMode=0700",
+                     "UMask=0077", "ProtectHome=read-only"):
+            self.assertIn(line, svc_directives)
+        tmr_directives = [ln.strip() for ln in timer.splitlines()
+                          if ln.strip() and not ln.lstrip().startswith("#")]
+        self.assertIn("OnCalendar=*-*-* 00:05:00", tmr_directives)
+        self.assertIn("AccuracySec=1min", tmr_directives)
+        self.assertFalse(any(d.startswith("Persistent=") for d in tmr_directives))
 
 
 if __name__ == "__main__":
