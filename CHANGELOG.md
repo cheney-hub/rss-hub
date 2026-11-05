@@ -23,8 +23,14 @@
 - **产物搬进 `/dev/shm/rss-hub`**（tmpfs，Pi 上可用 453MB，全部产物不到 1MB）：
   `rss-build` / `rss-rotate` / `kindle-screen` / `moreaix-site` 四个单元与
   `Pi/rotate_screen.py` 的路径一起改。SD 卡上只留 `feeds.txt` 配置副本与站点
-  静态页源文件，都是低频读、几乎不写。严格说 journald 每轮还会写几行日志
-  （几百字节），那是系统日志不是产物；把日志也关掉会丢掉排障线索，不划算。
+  静态页源文件，都是低频读、几乎不写。
+- **「零写盘」只对本项目的产物成立，不等于整机 SD 卡零写入**。上机按
+  `/proc/diskstats` 的扇区口径实测：静置 60 秒块层仍写 1.23MB，不同窗口
+  3.6～34 KB/s 波动（journald 周期性刷盘造成的突发，不是匀速）。进程级归因
+  `systemd-journald` 占八成以上，其余是 `tailscaled` 与 ext4 的 `jbd2` 提交；
+  旧产物 mtime 冻结在改造那一刻、`feeds.txt` 冻结在 11-01，确认 RSS 侧一笔没写。
+  连这部分也要清掉得改系统级配置（journald `Storage=volatile`，重启即丢日志），
+  不属于本项目范围。
 - 目录由各单元的 `ExecStartPre=/usr/bin/install -d -m 700` 幂等创建；两个静态页
   在 `moreaix-site` 启动时复制进内存盘；`ExecStartPost` 异步触发一轮抓取，把
   重启后的空窗从「最多 5 分钟」缩到「一次构建」。
@@ -57,6 +63,11 @@
 
 行为变更两处，都写进了用例：未知扩展名从「照发 octet-stream」改成 404；
 4xx 访问日志从逐条改成按分钟一条汇总。用例 331 → 344。
+
+**还没清零的两处**：每轮构建仍从 SD 卡读一次 `feeds.txt`（内容相同就跳过写，
+根分区挂 `noatime`，这次读不会产生元数据写）；200/304 成功请求仍逐条写访问
+日志，只聚合了 4xx —— 正常 GET 一样能指挥 journal 写盘，流量上来会是新的
+放大器。
 
 ## [1.15.0] - 2026-11-05
 
