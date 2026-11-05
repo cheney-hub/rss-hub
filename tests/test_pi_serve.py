@@ -11,6 +11,7 @@ mock 一个子类会把它们绕过去，测了等于没测：
 网络上只走本地回环（127.0.0.1 + 端口 0 随机端口），不碰外网，CI 里也能跑。
 """
 import builtins
+import collections
 import email.utils
 import os
 import shutil
@@ -387,6 +388,20 @@ class TestBeaconInjection(unittest.TestCase):
             self.assertEqual(serve.beacon_tag(bad), b"")
             self.assertEqual(serve.inject_beacon(raw, ".html", bad), raw)
 
+    def test_unicode_token_is_rejected(self):
+        """isalnum() 会放行全角字母与阿拉伯数字；属性里只认 ASCII。"""
+        for bad in ("ｂ３８ｄ", "abc١٢٣", "tok\U0001f600"):
+            self.assertEqual(serve.beacon_tag(bad), b"", repr(bad))
+
+    def test_unsafe_beacon_js_disables_injection(self):
+        """BEACON_JS 也拼进 HTML 属性：配错不能变成注入点。"""
+        raw = b"<body>x</body>"
+        with mock.patch.object(serve, "BEACON_JS", 'https://x/"onload="evil'):
+            self.assertEqual(serve.beacon_tag(self.TOKEN), b"")
+            self.assertEqual(serve.inject_beacon(raw, ".html", self.TOKEN), raw)
+        with mock.patch.object(serve, "BEACON_JS", "http://x/x.js"):
+            self.assertEqual(serve.beacon_tag(self.TOKEN), b"")
+
     # ---- HTTP 层：头与真实字节 ----
 
     def test_get_content_length_matches_injected_body(self):
@@ -477,6 +492,37 @@ class TestServeHardening(unittest.TestCase):
         finally:
             s.close()
 
+    @staticmethod
+    def make_req(method="GET", path="/", host="localhost", extra=()):
+        lines = ["%s %s HTTP/1.0" % (method, path)]
+        if host is not None:
+            lines.append("Host: " + host)
+        lines.extend(extra)
+        return ("\r\n".join(lines) + "\r\n\r\n").encode("latin-1")
+
+    def raw_req(self, raw):
+        """裸 socket 发任意请求，返回 (状态码, 小写的响应头字典, 已读到的 body)。"""
+        s = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+        try:
+            s.sendall(raw)
+            buf = b""
+            while b"\r\n\r\n" not in buf and len(buf) < 16384:
+                chunk = s.recv(4096)
+                if not chunk:
+                    break
+                buf += chunk
+            head, _, rest = buf.partition(b"\r\n\r\n")
+            lines = head.decode("latin-1").split("\r\n")
+            code = int(lines[0].split()[1])
+            hdr = {}
+            for ln in lines[1:]:
+                if ":" in ln:
+                    k, v = ln.split(":", 1)
+                    hdr[k.strip().lower()] = v.strip()
+            return code, hdr, rest
+        finally:
+            s.close()
+
     def test_secrets_and_half_written_artifacts_are_never_served(self):
         """配置、临时半成品、备份、隐藏文件、白名单外扩展名一律取不到。"""
         for p in ("/analytics.env", "/feed.xml.tmp", "/feed.xml.new", "/backup.bak",
@@ -498,6 +544,60 @@ class TestServeHardening(unittest.TestCase):
         for h in ("evil.example", "moreaix.com.evil.example", "0.0.0.0"):
             self.assertFalse(ok(h), h)
 
+    def test_any_method_other_than_get_head_is_405(self):
+        """基类的 501 绕过 _precheck：任意方法都落到同一道闸，且不回显方法名。"""
+        for m in ("POST", "PUT", "DELETE", "OPTIONS", "TRACE", "PATCH", "BREW"):
+            code, hdr, body = self.raw_req(self.make_req(m))
+            self.assertEqual(code, 405, m)
+            self.assertEqual(hdr.get("allow"), "GET, HEAD", m)
+            self.assertEqual(hdr.get("content-length"), "0", m)
+            self.assertNotIn(m.encode(), body, m)
+
+    def test_rejected_method_still_checks_host(self):
+        """伪造 Host 的 POST 以前回 501（白名单根本没跑），现在必须是 400。"""
+        self.assertEqual(self.raw_req(self.make_req("POST", host="evil.example"))[0], 400)
+        self.assertEqual(self.raw_req(self.make_req("OPTIONS", host="evil.example"))[0], 400)
+
+    def test_rejected_method_is_rate_limited(self):
+        """非 GET/HEAD 也要占限流额度，否则能无限打方法绕开闸门。"""
+        old = serve.RATE_PER_IP
+        serve.RATE_PER_IP = 2
+        rt = self.handler.runtime
+        try:
+            rt.global_hits.clear()
+            rt.ip_hits.clear()
+            codes = [self.raw_req(self.make_req("POST"))[0] for _ in range(3)]
+            self.assertEqual(codes, [405, 405, 429])
+        finally:
+            serve.RATE_PER_IP = old
+            rt.global_hits.clear()
+            rt.ip_hits.clear()
+
+    def test_duplicate_host_headers_are_all_checked(self):
+        """只取第一个 Host 时，第二个伪造值能白嫖白名单（实测曾返回 200）。"""
+        self.assertEqual(self.raw_req(self.make_req(extra=["Host: evil.example"]))[0], 400)
+        self.assertEqual(self.raw_req(self.make_req(extra=["Host: moreaix.com"]))[0], 200)
+
+    def test_del_in_url_is_rejected(self):
+        self.assertEqual(self.raw_code("/bad\x7fpath.html"), 400)
+
+    def test_rejected_flood_does_not_grow_ip_table(self):
+        """全局额度满后，被拒的伪造 IP 不该再往字典里塞条目。"""
+        rt = serve._Runtime()
+        for i in range(serve.RATE_GLOBAL + 500):
+            rt.allow("10.%d.%d.%d" % (i // 65536 % 256, i // 256 % 256, i % 256))
+        self.assertLessEqual(len(rt.ip_hits), serve.RATE_GLOBAL)
+
+    def test_expired_ip_entries_are_swept(self):
+        """原来的清理只删空 deque，一次性灌进来的条目永远变不空。"""
+        rt = serve._Runtime()
+        old = time.monotonic() - serve.RATE_WINDOW - 10
+        for i in range(100):
+            rt.ip_hits["198.51.100.%d" % i] = collections.deque([old])
+        for i in range(300):
+            rt.allow("203.0.113.%d" % (i % 250 + 1))
+        self.assertLessEqual(len(rt.ip_hits), 250)
+
     def test_nul_byte_and_overlong_url_are_rejected(self):
         self.assertEqual(self.raw_code("/bad\x00path.html"), 400)
         self.assertEqual(self.raw_code("/" + "a" * 2100 + ".html"), 414)
@@ -509,6 +609,9 @@ class TestServeHardening(unittest.TestCase):
             self.assertEqual(headers.get("X-Frame-Options"), "SAMEORIGIN", path)
             self.assertIn("strict-origin", headers.get("Referrer-Policy", ""), path)
             self.assertIn("geolocation=()", headers.get("Permissions-Policy", ""), path)
+            csp = headers.get("Content-Security-Policy", "")
+            self.assertIn("frame-ancestors", csp, path)
+            self.assertNotIn("default-src", csp, path)  # 会掐掉首页内联脚本
             self.assertEqual(headers.get("Access-Control-Allow-Origin"), "*", path)
 
     def test_rate_limit_returns_429_with_retry_after(self):
@@ -599,12 +702,23 @@ class TestResponseCache(unittest.TestCase):
                 rt.body(p, self.key_of(p), ".html", "")
             self.assertLessEqual(len(rt.cache), serve.CACHE_MAX_ENTRIES)
 
-    def test_denied_log_aggregates_within_window(self):
+    def test_log_summary_aggregates_within_window(self):
         rt = serve._Runtime()
         rt.err["since"] = time.monotonic() - 3600
-        first = rt.denied_summary(404)
+        first = rt.log_summary(404)
         self.assertIn("404", first)
-        self.assertIsNone(rt.denied_summary(404))
+        self.assertIsNone(rt.log_summary(404))
+
+    def test_success_log_is_also_aggregated(self):
+        """200 逐条写 journal 时，正常 GET 一样能指挥 SD 卡写盘。"""
+        handler = serve._StaticHandler.__new__(serve._StaticHandler)
+        handler._code = 200
+        handler.runtime = serve._Runtime()
+        handler.runtime.err["since"] = time.monotonic() - 3600
+        with mock.patch("sys.stderr") as err:
+            handler.log_message('"%s" %s %s', "GET / HTTP/1.0", 200, 100)
+            handler.log_message('"%s" %s %s', "GET / HTTP/1.0", 200, 100)
+        self.assertEqual(err.write.call_count, 1)
 
     def test_log_error_is_silent_so_aggregation_is_not_bypassed(self):
         """send_error 先 log_error 再 send_response；这里逐条写就绕过了汇总。"""

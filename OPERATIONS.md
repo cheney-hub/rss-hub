@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.16.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.17.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -165,9 +165,16 @@ systemctl status kindle-screen.path                # path 有没有在盯内存�
 
 `moreaix.com` 的公网出口只认扩展名白名单（`.xml/.json/.html/.htm/.css/.js/.txt/.png/.svg`），
 隐藏文件与 `*.tmp` / `*.new` 半成品一律 404 —— 站点根目录里的 `analytics.env`
-因此不会再被取到。另外 `serve.py` 有 Host 白名单、每访客限流（超限 429）、
-连接 8 秒读超时，4xx 日志按分钟汇总一条；真被扫时先看
-`journalctl -u moreaix-site.service` 的汇总行，别被逐条日志淹没。
+因此不会再被取到。`serve.py` 另有 Host 白名单（重复 Host 全查）、每访客+全局双限流
+（超限 429）、连接 8 秒读超时、任意非 GET/HEAD 方法统一 405 且同样过闸，
+以及只含 `frame-ancestors/object-src/base-uri` 的宽松 CSP（不掐首页内联脚本）。
+**所有**状态码的访问日志按分钟汇总一行，正常 GET 也指挥不动 journald 写盘；
+排障代价是丢掉逐条 IP/路径明细，被扫时看 `journalctl -u moreaix-site.service`。
+
+**边缘层仍归 Cloudflare 控制台**（仓库与 Pi 都改不了）：实测公网响应缺 HSTS、
+缺完整 CSP，也没给大文件配速率限制。站点强制 `no-cache`，400KB 的 feed 每次
+都回源，是最容易被拿来放大流量的目标。至少应开启 HSTS、WAF 托管规则、
+Bot Fight，并对 `/rss/feed.xml*`、`/kindle/*.png` 配每 IP 60 次/分钟的限速。
 
 ## 刷新节奏
 

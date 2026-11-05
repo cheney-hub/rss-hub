@@ -6,6 +6,39 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.17.0] - 2026-11-05
+
+**安全审计：补齐服务端缺口；边缘层缺口移交给 Cloudflare 控制台**
+
+上机用裸 socket 打了 40 多组畸形请求。核心路径（目录穿越、编码绕过、扩展名
+白名单、隐藏文件、请求走私、敏感配置）全部挡住，但抓到四处服务端缺口：
+
+- **非 GET/HEAD 完全绕过闸门**：基类对未定义的 `do_*` 直接回 501，不经
+  `_precheck()`。实测「伪造 Host 的 POST」照样 501 —— Host 白名单、URL 校验、
+  限流一起被跳过，501 还把请求方法名原样回显。现在 `__getattr__` 兜住**任意**
+  方法，统一先过闸再回 405 + `Allow: GET, HEAD`，不再回显方法名。
+- **限流表可被撑大**：原写法先 `setdefault` 再判全局额度，被 429 拒绝的伪造
+  IP 也会建条目；清理又只删「空 deque」，一次性灌进来的条目永远变不空。
+  改成全局额度先判、判满不建条目，每 256 次放行扫一遍过期条目。
+- **重复 Host 只查第一个**：第二个伪造值能白嫖白名单（实测 200）。改为
+  `get_all()` 全量校验；URL 控制字符补上 DEL(0x7f)。
+- **200/304 仍逐条写日志**：只聚合 4xx 时，正常 GET 一样能指挥 journald
+  写 SD 卡。现在所有状态码按分钟汇总一行，代价是丢掉逐条 IP/路径明细。
+- beacon 配置也当外部输入：token 改显式 ASCII 白名单（`isalnum()` 会放行全角
+  字母与阿拉伯数字）；`CF_BEACON_JS` 必须 https 且不含引号/尖括号。
+- systemd 沙箱补 `ProtectSystem=full`、`PrivateDevices`、
+  `CapabilityBoundingSet=`（空）、`RestrictAddressFamilies` 等 12 项。
+  `ProtectSystem=strict` 仍不能用（会把 `/dev/shm` 一并设只读）。
+- 宽松 CSP 只放 `frame-ancestors/object-src/base-uri`，不设 `default-src`：
+  首页内联 canvas 脚本与 CF 统计不会被掐掉。
+
+**边缘层仍缺（需控制台操作）**：实测公网响应没有 HSTS、没有完整 CSP，也没有
+针对大文件的速率限制；WAF 托管规则与 Bot Fight 是否开启未知。这些只能在
+Cloudflare 侧配，详见 OPERATIONS.md「内存盘产物」一节。
+
+行为变更两处：非 GET/HEAD 从 501 改 405；访问日志从逐条改成按分钟汇总。
+用例 350 → 360，新增 11 条反例逐个退回全部变红（旧 11 条同步回归有效）。
+
 ## [1.16.0] - 2026-11-05
 
 **三件事：产物全搬进内存盘、`serve.py` 收敛攻击面、请求不再反复读盘**

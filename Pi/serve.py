@@ -33,6 +33,7 @@ import collections
 import email.utils
 import os
 import stat
+import string
 import sys
 import threading
 import time
@@ -73,6 +74,9 @@ BEACON_JS = os.environ.get("CF_BEACON_JS", "https://static.cloudflareinsights.co
 # token 由 Pi 上 /home/user/site/analytics.env 提供（不进仓库）。空 = 不注入，
 # 于是「先发版、后给 token」两段解耦：没配 token 时服务行为与改动前逐字节一致。
 CF_BEACON_TOKEN = os.environ.get("CF_BEACON_TOKEN", "").strip()
+# 显式 ASCII 白名单：str.isalnum() 会把全角字母、阿拉伯数字等 Unicode 字符也算
+# 「字母数字」，而 token 要被拼进 HTML 属性，这里不给自己留模糊地带。
+_TOKEN_CHARS = frozenset(string.ascii_letters + string.digits + "-_")
 
 
 def beacon_tag(token):
@@ -82,11 +86,16 @@ def beacon_tag(token):
     宁可不统计，也不能让一个配置写错把整页 HTML 弄坏。
     """
     token = (token or "").strip()
-    if not token or not all(ch.isalnum() or ch in "-_" for ch in token):
+    js = BEACON_JS
+    # BEACON_JS 也要当外部输入看：它同样被拼进 HTML 属性。配置写错宁可不统计。
+    if not js.startswith("https://") or any(
+            ch in js for ch in ('"', "'", "<", ">", "\\", " ", "\r", "\n", "\t")):
+        return b""
+    if not token or not all(ch in _TOKEN_CHARS for ch in token):
         return b""
     return ('<script type="module" src="%s" '
             'data-cf-beacon=\'{"token": "%s"}\'></script>\n'
-            % (BEACON_JS, token)).encode("utf-8")
+            % (js, token)).encode("utf-8")
 
 
 def inject_beacon(body, ext, token):
@@ -122,25 +131,45 @@ class _Runtime:
         self.cache = collections.OrderedDict()
         self.global_hits = collections.deque()
         self.ip_hits = {}
+        self.sweeps = 0
         self.err = {"codes": {}, "since": 0.0}
 
     def allow(self, ip):
-        """滑动窗口限流；超限返回 False，由调用方回 429。"""
+        """滑动窗口限流；超限返回 False，由调用方回 429。
+
+        两条与内存有关的硬约束：
+          * 全局额度先判、判满就直接返回 —— 被拒的请求**不**为伪造 IP 建条目。
+            原来的写法是 setdefault 在前，攻击者用一万个不同的 CF-Connecting-IP
+            就能把字典撑到一万项（哪怕这些请求全被 429 拒绝）。
+          * 每 256 次放行扫一遍过期条目。原来只删「空 deque」，而 deque 只在
+            该 IP 再次请求时才清空，一次性灌进来的条目永远不会变空 —— 清理形同虚设。
+        """
         now = time.monotonic()
+        cutoff = now - RATE_WINDOW
         with self.lock:
             g = self.global_hits
-            while g and g[0] <= now - RATE_WINDOW:
+            while g and g[0] <= cutoff:
                 g.popleft()
-            q = self.ip_hits.setdefault(ip, collections.deque())
-            while q and q[0] <= now - RATE_WINDOW:
+            if len(g) >= RATE_GLOBAL:
+                return False
+            q = self.ip_hits.get(ip)
+            if q is None:
+                q = collections.deque()
+                self.ip_hits[ip] = q
+            while q and q[0] <= cutoff:
                 q.popleft()
-            if len(g) >= RATE_GLOBAL or len(q) >= RATE_PER_IP:
+            if len(q) >= RATE_PER_IP:
                 return False
             g.append(now)
             q.append(now)
-            if len(self.ip_hits) > 4096:          # 伪造海量 IP 时别让字典胀死
-                for k in [k for k, v in self.ip_hits.items() if not v]:
-                    del self.ip_hits[k]
+            self.sweeps += 1
+            if self.sweeps >= 256:
+                self.sweeps = 0
+                for k, dq in list(self.ip_hits.items()):
+                    while dq and dq[0] <= cutoff:
+                        dq.popleft()
+                    if not dq:
+                        del self.ip_hits[k]
             return True
 
     def body(self, path, key, ext, token):
@@ -168,11 +197,11 @@ class _Runtime:
                 total -= len(dropped[1])
         return out
 
-    def denied_summary(self, code):
-        """4xx 每分钟最多回一条汇总；其余返回 None（不写 journal）。
+    def log_summary(self, code):
+        """所有状态码按分钟汇总成一条；窗口内返回 None（一行都不写）。
 
-        扫描器打一万个不存在的路径时，逐条访问日志会让 journald 疯狂写 SD 卡，
-        正好和「少写盘」唱反调。正常 200 仍逐条记，排障线索不丢。
+        只聚合 4xx 是不够的：攻击者用**正常 GET** 一样能指挥 journald 写 SD 卡。
+        统一按分钟汇总后每分钟最多一行，代价是丢掉逐条访问明细（IP 与路径）。
         """
         now = time.monotonic()
         with self.lock:
@@ -182,7 +211,7 @@ class _Runtime:
                 return None
             codes, e["codes"] = e["codes"], {}
             e["since"] = now
-        return "最近 %.0fs 拒绝 %d 次：%s" % (
+        return "最近 %.0fs 响应 %d 次：%s" % (
             RATE_WINDOW, sum(codes.values()),
             ", ".join("%s×%d" % kv for kv in sorted(codes.items())))
 
@@ -245,14 +274,18 @@ class _StaticHandler(BaseHTTPRequestHandler):
 
     def _precheck(self):
         """请求进来先过四关：Host、URL 长度/控制字符、限流。返回 False 已自行回响应。"""
-        if not self._host_ok(self.headers.get("Host")):
+        hosts = self.headers.get_all("Host") or []
+        # 重复 Host 要全查：只取第一个值时，伪造头能绕过白名单（实测返回 200）。
+        if hosts and not all(self._host_ok(h) for h in hosts):
             self.send_error(400, "Bad Host")
             return False
+        # 不带 Host 的 HTTP/1.0 由基类兼容处理；HTTP/1.1 缺 Host 基类自己会回 400，
+        # 这里不重复判一次（重复检查写不出能把它弄红的反例）。
         raw = self.path
         if len(raw) > MAX_PATH:
             self.send_error(414, "URI Too Long")
             return False
-        if any(ord(c) < 0x20 for c in raw):
+        if any(ord(c) < 0x20 or ord(c) == 0x7f for c in raw):
             # 含 NUL 的路径会让 realpath 抛 ValueError，未兜住就是整条连接 500
             self.send_error(400, "Bad Request")
             return False
@@ -377,6 +410,10 @@ class _StaticHandler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         self.send_header("X-Frame-Options", "SAMEORIGIN")
         self.send_header("Permissions-Policy", "geolocation=(), camera=(), microphone=()")
+        # 只放不破坏页面内联 style/script 的指令。严格 CSP 要先外置脚本，
+        # 贸然加 default-src 会把首页 canvas 动画与 CF 统计一起弄坏。
+        self.send_header("Content-Security-Policy",
+                         "frame-ancestors 'self'; object-src 'none'; base-uri 'self'")
         super().end_headers()
 
     def do_GET(self):
@@ -387,6 +424,29 @@ class _StaticHandler(BaseHTTPRequestHandler):
         """HEAD：只回头和 Content-Length，客户端据此判断要不要真下载。"""
         self._send(True)
 
+    def _reject_method(self):
+        """非 GET/HEAD 一律 405，且必须先过同一道预检。
+
+        基类对未定义的 do_* 直接回 501，那条路径不经 _precheck()：Host 白名单、
+        URL 校验、限流全被绕过（实测「伪造 Host 的 POST」照样 501）。让任意
+        方法都落到这道闸，顺带不再把请求方法名原样回显到状态行与响应体。
+        """
+        if not self._precheck():
+            return
+        self.send_response(405, "Method Not Allowed")
+        self.send_header("Allow", "GET, HEAD")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def __getattr__(self, name):
+        """基类用 hasattr(self, "do_" + command) 找方法：兜住任意自定义方法。
+
+        只显式列 POST/PUT/... 会漏掉 BREW 之类，那些又掉回不受限流的 501。
+        """
+        if name.startswith("do_"):
+            return self._reject_method
+        raise AttributeError(name)
+
     def log_error(self, fmt, *args):
         """send_error 先调本方法、再调 send_response，此时 _code 还是旧值。
 
@@ -396,13 +456,10 @@ class _StaticHandler(BaseHTTPRequestHandler):
         return
 
     def log_message(self, fmt, *args):
-        """200/304 逐条记；4xx 按分钟汇总一条，别让扫描把 journal 写爆。"""
-        if self._code >= 400:
-            line = self.runtime.denied_summary(self._code)
-            if line:
-                sys.stderr.write("%s\n" % line)
-            return
-        sys.stderr.write("%s - %s\n" % (self.client_address[0], fmt % args))
+        """所有状态码按分钟汇总一条：正常 GET 也能指挥 journal 写盘。"""
+        line = self.runtime.log_summary(self._code)
+        if line:
+            sys.stderr.write("%s\n" % line)
 
 
 class _Server(ThreadingHTTPServer):

@@ -31,14 +31,30 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStartPre=/usr/bin/install -d -m 700 /dev/shm/rss-hub /dev/shm/rss-hub/kindle
 ExecStartPre=-/bin/cp -f /home/user/rss-hub/docs/index.html /home/user/rss-hub/docs/screen.html /dev/shm/rss-hub/
 # 纵深防御：服务即使被利用，也不能提权、改 /home、碰内核参数或申请可执行内存。
-# 不用 ProtectSystem=strict —— 它会把 /dev/shm 一并设成只读，和上面的 cp 冲突。
+# 不用 ProtectSystem=strict —— 它会把 /dev/shm 一并设成只读，和上面的 cp 冲突；
+# full 只锁 /usr /boot /etc，产物目录在 /dev/shm 与 /home，不受影响。
 NoNewPrivileges=yes
 PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=full
 ProtectHome=read-only
 ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
 ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
 RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
 MemoryDenyWriteExecute=yes
+# 普通用户服务不需要任何 capability；systemd 默认给的是全集。
+CapabilityBoundingSet=
+AmbientCapabilities=
+# 只需 IPv4/IPv6 监听与本地 socket；禁掉 AF_PACKET / AF_NETLINK 等提权途径。
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0077
 # Cloudflare Web Analytics 的站点 token 放这里，不进仓库：
 #   CF_BEACON_TOKEN=<控制台 Manage site 里给的 token>
 # 前面的 - 表示文件不存在也照常启动（没配 token = 不注入 beacon，服务行为不变）。
