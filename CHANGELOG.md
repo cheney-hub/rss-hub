@@ -6,6 +6,26 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.15.0] - 2026-11-05
+
+**新增：Cloudflare Web Analytics 的手动 beacon 接入（只在 moreaix.com）**
+
+Cloudflare 控制台的自动注入对 moreaix.com 不生效：这个 hostname 只走 Tunnel，
+不是账号下的 Website（zone），控制台明确要求自己装 JS Snippet。实测打开自动注入后
+等 150 秒、两种 UA、三个页面，响应里始终没有 beacon —— 而同一份 HTML 里
+Cloudflare 的邮箱混淆脚本一直在注入，说明边缘 HTML 改写本身是通的。
+
+- `Pi/serve.py`：给 HTML 响应在 `</body>` 前注入 beacon。只改 HTML、只插一次、
+  token 为空就完全不注入；注入在算 Content-Length 之前完成，GET 与 HEAD 长度一致。
+  一处覆盖 `/`、`/rss/`、`/kindle/` 三页。`docs/index.html` 与 GitHub Pages 是同一份
+  源文件，但改写只发生在 HTTP 响应里，磁盘文件和 Pages 上的页面都不受影响。
+- `Pi/services/moreaix-site.service`：加 `EnvironmentFile=-/home/user/site/analytics.env`。
+  token 放 Pi 上、不进仓库；文件不存在（`-`）时服务照常启动且不注入，于是
+  「先发版、后给 token」两件事解耦，给 token 后只需重启服务。
+- token 有字符白名单：混进引号或尖括号就拒绝注入，不让一个配置写错弄坏整页 HTML。
+- 用例 317 → 331（`test_pi_serve.py` 20 → 34）；6 条反例把每条防线逐个退回，
+  对应用例全部变红。顺手修掉测试文件里一处脏串。
+
 ## [1.14.0] - 2026-11-01
 
 **全量代码审核后的加固：修的是「不报错、只是结果悄悄变错」那一类**

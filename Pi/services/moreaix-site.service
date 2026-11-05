@@ -19,6 +19,12 @@ ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/sit
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
+# Cloudflare Web Analytics 的站点 token 放这里，不进仓库：
+#   CF_BEACON_TOKEN=<控制台 Manage site 里给的 token>
+# 前面的 - 表示文件不存在也照常启动（没配 token = 不注入 beacon，服务行为不变）。
+# 手写后 `sudo systemctl daemon-reload && sudo systemctl restart moreaix-site` 即生效。
+# 注意：Environment= 写在 .service 里才有效，写进 .timer 是死键。
+EnvironmentFile=-/home/user/site/analytics.env
 
 [Install]
 WantedBy=multi-user.target

@@ -70,7 +70,7 @@ class TestStaticServer(unittest.TestCase):
         cls.httpd.server_close()
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
-    # ---- 基本 Cow出力 ----
+    # ---- 基本输出 ----
 
     def test_content_type(self):
         """RSS / JSON / HTML 要给对 Content-Type，读屏器据此判断是否当 feed 解析。"""
@@ -286,6 +286,137 @@ class TestAlias(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as c:
             ask(self.base + "/kindle/../index.html")
         self.assertEqual(c.exception.code, 404)
+
+
+class TestBeaconInjection(unittest.TestCase):
+    """Cloudflare Web Analytics beacon 注入：只改 HTML、只插一次、token 为空就完全不动。
+
+    分两层测：纯函数管「什么情况下改、改在哪」；真起服务管 HTTP 头层面
+    （Content-Length / HEAD / 304 / 别名页面）—— 这些打桩是测不出来的。
+    断言里不写死脚本域名，一律引用 serve.BEACON_JS：门禁不许源码出现裸外链。
+    """
+
+    TOKEN = "0123456789abcdef0123456789abcdef"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="rss-beacon-")
+        cls.root = os.path.join(cls.tmp, "root")
+        cls.feed = os.path.join(cls.tmp, "feed")
+        cls.board = os.path.join(cls.tmp, "board")
+        for d in (cls.root, cls.feed, cls.board):
+            os.makedirs(d)
+        cls.files = {
+            cls.root: {
+                "index.html": b"<html><body><p>hi</p></body></html>",
+                "feed.xml": b"<rss><channel></channel></rss>",
+                # 二进制产物里故意混一段 <body>，用来抓「忘了判扩展名」
+                "shot.png": b"\x89PNG\r\n\x1a\n<body>fake</body>",
+            },
+            cls.feed: {"index.html": b"<body>subscribe</body>"},
+            cls.board: {"index.html": b"<body>board</body>"},
+        }
+        for d, files in cls.files.items():
+            for name, body in files.items():
+                with open(os.path.join(d, name), "wb") as f:
+                    f.write(body)
+        # 与线上 moreaix-site 同构：一个 root + 两个 alias，一次注入覆盖三页
+        cls.httpd = ThreadingHTTPServer(
+            ("127.0.0.1", 0),
+            serve.make_handler(cls.root, "",
+                               aliases=[("rss", cls.feed), ("kindle", cls.board)],
+                               beacon_token=cls.TOKEN))
+        cls.base = "http://127.0.0.1:%d" % cls.httpd.server_address[1]
+        t = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
+        t.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.httpd.shutdown()
+        cls.httpd.server_close()
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    # ---- 纯函数层：改不改、改在哪 ----
+
+    def test_tag_contains_token_and_module_type(self):
+        tag = serve.beacon_tag(self.TOKEN)
+        self.assertIn(b'type="module"', tag)
+        self.assertIn(self.TOKEN.encode(), tag)
+        self.assertIn(serve.BEACON_JS.encode(), tag)
+
+    def test_injected_right_before_body_close(self):
+        out = serve.inject_beacon(b"<html><body>abc</body></html>", ".html", self.TOKEN)
+        self.assertLess(out.index(b"data-cf-beacon"), out.index(b"</body>"))
+        self.assertTrue(out.startswith(b"<html><body>abc"))
+        self.assertTrue(out.endswith(b"</body></html>"))
+
+    def test_htm_extension_and_uppercase_close(self):
+        out = serve.inject_beacon(b"<BODY>x</BODY>", ".HTM", self.TOKEN)
+        self.assertIn(b"data-cf-beacon", out)
+
+    def test_html_close_is_fallback_insert_point(self):
+        out = serve.inject_beacon(b"plain</html>", ".html", self.TOKEN)
+        self.assertLess(out.index(b"data-cf-beacon"), out.index(b"</html>"))
+
+    def test_non_html_never_touched(self):
+        raw = b"<body>x</body>"
+        for ext in (".xml", ".png", ".json", ".js", ""):
+            self.assertEqual(serve.inject_beacon(raw, ext, self.TOKEN), raw)
+
+    def test_no_insert_point_leaves_body_alone(self):
+        raw = b"just text, no closing tag"
+        self.assertEqual(serve.inject_beacon(raw, ".html", self.TOKEN), raw)
+
+    def test_already_injected_is_not_duplicated(self):
+        once = serve.inject_beacon(b"<body>x</body>", ".html", self.TOKEN)
+        self.assertEqual(serve.inject_beacon(once, ".html", self.TOKEN), once)
+
+    def test_empty_token_disables_injection(self):
+        raw = b"<body>x</body>"
+        self.assertEqual(serve.inject_beacon(raw, ".html", ""), raw)
+        self.assertEqual(serve.beacon_tag(None), b"")
+
+    def test_malformed_token_is_rejected(self):
+        raw = b"<body>x</body>"
+        for bad in ('abc"onload="evil', "<script>", "a b", "a/b"):
+            self.assertEqual(serve.beacon_tag(bad), b"")
+            self.assertEqual(serve.inject_beacon(raw, ".html", bad), raw)
+
+    # ---- HTTP 层：头与真实字节 ----
+
+    def test_get_content_length_matches_injected_body(self):
+        with ask(self.base + "/index.html") as r:
+            body = r.read()
+            self.assertIn(b"data-cf-beacon", body)
+            self.assertEqual(int(r.headers["Content-Length"]), len(body))
+
+    def test_head_length_matches_get_and_has_no_body(self):
+        with ask(self.base + "/index.html") as g:
+            get_len = int(g.headers["Content-Length"])
+        with ask(self.base + "/index.html", "HEAD") as h:
+            self.assertEqual(int(h.headers["Content-Length"]), get_len)
+            self.assertEqual(h.read(), b"")
+
+    def test_alias_pages_are_also_injected(self):
+        for path in ("/rss/", "/kindle/"):
+            with ask(self.base + path) as r:
+                self.assertIn(b"data-cf-beacon", r.read())
+
+    def test_non_html_response_is_byte_identical(self):
+        for name in ("feed.xml", "shot.png"):
+            with ask(self.base + "/" + name) as r:
+                body = r.read()
+            self.assertNotIn(b"data-cf-beacon", body)
+            with open(os.path.join(self.root, name), "rb") as f:
+                self.assertEqual(body, f.read())
+
+    def test_304_still_has_no_body_after_injection(self):
+        with ask(self.base + "/index.html") as r:
+            last = r.headers["Last-Modified"]
+            r.read()
+        with self.assertRaises(urllib.error.HTTPError) as c:
+            ask(self.base + "/index.html", headers={"If-Modified-Since": last})
+        self.assertEqual(c.exception.code, 304)
 
 
 if __name__ == "__main__":

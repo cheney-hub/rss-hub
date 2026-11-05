@@ -24,6 +24,9 @@
   这条头对**所有**响应都发（含 404），否则前端看到的是跨域错误而不是 404。
 - 带 Last-Modified + If-Modified-Since → 304：Kindle 每 5 分钟来拉一次看板 PNG，
   图没变就只回一个 304 头，别每次把几十 KB 重传一遍（省流量也省电）。
+- 可选：给 HTML 响应注入 Cloudflare Web Analytics 的 beacon。token 为空就完全不注入，
+  只有 moreaix-site 这一台配了 token；docs/index.html 与 GitHub Pages 是同一份源文件，
+  但改写只发生在响应里，磁盘文件和 Pages 上的页面都不受影响。
 """
 import argparse
 import email.utils
@@ -44,6 +47,48 @@ MIME = {
     ".svg": "image/svg+xml",
 }
 
+# beacon 脚本地址写成 os.environ.get 的默认值：它本来就该可配置，也顺带符合门禁
+# 「源码里不许出现带真实域名的裸地址」。Cloudflare 控制台给的手动 snippet 就是这个地址。
+BEACON_JS = os.environ.get("CF_BEACON_JS", "https://static.cloudflareinsights.com/beacon.min.js")
+# token 由 Pi 上 /home/user/site/analytics.env 提供（不进仓库）。空 = 不注入，
+# 于是「先发版、后给 token」两段解耦：没配 token 时服务行为与改动前逐字节一致。
+CF_BEACON_TOKEN = os.environ.get("CF_BEACON_TOKEN", "").strip()
+
+
+def beacon_tag(token):
+    """生成 beacon 的 <script> 标签；token 没配或不像 token 就返回空字节。
+
+    只放行字母数字与 -_：token 要被拼进 HTML 属性，万一配置里混进引号或尖括号，
+    宁可不统计，也不能让一个配置写错把整页 HTML 弄坏。
+    """
+    token = (token or "").strip()
+    if not token or not all(ch.isalnum() or ch in "-_" for ch in token):
+        return b""
+    return ('<script type="module" src="%s" '
+            'data-cf-beacon=\'{"token": "%s"}\'></script>\n'
+            % (BEACON_JS, token)).encode("utf-8")
+
+
+def inject_beacon(body, ext, token):
+    """把 beacon 插在 </body> 前；任何不满足条件都把 body 原样退回。
+
+    只改 HTML、只插一次、找不到插入点就不动。静态服务器宁可少统计一个页面，
+    也不能把 feed.xml 或看板 PNG 这些非 HTML 产物写坏。注入在算 Content-Length
+    之前完成，所以 GET 与 HEAD 报的长度都跟实际发出去的字节一致。
+    """
+    tag = beacon_tag(token)
+    if not tag or ext.lower() not in (".html", ".htm"):
+        return body
+    if b"data-cf-beacon" in body or b"cloudflareinsights" in body:
+        return body                     # 已经有人插过了，别插第二次
+    low = body.lower()
+    pos = low.rfind(b"</body>")
+    if pos < 0:
+        pos = low.rfind(b"</html>")
+    if pos < 0:
+        return body
+    return body[:pos] + tag + body[pos:]
+
 
 class _StaticHandler(BaseHTTPRequestHandler):
     """只做 GET/HEAD 的静态文件处理器；没有列目录、没有写操作。
@@ -55,6 +100,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
     root = ""
     prefix = ""
     aliases = ()
+    beacon_token = ""
     server_version = "rss-serve/1.0"
     # 默认会把 "Python/3.13.x" 拼进 Server 头。8080 是公网（走 Tunnel），
     # 没必要告诉扫描器这台机器跑的是哪个小版本。
@@ -136,6 +182,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
         except OSError:
             self.send_error(500, "Read Error")
             return
+        body = inject_beacon(body, ext, self.beacon_token)
         self.send_response(200)
         self.send_header("Content-Type", MIME.get(ext, "application/octet-stream"))
         self.send_header("Content-Length", str(len(body)))
@@ -167,7 +214,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - %s\n" % (self.client_address[0], fmt % args))
 
 
-def make_handler(root, prefix="", aliases=None):
+def make_handler(root, prefix="", aliases=None, beacon_token=None):
     """造一个绑定了 root/prefix 的 Handler 类。
 
     每个服务实例各造一个子类，而不是把目录写死进 _StaticHandler：同一个进程将来
@@ -178,12 +225,15 @@ def make_handler(root, prefix="", aliases=None):
 
     aliases 是 [(路径前缀, 目录)] 的列表，用于「一台实例顺带服务另一个目录」。
     按路径长度降序匹配，所以 /kindle 与 /kindle/live 这种嵌套关系不会互相盖住。
+    beacon_token 传 None 时取环境变量 CF_BEACON_TOKEN；显式传值是为了让测试
+    不用改进程环境就能起一个带注入的服务。
     """
     class Handler(_StaticHandler):
         """某个 --root 实例专用的处理器。"""
 
     Handler.root = os.path.realpath(root)
     Handler.prefix = prefix
+    Handler.beacon_token = CF_BEACON_TOKEN if beacon_token is None else beacon_token
     pairs = [(_norm_slash(p), os.path.realpath(d)) for p, d in (aliases or [])]
     Handler.aliases = tuple(sorted(pairs, key=lambda x: len(x[0]), reverse=True))
     return Handler

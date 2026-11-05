@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.14.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.15.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -62,6 +62,8 @@ python3 tools/gen_minute_workflow.py 13
 | `OUT_FILE` | `./docs/feed.xml` | 完整版输出路径 |
 | `SCREEN_OUT` | 与 `OUT_FILE` 同目录的 `feed-wrap.xml` | 设备版输出路径。**GitHub 三个 workflow 都把它改指 `${{ runner.temp }}`，即本仓库不再发布设备版**；设备版只由树莓派发布在 `moreaix.com/rss/feed-wrap.xml`，Dot App 订阅那一个 |
 | `ROTATE_STATE` | 与 `OUT_FILE` 同目录的 `rotate.json` | 轮播游标状态。**GitHub 侧指到 `${{ runner.temp }}`（不发布、不提交）**；树莓派侧是 `/home/user/rss-hub/docs/rotate.json`，发布在 `moreaix.com/rss/rotate.json` |
+| `CF_BEACON_TOKEN` | 空 | Cloudflare Web Analytics 站点 token。**只有树莓派配**，写在 `/home/user/site/analytics.env`（不进仓库），空 = 不注入 beacon。值从控制台 Web Analytics → Manage site 的 JS Snippet 里复制 |
+| `CF_BEACON_JS` | 控制台 snippet 固定 | beacon 脚本地址，一般不用改。写成环境变量默认值是因为门禁不许源码里出现带真实域名的裸地址 |
 
 
 设备版还自动做了三件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、
