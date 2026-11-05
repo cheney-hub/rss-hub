@@ -52,6 +52,19 @@ MIME = {
     ".svg": "image/svg+xml",
 }
 
+
+def _content_type(target, ext):
+    """Content-Type 解析：sitemap.xml 是 XML 但不是 RSS，单独给 application/xml。
+
+    feed.xml 必须保持 application/rss+xml（阅读器据此判定是否当 feed 解析），
+    不能因为同是 .xml 就一锅煮成 application/xml；而 sitemap.xml 若错用
+    application/rss+xml，部分搜索引擎会拒收，所以用文件名精确区分。
+    """
+    if os.path.basename(target) == "sitemap.xml":
+        return "application/xml; charset=utf-8"
+    return MIME[ext]
+
+
 # ---- 对外暴露面 ------------------------------------------------------------
 # 只有这些扩展名会被发出去。站点根目录里还躺着 analytics.env（统计 token），
 # 构建任务写的 *.tmp/*.new 半成品也在被服务的目录里；「存在就发」等于把配置挂公网。
@@ -390,7 +403,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
             self.send_error(500, "Read Error")
             return
         self.send_response(200)
-        self.send_header("Content-Type", MIME[ext])
+        self.send_header("Content-Type", _content_type(target, ext))
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Last-Modified", last_mod)
         self.end_headers()

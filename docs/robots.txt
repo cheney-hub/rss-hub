@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# 唯一权威 sitemap 在 moreaix.com；GitHub Pages 这边的副本只是指向它，避免重复收录。
+Sitemap: https://moreaix.com/sitemap.xml

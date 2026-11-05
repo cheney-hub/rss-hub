@@ -25,6 +25,8 @@ on:
       - "docs/screen.html"
       - "docs/board.html"
       - "docs/subscribe.html"
+      - "docs/sitemap.xml"    # SEO：站点地图也要重新部署 Pages
+      - "docs/robots.txt"     # SEO：爬虫规则也要重新部署 Pages
       - ".github/workflows/rss.yml"
 
 concurrency:

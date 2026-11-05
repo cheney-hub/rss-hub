@@ -53,6 +53,8 @@ class TestStaticServer(unittest.TestCase):
             "feed.xml": "<rss><channel><item><title>甲</title></item></channel></rss>",
             "rotate.json": '{"window": 1}',
             "index.html": "<html><body>ok</body></html>",
+            "sitemap.xml": '<?xml version="1.0" encoding="UTF-8"?>'
+                           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
             "a.bin": "\x00\x01\x02binary",
         }
         for name, body in cls.files.items():
@@ -78,10 +80,11 @@ class TestStaticServer(unittest.TestCase):
     # ---- 基本输出 ----
 
     def test_content_type(self):
-        """RSS / JSON / HTML 要给对 Content-Type，读屏器据此判断是否当 feed 解析。"""
+        """RSS / JSON / HTML / sitemap 要给对 Content-Type，读屏器据此判断是否当 feed 解析。"""
         for name, want in (("feed.xml", "application/rss+xml; charset=utf-8"),
                            ("rotate.json", "application/json; charset=utf-8"),
-                           ("index.html", "text/html; charset=utf-8")):
+                           ("index.html", "text/html; charset=utf-8"),
+                           ("sitemap.xml", "application/xml; charset=utf-8")):
             with ask("%s/rss/%s" % (self.base, name)) as r:
                 self.assertEqual(r.status, 200, name)
                 self.assertEqual(r.headers.get("Content-Type"), want, name)
