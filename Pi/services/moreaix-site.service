@@ -1,7 +1,10 @@
 [Unit]
 Description=moreaix.com Static Homepage Server
 After=network-online.target
-Wants=network-online.target
+# 开机/重启后 /dev/shm 是空的：靠 systemd 层的 Wants 顺带拉起一轮构建填回产物。
+# 不用 ExecStartPost 里的 systemctl —— 服务以普通用户运行，polkit 会回
+# "Interactive authentication required"（部署实测），加了 sudo 又被 NoNewPrivileges 挡。
+Wants=network-online.target rss-build.service
 
 [Service]
 Type=simple
@@ -15,10 +18,27 @@ WorkingDirectory=/home/user/site
 #             兜底规则会吃掉所有路径，单开一条 /kindle 的 Public Hostname 永远轮不到。
 #   /rss    → feed 目录。原先由独立的 rss-serve（8080）承担，但那就是同一个 serve.py
 #             换了参数；合并之后 Tunnel 只需要一条根域规则，顺序/正则那些坑一起消失。
-ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix= --alias /kindle=/home/user/kindle --alias /rss=/home/user/rss-hub/docs
+# 两个别名都指向内存盘（/dev/shm 是 tmpfs）：站点只从内存里取产物，SD 卡零读零写。
+# 磁盘上的 /home/user/kindle 与 /home/user/rss-hub/docs 只留作静态页源文件与冷备。
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/serve.py --root /home/user/site --port 8081 --prefix= --alias /kindle=/dev/shm/rss-hub/kindle --alias /rss=/dev/shm/rss-hub
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
+# 不写 .pyc：服务是纯只读的，少一次落盘；沙箱里 /home 只读也写不进去。
+Environment=PYTHONDONTWRITEBYTECODE=1
+# 开机 / 重启后 /dev/shm 是空的：先把目录和两个静态页放进内存。
+# 动态产物由上面 [Unit] 的 Wants 拉起的那一轮构建填回来。
+ExecStartPre=/usr/bin/install -d -m 700 /dev/shm/rss-hub /dev/shm/rss-hub/kindle
+ExecStartPre=-/bin/cp -f /home/user/rss-hub/docs/index.html /home/user/rss-hub/docs/screen.html /dev/shm/rss-hub/
+# 纵深防御：服务即使被利用，也不能提权、改 /home、碰内核参数或申请可执行内存。
+# 不用 ProtectSystem=strict —— 它会把 /dev/shm 一并设成只读，和上面的 cp 冲突。
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+MemoryDenyWriteExecute=yes
 # Cloudflare Web Analytics 的站点 token 放这里，不进仓库：
 #   CF_BEACON_TOKEN=<控制台 Manage site 里给的 token>
 # 前面的 - 表示文件不存在也照常启动（没配 token = 不注入 beacon，服务行为不变）。

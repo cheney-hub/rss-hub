@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.15.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.16.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -137,6 +137,37 @@ git commit -m "revert feed" && git push
 3. **Settings → Pages** → Source 选 **GitHub Actions**（不是 Deploy from a branch）；
 4. **Settings → Actions → General → Workflow permissions** 选 **Read and write permissions**（否则作业无法提交 feed）；
 5. 等 1～2 分钟，访问 `https://<用户名>.github.io/<仓库名>/feed.xml`。
+
+## 内存盘产物（只影响树莓派）
+
+1.16.0 起，Pi 上**所有运行产物都在 `/dev/shm/rss-hub`（tmpfs）**，不落 SD 卡：
+
+- `feed.xml`（完整版）、`feed-wrap.xml`（设备版）、`rotate.json`（显示游标）、
+  `kindle/rss-pw2.png` 与 `kindle/index.html` 全在这一个目录下；
+- `moreaix-site` 用 `--alias /rss`、`--alias /kindle` 直接读内存盘；
+  `rss-build` / `rss-rotate` / `kindle-screen` 三个单元也都写这里；
+- SD 卡上只留 `feeds.txt`（配置副本，内容不变就不写）、站点主页 `/home/user/site`
+  和 `/home/user/rss-hub/docs/` 里那两个静态页**源文件**（`index.html` /
+  `screen.html`，部署时上传、`moreaix-site` 启动时复制进内存盘）。
+
+**重启行为**：`/dev/shm` 开机即空。各单元的 `ExecStartPre` 会重建目录，
+`moreaix-site` 的 `[Unit] Wants=rss-build.service` 顺带拉起一轮抓取，
+所以空窗大约是一次构建（30～45 秒），不是一整个 5 分钟节拍。
+代价是**轮播游标重置一次**（可能重复播一条）；Kindle 端会保留上一张图。
+
+排查时先看这几条：
+
+```bash
+ls -la /dev/shm/rss-hub /dev/shm/rss-hub/kindle   # 产物在不在
+df -hT /dev/shm                                   # 是 tmpfs 吗、还剩多少
+systemctl status kindle-screen.path                # path 有没有在盯内存盘那个 feed.xml
+```
+
+`moreaix.com` 的公网出口只认扩展名白名单（`.xml/.json/.html/.htm/.css/.js/.txt/.png/.svg`），
+隐藏文件与 `*.tmp` / `*.new` 半成品一律 404 —— 站点根目录里的 `analytics.env`
+因此不会再被取到。另外 `serve.py` 有 Host 白名单、每访客限流（超限 429）、
+连接 8 秒读超时，4xx 日志按分钟汇总一条；真被扫时先看
+`journalctl -u moreaix-site.service` 的汇总行，别被逐条日志淹没。
 
 ## 刷新节奏
 

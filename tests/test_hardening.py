@@ -9,11 +9,13 @@
 跑法：
     python -m unittest discover -s tests -v
 """
+import builtins
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -132,6 +134,61 @@ class TestHardening(unittest.TestCase):
         # （写出 0001-01-01 这种假日期，产物看着正常、实则是错的时间），
         # 在 Windows 上抛 OSError。这条断言因此必须是平台无关的。
         self.assertNotIn("pubDate", out)
+
+
+class TestWriteOnlyWhenChanged(unittest.TestCase):
+    """「内容没变就不落盘」是整条重绘链的开关，必须能红能绿。
+
+    feed.xml 每 5 分钟重写会触发 kindle-screen.path 连画两张 PNG 和网页；
+    跳过写入后 mtime 不动，SD 卡与 CPU 一起省下来。
+    """
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.path = os.path.join(tmp.name, "feed.xml")
+        self.addCleanup(setattr, B, "OUT_FILE", B.OUT_FILE)
+        self.addCleanup(setattr, B, "FEED_URL", B.FEED_URL)
+        B.OUT_FILE = self.path
+        B.FEED_URL = "http://feed-host/rss/feed.xml"
+
+    def test_only_timestamp_changed_keeps_old_inode(self):
+        a = "<rss><channel><lastBuildDate>D1</lastBuildDate><item>A</item></channel></rss>"
+        b = "<rss><channel><lastBuildDate>D2</lastBuildDate><item>A</item></channel></rss>"
+        self.assertTrue(B._write_if_changed(self.path, a))
+        ino = os.stat(self.path).st_ino
+        self.assertFalse(B._write_if_changed(self.path, b))
+        self.assertEqual(os.stat(self.path).st_ino, ino)
+        with open(self.path, "r", encoding="utf-8") as f:
+            self.assertEqual(f.read(), a)
+
+    def test_real_content_change_is_written(self):
+        B._write_if_changed(self.path, "<rss>A</rss>")
+        self.assertTrue(B._write_if_changed(self.path, "<rss>B</rss>"))
+        with open(self.path, "r", encoding="utf-8") as f:
+            self.assertEqual(f.read(), "<rss>B</rss>")
+
+    def test_missing_or_unreadable_file_still_writes(self):
+        self.assertTrue(B._write_if_changed(self.path, "<rss/>"))
+        self.assertTrue(os.path.isfile(self.path))
+
+    def test_load_prev_items_returns_raw_for_comparison(self):
+        xml = "<rss><channel><item><title>x</title></item></channel></rss>"
+        with open(self.path, "w", encoding="utf-8") as f:
+            f.write(xml)
+        prev, raw = B.load_prev_items()
+        self.assertEqual(raw, xml)
+        self.assertIsInstance(prev, dict)
+
+    def test_write_feed_reuses_prev_raw_without_rereading(self):
+        xml = "<rss><channel><lastBuildDate>D1</lastBuildDate></channel></rss>"
+        with mock.patch.object(B, "build_rss", return_value=xml), \
+                mock.patch.object(B, "_write_if_changed", return_value=False) as w, \
+                mock.patch("builtins.open", wraps=builtins.open) as m:
+            B.write_feed([], {"total": 1}, None, prev_raw=xml)
+        self.assertEqual(w.call_args.kwargs.get("old"), xml)
+        reads = [c for c in m.call_args_list if c.args and c.args[0] == B.OUT_FILE]
+        self.assertEqual(reads, [])
 
 
 if __name__ == "__main__":

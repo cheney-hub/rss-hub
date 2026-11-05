@@ -17,5 +17,6 @@ Environment=ROTATE_SECONDS=300
 Environment=ROTATE_POOL_MAX=120
 # 只读 feed.xml（池子）+ rotate.json（显示游标）→ 重写 feed-wrap.xml。
 # 不联网、不抓源，一次不到 1 秒；可以高频跑，与抓取任务互不干扰。
-# 正文与上一版一致时脚本自己跳过写入，不会每 5 分钟磨一次 SD 卡。
+# 三样东西都在内存盘上，正文与上一版一致时脚本还会跳过写入，连 tmpfs 都不碰。
+ExecStartPre=/usr/bin/install -d -m 700 /dev/shm/rss-hub /dev/shm/rss-hub/kindle
 ExecStart=/usr/bin/python3 /home/user/pi-pipeline/rotate_screen.py

@@ -15,8 +15,9 @@
 #   feeds.txt —— Pi 那份由引擎每轮构建前自己去仓库拉（见 rss-build.service 的
 #   FEEDS_SYNC_URL）。这里再传一份等于两条路同时管同一个文件，迟早打架。
 #   /home/user/site（主页产物）—— 运行产物，只在下面保证目录存在。
-#   /home/user/kindle（出图目录）—— 归 kindle/ 那套管，这里**不**去动它：
-#   本脚本连目录都不建，免得两边重复着 daemon-reload。
+#   /dev/shm/rss-hub（内存盘产物）—— 运行产物，由各单元的 ExecStartPre 自己建，
+#   这里不传也不建；只有 docs/ 里那两个静态页**源文件**要上传（见下面）。
+#   /home/user/kindle（旧出图目录）—— 已停用，归 kindle/ 那套管，不去动它。
 #
 # 为什么连引擎一起传：2026-11-01 实测过一次漂移 —— 仓库改了代码没同步到 Pi，
 # 两边各出一版 feed，屏幕上完全看不出来（这正是那次事故里唯一可怕的地方）。
@@ -95,6 +96,14 @@ echo "==> 上传主页静态文件（site/ → ${SITE_DIR}）"
 for f in "${HERE}"/site/*; do
     [ -f "$f" ] || continue
     "${SCP[@]}" "$f" "${PI_USER}@${PI_HOST}:${SITE_DIR}/$(basename "$f")"
+done
+
+echo "==> 上传 /rss 静态页（内存盘冷启动的源文件）"
+# moreaix-site 的 ExecStartPre 会把这两页 cp 进 /dev/shm/rss-hub。
+# 不传的话 Pi 上那份是旧副本，页脚版本号会一直停在过去，而部署看起来完全成功。
+# 只传 HTML：feed.xml / feed-wrap.xml / rotate.json 都是构建产物，绝不从仓库覆盖。
+for f in index.html screen.html; do
+    "${SCP[@]}" "${HERE}/../docs/${f}" "${PI_USER}@${PI_HOST}:${FEED_ROOT}/${f}"
 done
 
 echo "==> 上传并安装 systemd 单元"

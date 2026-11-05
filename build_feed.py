@@ -526,15 +526,22 @@ def parse_items(xml_text, source_url, limit=None):
 
 
 def load_prev_items():
-    """读上一份 feed.xml，取 源地址 → 条目列表 的映射，用于失败回退。"""
+    """读上一份 feed.xml，返回 (源地址 → 条目列表, 文件原文)。
+
+    原文一并返回给写盘前的「内容变没变」比较：这 400KB 本来就要读一次做回退，
+    顺手带走就不必为了比一次再读一遍。解析失败时原文仍可用于比较（它确实是
+    磁盘上那份），只是回退映射为空。
+    """
     prev = {}
-    if not os.path.exists(OUT_FILE):
-        return prev
     try:
         with open(OUT_FILE, "r", encoding="utf-8") as f:
-            root = ET.fromstring(f.read())
+            raw = f.read()
+    except OSError:
+        return prev, ""
+    try:
+        root = ET.fromstring(raw)
     except Exception:
-        return prev
+        return prev, raw
     for it in root.iter("item"):
         src_el = it.find("source")
         if src_el is None:
@@ -556,7 +563,7 @@ def load_prev_items():
             "src": url,
             "src_name": (src_el.text or "").strip(),
         })
-    return prev
+    return prev, raw
 
 
 # ---------------- 轮播的位置配置 ----------------
@@ -694,7 +701,36 @@ def _write(path, xml_text):
         raise
 
 
-def write_feed(items, stats, pick=None):
+_STAMP_RE = re.compile(r"<lastBuildDate>[^<]*</lastBuildDate>")
+
+
+def _write_if_changed(path, xml_text, old=None):
+    """内容没变就不落盘；返回是否真的写了。
+
+    Pi 上 rss-build.timer 白天每 5 分钟一轮，feed.xml 近 400KB，而
+    `kindle-screen.path` 盯的正是这个文件的 mtime：无条件重写会连锁触发
+    两张 PNG（各约 100KB）和 40KB 网页的重绘，哪怕这一轮一条新内容都没有。
+    跳过写入后整条链一起停，SD 卡擦写与 mtime 抖动同时消失。
+
+    比较前摘掉 <lastBuildDate>：build_rss 每轮都把它写成「现在」，直接比全文
+    永远不相等。摘掉后这个字段反而回到「内容最后一次变化的时间」的本意。
+
+    old 传调用方刚读过的原文（完整版就是 load_prev_items 的返回值）可省一次读；
+    不传就自己读，读不了（不存在 / 权限）也照写 —— 绝不因为一次比较失败丢产物。
+    """
+    if old is None:
+        try:
+            with open(path, "r", encoding="utf-8", newline="") as f:
+                old = f.read()
+        except OSError:
+            old = None
+    if old is not None and _STAMP_RE.sub("", old) == _STAMP_RE.sub("", xml_text):
+        return False
+    _write(path, xml_text)
+    return True
+
+
+def write_feed(items, stats, pick=None, prev_raw=""):
     """写两份：完整版 feed.xml（全部条目）+ 设备版 feed-wrap.xml（只有轮播到的那一条）。
 
     pick 为 None 有两种成因（都不是「出错」）：
@@ -703,12 +739,12 @@ def write_feed(items, stats, pick=None):
     两种情况都只刷新完整版，设备版保留上一版不动 —— 5 分钟内换两条比晚一条更糟。
     pick 非 None 时设备版只写一条：云端本来就只渲染第一条，多写的部分纯属浪费体积。
     """
-    _write(OUT_FILE, build_rss(items, FEED_URL, stats))
+    _write_if_changed(OUT_FILE, build_rss(items, FEED_URL, stats), old=prev_raw)
     if pick is None:
         return
 
     wrap_url = FEED_URL.rsplit("/", 1)[0] + "/" + os.path.basename(SCREEN_OUT)
-    _write(SCREEN_OUT, build_rss(
+    _write_if_changed(SCREEN_OUT, build_rss(
         [pick], wrap_url, stats,
         channel_title="RSS 头条 · 小屏",
         # 文案由 render 统一出，Pi 的 rotate_screen 也用同一份（见 device_description）
@@ -733,13 +769,14 @@ def _one_round(entries):
     池子只管设备端，不影响阅读器能订到多少。
     """
     t0 = time.time()
-    items, stats = run_once(entries, load_prev_items())
+    prev_items, prev_raw = load_prev_items()
+    items, stats = run_once(entries, prev_items)
     if not items:
         return None, "", stats, time.time() - t0
     pool = items[:ROTATE_POOL_MAX] if ROTATE_POOL_MAX else items
     state = load_rotate_state(ROTATE_STATE, _rotate_url(), UA)
     pick, state, note = rotate_pick(pool, state)
-    write_feed(items, stats, pick)
+    write_feed(items, stats, pick, prev_raw)
     if pick is not None:
         save_rotate_state(state, ROTATE_STATE)
     return pick, note, stats, time.time() - t0

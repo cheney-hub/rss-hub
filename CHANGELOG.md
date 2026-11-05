@@ -6,6 +6,58 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.16.0] - 2026-11-05
+
+**三件事：产物全搬进内存盘、`serve.py` 收敛攻击面、请求不再反复读盘**
+
+### 1. 产物写入全部离开 SD 卡
+
+原来白天每 5 分钟一轮会写 400KB 的 `feed.xml`，而 `kindle-screen.path` 盯的正是
+它的 mtime —— 内容没变也会连锁重画两张 PNG（约 200KB）和 40KB 网页。实测公网
+`GET /analytics.env` 还直接返回 200（49 字节配置文件），暴露面比想象中大。
+
+- **内容没变就不写**：`build_feed._write_if_changed()` 比较前摘掉
+  `<lastBuildDate>`（这个字段每轮都刷成现在，直接比全文永远不相等）。比较用的
+  原文由 `load_prev_items()` 顺手带回 —— 那 400KB 本来就要读一次做失败回退，
+  不必为了比一次再读一遍。这一处让整条重绘链一起停下。
+- **产物搬进 `/dev/shm/rss-hub`**（tmpfs，Pi 上可用 453MB，全部产物不到 1MB）：
+  `rss-build` / `rss-rotate` / `kindle-screen` / `moreaix-site` 四个单元与
+  `Pi/rotate_screen.py` 的路径一起改。SD 卡上只留 `feeds.txt` 配置副本与站点
+  静态页源文件，都是低频读、几乎不写。严格说 journald 每轮还会写几行日志
+  （几百字节），那是系统日志不是产物；把日志也关掉会丢掉排障线索，不划算。
+- 目录由各单元的 `ExecStartPre=/usr/bin/install -d -m 700` 幂等创建；两个静态页
+  在 `moreaix-site` 启动时复制进内存盘；`ExecStartPost` 异步触发一轮抓取，把
+  重启后的空窗从「最多 5 分钟」缩到「一次构建」。
+- **已知取舍**：重启后轮播游标重置一次（内存盘不持久），站点在首轮构建完成前
+  这些动态产物是 404；Kindle 端会保留上一张图。换「单进程纯内存」能免掉空窗，
+  但要合并四个服务、丢掉原子替换与进程解耦，不值。
+
+### 2. `serve.py` 收敛攻击面
+
+- **扩展名白名单 + 隐藏文件拒绝**：`analytics.env`、`*.tmp/*.new` 半成品、
+  `.git`、未知扩展名一律 404。以前是「文件存在就发，不认识的类型给
+  octet-stream」，等于把站点根目录整个挂上公网。
+- Host 白名单（挡 DNS rebinding）、URL 长度与 NUL/控制字符校验（含 NUL 的
+  路径原来会让 `realpath` 抛 ValueError，整条连接 500）、内存滑动窗口限流
+  （429 + `Retry-After`，按 `CF-Connecting-IP` 分访客 + 全局兜底）、连接读超时
+  8 秒（Slowloris）、`daemon_threads`、四个低风险安全响应头。
+- **错误日志按分钟汇总**：4xx 逐条写 journal 等于扫描器能指挥 SD 卡写盘。
+  实测发现 `send_error()` 是先 `log_error()` 再 `send_response()`，那时状态码
+  还没落到 `_code`，只在 `log_message` 里判断会让聚合被整个绕过 —— 补了
+  `log_error` 覆盖，日志输出复核后逐条 404 归零。
+
+### 3. 请求路径只做一次 stat
+
+- 响应字节按 `(dev, ino, size, mtime_ns, ctime_ns)` 缓存在内存里（含注入后的
+  HTML），命中连 `open()` 都不做；`os.replace` 换 inode 或原地改写都会让 key
+  失配并重读，不会把新内容压成旧内容。原来每个请求 `isfile` + `stat` +
+  `open/read` 三次调用，400KB 的 feed 每次都重读一遍。
+- 缓存与限流状态挂在 `make_handler` 造出的子类上（每个实例一份），不落盘、
+  测试互不污染；上限 32 项 / 2MB。304 直接由 stat 回答，连缓存都不查。
+
+行为变更两处，都写进了用例：未知扩展名从「照发 octet-stream」改成 404；
+4xx 访问日志从逐条改成按分钟一条汇总。用例 331 → 344。
+
 ## [1.15.0] - 2026-11-05
 
 **新增：Cloudflare Web Analytics 的手动 beacon 接入（只在 moreaix.com）**

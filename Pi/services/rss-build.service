@@ -18,13 +18,15 @@ Environment=FEEDS_FILE=/home/user/rss-hub/feeds.txt
 # 夜间 1 小时）就在 Pi 上生效，不用再手工 scp。拉不到/内容不像清单就沿用本地那份，
 # 构建照常跑 —— 同步失败绝不能让整份 feed 停摆。
 Environment=FEEDS_SYNC_URL=https://raw.githubusercontent.com/cheney-hub/rss-hub/main/feeds.txt
-Environment=OUT_FILE=/home/user/rss-hub/docs/feed.xml
+# 产物放内存盘：/dev/shm 是 tmpfs，白天每 5 分钟一轮的 400KB feed.xml 不写 SD 卡。
+# 目录由 ExecStartPre 幂等创建 —— 开机时 /dev/shm 是空的，哪个单元先跑谁建都行。
+Environment=OUT_FILE=/dev/shm/rss-hub/feed.xml
 Environment=FEED_URL=https://moreaix.com/rss/feed.xml
 # 抓取只负责完整版 feed.xml（池子）。设备版与显示游标交给 rss-rotate.service，
-# 所以这里把它俩指到临时目录：抓取白天每 5 分钟一轮、夜间每小时一轮，
+# 所以这里把它俩指到内存盘里另两个名字：抓取白天每 5 分钟一轮、夜间每小时一轮，
 # 不该顺手替屏幕决定「现在播哪一条」（两者节奏不同，捆一起屏幕就会僵住）。
-Environment=SCREEN_OUT=/tmp/feed-wrap-build.xml
-Environment=ROTATE_STATE=/tmp/rotate-build.json
+Environment=SCREEN_OUT=/dev/shm/rss-hub/feed-wrap-build.xml
+Environment=ROTATE_STATE=/dev/shm/rss-hub/rotate-build.json
 # 线上状态的兜底地址：本地 rotate.json 丢了就从这儿取回游标。
 # 端口跟着 moreaix-site 走 —— 8080 那台静态服务已合并进 8081，别再指回去。
 Environment=ROTATE_STATE_URL=http://127.0.0.1:8081/rss/rotate.json
@@ -44,5 +46,7 @@ Environment=FETCH_TIMEOUT=15
 TimeoutStartSec=900
 TimeoutStopSec=30
 
-# flock：上一轮还没跑完就跳过本 tick，绝不并发两轮
-ExecStart=/bin/bash -c 'exec 9>/tmp/rss-build.lock; flock -n 9 || exit 0; exec /usr/bin/python3 /home/user/rss-hub/build_feed.py'
+# flock：上一轮还没跑完就跳过本 tick，绝不并发两轮。锁文件也放内存盘，
+# 免得每 5 分钟在 SD 卡上碰一次 /tmp。
+ExecStartPre=/usr/bin/install -d -m 700 /dev/shm/rss-hub /dev/shm/rss-hub/kindle
+ExecStart=/bin/bash -c 'exec 9>/dev/shm/rss-hub/rss-build.lock; flock -n 9 || exit 0; exec /usr/bin/python3 /home/user/rss-hub/build_feed.py'

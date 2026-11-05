@@ -32,10 +32,15 @@ import xml.etree.ElementTree as ET
 # 做成旋钮就得同步进根目录 OPERATIONS.md 的参数表（那是根系统的文档，不该记 Pi 的路径）。
 # 常量放在 import 之前：下面的 sys.path.insert 要用 RSS_HUB，而这条路径只能写一处——
 # 两处字面量迟早漂移成「import 从 A 读、读写却走 B」。
-RSS_HUB = "/home/user/rss-hub"
-FEED = os.path.join(RSS_HUB, "docs", "feed.xml")            # 池子，抓取任务写
-WRAP_OUT = os.path.join(RSS_HUB, "docs", "feed-wrap.xml")   # 设备版，本脚本写
-STATE = os.path.join(RSS_HUB, "docs", "rotate.json")        # 显示游标，本脚本写
+RSS_HUB = "/home/user/rss-hub"        # 引擎代码在这，sys.path 要指它
+# 产物全部落到内存盘（/dev/shm 是 tmpfs）：白天每 5 分钟一轮的 feed.xml、
+# feed-wrap.xml、rotate.json 一次也不写 SD 卡。/dev/shm 有 453MB 可用，
+# 这几个文件加起来不到 1MB。重启后目录会被各单元的 ExecStartPre 重建，
+# 下一轮 timer 把内容填回来（最多 5 分钟空窗，轮播游标重置一次）。
+MEM_ROOT = "/dev/shm/rss-hub"
+FEED = os.path.join(MEM_ROOT, "feed.xml")          # 池子，抓取任务写
+WRAP_OUT = os.path.join(MEM_ROOT, "feed-wrap.xml") # 设备版，本脚本写
+STATE = os.path.join(MEM_ROOT, "rotate.json")      # 显示游标，本脚本写
 CHANNEL = "RSS 头条 · 小屏"
 
 # build_rss 每次都会把 lastBuildDate 改成「现在」，所以两份产物直接比全文永远不相等。

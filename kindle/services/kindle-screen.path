@@ -9,7 +9,10 @@ Description=Re-render Kindle board whenever feed.xml is rebuilt
 # 被监视的那个 inode 会被换掉，IN_MODIFY 根本不会发生 —— systemd 只会打一行
 # "possibly broken watch ... retrying" 再重新挂 watch，单元不触发，屏幕从此不再更新。
 # PathChanged 覆盖「文件被 rename 覆盖」这一情形，才和这种写入方式对得上。
-PathChanged=/home/user/rss-hub/docs/feed.xml
+#
+# 现在 feed.xml 在内存盘上，而且改成「内容没变就不写」：内容真变了才会触发重画，
+# 池子没换血时连 PNG 都不重绘，SD 卡与 CPU 一起省下来。
+PathChanged=/dev/shm/rss-hub/feed.xml
 Unit=kindle-screen.service
 
 [Install]

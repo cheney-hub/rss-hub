@@ -10,16 +10,20 @@ mock 一个子类会把它们绕过去，测了等于没测：
 
 网络上只走本地回环（127.0.0.1 + 端口 0 随机端口），不碰外网，CI 里也能跑。
 """
+import builtins
 import email.utils
 import os
 import shutil
+import socket
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
+from unittest import mock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -82,10 +86,11 @@ class TestStaticServer(unittest.TestCase):
                 self.assertEqual(r.headers.get("Content-Type"), want, name)
                 self.assertEqual(r.read().decode("utf-8"), self.files[name], name)
 
-    def test_unknown_ext_is_octet_stream(self):
-        """不认识的扩展名别猜：application/octet-stream 让它走下载而不是被执行。"""
-        with ask("%s/rss/a.bin" % self.base) as r:
-            self.assertEqual(r.headers.get("Content-Type"), "application/octet-stream")
+    def test_unknown_ext_is_not_served(self):
+        """白名单外一律 404：站点根目录里的 .env / .tmp 不能靠「猜类型」发出去。"""
+        with self.assertRaises(urllib.error.HTTPError) as cm:
+            ask("%s/rss/a.bin" % self.base)
+        self.assertEqual(cm.exception.code, 404)
 
     def test_head_has_length_but_no_body(self):
         """HEAD 只回头：Kindle 端先探一次 Content-Length 再决定要不要拉。"""
@@ -417,6 +422,196 @@ class TestBeaconInjection(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as c:
             ask(self.base + "/index.html", headers={"If-Modified-Since": last})
         self.assertEqual(c.exception.code, 304)
+
+
+class TestServeHardening(unittest.TestCase):
+    """攻击面收敛：白名单 / Host / 限流 / 畸形 URL / 安全头，都走真 HTTP。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="rss-guard-")
+        cls.root = os.path.join(cls.tmp, "root")
+        os.makedirs(cls.root)
+        cls.files = {
+            "index.html": b"<html><body>ok</body></html>",
+            "feed.xml": b"<rss/>",
+            "rotate.json": b"{}",
+            "analytics.env": b"CF_BEACON_TOKEN=secret",
+            "feed.xml.tmp": b"half written",
+            "feed.xml.new": b"half written",
+            "backup.bak": b"backup",
+            "a.bin": b"\x00\x01",
+            ".hidden": b"secret",
+        }
+        for name, body in cls.files.items():
+            with open(os.path.join(cls.root, name), "wb") as f:
+                f.write(body)
+        cls.handler = serve.make_handler(cls.root, "")
+        cls.httpd = serve._Server(("127.0.0.1", 0), cls.handler)
+        cls.port = cls.httpd.server_address[1]
+        cls.base = "http://127.0.0.1:%d" % cls.port
+        cls.pump = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
+        cls.pump.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.httpd.shutdown()
+        cls.httpd.server_close()
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def ask_code(self, path, headers=None):
+        try:
+            with ask(self.base + path, headers=headers) as r:
+                r.read()
+                return r.status, r.headers
+        except urllib.error.HTTPError as e:
+            return e.code, e.headers
+
+    def raw_code(self, target):
+        """urllib/http.client 会先拦下畸形 URL，只能拿裸 socket 发。"""
+        s = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+        try:
+            s.sendall(("GET %s HTTP/1.0\r\n\r\n" % target).encode("latin-1"))
+            head = s.recv(256).split(b"\r\n", 1)[0]
+            return int(head.split()[1])
+        finally:
+            s.close()
+
+    def test_secrets_and_half_written_artifacts_are_never_served(self):
+        """配置、临时半成品、备份、隐藏文件、白名单外扩展名一律取不到。"""
+        for p in ("/analytics.env", "/feed.xml.tmp", "/feed.xml.new", "/backup.bak",
+                  "/a.bin", "/.hidden", "/.git/config", "/index.html.env"):
+            self.assertEqual(self.ask_code(p)[0], 404, p)
+
+    def test_whitelisted_files_still_served(self):
+        for p in ("/index.html", "/feed.xml", "/rotate.json", "/"):
+            self.assertEqual(self.ask_code(p)[0], 200, p)
+
+    def test_host_outside_allowlist_is_rejected(self):
+        self.assertEqual(self.ask_code("/index.html", {"Host": "evil.example"})[0], 400)
+        self.assertEqual(self.ask_code("/index.html", {"Host": "127.0.0.1"})[0], 200)
+
+    def test_host_normalization(self):
+        ok = serve._StaticHandler._host_ok
+        for h in ("moreaix.com", "moreaix.com:443", "127.0.0.1:8081", "", "[::1]:8081"):
+            self.assertTrue(ok(h), h)
+        for h in ("evil.example", "moreaix.com.evil.example", "0.0.0.0"):
+            self.assertFalse(ok(h), h)
+
+    def test_nul_byte_and_overlong_url_are_rejected(self):
+        self.assertEqual(self.raw_code("/bad\x00path.html"), 400)
+        self.assertEqual(self.raw_code("/" + "a" * 2100 + ".html"), 414)
+
+    def test_security_headers_on_200_and_404(self):
+        for path in ("/index.html", "/nope.html"):
+            _, headers = self.ask_code(path)
+            self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff", path)
+            self.assertEqual(headers.get("X-Frame-Options"), "SAMEORIGIN", path)
+            self.assertIn("strict-origin", headers.get("Referrer-Policy", ""), path)
+            self.assertIn("geolocation=()", headers.get("Permissions-Policy", ""), path)
+            self.assertEqual(headers.get("Access-Control-Allow-Origin"), "*", path)
+
+    def test_rate_limit_returns_429_with_retry_after(self):
+        old = serve.RATE_PER_IP
+        serve.RATE_PER_IP = 3
+        rt = self.handler.runtime
+        try:
+            rt.global_hits.clear()
+            rt.ip_hits.clear()
+            codes = [self.ask_code("/index.html",
+                                   {"CF-Connecting-IP": "198.51.100.7"}) for _ in range(5)]
+            self.assertEqual([c[0] for c in codes[:3]], [200, 200, 200])
+            self.assertEqual(codes[3][0], 429)
+            self.assertTrue(codes[3][1].get("Retry-After"))
+        finally:
+            serve.RATE_PER_IP = old
+            rt.global_hits.clear()
+            rt.ip_hits.clear()
+
+    def test_limit_is_per_visitor_not_shared_loopback(self):
+        old = serve.RATE_PER_IP
+        serve.RATE_PER_IP = 2
+        rt = self.handler.runtime
+        try:
+            rt.global_hits.clear()
+            rt.ip_hits.clear()
+            for ip in ("198.51.100.7", "198.51.100.8"):
+                for _ in range(2):
+                    self.assertEqual(
+                        self.ask_code("/index.html", {"CF-Connecting-IP": ip})[0], 200)
+        finally:
+            serve.RATE_PER_IP = old
+            rt.global_hits.clear()
+            rt.ip_hits.clear()
+
+
+class TestResponseCache(unittest.TestCase):
+    """缓存命中不读盘、内容一变立刻失效 —— 这两条决定「零磁盘读」可信不可信。"""
+
+    @staticmethod
+    def key_of(path):
+        st = os.stat(path)
+        return (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+
+    def test_second_read_never_opens_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = os.path.join(tmp, "a.html")
+            with open(p, "wb") as f:
+                f.write(b"<body>x</body>")
+            key = self.key_of(p)
+            rt = serve._Runtime()
+            with mock.patch("builtins.open", wraps=builtins.open) as m:
+                first = rt.body(p, key, ".html", "")
+                second = rt.body(p, key, ".html", "")
+            self.assertEqual(first, second)
+            reads = [c for c in m.call_args_list if c.args and c.args[0] == p]
+            self.assertEqual(len(reads), 1)
+
+    def test_changed_file_forces_reread(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = os.path.join(tmp, "a.html")
+            with open(p, "wb") as f:
+                f.write(b"<body>A</body>")
+            rt = serve._Runtime()
+            self.assertIn(b"A", rt.body(p, self.key_of(p), ".html", ""))
+            time.sleep(0.01)
+            with open(p, "wb") as f:
+                f.write(b"<body>B</body>")
+            self.assertIn(b"B", rt.body(p, self.key_of(p), ".html", ""))
+
+    def test_token_change_forces_reinject(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = os.path.join(tmp, "a.html")
+            with open(p, "wb") as f:
+                f.write(b"<body>x</body>")
+            rt = serve._Runtime()
+            key = self.key_of(p)
+            self.assertNotIn(b"data-cf-beacon", rt.body(p, key, ".html", ""))
+            self.assertIn(b"data-cf-beacon", rt.body(p, key, ".html", "abc123"))
+
+    def test_cache_stays_bounded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rt = serve._Runtime()
+            for i in range(serve.CACHE_MAX_ENTRIES + 10):
+                p = os.path.join(tmp, "f%d.html" % i)
+                with open(p, "wb") as f:
+                    f.write(b"<body>x</body>")
+                rt.body(p, self.key_of(p), ".html", "")
+            self.assertLessEqual(len(rt.cache), serve.CACHE_MAX_ENTRIES)
+
+    def test_denied_log_aggregates_within_window(self):
+        rt = serve._Runtime()
+        rt.err["since"] = time.monotonic() - 3600
+        first = rt.denied_summary(404)
+        self.assertIn("404", first)
+        self.assertIsNone(rt.denied_summary(404))
+
+    def test_log_error_is_silent_so_aggregation_is_not_bypassed(self):
+        """send_error 先 log_error 再 send_response；这里逐条写就绕过了汇总。"""
+        handler = serve._StaticHandler.__new__(serve._StaticHandler)
+        with mock.patch("sys.stderr") as err:
+            handler.log_error("code %d, message %s", 404, "Not Found")
+        err.write.assert_not_called()
 
 
 if __name__ == "__main__":

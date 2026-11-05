@@ -29,9 +29,13 @@
   但改写只发生在响应里，磁盘文件和 Pages 上的页面都不受影响。
 """
 import argparse
+import collections
 import email.utils
 import os
+import stat
 import sys
+import threading
+import time
 from datetime import timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -46,6 +50,22 @@ MIME = {
     ".png": "image/png",
     ".svg": "image/svg+xml",
 }
+
+# ---- 对外暴露面 ------------------------------------------------------------
+# 只有这些扩展名会被发出去。站点根目录里还躺着 analytics.env（统计 token），
+# 构建任务写的 *.tmp/*.new 半成品也在被服务的目录里；「存在就发」等于把配置挂公网。
+ALLOWED_EXT = frozenset(MIME)
+MAX_PATH = 2048
+# Tunnel 转发时 Host 就是对外 hostname；挡掉其它 Host 可防 DNS rebinding 与
+# 用伪造 Host 探测内网。localhost/回环留给本机健康检查与测试。
+ALLOWED_HOSTS = frozenset(("moreaix.com", "www.moreaix.com",
+                           "localhost", "127.0.0.1", "::1"))
+SOCKET_TIMEOUT = 8                # Slowloris：慢慢发头的连接 8 秒就断
+RATE_WINDOW = 60.0
+RATE_PER_IP = 600                 # 每访客每分钟；正常订阅/看板远不到这个量级
+RATE_GLOBAL = 2400                # 全局兜底：伪造不同 CF-Connecting-IP 也挡得住
+CACHE_MAX_ENTRIES = 32
+CACHE_MAX_BYTES = 2 * 1024 * 1024
 
 # beacon 脚本地址写成 os.environ.get 的默认值：它本来就该可配置，也顺带符合门禁
 # 「源码里不许出现带真实域名的裸地址」。Cloudflare 控制台给的手动 snippet 就是这个地址。
@@ -90,6 +110,83 @@ def inject_beacon(body, ext, token):
     return body[:pos] + tag + body[pos:]
 
 
+class _Runtime:
+    """一个服务实例的内存态：响应缓存 + 限流 + 被拒请求汇总，全都不落盘。
+
+    挂在 make_handler 造出的子类上而不是模块全局：同一进程起多个实例时互不串，
+    测试也能各起一份干净的状态。
+    """
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.cache = collections.OrderedDict()
+        self.global_hits = collections.deque()
+        self.ip_hits = {}
+        self.err = {"codes": {}, "since": 0.0}
+
+    def allow(self, ip):
+        """滑动窗口限流；超限返回 False，由调用方回 429。"""
+        now = time.monotonic()
+        with self.lock:
+            g = self.global_hits
+            while g and g[0] <= now - RATE_WINDOW:
+                g.popleft()
+            q = self.ip_hits.setdefault(ip, collections.deque())
+            while q and q[0] <= now - RATE_WINDOW:
+                q.popleft()
+            if len(g) >= RATE_GLOBAL or len(q) >= RATE_PER_IP:
+                return False
+            g.append(now)
+            q.append(now)
+            if len(self.ip_hits) > 4096:          # 伪造海量 IP 时别让字典胀死
+                for k in [k for k, v in self.ip_hits.items() if not v]:
+                    del self.ip_hits[k]
+            return True
+
+    def body(self, path, key, ext, token):
+        """命中缓存就直接给内存里的响应字节，一次 open 都不做。
+
+        key 是 stat 五元组：文件被 os.replace 换 inode、或被原地改写（ctime 必变）
+        都会让 key 失配并重读，所以缓存不会把新内容压成旧内容。缓存的是**注入后**
+        的字节，连 beacon 拼接也一起省了。
+        """
+        ck = (key, ext, token)
+        with self.lock:
+            hit = self.cache.get(path)
+            if hit and hit[0] == ck:
+                self.cache.move_to_end(path)
+                return hit[1]
+        with open(path, "rb") as fh:
+            raw = fh.read()
+        out = inject_beacon(raw, ext, token)
+        with self.lock:
+            self.cache[path] = (ck, out)
+            self.cache.move_to_end(path)
+            total = sum(len(v[1]) for v in self.cache.values())
+            while len(self.cache) > CACHE_MAX_ENTRIES or total > CACHE_MAX_BYTES:
+                _, dropped = self.cache.popitem(last=False)
+                total -= len(dropped[1])
+        return out
+
+    def denied_summary(self, code):
+        """4xx 每分钟最多回一条汇总；其余返回 None（不写 journal）。
+
+        扫描器打一万个不存在的路径时，逐条访问日志会让 journald 疯狂写 SD 卡，
+        正好和「少写盘」唱反调。正常 200 仍逐条记，排障线索不丢。
+        """
+        now = time.monotonic()
+        with self.lock:
+            e = self.err
+            e["codes"][code] = e["codes"].get(code, 0) + 1
+            if now - e["since"] < RATE_WINDOW:
+                return None
+            codes, e["codes"] = e["codes"], {}
+            e["since"] = now
+        return "最近 %.0fs 拒绝 %d 次：%s" % (
+            RATE_WINDOW, sum(codes.values()),
+            ", ".join("%s×%d" % kv for kv in sorted(codes.items())))
+
+
 class _StaticHandler(BaseHTTPRequestHandler):
     """只做 GET/HEAD 的静态文件处理器；没有列目录、没有写操作。
 
@@ -101,10 +198,71 @@ class _StaticHandler(BaseHTTPRequestHandler):
     prefix = ""
     aliases = ()
     beacon_token = ""
+    runtime = None
+    _code = 0
     server_version = "rss-serve/1.0"
     # 默认会把 "Python/3.13.x" 拼进 Server 头。8080 是公网（走 Tunnel），
     # 没必要告诉扫描器这台机器跑的是哪个小版本。
     sys_version = ""
+
+    def setup(self):
+        """给每条连接设读超时：慢速发头（Slowloris）不能一直占着一个线程。"""
+        super().setup()
+        self.connection.settimeout(SOCKET_TIMEOUT)
+
+    def handle(self):
+        """超时的连接安静关掉，不把栈回溯刷进 journal。"""
+        try:
+            super().handle()
+        except (TimeoutError, OSError):
+            pass
+
+    def send_response(self, code, message=None):
+        """记下状态码：log_message 据此决定逐条记还是按分钟汇总。"""
+        self._code = code
+        super().send_response(code, message)
+
+    def _client_ip(self):
+        """取访客 IP：流量全从本机 Tunnel 来，client_address 恒是 127.0.0.1。
+
+        Cloudflare 会覆盖（不是透传）CF-Connecting-IP 为真实访客地址；能被本机
+        直连伪造的只有 8081 这个回环口，而那已经需要本机权限了。
+        """
+        ip = (self.headers.get("CF-Connecting-IP") or "").strip().split(",")[0].strip()
+        return ip[:64] or self.client_address[0]
+
+    @staticmethod
+    def _host_ok(value):
+        """Host 白名单；HTTP/1.0 不带 Host 时放行（老式客户端，也构不成 rebinding）。"""
+        host = (value or "").strip().lower()
+        if not host:
+            return True
+        if host.startswith("["):                # [::1]:8081
+            host = host[1:].split("]", 1)[0]
+        else:
+            host = host.split(":", 1)[0]
+        return host in ALLOWED_HOSTS
+
+    def _precheck(self):
+        """请求进来先过四关：Host、URL 长度/控制字符、限流。返回 False 已自行回响应。"""
+        if not self._host_ok(self.headers.get("Host")):
+            self.send_error(400, "Bad Host")
+            return False
+        raw = self.path
+        if len(raw) > MAX_PATH:
+            self.send_error(414, "URI Too Long")
+            return False
+        if any(ord(c) < 0x20 for c in raw):
+            # 含 NUL 的路径会让 realpath 抛 ValueError，未兜住就是整条连接 500
+            self.send_error(400, "Bad Request")
+            return False
+        if not self.runtime.allow(self._client_ip()):
+            self.send_response(429, "Too Many Requests")
+            self.send_header("Retry-After", str(int(RATE_WINDOW)))
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return False
+        return True
 
     def _target(self):
         """把请求路径映射到磁盘路径；越界返回 None。
@@ -132,6 +290,12 @@ class _StaticHandler(BaseHTTPRequestHandler):
         target = os.path.realpath(os.path.join(root, rel))
         if target != root and not target.startswith(root + os.sep):
             return None
+        # 白名单 + 隐藏文件：analytics.env、*.tmp/*.new 半成品、.git 一律取不到。
+        # 放在 realpath 之后，越界判定仍是第一道，符号链接测试不受影响。
+        if os.path.splitext(target)[1].lower() not in ALLOWED_EXT:
+            return None
+        if any(seg.startswith(".") for seg in rel.split("/")):
+            return None
         return target
 
     def _ims_since(self):
@@ -157,15 +321,25 @@ class _StaticHandler(BaseHTTPRequestHandler):
         return int(dt.timestamp())
 
     def _send(self, head_only):
-        """取文件 → 能 304 就 304，否则 200 + 全文（head_only 时只回头）。"""
+        """过闸 → 一次 stat → 能 304 就 304，否则从内存缓存取全文（head_only 只回头）。
+
+        以前每个请求 isfile + stat + open/read 三次系统调用，feed.xml 近 400KB 每次
+        都从盘上读一遍；现在只 stat 一次，命中缓存连 open 都没有。304 直接由 stat
+        回答，连缓存都不用查。
+        """
+        if not self._precheck():
+            return
         target = self._target()
-        if target is None or not os.path.isfile(target):
+        if target is None:
             self.send_error(404, "Not Found")
             return
         try:
             st = os.stat(target)
         except OSError:
-            self.send_error(500, "Stat Error")
+            self.send_error(404, "Not Found")   # 与「不存在」同码，不泄露文件状态
+            return
+        if not stat.S_ISREG(st.st_mode):        # 目录、设备、FIFO 一律不给
+            self.send_error(404, "Not Found")
             return
         ext = os.path.splitext(target)[1].lower()
         last_mod = self.date_time_string(st.st_mtime)
@@ -176,15 +350,14 @@ class _StaticHandler(BaseHTTPRequestHandler):
             self.send_header("Last-Modified", last_mod)
             self.end_headers()
             return
+        key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
         try:
-            with open(target, "rb") as fh:
-                body = fh.read()
+            body = self.runtime.body(target, key, ext, self.beacon_token)
         except OSError:
             self.send_error(500, "Read Error")
             return
-        body = inject_beacon(body, ext, self.beacon_token)
         self.send_response(200)
-        self.send_header("Content-Type", MIME.get(ext, "application/octet-stream"))
+        self.send_header("Content-Type", MIME[ext])
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Last-Modified", last_mod)
         self.end_headers()
@@ -199,6 +372,11 @@ class _StaticHandler(BaseHTTPRequestHandler):
         """
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "no-cache, must-revalidate")
+        # 低风险安全头：不改页面内容，也不挡现有的内联脚本与跨域读 feed。
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header("Permissions-Policy", "geolocation=(), camera=(), microphone=()")
         super().end_headers()
 
     def do_GET(self):
@@ -209,9 +387,28 @@ class _StaticHandler(BaseHTTPRequestHandler):
         """HEAD：只回头和 Content-Length，客户端据此判断要不要真下载。"""
         self._send(True)
 
+    def log_error(self, fmt, *args):
+        """send_error 先调本方法、再调 send_response，此时 _code 还是旧值。
+
+        若在这里逐条写，4xx 就绕过了下面的汇总（正是开着日志实测抓到的）。
+        交给 send_response 触发的那次 log_request 统一记一次即可。
+        """
+        return
+
     def log_message(self, fmt, *args):
-        """访问日志：一行一条打到 stderr（systemd 收进 journal）。"""
+        """200/304 逐条记；4xx 按分钟汇总一条，别让扫描把 journal 写爆。"""
+        if self._code >= 400:
+            line = self.runtime.denied_summary(self._code)
+            if line:
+                sys.stderr.write("%s\n" % line)
+            return
         sys.stderr.write("%s - %s\n" % (self.client_address[0], fmt % args))
+
+
+class _Server(ThreadingHTTPServer):
+    """线程随主进程走、半开连接的 backlog 有上限（超时由 Handler.setup 兜）。"""
+    daemon_threads = True
+    request_queue_size = 64
 
 
 def make_handler(root, prefix="", aliases=None, beacon_token=None):
@@ -234,6 +431,7 @@ def make_handler(root, prefix="", aliases=None, beacon_token=None):
     Handler.root = os.path.realpath(root)
     Handler.prefix = prefix
     Handler.beacon_token = CF_BEACON_TOKEN if beacon_token is None else beacon_token
+    Handler.runtime = _Runtime()       # 每个实例一份缓存/限流状态，测试互不污染
     pairs = [(_norm_slash(p), os.path.realpath(d)) for p, d in (aliases or [])]
     Handler.aliases = tuple(sorted(pairs, key=lambda x: len(x[0]), reverse=True))
     return Handler
@@ -273,7 +471,7 @@ def main():
         # 这里静默建一个空目录只会让 404 更难查。
         sys.exit("根目录不存在: %s" % args.root)
 
-    httpd = ThreadingHTTPServer(
+    httpd = _Server(
         (args.bind, args.port),
         make_handler(args.root, args.prefix.strip("/"),
                      [parse_alias(a) for a in args.alias])

@@ -12,7 +12,8 @@
 # 不上传什么：
 #   board.sh 与 extension/ —— 那是**跑在 Kindle 设备上**的客户端，压根不到树莓派，
 #   它们的分发走 build-extension-zip.sh / build-mrpackage.sh。
-#   /home/user/kindle（出图目录）—— 运行产物，本脚本只保证目录存在。
+#   /dev/shm/rss-hub/kindle（出图目录）—— 内存盘运行产物，本脚本只保证目录存在；
+#   feed.xml 也读内存盘那份，改路径时 kindle-screen.service 与 .path 要一起改。
 #
 # 幂等：重复跑只是把同样内容再传一遍。已启用的单元用 try-restart ——
 # `enable --now` 对已经 active 的单元不会重启，传了新脚本却还在跑旧进程（踩过）。
@@ -36,8 +37,10 @@ set -euo pipefail
 PI_USER="${PI_USER:-user}"
 PI_HOST="${PI_HOST:-100.88.176.80}"
 REMOTE_DIR="/home/${PI_USER}/pi-pipeline"
-FEED="/home/${PI_USER}/rss-hub/docs/feed.xml"
-KINDLE_DIR="/home/${PI_USER}/kindle"
+# 产物与 feed 都在内存盘（/dev/shm 是 tmpfs）：出图目录和自检查的 feed 路径
+# 必须跟 kindle-screen.service / .path 里写的一致，否则部署完看到的是旧路径的 404。
+FEED="/dev/shm/rss-hub/feed.xml"
+KINDLE_DIR="/dev/shm/rss-hub/kindle"
 
 SSH_OPTS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
 # **目标地址写在数组里**（和 Pi/deploy.sh 一个写法），后面每条命令就不必再抄一遍。
@@ -63,7 +66,7 @@ INSTALL_UNITS="kindle-screen.service kindle-screen.path"
 ENABLE_UNITS="kindle-screen.path"
 
 echo "==> 目标 ${PI_USER}@${PI_HOST}"
-"${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' '${KINDLE_DIR}' && echo paths-ok"
+"${SSH[@]}" "python3 -V && mkdir -p '${REMOTE_DIR}' && /usr/bin/install -d -m 700 '${KINDLE_DIR}' && echo paths-ok"
 
 echo "==> 上传渲染器"
 # 两个都得传：kindle_screen.py 出 PNG、kindle_page.py 出网页看板，它们是同一个
