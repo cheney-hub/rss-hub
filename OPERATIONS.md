@@ -182,6 +182,52 @@ HTTP 头仍按文档用它取客户端 IP；公网响应有 `CF-RAY`、`/cdn-cgi
 都回源，是最容易被拿来放大流量的目标。至少应开启 HSTS、WAF 托管规则、
 Bot Fight，并对 `/rss/feed.xml*`、`/kindle/*.png` 配每 IP 60 次/分钟的限速。
 
+## 日志存储（只影响树莓派，整机配置）
+
+2026-11-06 起，Pi 的 `systemd-journald` 改成 **volatile**：日志只进内存，
+不再写 SD 卡。全机只有它在持续写日志（rsyslog / syslog-ng 都没装），
+所以这一处改完，日志类写入就归零了。
+
+配置文件在 Pi `/etc/systemd/journald.conf.d/10-volatile.conf`，**不进仓库**
+（整机配置，重跑 `Pi/deploy.sh` 不会覆盖也不会重建）：
+
+```
+[Journal]
+Storage=volatile
+RuntimeMaxUse=96M
+RuntimeKeepFree=64M
+RuntimeMaxFileSize=8M
+MaxRetentionSec=7d
+ForwardToSyslog=no
+```
+
+日志落在 `/run/log/journal/`（tmpfs，空闲约 181M），`journalctl` 的查法不变。
+`MaxRetentionSec=7d` 是**上限**：96M 容量先到就按容量淘汰最旧的，两者都不会
+撑爆 `/run`。要改周期就改 `MaxRetentionSec`，改完
+`sudo systemctl restart systemd-journald`；用 `journalctl --disk-usage` 看占用。
+`ForwardToSyslog=no` 是防止以后装了 rsyslog 又把文本日志写回磁盘。
+
+首次切换要先清掉旧的持久归档，否则 `journalctl` 仍会读到 SD 卡上的文件：
+
+```bash
+sudo journalctl --rotate
+sudo journalctl --vacuum-time=1s
+sudo rm -f /var/log/journal/*/*.journal
+```
+
+**代价（必须知道）**：`/run` 是 tmpfs，重启或断电后日志全部清空 ——
+「保留 7 天」实际是「单次开机期间最多 7 天」。要跨重启留日志只能落盘，
+与零写盘目标冲突，别指望它当长期审计。回退只需删掉这个 drop-in 并重启
+journald，就回到默认的 `Storage=auto`（`/var/log/journal` 目录还在，会自动
+重新持久化）。
+
+SD 卡仍有极低频的非 journald 写入：`btmp` / `wtmp`（登录记录，按用户要求保留
+`btmp.1` 审计文件）、apt/dpkg 安装日志、`fake-hwclock`，以及 ext4 自身的
+`jbd2` 元数据提交。实测切换后 60 秒窗口：journald 块写 0 KB、
+`/var/log` 零文件变动，整机块层写入从之前约 21 KB/s 降到 2.53 KB/s
+（30 秒短窗口约 6.7 KB/s，波动来自 `jbd2` 周期性提交；进程归因只有
+`jbd2` 与 `tailscaled`，没有日志类进程）。
+
 ## 刷新节奏
 
 **现在有两套各自独立的节拍，别再混着看**：
