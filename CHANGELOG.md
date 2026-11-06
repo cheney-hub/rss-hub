@@ -6,6 +6,33 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.20.0] - 2026-11-06
+
+**AI 每日重点页正式上线：Cloudflare Workers AI 免费档（无需绑卡）**
+
+之前这一页一直卡在「后端不可用」：Gemini 被 Google 应用层地区封锁（HTTP 400），
+DeepSeek key 零余额（402）。这次换成 **Cloudflare Workers AI 免费档** —— 10,000 Neurons/天、
+无需绑卡、OpenAI 兼容端点，实测每天三次、每次从 120 条里挑 25 条带理由，只消耗约 1,800
+Neurons（不到免费额度的两成）。Token 只写在树莓派的 `/home/user/site/llm.env`（600，
+不进仓库、不回显），脚本缺 key / 超时 / 限流 / 脏数据一律保留上一期或写占位页，退出码 0，
+绝不连累 rss-build / moreaix-site。
+
+**修了两个会让这页静默走兜底的真问题**：
+
+- **默认模型已下线**：`@cf/meta/llama-3.1-8b-instruct` 已于 2026-05-30 下线（Cloudflare 返回
+  410 Gone），换用同免费档、更快的 `@cf/meta/llama-3.1-8b-instruct-fp8-fast`。
+- **json_object 强制对象、模型自选键名会解析失败**：OpenAI 兼容端点走 `response_format=json_object`
+  时顶层必须是对象，模型实际会自选键名（如 `{"fruits": [...]}`），而旧的 `_extract_json_array`
+  只认 `items` 键 —— 解析失败 → 走兜底 → 永远出不来真页。现在 OpenAI 后端提示词显式要求
+  `{"items": [...]}` 对象、Gemini 后端保持裸数组（匹配各自的格式约束），`_extract_json_array`
+  也兜底取「第一个值为列表的键」，两种后端都稳出真页。`max_tokens` 提到 4096 防截断。
+
+实测（2026-11-06 12:57 Pi 真机）：Cloudflare 返回 25 条带理由，写出
+`/dev/shm/rss-hub/ai-digest.html`，经 `--alias /rss` 在 `moreaix.com/rss/ai-digest.html` 返回
+200，页面自 canonical、零站内交叉链接、只外链原文。sitemap 同步加入该页。
+
+用例 400 → 403（`tests/test_ai_digest.py` 18 → 21：补模型自选键名兜底、提示词按后端区分对象/数组）。
+
 ## [1.19.0] - 2026-11-06
 
 **每日日志快照改为落盘持久化：每天只写一次盘，重启后仍可查**

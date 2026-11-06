@@ -65,11 +65,12 @@ done
 # 要装的单元清单（加新单元记得同步这里，否则会漏装）
 UNITS="rss-build.service rss-build.timer \
 rss-rotate.service rss-rotate.timer moreaix-site.service \
-journal-snapshot.service journal-snapshot.timer"
+journal-snapshot.service journal-snapshot.timer \
+ai-digest.service ai-digest.timer"
 # 只有带 [Install] 的才能 enable：三个 oneshot（rss-build / rss-rotate /
-# journal-snapshot）都由 timer 触发，enable 它们会直接报「no installation config」。
+# journal-snapshot / ai-digest）都由 timer 触发，enable 它们会直接报「no installation config」。
 ENABLE_UNITS="rss-build.timer rss-rotate.timer \
-moreaix-site.service journal-snapshot.timer"
+moreaix-site.service journal-snapshot.timer ai-digest.timer"
 
 echo "==> 目标 ${PI_USER}@${PI_HOST}"
 # ${SITE_DIR} 一定要一起建：moreaix-site.service 的 WorkingDirectory 与
@@ -87,7 +88,7 @@ done
 echo "==> 上传脚本"
 # 三个 Pi 侧脚本：静态服务、轮播、每日日志快照。Kindle 那两个渲染器虽然也落在
 # 同一个远程目录，但归 kindle/deploy.sh 传 —— 两套 pipeline 各管一半，不会互相覆盖。
-for f in serve.py rotate_screen.py journal_snapshot.py; do
+for f in serve.py rotate_screen.py journal_snapshot.py ai_digest.py; do
     "${SCP[@]}" "${HERE}/${f}" "${PI_USER}@${PI_HOST}:${REMOTE_DIR}/${f}"
 done
 

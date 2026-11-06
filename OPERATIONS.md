@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.19.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.20.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -66,6 +66,9 @@ python3 tools/gen_minute_workflow.py 13
 | `CF_BEACON_JS` | 控制台 snippet 固定 | beacon 脚本地址，一般不用改。写成环境变量默认值是因为门禁不许源码里出现带真实域名的裸地址 |
 | `JOURNAL_SNAPSHOT_DIR` | `/var/log/journal-archive` | **只有树莓派**：每日日志快照目录，在 SD 卡上，每天只写一次 gz（体积随日志量波动，2026-11-06 实测 20,449 B，不是固定 10KB）；目录由单元的 `LogsDirectory=` 建好（`LogsDirectoryMode=0700` + `UMask=0077`，文件仅属主可读）。改这里要同步 `journal-snapshot.service` 的同名 `Environment=`（门禁核对两者相等且都不是 tmpfs 路径） |
 | `JOURNAL_SNAPSHOT_KEEP_DAYS` | `3` | 快照只留最近 3 份（今天 + 前 2 天），第 4 份起每天 00:05 自动清除 |
+| `GEMINI_API_KEY` | 空（由 `gemini.env` 注入） | **只有树莓派**：Gemini API key，写在 `/home/user/site/gemini.env`（不进仓库，`EnvironmentFile=-` 注入）；仅在 `LLM_PROVIDER=gemini` 时使用，空 = 走兜底保留上一期重点页 |
+| `LLM_API_KEY` | 空（由 `llm.env` 注入） | **只有树莓派**：OpenAI 兼容平台 key；默认后端是 **Cloudflare Workers AI 免费档**（10,000 Neurons/天、无需绑卡，你已有 CF 账号，只需一个带 Workers AI 权限的 API Token），写在 `/home/user/site/llm.env`（不进仓库，`EnvironmentFile=-` 注入）；空 = 走兜底保留上一期重点页。配合 `LLM_PROVIDER`（默认 `openai`，可设 `gemini` 切回 Gemini 后端，需境外网络/代理）、`LLM_MODEL`（默认 `@cf/meta/llama-3.1-8b-instruct-fp8-fast`（基础版 llama-3.1-8b 已于 2026-05-30 下线），免费档；可换更大免费的 70B/30B）、`LLM_BASE_URL`（默认 Cloudflare Workers AI 端点，含你的 account id，见 `ai_digest.py` 常量）使用 |
+| `LLM_BASE_URL` | `https://api.cloudflare.com/client/v4/accounts/<你的id>/ai/v1` | OpenAI 兼容接口基址（默认 Cloudflare Workers AI 免费档）。一般不用改；若换 DeepSeek/通义等，设此变量 + `LLM_MODEL` 即可，无需改代码 |
 
 
 设备版还自动做了三件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、

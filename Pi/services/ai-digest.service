@@ -1,0 +1,37 @@
+[Unit]
+Description=AI Daily News Digest (ranks top items from the 120-item pool via Cloudflare Workers AI free tier)
+# 只依赖网络：要出网调 LLM。不依赖 rss-build（读的是它已写好的 /dev/shm 池子，
+# 但本单元独立触发，不挂在它的 Wants 链上 —— 保持「Pi 独立生成」的边界）。
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=user
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=Asia/Shanghai
+# 读最新池子、写独立页，两个路径都显式写死，与 ai_digest.py 的默认值一致。
+Environment=FEED_XML=/dev/shm/rss-hub/feed.xml
+Environment=OUT_HTML=/dev/shm/rss-hub/ai-digest.html
+Environment=AI_TOP_N=25
+Environment=LLM_PROVIDER=openai
+Environment=LLM_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8-fast
+Environment=GEMINI_MODEL=gemini-1.5-flash
+# API key 单独放，不进仓库；前面的 - 表示文件不存在也能启动（缺 key 时脚本走兜底，
+# 页面保留上一期）。手写后 `sudo systemctl daemon-reload && sudo systemctl restart
+# ai-digest.service` 即可生效。Gemini key 在 gemini.env（LLM_PROVIDER=gemini 时用），
+# Cloudflare Workers AI 的 API Token 在 llm.env（默认 openai provider 时用）。
+EnvironmentFile=-/home/user/site/gemini.env
+EnvironmentFile=-/home/user/site/llm.env
+# 保证输出目录存在（moreaix-site 也会建，这里幂等兜底；/dev/shm 重启即空）。
+ExecStartPre=/usr/bin/install -d -m 700 /dev/shm/rss-hub
+ExecStart=/usr/bin/python3 /home/user/pi-pipeline/ai_digest.py
+# 与 journal-snapshot 同级的最小沙箱：需要出网调 LLM，所以放行进 AF_INET/AF_INET6。
+NoNewPrivileges=yes
+ProtectHome=read-only
+ProtectSystem=full
+PrivateTmp=yes
+UMask=0077
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
