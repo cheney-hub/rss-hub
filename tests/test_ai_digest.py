@@ -280,6 +280,16 @@ class TestRenderHtml(unittest.TestCase):
         self.assertIn("从当日 3 条 RSS 候选中筛选", html)
         self.assertNotIn("从当日 1 条 RSS 候选中筛选", html)
 
+    def test_render_html_truncates_essence_to_10_chars(self):
+        items = AD.load_items(_write_feed(_tmp()))
+        # 模型偶发给超 10 字，渲染端必须硬截断到 10 字（与「宁丢不配错」一致）
+        results = AD.parse_response([{"idx": 1, "reason": "甲事件引发市场剧烈波动值得关注"}], items)
+        html = AD.render_html(results, "gemini-1.5-flash", pool_size=len(items))
+        # 前 10 字：甲事件引发市场剧烈波
+        self.assertIn("<p class=\"reason\">甲事件引发市场剧烈波</p>", html)
+        # 截断后「关注」二字不应再出现在页面任何位置（标题为甲/乙/丙，不含「关注」）
+        self.assertNotIn("关注", html)
+
 
 class TestPoolSignature(unittest.TestCase):
     def _items(self):
