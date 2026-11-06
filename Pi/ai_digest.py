@@ -19,7 +19,7 @@
 需要的环境变量（都带默认值，缺了也不崩）：
   FEED_XML     池子路径，默认 /dev/shm/rss-hub/feed.xml
   OUT_HTML     输出页路径，默认 /dev/shm/rss-hub/ai-digest.html
-  AI_TOP_N     挑多少条，默认 25
+  AI_TOP_N     挑多少条，默认 20（一页刚好快速看完）
   LLM_PROVIDER 后端：openai（默认，Cloudflare Workers AI 免费档，10,000 Neurons/天、
                无需绑卡；你已有 CF 账号，只需一个带 Workers AI 权限的 API Token）或
                gemini（需境外网络 / 代理）
@@ -41,7 +41,9 @@ import xml.etree.ElementTree as ET
 
 DEFAULT_FEED = "/dev/shm/rss-hub/feed.xml"
 DEFAULT_OUT = "/dev/shm/rss-hub/ai-digest.html"
-DEFAULT_TOP_N = 25
+# AI_TOP_N 的代码默认值直接写字面量 "20"（而不是 str(常量)）：门禁靠
+# os.environ.get("名字", "字面量") 这个形状把参数收进参数表与 OPERATIONS.md 核对，
+# 包一层常量它就静默退出契约，文档写错了也不会报红。
 DEFAULT_MODEL = "gemini-1.5-flash"
 PAGE_TITLE = "Dot Quote / 0 · AI 每日重点"
 # 两个带真实域名的地址：把 "https://" 与域名拆开写，避免门禁把裸外链判成硬编码
@@ -66,23 +68,33 @@ SYSTEM = (
     "请挑选出最值得普通读者关注的若干条，按重要性从高到低排序。"
     "挑选标准：优先影响面广的国际、两岸、民生、政策、科技、财经；"
     "剔除广告、征集、纯娱乐八卦、重复转载与低信息量短讯。"
-    "为每条用一句话（不超过 40 字）说明为何值得关注。"
+    "为每条用一句话（不超过 40 字）说明为何值得关注：必须是解释性理由，"
+    "不能照抄或复述该条标题，更不能写另一条新闻的标题或内容。"
 )
 
 # 两套提示词尾，分别对应两个后端的格式约束：
 #  * openai 后端走 response_format=json_object —— 顶层必须是对象，所以让模型把数组
 #    放进 {"items": [...]}；_extract_json_array 会优先拆 items，也兜底兼容模型自选的其它键名。
 #  * gemini 后端用 responseSchema=ARRAY —— 顶层必须是数组，所以直接要裸数组。
+# 让模型回显“它选中的那条标题”（title），而不是只报编号 idx：小模型对着上百条编号
+# 挑 20 条时，idx 与 reason 常常张冠李戴 —— 2026-11-06 线上实拍就是 reason 干脆抄了
+# 下一条的标题，页面变成“标题 A 配小字 B”。title 和 reason 放进同一个 JSON 对象，
+# 配对由模型自己锁死，parse_response 再以标题对标题映射，不信任编号。
 _PROMPT_TAIL_OBJECT = (
     "请挑选最重要的 {n} 条，按重要性从高到低，仅返回 JSON 对象，"
     "对象只有一个键 \"items\"，其值为数组，每个元素格式为 "
-    "{{\"idx\": 编号, \"reason\": \"一句话理由（不超过 40 字）\"}}。"
-    "不要改动 idx 对应的原文，不要输出该对象以外的任何内容。"
+    "{{\"title\": \"逐字照抄你选中的那条新闻的完整标题\", "
+    "\"reason\": \"一句话说明这条新闻（就是 title 那条）为何值得关注（不超过 40 字）\"}}。"
+    "title 必须与候选列表原文完全一致；reason 只能谈 title 那条新闻本身，"
+    "严禁照抄任何标题、严禁谈论其它新闻。不要输出该对象以外的任何内容。"
 )
 _PROMPT_TAIL_ARRAY = (
     "请挑选最重要的 {n} 条，按重要性从高到低，仅返回 JSON 数组，"
-    "每个元素格式为 {{\"idx\": 编号, \"reason\": \"一句话理由（不超过 40 字）\"}}。"
-    "不要改动 idx 对应的原文，不要输出数组以外的任何内容。"
+    "每个元素格式为 "
+    "{{\"title\": \"逐字照抄你选中的那条新闻的完整标题\", "
+    "\"reason\": \"一句话说明这条新闻（就是 title 那条）为何值得关注（不超过 40 字）\"}}。"
+    "title 必须与候选列表原文完全一致；reason 只能谈 title 那条新闻本身，"
+    "严禁照抄任何标题、严禁谈论其它新闻。不要输出数组以外的任何内容。"
 )
 
 
@@ -158,10 +170,10 @@ def call_gemini(api_key, model, system, prompt):
                 "items": {
                     "type": "OBJECT",
                     "properties": {
-                        "idx": {"type": "INTEGER"},
+                        "title": {"type": "STRING"},
                         "reason": {"type": "STRING"},
                     },
-                    "required": ["idx", "reason"],
+                    "required": ["title", "reason"],
                 },
             },
             "maxOutputTokens": 2048,
@@ -244,28 +256,77 @@ def call_openai(base_url, api_key, model, system, prompt):
 
 
 def parse_response(gem_list, items):
-    """把模型返回的 [{idx, reason}] 映射回原文，按返回顺序排好。"""
+    """把模型返回的 [{title, reason}] 映射回池子里的原文，按返回顺序排好。
+
+    匹配优先级：模型回显的 title（去空白后先精确、再包含式容错）→ 旧式 idx
+    编号兜底（模型没回显 title 时仍可用）。回显标题来自 2026-11-06 的失配修复：
+    只信 idx 时，8B 免费模型把 reason 和编号配错位，页面就成了「标题 A 配
+    小字 B」；以标题对标题后配错位无处藏身。
+
+    两道防线：
+      * reason 若去空白后恰好等于池子里**任何一条**的标题（含本条）——模型在
+        抄标题冒充理由——判无效置空，渲染时显示占位文案，页面永远不会出现
+        「标题下面那行小字是另一条新闻的标题」；
+      * 同一条标题被模型返回两次时只保留第一次，配 rank 连续。
+    """
     out = []
     if not isinstance(gem_list, list):
         return out
+    pool = {}
+    for it in items:
+        pool.setdefault(_norm_title(it["title"]), it)
+    seen = set()
     for obj in gem_list:
         if not isinstance(obj, dict):
             continue
-        try:
-            idx = int(obj.get("idx"))
-        except (TypeError, ValueError):
+        chosen = None
+        echo = _norm_title(obj.get("title"))
+        if echo:
+            if echo in pool:
+                chosen = pool[echo]
+            elif len(echo) >= 8:
+                # 包含式容错：模型回显时多了空格/截了尾巴，任一方包含另一方就算同一条
+                for norm, it in pool.items():
+                    if echo in norm or norm in echo:
+                        chosen = it
+                        break
+        if chosen is None:
+            try:
+                idx = int(obj.get("idx"))
+            except (TypeError, ValueError):
+                continue
+            if 1 <= idx <= len(items):
+                chosen = items[idx - 1]
+        if chosen is None:
             continue
-        if 1 <= idx <= len(items):
-            it = items[idx - 1]
-            out.append({
-                "rank": len(out) + 1,
-                "title": it["title"],
-                "link": it["link"],
-                "source": it["source"],
-                "date": it["date_raw"],
-                "reason": (obj.get("reason") or "").strip(),
-            })
+        key = _norm_title(chosen["title"])
+        if key in seen:
+            continue
+        seen.add(key)
+        reason = _as_text(obj.get("reason"))
+        if _norm_title(reason) in pool:
+            reason = ""
+        out.append({
+            "rank": len(out) + 1,
+            "title": chosen["title"],
+            "link": chosen["link"],
+            "source": chosen["source"],
+            "date": chosen["date_raw"],
+            "reason": reason,
+        })
     return out
+
+
+def _norm_title(t):
+    """比较标题用：去掉全部空白；非字符串（模型偶发返回数字/对象）一律视作空。"""
+    if not isinstance(t, str):
+        return ""
+    return re.sub(r"\s+", "", t)
+
+
+def _as_text(v):
+    """reason 取值用：只接受字符串，其余类型（数字/嵌套对象）视作缺失而不是崩。"""
+    return v.strip() if isinstance(v, str) else ""
 
 
 def _safe_href(link):
@@ -367,9 +428,9 @@ def main():
     feed = os.environ.get("FEED_XML", DEFAULT_FEED)
     out = os.environ.get("OUT_HTML", DEFAULT_OUT)
     try:
-        top_n = int(os.environ.get("AI_TOP_N", str(DEFAULT_TOP_N)))
+        top_n = int(os.environ.get("AI_TOP_N", "20"))
     except ValueError:
-        top_n = DEFAULT_TOP_N
+        top_n = 20
 
     provider = os.environ.get("LLM_PROVIDER", DEFAULT_PROVIDER)
     items = load_items(feed)

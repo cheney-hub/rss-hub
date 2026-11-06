@@ -1,6 +1,6 @@
 # 运维手册
 
-当前版本 **v1.20.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
+当前版本 **v1.21.0**（历史见 [CHANGELOG.md](CHANGELOG.md)；线上跑的是哪一版看 `curl -s …/feed.xml | grep generator`）。
 
 ## 日常操作
 
@@ -69,6 +69,7 @@ python3 tools/gen_minute_workflow.py 13
 | `GEMINI_API_KEY` | 空（由 `gemini.env` 注入） | **只有树莓派**：Gemini API key，写在 `/home/user/site/gemini.env`（不进仓库，`EnvironmentFile=-` 注入）；仅在 `LLM_PROVIDER=gemini` 时使用，空 = 走兜底保留上一期重点页 |
 | `LLM_API_KEY` | 空（由 `llm.env` 注入） | **只有树莓派**：OpenAI 兼容平台 key；默认后端是 **Cloudflare Workers AI 免费档**（10,000 Neurons/天、无需绑卡，你已有 CF 账号，只需一个带 Workers AI 权限的 API Token），写在 `/home/user/site/llm.env`（不进仓库，`EnvironmentFile=-` 注入）；空 = 走兜底保留上一期重点页。配合 `LLM_PROVIDER`（默认 `openai`，可设 `gemini` 切回 Gemini 后端，需境外网络/代理）、`LLM_MODEL`（默认 `@cf/meta/llama-3.1-8b-instruct-fp8-fast`（基础版 llama-3.1-8b 已于 2026-05-30 下线），免费档；可换更大免费的 70B/30B）、`LLM_BASE_URL`（默认 Cloudflare Workers AI 端点，含你的 account id，见 `ai_digest.py` 常量）使用 |
 | `LLM_BASE_URL` | `https://api.cloudflare.com/client/v4/accounts/<你的id>/ai/v1` | OpenAI 兼容接口基址（默认 Cloudflare Workers AI 免费档）。一般不用改；若换 DeepSeek/通义等，设此变量 + `LLM_MODEL` 即可，无需改代码 |
+| `AI_TOP_N` | `20` | **只有树莓派**：AI 重点页每期从 120 条池子里挑多少条（20 条一页刚好快速看完）。模型被要求回显选中标题并配一句话理由；理由若抄了任何一条的标题会被判无效，页面不出现「标题与那行小字各说各话」 |
 
 
 设备版还自动做了三件事，不用配：标题转纯文本（emoji / 箭头 / 零宽字符全摘掉）、

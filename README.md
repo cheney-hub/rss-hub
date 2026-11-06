@@ -1,6 +1,6 @@
 # rss-hub · RSS 聚合头条
 
-> 当前版本 **v1.20.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
+> 当前版本 **v1.21.0**（版本历史见 [CHANGELOG.md](CHANGELOG.md)）
 >
 > **专为 [Dot (Quote/0)](https://dot.mindreset.tech/docs/quote_0) 墨水屏设备开发**——
 > 一款基于 ESP32-C3 的 2.13 寸黑白墨水屏桌面设备。输出按它的真实显示链路做过专门适配：
@@ -120,7 +120,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── audit_source_dates.py   # 源时间戳体检：逐个源量它的发布时间能不能信
 │   ├── gate_contracts.py        # 跨文件契约：版本 / workflow 调参 / timer 节拍 / 用例数 ↔ 文档 / 快照目录
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 403 个用例，零依赖、不联网（数量由门禁核对，别手改）
+├── tests/                   # 410 个用例，零依赖、不联网（数量由门禁核对，别手改）
 │   ├── test_arrival.py      #   14 例：时间戳失真源的排序修正（谁算「首次见到」、记忆链不断）
 │   ├── test_audit_source_dates.py # 14 例：源时间戳体检判据（共用时钟 / 逐条改时间 / 未来时间 / 时钟偏差容忍）
 │   ├── test_core.py         #   58 例：抓取与序列化的核心行为（清洗、去重、解析、轮播稳态、workflow 参数契约）
@@ -134,7 +134,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 按行比对（换行已归一）
 │   ├── test_pi_serve.py     #   58 例：静态服务（穿越、白名单、Host、限流、响应缓存、304、CORS 与 beacon）
 │   ├── test_journal_snapshot.py # 16 例：每日日志快照（落盘位置、只留 3 份、按文件名清理、原子写、24h 窗口）
-│   ├── test_ai_digest.py   #   21 例：AI 重点页（feed 解析、提示词按后端区分对象/数组、模型映射、渲染、自 canonical、无交叉链接、Gemini/OpenAI 请求构造、JSON 抠取健壮化含模型自选键名兜底、Gemini/OpenAI 两后端兜底）
+│   ├── test_ai_digest.py   #  28 例：AI 重点页（feed 解析、提示词按后端区分对象/数组且要求回显选中标题、模型按标题回显映射（含空格漂移容错/idx 兜底/同条去重）、理由抄任何标题即判无效、渲染、自 canonical、无交叉链接、Gemini/OpenAI 请求构造、JSON 抠取健壮化含模型自选键名兜底、Gemini/OpenAI 两后端兜底）
 │   ├── test_pi_rotate_screen.py # 21 例：显示时间线（按需落盘、坏状态自愈、地址不写死）
 │   ├── test_kindle_screen.py # 31 例：Kindle 排版（折行硬上限、只画一遍列表、PNG 原子替换、时间归一到东八区）
 │   ├── test_kindle_page.py   # 16 例：网页看板（伪协议过滤、HTML 转义、空池子不砸旧页、时间归一）
@@ -379,7 +379,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：403 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
+python3 -m unittest discover -s tests -v    # 单测：410 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
@@ -427,7 +427,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.20.0` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.21.0` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

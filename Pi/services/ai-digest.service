@@ -13,7 +13,7 @@ Environment=TZ=Asia/Shanghai
 # 读最新池子、写独立页，两个路径都显式写死，与 ai_digest.py 的默认值一致。
 Environment=FEED_XML=/dev/shm/rss-hub/feed.xml
 Environment=OUT_HTML=/dev/shm/rss-hub/ai-digest.html
-Environment=AI_TOP_N=25
+Environment=AI_TOP_N=20
 Environment=LLM_PROVIDER=openai
 Environment=LLM_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8-fast
 Environment=GEMINI_MODEL=gemini-1.5-flash

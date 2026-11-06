@@ -57,21 +57,23 @@ class TestLoadItems(unittest.TestCase):
 class TestBuildPrompt(unittest.TestCase):
     def test_build_prompt_includes_items_and_count(self):
         items = AD.load_items(_write_feed(_tmp()))
-        prompt = AD.build_prompt(items, 25, "openai")
+        prompt = AD.build_prompt(items, 20, "openai")
         self.assertIn("甲事件", prompt)
         self.assertIn("来源B", prompt)
-        self.assertIn("25", prompt)
-        self.assertIn("idx", prompt)
+        self.assertIn("20", prompt)
+        # 新契约：模型必须回显它选中的标题（title），配对由 title↔reason 锁定
+        self.assertIn("title", prompt)
+        self.assertIn("reason", prompt)
 
     def test_prompt_tail_openai_asks_items_object(self):
         items = AD.load_items(_write_feed(_tmp()))
-        prompt = AD.build_prompt(items, 25, "openai")
+        prompt = AD.build_prompt(items, 20, "openai")
         self.assertIn("items", prompt)
         self.assertIn("JSON 对象", prompt)
 
     def test_prompt_tail_gemini_asks_array(self):
         items = AD.load_items(_write_feed(_tmp()))
-        prompt = AD.build_prompt(items, 25, "gemini")
+        prompt = AD.build_prompt(items, 20, "gemini")
         self.assertIn("JSON 数组", prompt)
         self.assertNotIn("items", prompt)
 
@@ -101,6 +103,60 @@ class TestParseResponse(unittest.TestCase):
     def test_parse_response_empty_on_nonlist(self):
         items = AD.load_items(_write_feed(_tmp()))
         self.assertEqual(AD.parse_response({"idx": 1}, items), [])
+
+    def test_parse_response_matches_by_echoed_title(self):
+        # 新契约：模型回显 title，没有 idx 也能对上原文
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": "乙事件", "reason": "乙重要"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["title"], "乙事件")
+        self.assertEqual(out[0]["link"], "http://b/2")
+        self.assertEqual(out[0]["reason"], "乙重要")
+
+    def test_parse_response_title_match_tolerates_whitespace(self):
+        # 模型回显多了/少了空格：去空白后仍应精确命中，而不是落到包含式容错
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": " 乙 事件 ", "reason": "乙重要"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual([r["title"] for r in out], ["乙事件"])
+
+    def test_parse_response_prefers_title_over_idx(self):
+        # 两者都在时以 title 为准 —— idx 恰恰是小模型最容易配错位的字段
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": "乙事件", "idx": 1, "reason": "为什么值得读"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(out[0]["title"], "乙事件")
+
+    def test_parse_response_neutralizes_reason_that_is_another_title(self):
+        # 2026-11-06 线上失配实拍：reason 抄了**别的**新闻的标题 —— 必须判无效，
+        # 页面绝不能出现「标题 A 配小字 B」
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": "甲事件", "reason": "乙事件"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(out[0]["reason"], "")
+
+    def test_parse_response_neutralizes_reason_that_is_own_title(self):
+        # 退一步的偷懒写法：reason 原样复述本条标题，同样不是理由
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": "甲事件", "reason": "甲事件"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(out[0]["reason"], "")
+
+    def test_parse_response_dedupes_repeated_title(self):
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": "甲事件", "reason": "甲重要"},
+               {"title": "甲事件", "reason": "又是甲"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["reason"], "甲重要")
+
+    def test_parse_response_skips_non_dict_and_unmatchable(self):
+        # 非字典元素直接跳过；回显标题对不上任何原文又没有 idx，同样跳过
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = ["garbage", {"title": "池子里没有的标题", "reason": "x"},
+               {"reason": "没有 title 也没有 idx"}]
+        self.assertEqual(AD.parse_response(gem, items), [])
 
 
 class TestRenderHtml(unittest.TestCase):
@@ -201,7 +257,7 @@ class TestCallGeminiRequest(unittest.TestCase):
             return FakeResp(payload.encode("utf-8"))
 
         items = AD.load_items(_write_feed(_tmp()))
-        prompt = AD.build_prompt(items, 25, "gemini")
+        prompt = AD.build_prompt(items, 20, "gemini")
         with mock.patch.object(AD.urllib.request, "urlopen", fake_urlopen):
             out = AD.call_gemini("KEY123", "gemini-1.5-flash", AD.SYSTEM, prompt)
         self.assertEqual(out, [{"idx": 1, "reason": "x"}])
@@ -235,7 +291,7 @@ class TestCallOpenaiRequest(unittest.TestCase):
             return FakeResp(payload.encode("utf-8"))
 
         items = AD.load_items(_write_feed(_tmp()))
-        prompt = AD.build_prompt(items, 25, "openai")
+        prompt = AD.build_prompt(items, 20, "openai")
         with mock.patch.object(AD.urllib.request, "urlopen", fake_urlopen):
             out = AD.call_openai(AD.DEFAULT_LLM_BASE_URL, "KEY456",
                                  "@cf/meta/llama-3.1-8b-instruct-fp8-fast", AD.SYSTEM, prompt)
