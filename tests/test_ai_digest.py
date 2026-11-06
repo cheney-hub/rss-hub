@@ -5,6 +5,7 @@
 """
 import io
 import os
+import subprocess
 import sys
 import unittest
 from unittest import mock
@@ -307,6 +308,56 @@ class TestPoolSignature(unittest.TestCase):
         self.assertNotEqual(sig0, AD._pool_signature(mutated))
 
 
+class TestBudgetItems(unittest.TestCase):
+    """送选按 token 预算截取前缀：存储（400）与送选（≈196 条）分离的下半场。"""
+
+    def _items(self):
+        return AD.load_items(_write_feed(_tmp()))
+
+    def test_all_kept_within_budget(self):
+        # 预算装得下全池：一条不少、顺序不变
+        items = self._items()
+        budget = AD._PROMPT_OVERHEAD_TOKENS + 3 * AD._EST_TOKENS_PER_ITEM
+        self.assertEqual(AD._budget_items(items, budget), items)
+
+    def test_over_budget_keeps_newest_prefix_in_order(self):
+        # 装不下：只留「最新在前」的前缀，顺序不变（_merge_accum 已保证 newest-first）
+        items = self._items()
+        budget = AD._PROMPT_OVERHEAD_TOKENS + 2 * AD._EST_TOKENS_PER_ITEM
+        self.assertEqual([it["title"] for it in AD._budget_items(items, budget)],
+                         ["甲事件", "乙事件"])
+
+    def test_tiny_budget_still_keeps_one(self):
+        # 预算被调得极小：宁可超预算也至少送 1 条，绝不让页面交白卷
+        items = self._items()
+        self.assertEqual(len(AD._budget_items(items, 550)), 1)
+        self.assertEqual(len(AD._budget_items(items, 0)), 1)
+
+    def test_empty_items_returns_empty(self):
+        # 空列表由上游兜底（feed 为空走占位页），这里原样返回空
+        self.assertEqual(AD._budget_items([], 20000), [])
+
+
+class TestBadEnvImport(unittest.TestCase):
+    """模块级 int(env) 防崩回归：unit 的 EnvironmentFile 配错也不能崩 import。"""
+
+    def test_bad_numeric_env_does_not_crash_import(self):
+        # subprocess 而非 reload：import 恰好只发生一次，最接近 Pi 上服务
+        # 「启动即 import」的真实路径；reload 会复用已编译模块，测不出 L98 的崩。
+        env = dict(os.environ, AI_ACCUM_CAP="abc",
+                   AI_PROMPT_TOKEN_BUDGET="20000 tokens")
+        r = subprocess.run(
+            [sys.executable, "-c",
+             "import ai_digest as m;"
+             " print(m.ACCUM_CAP, m.AI_PROMPT_TOKEN_BUDGET)"],
+            env=env, cwd=os.path.dirname(os.path.abspath(AD.__file__)),
+            capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        # 坏值分别回退各自默认值，而不是带着半初始化模块退出
+        # （坏输入故意用 "20000 tokens"≠默认值，证明回退不是原样透传）
+        self.assertEqual(r.stdout.strip(), "400 30000")
+
+
 class TestMainFallback(unittest.TestCase):
     def _run_main(self, tmp, prev_exists, call_side_effect, provider="openai"):
         feed = _write_feed(tmp)
@@ -381,6 +432,28 @@ class TestMainFallback(unittest.TestCase):
         fake.assert_not_called()  # 没有消耗任何 CF 额度
         with open(out, encoding="utf-8") as f:
             self.assertEqual(f.read(), "<html>PREV</html>")
+
+    def test_main_sends_budget_limited_prefix(self):
+        # 送选按 token 预算截取：预算 550（固定开销 500 + 1 条 150 装不下）→
+        # prompt 只含最新的 1 条候选；页面文案的候选数也写 1（AI 看到几条写几条）
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        feed = _write_feed(tmp)
+        out = os.path.join(tmp, "ai-digest.html")
+        fake = mock.MagicMock(return_value=[{"title": "甲事件", "reason": "甲"}])
+        env = {"FEED_XML": feed, "OUT_HTML": out, "AI_TOP_N": "2",
+               "LLM_PROVIDER": "openai", "LLM_API_KEY": "x",
+               "LLM_MODEL": "deepseek-chat", "AI_PROMPT_TOKEN_BUDGET": "550"}
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(AD, "call_openai", fake):
+            rc = AD.main()
+        self.assertEqual(rc, 0)
+        prompt = fake.call_args[0][4]  # call_openai(base, key, model, system, prompt)
+        self.assertIn("甲事件", prompt)
+        self.assertNotIn("乙事件", prompt)  # 预算只装得下最新 1 条
+        self.assertNotIn("丙事件", prompt)
+        with open(out, encoding="utf-8") as f:
+            self.assertIn("从当日 1 条 RSS 候选中筛选", f.read())
 
     def test_main_calls_cf_when_feed_changed(self):
         import tempfile

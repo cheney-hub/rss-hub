@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""RSS 新闻 · AI 的目光：从 Pi 本地最新 120 条池子里挑出最值得关注的若干条，单独成页。
+"""RSS 新闻 · AI 的目光：从 Pi 本地「当日滚动池」（当天见过的全部 RSS 条目，含已跌出 120 快照的）里挑出最值得关注的若干条，单独成页。
 
 设计约束（与项目约定一致）：
   * **Pi 独立生成**：本脚本只跑在树莓派上，由自己的 timer 触发，不进 GitHub Actions /
@@ -11,10 +11,19 @@
   * **兜底不阻断**：AI 调用超时 / 限流 / 返回脏数据 / 缺 key 时，一律保留上一期页面；
     若从没有过页面，则写一张「今日暂时无法生成」的占位页（同样自包含、自 canonical）。
     单元以退出码 0 结束，绝不连累 rss-build / moreaix-site。
-  * **省额度**：源 feed 指纹未变时跳过 CF 调用、直接保留现有页面（指纹随 120 条池的
-    增删/换位而变，只跳真正静止的时段，如深夜）。定时器白天每小时触发一次、夜间不跑。
+  * **省额度 + 当天滚动池**：每小时把 rss-build 的最新 120 条并入「当日滚动池」
+    （存于 /dev/shm，按本地零点重置，存储上限 AI_ACCUM_CAP=400），让 AI 从
+    「今天的新闻」而非仅最近 120 条里挑。**存储与送选分离**：滚动池只管存
+    （tmpfs 廉价，尽量保住全天条目），真正送 AI 的是「最新在前」的送选前缀，
+    条数由 token 预算决定（AI_PROMPT_TOKEN_BUDGET，默认 30000 → 约 196 条，
+    比真机验证过的 120 条略多、仍在 8B 上下文安全区，绝不顶爆）。同一稿不全局去重，
+    可因重要性变化隔几小时再入选。送选前缀指纹未变才跳 CF 调用（只跳真正
+    静止时段）。定时器白天每小时、夜间不跑。
+    单次成本核算（明细见下方常量注释）：合计 ≈165 neurons/次；白天 15 次触发
+    （指纹未变还会跳过）≤2.5k neurons/天 ≈ 25% 免费档 10,000 neurons。
 
-读取：/dev/shm/rss-hub/feed.xml（rss-build 维护的最新池子，tmpfs，不落盘）。
+读取：/dev/shm/rss-hub/feed.xml（rss-build 维护的最新 120 条池子，tmpfs，不落盘）。
+累积：/dev/shm/rss-hub/ai-accum.json（当日滚动池，tmpfs，按本地零点重置；不写 SD）。
 写出：/dev/shm/rss-hub/ai-digest.html（同目录，经 --alias /rss 暴露为
       https://moreaix.com/rss/ai-digest.html）。
 
@@ -22,6 +31,11 @@
   FEED_XML     池子路径，默认 /dev/shm/rss-hub/feed.xml
   OUT_HTML     输出页路径，默认 /dev/shm/rss-hub/ai-digest.html
   AI_TOP_N     挑多少条，默认 20（一页刚好快速看完）
+  AI_ACCUM_PATH 当日滚动池落盘路径，默认 /dev/shm/rss-hub/ai-accum.json（tmpfs，不写 SD）
+  AI_ACCUM_CAP  当日滚动池**存储**上限，默认 400（tmpfs 廉价，尽量保住全天条目；
+                送选条数由 token 预算决定，见 AI_PROMPT_TOKEN_BUDGET）
+  AI_PROMPT_TOKEN_BUDGET 送选 token 预算，默认 30000（每条候选估 150 token、
+                固定开销 500，约可送 196 条）
   LLM_PROVIDER 后端：openai（默认，Cloudflare Workers AI 免费档，10,000 Neurons/天、
                无需绑卡；你已有 CF 账号，只需一个带 Workers AI 权限的 API Token）或
                gemini（需境外网络 / 代理）
@@ -63,6 +77,38 @@ MAX_ITEMS = 120  # 池子硬上限，多取无意义
 # 的是另两招：温度压到 0.1（更确定、更少改写/重复）+ 提示词硬性「不得重复、恰好 n 条、逐字回显」，
 # 把重复和少给都压下去。成本大头是固定的 120 条候选输入，多问几条几乎不增费。
 _ASK_BUFFER = 4
+
+# 当日滚动池（memory + /dev/shm 持久化，按本地零点重置）：每小时把 rss-build 的
+# 最新 120 条并入，AI 从「今天见过的全部条目」里挑 Top N，而不是只从当前 120 快照挑。
+# 这样 9 点的大新闻被新稿顶出 120 快照后，傍晚仍能因重要性变化再次入选（用户定：全天不去重）。
+# 存储与送选分离：这里的上限只是**存储**上限（tmpfs 廉价，尽量保住全天条目），
+# 真正送 AI 的条数由 token 预算决定（见 _budget_items）——调大存储不会顶爆 8B 上下文。
+DEFAULT_ACCUM_PATH = "/dev/shm/rss-hub/ai-accum.json"
+# 模块级读环境必须防崩：unit 的 EnvironmentFile 配错（如 "400 条" 带单位/空格）
+# 若在 import 时抛 ValueError，服务启动即退非零——违背文件头「缺了也不崩」的
+# 自我声明。坏值一律回退默认值；os.environ.get("名字","字面量") 的字面形状
+# 必须留在 try 块内原样保留（门禁靠这个形状收参数表，不能改成变量传参）。
+ACCUM_CAP = 400
+try:
+    ACCUM_CAP = int(os.environ.get("AI_ACCUM_CAP", "400"))
+except ValueError:
+    pass
+
+# 送选按 token 预算截取（存储 400 / 送选 ≈196 条）：每条候选估 150 token ——
+# 标题+来源+摘要≤120 字 ≈ 170 字，按 Llama-3 分词留余量；固定开销 500 token
+# 是 system 提示 + 尾部格式约束的底价。预算 30000 → (30000-500)/150 ≈ 196 条，
+# 超出真机验证过的 120 条包线；若 CF 端上下文不够，兜底会保留上一期页面（安全失败）。
+# 单次成本核算（Cloudflare 免费档：输入 4119 neurons/1M token、输出 34868/1M）：
+# 输入 ≈196 条 ×150 ≈ 29.9k token ≈ 123 neurons；输出 ≈1.2k token ≈ 42 neurons；
+# 合计 ≈165 neurons/次；白天 15 次触发（指纹未变还会跳过）≤2.5k neurons/天 ≈ 25% 免费档。
+_EST_TOKENS_PER_ITEM = 150
+_PROMPT_OVERHEAD_TOKENS = 500
+# 同 ACCUM_CAP：坏 env 值（如 "20000 tokens"）回退默认值，绝不在 import 时崩。
+AI_PROMPT_TOKEN_BUDGET = 30000
+try:
+    AI_PROMPT_TOKEN_BUDGET = int(os.environ.get("AI_PROMPT_TOKEN_BUDGET", "30000"))
+except ValueError:
+    pass
 
 # 默认后端：Cloudflare Workers AI 免费档（10,000 Neurons/天，无需绑卡；你已有 CF 账号，
 # 只需建一个带 Workers AI 权限的 API Token，写进 llm.env 的 LLM_API_KEY）。OpenAI 兼容端点，
@@ -547,7 +593,11 @@ def _atomic_write(path, text):
 
 
 def _pool_signature(items):
-    """候选池指纹：池子（最新 120 条）有任何条目增删/换位即变，用于判断是否需要重算。"""
+    """送选前缀指纹：AI 实际看到的候选有任何条目增删/换位即变，用于判断是否需要重算。
+
+    指纹算在**送选前缀**（而非全量滚动池）上：滚动池只管存储，前缀外的旧条目
+    被挤出存储上限并不改变 AI 看到的东西，不该触发重算白烧额度。
+    """
     h = hashlib.sha256()
     for it in items:
         h.update("\u0001".join((it.get("title", ""), it.get("link", ""),
@@ -571,6 +621,80 @@ def _write_sig(path, sig):
         pass
 
 
+def _today_local():
+    """本地日期串 YYYY-MM-DD，用于滚动池的零点重置（与 timer 所在时区一致）。"""
+    return time.strftime("%Y-%m-%d", time.localtime())
+
+
+def _load_accum(path):
+    """读当日滚动池；文件缺失 / 损坏 / 日期不是今天（本地）一律视为空（零点重置）。
+
+    返回条目列表（与 load_items 同字段），缺失或跨天时返回 []，绝不抛。
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return []
+    if not isinstance(data, dict) or data.get("date") != _today_local():
+        return []
+    items = data.get("items")
+    return items if isinstance(items, list) else []
+
+
+def _save_accum(path, items):
+    """原子写当日滚动池；目录/权限不可用（如 /dev/shm 未建）静默放弃，下次重攒。"""
+    try:
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"date": _today_local(), "items": items},
+                      f, ensure_ascii=False)
+        os.replace(tmp, path)
+    except OSError:
+        pass
+
+
+def _merge_accum(accum, new_items, cap):
+    """把本小时新抓到的条目并入当日滚动池。
+
+    按归一标题去重（同一稿只留一份，不重复占候选位），feed 在前保证较新的
+    版本覆盖旧的；按出现顺序保留「最新在前」，超出 cap 丢最旧的。
+
+    注意：这里的去重是为了「候选列表里不出现重复条目」，绝不是「排除已推荐
+    过的条目」—— 用户定：全天不去重，同一稿可因重要性变化隔几小时再次入选。
+    """
+    order = []
+    d = {}
+    for it in list(new_items) + list(accum):
+        k = _norm_title(it.get("title", ""))
+        if not k:
+            continue
+        if k not in d:
+            d[k] = it
+            order.append(k)
+    return [d[k] for k in order[:cap]]
+
+
+def _budget_items(items, budget):
+    """按 token 预算从「最新在前」的候选里截取送选前缀（存储与送选分离的下半场）。
+
+    为什么只截前缀：_merge_accum 已保证最新在前，截前缀 = 保最新；预算装不下
+    全池时，多出来的旧条目对 8B 小模型只是噪音（候选越多越容易挑花眼）。
+    为什么至少保留 1 条：预算被调得再小（如 550，连固定开销都盖不住），页面也
+    必须有候选可挑 —— 否则每次都「AI 返回为空」走兜底，宁可超预算 1 条也不交白卷。
+    空列表由上游兜底（feed 为空时 main 直接走占位页），这里不处理。
+    """
+    remaining = budget - _PROMPT_OVERHEAD_TOKENS
+    kept = []
+    for it in items:
+        # 第一条不做余量检查 —— 这就是「预算再小也至少 1 条」的实现
+        if kept and remaining < _EST_TOKENS_PER_ITEM:
+            break
+        remaining -= _EST_TOKENS_PER_ITEM
+        kept.append(it)
+    return kept
+
+
 def _fallback(out_path, reason, had_key, pool_size=0):
     if os.path.exists(out_path):
         _log("兜底：保留上一期页面（%s，had_key=%s）" % (reason, had_key))
@@ -580,9 +704,30 @@ def _fallback(out_path, reason, had_key, pool_size=0):
     _log("兜底：写入占位页（%s，had_key=%s）" % (reason, had_key))
 
 
+def _invoke_llm(provider, prompt):
+    """按 provider 调对应后端，返回 (结果数组, 模型名, api_key)。
+
+    任何网络 / 协议 / 缺 key 错误都向上抛，由调用方决定兜底；api_key 原样带出，
+    供兜底日志区分「没配 key」与「配了但调用失败」。
+    """
+    if provider == "gemini":
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        model = os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
+        if not api_key:
+            raise RuntimeError("缺少 GEMINI_API_KEY")
+        return call_gemini(api_key, model, SYSTEM, prompt), model, api_key
+    api_key = os.environ.get("LLM_API_KEY", "").strip()
+    model = os.environ.get("LLM_MODEL", DEFAULT_LLM_MODEL)
+    if not api_key:
+        raise RuntimeError("缺少 LLM_API_KEY")
+    base = os.environ.get("LLM_BASE_URL", DEFAULT_LLM_BASE_URL)
+    return call_openai(base, api_key, model, SYSTEM, prompt), model, api_key
+
+
 def main():
     feed = os.environ.get("FEED_XML", DEFAULT_FEED)
     out = os.environ.get("OUT_HTML", DEFAULT_OUT)
+    accum_path = os.environ.get("AI_ACCUM_PATH", DEFAULT_ACCUM_PATH)
     try:
         top_n = int(os.environ.get("AI_TOP_N", "20"))
     except ValueError:
@@ -594,45 +739,49 @@ def main():
         _fallback(out, "feed 为空或不存在", False, 0)
         return 0
 
-    # 源 feed 指纹未变则跳过 CF 调用（省免费额度）：仅当已有产物页且指纹一致才跳；
+    # 并入当日滚动池（不去重已推荐条目；同稿可因重要性变化重复入选）。
+    # 滚动池只管**存储**（上限 400，tmpfs 廉价尽量保住全天条目）；真正送 AI 的
+    # 是按 token 预算截取的「最新在前」送选前缀，二者解耦见 _budget_items。
+    accum = _merge_accum(_load_accum(accum_path), items, ACCUM_CAP)
+    _save_accum(accum_path, accum)
+    try:
+        budget = int(os.environ.get("AI_PROMPT_TOKEN_BUDGET",
+                                    str(AI_PROMPT_TOKEN_BUDGET)))
+    except ValueError:
+        budget = AI_PROMPT_TOKEN_BUDGET
+    prompt_items = _budget_items(accum, budget)
+
+    # 送选前缀指纹未变则跳过 CF 调用（省免费额度）：仅当已有产物页且指纹一致才跳；
     # 指纹变了（哪怕只增删/换位一条）就必须重算，因为 20 条重点可能随之不同。
-    sig = _pool_signature(items)
+    sig = _pool_signature(prompt_items)
     sig_path = out + ".sig"
     if (os.path.exists(out) and os.path.getsize(out) > 0
             and sig == _read_sig(sig_path)):
         _log("源 feed 未变（指纹一致），跳过 CF 调用，保留现有页面 -> %s" % out)
         return 0
 
-    prompt = build_prompt(items, top_n + _ASK_BUFFER, provider)
+    prompt = build_prompt(prompt_items, top_n + _ASK_BUFFER, provider)
+    api_key = ""
     try:
-        if provider == "gemini":
-            api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-            model = os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
-            if not api_key:
-                raise RuntimeError("缺少 GEMINI_API_KEY")
-            raw = call_gemini(api_key, model, SYSTEM, prompt)
-        else:
-            api_key = os.environ.get("LLM_API_KEY", "").strip()
-            model = os.environ.get("LLM_MODEL", DEFAULT_LLM_MODEL)
-            if not api_key:
-                raise RuntimeError("缺少 LLM_API_KEY")
-            base = os.environ.get("LLM_BASE_URL", DEFAULT_LLM_BASE_URL)
-            raw = call_openai(base, api_key, model, SYSTEM, prompt)
+        raw, model, api_key = _invoke_llm(provider, prompt)
     except Exception as e:  # 网络/限流/协议/缺 key —— 一律兜底
-        _fallback(out, "AI 调用失败: %s" % e, bool(api_key), len(items))
+        _fallback(out, "AI 调用失败: %s" % e, bool(api_key), len(prompt_items))
         return 0
 
-    results = parse_response(raw, items)
+    # 一致性铁律：解析/页面文案全以「AI 实际看到的送选前缀」为准 —— 它看到几条，
+    # 页面「从当日 N 条 RSS 候选中筛选」就写几条，绝不拿全量滚动池充数。
+    results = parse_response(raw, prompt_items)
     if not results:
-        _fallback(out, "AI 返回为空或无法解析", bool(api_key), len(items))
+        _fallback(out, "AI 返回为空或无法解析", bool(api_key), len(prompt_items))
         return 0
     results = _keep_top(results, top_n)
 
-    _atomic_write(out, render_html(results, model, len(items)))
+    _atomic_write(out, render_html(results, model, len(prompt_items)))
     _write_sig(sig_path, sig)
     n_raw = len(raw) if isinstance(raw, list) else 0
-    _log("已生成 %d 条重点新闻 -> %s（模型 %s，请求 %d 条 / 返回 %d 条 / 对上 %d 条）"
-         % (len(results), out, model, top_n + _ASK_BUFFER, n_raw, len(results)))
+    _log("已生成 %d 条重点新闻 -> %s（模型 %s，滚动池 %d 条 / 送选 %d 条 / 请求 %d 条 / 返回 %d 条 / 对上 %d 条）"
+         % (len(results), out, model, len(accum), len(prompt_items),
+            top_n + _ASK_BUFFER, n_raw, len(results)))
     return 0
 
 
