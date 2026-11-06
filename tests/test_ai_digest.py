@@ -213,6 +213,18 @@ class TestParseResponse(unittest.TestCase):
         gem = [{"title": "完全不相干的一句话标题而已", "reason": "x"}]
         self.assertEqual(AD.parse_response(gem, items), [])
 
+    def test_keep_top_truncates_to_n_keeping_order(self):
+        # 多问几条做缓冲后，按模型返回顺序只保留前 n 条（已正确配对），多余丢弃；
+        # 这是凑满「一页 20 条」又不冒配错风险的机制
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": t, "reason": "r"} for t in
+               ["甲事件", "乙事件", "丙事件"]]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(len(out), 3)
+        self.assertEqual(len(AD._keep_top(out, 2)), 2)
+        self.assertEqual([r["title"] for r in AD._keep_top(out, 2)],
+                         ["甲事件", "乙事件"])
+
 
 class TestFmtDateSgt(unittest.TestCase):
     def test_gmt_converted_to_sgt(self):

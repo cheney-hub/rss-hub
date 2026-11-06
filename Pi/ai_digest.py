@@ -54,6 +54,8 @@ PAGE_TITLE = "RSS 新闻 · AI 的目光"
 GEMINI_ENDPOINT = "https://" + "generativelanguage.googleapis.com/v1beta/models"
 CANONICAL = "https://" + "moreaix.com/rss/ai-digest.html"
 MAX_ITEMS = 120  # 池子硬上限，多取无意义
+_ASK_BUFFER = 4  # 多问几条做缓冲：模型偶发把回显标题改写到对不上而被安全丢弃时，
+              # 仍有余量补到满 AI_TOP_N 条（用户要求一页 20 条刚好看完）
 
 # 默认后端：Cloudflare Workers AI 免费档（10,000 Neurons/天，无需绑卡；你已有 CF 账号，
 # 只需建一个带 Workers AI 权限的 API Token，写进 llm.env 的 LLM_API_KEY）。OpenAI 兼容端点，
@@ -331,6 +333,16 @@ def parse_response(gem_list, items):
     return out
 
 
+def _keep_top(results, top_n):
+    """按模型返回顺序保留前 top_n 条（已逐条正确配对），多余丢弃。
+
+    配合 _ASK_BUFFER 多问几条做缓冲：模型偶发把回显标题改写到对不上而被
+    安全丢弃时，仍有余量补到满 AI_TOP_N 条——用户要求一页 20 条刚好看完，
+    但「宁丢不配错」优先，绝不为凑数而容忍张冠李戴。
+    """
+    return results[:top_n]
+
+
 # 简繁对照表（繁→简，方向唯一、基本一对一）。**只用于比对**：模型回显标题时
 # 常把繁体字转成简体（线上实拍「銀河娛樂」→「银河娛樂」），页面本身仍逐字显示
 # 池子里的源原文，绝不因这张表改写任何输出内容。每个词固定「繁简」两字；
@@ -539,7 +551,7 @@ def main():
         _fallback(out, "feed 为空或不存在", False)
         return 0
 
-    prompt = build_prompt(items, top_n, provider)
+    prompt = build_prompt(items, top_n + _ASK_BUFFER, provider)
     try:
         if provider == "gemini":
             api_key = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -562,11 +574,12 @@ def main():
     if not results:
         _fallback(out, "AI 返回为空或无法解析", bool(api_key))
         return 0
+    results = _keep_top(results, top_n)
 
     _atomic_write(out, render_html(results, model))
     n_raw = len(raw) if isinstance(raw, list) else 0
-    _log("已生成 %d 条重点新闻 -> %s（模型 %s，返回 %d 条 / 对上 %d 条）"
-         % (len(results), out, model, n_raw, len(results)))
+    _log("已生成 %d 条重点新闻 -> %s（模型 %s，请求 %d 条 / 返回 %d 条 / 对上 %d 条）"
+         % (len(results), out, model, top_n + _ASK_BUFFER, n_raw, len(results)))
     return 0
 
 
