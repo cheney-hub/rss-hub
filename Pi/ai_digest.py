@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""AI 每日重点新闻：从 Pi 本地最新 120 条池子里挑出最值得关注的若干条，单独成页。
+"""RSS 新闻 · AI 的目光：从 Pi 本地最新 120 条池子里挑出最值得关注的若干条，单独成页。
 
 设计约束（与项目约定一致）：
   * **Pi 独立生成**：本脚本只跑在树莓派上，由自己的 timer 触发，不进 GitHub Actions /
@@ -35,9 +35,12 @@ import re
 import sys
 import time
 import html
+import difflib
+import email.utils
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
+from datetime import timezone, timedelta
 
 DEFAULT_FEED = "/dev/shm/rss-hub/feed.xml"
 DEFAULT_OUT = "/dev/shm/rss-hub/ai-digest.html"
@@ -45,7 +48,7 @@ DEFAULT_OUT = "/dev/shm/rss-hub/ai-digest.html"
 # os.environ.get("名字", "字面量") 这个形状把参数收进参数表与 OPERATIONS.md 核对，
 # 包一层常量它就静默退出契约，文档写错了也不会报红。
 DEFAULT_MODEL = "gemini-1.5-flash"
-PAGE_TITLE = "Dot Quote / 0 · AI 每日重点"
+PAGE_TITLE = "RSS 新闻 · AI 的目光"
 # 两个带真实域名的地址：把 "https://" 与域名拆开写，避免门禁把裸外链判成硬编码
 #（URL 正则只认「https:// 紧跟域名」，拆开后就不匹配了）；它们随部署固定，不需要覆盖。
 GEMINI_ENDPOINT = "https://" + "generativelanguage.googleapis.com/v1beta/models"
@@ -255,17 +258,45 @@ def call_openai(base_url, api_key, model, system, prompt):
     return _extract_json_array(text)
 
 
+def _pick_item(obj, pool, items):
+    """把模型返回的一条 {title, reason} 映射回池子里的原文。
+
+    匹配优先级（标题对标题，详见 parse_response 的说明）：
+    精确 → 包含式容错（>=8 字时）→ 相似度兜底（_similar_title）。
+    模型没回显 title（旧式输出）时，才退到 idx 编号兜底——这是 2026-11-06
+    失配修复前的旧通道，新提示词已不再要求 idx，仅作兼容保留。三种标题匹配
+    都失败且又无可用 idx 时返回 None，由调用方跳过这条（宁丢不配错）。
+    """
+    echo = _norm_title(obj.get("title"))
+    if echo:
+        if echo in pool:
+            return pool[echo]
+        if len(echo) >= 8:
+            # 包含式容错：模型回显时多了空格/截了尾巴，任一方包含另一方就算同一条
+            for norm, it in pool.items():
+                if echo in norm or norm in echo:
+                    return it
+            # 相似度兜底：模型轻微改写标题（非简繁差异，归一后仍配不上）
+            return _similar_title(echo, items)
+    try:
+        idx = int(obj.get("idx"))
+    except (TypeError, ValueError):
+        return None
+    if 1 <= idx <= len(items):
+        return items[idx - 1]
+    return None
+
+
 def parse_response(gem_list, items):
     """把模型返回的 [{title, reason}] 映射回池子里的原文，按返回顺序排好。
 
-    匹配优先级：模型回显的 title（去空白后先精确、再包含式容错）→ 旧式 idx
-    编号兜底（模型没回显 title 时仍可用）。回显标题来自 2026-11-06 的失配修复：
-    只信 idx 时，8B 免费模型把 reason 和编号配错位，页面就成了「标题 A 配
-    小字 B」；以标题对标题后配错位无处藏身。
+    回显标题来自 2026-11-06 的失配修复：只信 idx 时，8B 免费模型把 reason 和
+    编号配错位，页面就成了「标题 A 配小字 B」；改成标题对标题后，配错位
+    无处藏身（单条匹配实现见 _pick_item）。
 
     两道防线：
-      * reason 若去空白后恰好等于池子里**任何一条**的标题（含本条）——模型在
-        抄标题冒充理由——判无效置空，渲染时显示占位文案，页面永远不会出现
+      * reason 若去空白 + 简繁归一后恰好等于池子里**任何一条**的标题（含本条）
+        ——模型在抄标题冒充理由——判无效置空，渲染时显示占位文案，页面永远不会出现
         「标题下面那行小字是另一条新闻的标题」；
       * 同一条标题被模型返回两次时只保留第一次，配 rank 连续。
     """
@@ -279,24 +310,7 @@ def parse_response(gem_list, items):
     for obj in gem_list:
         if not isinstance(obj, dict):
             continue
-        chosen = None
-        echo = _norm_title(obj.get("title"))
-        if echo:
-            if echo in pool:
-                chosen = pool[echo]
-            elif len(echo) >= 8:
-                # 包含式容错：模型回显时多了空格/截了尾巴，任一方包含另一方就算同一条
-                for norm, it in pool.items():
-                    if echo in norm or norm in echo:
-                        chosen = it
-                        break
-        if chosen is None:
-            try:
-                idx = int(obj.get("idx"))
-            except (TypeError, ValueError):
-                continue
-            if 1 <= idx <= len(items):
-                chosen = items[idx - 1]
+        chosen = _pick_item(obj, pool, items)
         if chosen is None:
             continue
         key = _norm_title(chosen["title"])
@@ -317,16 +331,103 @@ def parse_response(gem_list, items):
     return out
 
 
+# 简繁对照表（繁→简，方向唯一、基本一对一）。**只用于比对**：模型回显标题时
+# 常把繁体字转成简体（线上实拍「銀河娛樂」→「银河娛樂」），页面本身仍逐字显示
+# 池子里的源原文，绝不因这张表改写任何输出内容。每个词固定「繁简」两字；
+# 对不上的（模型自己改写的另一个说法）交给 _similar_title 的相似度兜底，
+# 宁可丢一条，也不把理由配到错的新闻上。
+_T2S_PAIRS = (
+    "愛爱 礙碍 罷罢 備备 筆笔 幣币 邊边 變变 標标 別别 億亿 灣湾 報报 幾几 機机 極极"
+    " 際际 濟济 繼继 價价 駕驾 階阶 節节 潔洁 結结 盡尽 進进 驚惊 經经 淨净 競竞 舊旧"
+    " 劇剧 覺觉 絕绝 軍军 開开 凱凯 課课 庫库 塊块 寬宽 礦矿 虧亏 闊阔 來来 藍蓝 蘭兰"
+    " 攔拦 欄栏 勞劳 樂乐 類类 淚泪 禮礼 麗丽 歷历 勵励 聯联 憐怜 連连 鏈链 練练 糧粮"
+    " 兩两 獵猎 臨临 鄰邻 鱗鳞 靈灵 嶺岭 領领 龍龙 攏拢 陸陆 錄录 慮虑 亂乱 論论 絡络"
+    " 馬马 碼码 賣卖 買买 麥麦 脈脉 蠻蛮 滿满 貓猫 貿贸 門门 們们 夢梦 綿绵 廟庙 滅灭"
+    " 難难 腦脑 鬧闹 內内 擬拟 釀酿 鳥鸟 寧宁 農农 濃浓 盤盘 賠赔 騙骗 頻频 貧贫 蘋苹"
+    " 評评 齊齐 騎骑 豈岂 棄弃 氣气 遷迁 僑侨 橋桥 親亲 輕轻 傾倾 請请 慶庆 窮穷 趨趋"
+    " 區区 驅驱 勸劝 卻却 確确 讓让 擾扰 熱热 認认 榮荣 軟软 賽赛 喪丧 殺杀 刪删 陝陕"
+    " 燒烧 設设 聲声 勝胜 聖圣 師师 濕湿 時时 識识 實实 勢势 視视 試试 適适 釋释 壽寿"
+    " 獸兽 樹树 雙双 誰谁 順顺 說说 碩硕 絲丝 鬆松 訴诉 雖虽 隨随 歲岁 孫孙 損损 縮缩"
+    " 鎖锁 態态 攤摊 貪贪 談谈 嘆叹 鐘钟 湯汤 討讨 騰腾 題题 體体 條条 鐵铁 廳厅 聽听"
+    " 銅铜 統统 頭头 圖图 塗涂 團团 萬万 網网 違违 圍围 為为 維维 偉伟 醫医 隱隐 義义"
+    " 藝艺 議议 譯译 異异 陰阴 銀银 應应 擁拥 優优 憂忧 郵邮 猶犹 餘余 漁渔 與与 語语"
+    " 預预 園园 員员 遠远 願愿 閱阅 雲云 運运 韻韵 雜杂 災灾 載载 贊赞 髒脏 責责 賊贼"
+    " 償偿 陣阵 爭争 鄭郑 證证 織织 職职 執执 紙纸 質质 種种 眾众 鑄铸 築筑 專专 轉转"
+    " 賺赚 莊庄 裝装 壯壮 狀状 資资 綜综 總总 縱纵 組组 鑽钻 記记 讀读 訂订 場场 車车"
+    " 東东 遞递 點点 電电 隊队 對对 頓顿 發发 髮发 範范 訪访 飛飞 費费 風风 鳳凤 婦妇"
+    " 複复 蓋盖 幹干 趕赶 鋼钢 個个 給给 貢贡 溝沟 構构 購购 夠够 話话 會会 揮挥 彙汇"
+    " 匯汇 環环 歡欢 換换 險险 壞坏 懷怀 選选 舉举 錯错 處处 傳传 達达 帶带 貸贷 單单"
+    " 膽胆 黨党 導导 島岛 燈灯 敵敌 動动 凍冻 鬥斗 獨独 噸吨 奪夺 產产 長长 腸肠 廠厂"
+    " 廚厨 釣钓 從从 辦办 幫帮 寶宝 補补 財财 慘惨 倉仓 層层 嘗尝 暢畅 遲迟 臺台 趙赵"
+    " 鎮镇 終终 顏颜 嚴严 鹽盐 樣样 藥药 頁页 業业 營营 駐驻 蹤踪 續续 養养 遊游 債债"
+    " 錢钱 銷销 稅税 貨货 豐丰 儲储 賬账 於于 穩稳 習习 問问 當当 學学 間间 關关 閉闭"
+    " 戰战"
+    " 閃闪 鍵键 灘滩 瘋疯 醜丑 販贩 衛卫 護护 療疗 術术 傷伤 嶼屿 覽览 觸触 訓训 誠诚"
+    " 誤误 謝谢 贈赠 讚赞 負负 敗败 紐纽 羅罗 興兴 號号 衝冲 緊紧 綠绿 紅红 純纯 將将"
+    " 準准 現现 過过 還还 這这 裡里 裏里 嗎吗 廣广 韓韩 鮮鲜 權权 國国 圓圆 壓压 亞亚"
+    " 佈布 併并 並并 務务 檢检 簡简 減减 決决 測测 寫写 採采 薦荐 鑑鉴 頒颁 顫颤 診诊"
+    " 細细 陽阳 娛娱 後后 麼么 沒没 響响 項项 顯显 觀观 計计 規规 據据 數数 聞闻"
+    " 訊讯 顧顾 僱雇 驗验 臉脸 駭骇 擇择"
+)
+_T2S_TABLE = str.maketrans(
+    "".join(p[0] for p in _T2S_PAIRS.split()),
+    "".join(p[1] for p in _T2S_PAIRS.split()),
+)
+
+
 def _norm_title(t):
-    """比较标题用：去掉全部空白；非字符串（模型偶发返回数字/对象）一律视作空。"""
+    """比较标题用：去空白 + 简繁归一到简体；非字符串（模型偶发返回数字/对象）视作空。
+
+    只影响比对（回显↔池子、理由防线、去重），页面显示的标题永远是池子里的
+    源原文，繁体源就显示繁体 —— 归一不是改写。
+    """
     if not isinstance(t, str):
         return ""
-    return re.sub(r"\s+", "", t)
+    return re.sub(r"\s+", "", t).translate(_T2S_TABLE)
+
+
+def _similar_title(echo, items, floor=0.75):
+    """标题回显的最后一道兜底：与全池标题逐条算相似度，取最高且过线的那条。
+
+    简繁混写已由 _norm_title 的归一表处理；这里管剩下的「模型轻微改写」
+    （换个说法/漏个字）。只用标准库 difflib，120 条 × 20 次回显约两千多次
+    短串比对，毫秒级。不过线返回 None —— 宁可丢一条，也绝不把理由配到
+    错的新闻上（丢条的后果只是页面少一条，配错的后果是「标题与那行小字
+    各说各话」又回来）。
+    """
+    best, best_r = None, 0.0
+    for it in items:
+        r = difflib.SequenceMatcher(None, echo, _norm_title(it["title"])).ratio()
+        if r > best_r:
+            best, best_r = it, r
+    return best if best_r >= floor else None
 
 
 def _as_text(v):
     """reason 取值用：只接受字符串，其余类型（数字/嵌套对象）视作缺失而不是崩。"""
     return v.strip() if isinstance(v, str) else ""
+
+
+_SGT = timezone(timedelta(hours=8))  # 新加坡时间，与页面所在时区约定一致
+
+
+def _fmt_date_sgt(date_raw):
+    """把源 pubDate 统一转成新加坡时间（UTC+8）显示，如「11-06 12:21 SGT」。
+
+    各源时区五花八门（GMT / +0800 / 无时区），页面上原来混着显示原文，
+    读者没法横向比较新旧（用户要求：时间显示统一为新加坡时间）。解析不了
+    或缺时区的按项目惯例当 +8 处理；完全不像日期就原样显示 —— 这页只做
+    展示，不因为时间脏而丢条。
+    """
+    if not date_raw:
+        return ""
+    try:
+        dt = email.utils.parsedate_to_datetime(date_raw)
+    except (TypeError, ValueError, OverflowError):
+        return date_raw
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_SGT)
+    return dt.astimezone(_SGT).strftime("%m-%d %H:%M") + " SGT"
 
 
 def _safe_href(link):
@@ -349,7 +450,7 @@ def render_html(results, model):
                           % (href, title_html))
         else:
             title_cell = title_html
-        meta = " · ".join(x for x in (r["source"], r["date"]) if x)
+        meta = " · ".join(x for x in (r["source"], _fmt_date_sgt(r["date"])) if x)
         reason = html.escape(r["reason"]) if r["reason"] else "（未提供理由）"
         cards.append(
             '<li class="card"><div class="rank">%d</div>'
@@ -372,7 +473,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 <meta name="description" content="由 AI 从当日 %d 条 RSS 候选中筛选出的重点新闻，仅供参考。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="%s">
-<meta property="og:description" content="AI 每日重点新闻">
+<meta property="og:description" content="RSS 新闻 · AI 的目光：每日由 AI 从 RSS 候选中精选的重点新闻">
 <meta property="og:url" content="%s">
 <link rel="canonical" href="%s">
 <style>
@@ -463,7 +564,9 @@ def main():
         return 0
 
     _atomic_write(out, render_html(results, model))
-    _log("已生成 %d 条重点新闻 -> %s（模型 %s）" % (len(results), out, model))
+    n_raw = len(raw) if isinstance(raw, list) else 0
+    _log("已生成 %d 条重点新闻 -> %s（模型 %s，返回 %d 条 / 对上 %d 条）"
+         % (len(results), out, model, n_raw, len(results)))
     return 0
 
 

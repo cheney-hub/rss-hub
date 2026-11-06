@@ -158,6 +158,83 @@ class TestParseResponse(unittest.TestCase):
                {"reason": "没有 title 也没有 idx"}]
         self.assertEqual(AD.parse_response(gem, items), [])
 
+    def test_parse_response_similar_title_rescues_minor_edit(self):
+        # 简繁归一之后的剩余情况：模型轻微改写（漏个「的」）—— 精确/包含/
+        # 归一都对不上，相似度 0.9+ 兜底救回
+        feed = _FEED.replace("甲事件", "研究战后的日本对中国的影响")
+        import tempfile
+        d = tempfile.mkdtemp()
+        p = os.path.join(d, "feed.xml")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(feed)
+        items = AD.load_items(p)
+        gem = [{"title": "研究战后日本对中国的影响", "reason": "为何重要"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["title"], "研究战后的日本对中国的影响")
+        self.assertEqual(out[0]["reason"], "为何重要")
+
+    def test_t2s_table_wellformed(self):
+        # 每个词固定「繁简」两字、彼此不同、繁体键不重复（maketrans 遇重复键
+        # 会静默取后一个，写表时手滑进了重复项只会悄悄丢映射）
+        toks = AD._T2S_PAIRS.split()
+        self.assertTrue(all(len(t) == 2 for t in toks))
+        self.assertTrue(all(t[0] != t[1] for t in toks))
+        keys = [t[0] for t in toks]
+        self.assertEqual(len(keys), len(set(keys)),
+                         "繁体键有重复：%s" % [k for k in keys if keys.count(k) > 1])
+
+    def test_norm_title_normalizes_script(self):
+        # 简繁归一（只影响比对）：繁体/混写都归到简体；简体过表不变
+        self.assertEqual(AD._norm_title("銀河娛樂"), "银河娱乐")
+        self.assertEqual(AD._norm_title("研究戰後的日本對中國"),
+                         "研究战后的日本对中国")
+        self.assertEqual(AD._norm_title("已经简化"), "已经简化")
+
+    def test_parse_response_script_normalized_match(self):
+        # 线上实拍的放大版：池子里整条繁体、模型整条转成简体回显 ——
+        # 归一后精确命中，不再丢条；页面标题仍是池子原文（繁体）
+        feed = _FEED.replace("乙事件", "研究戰後的日本對中國有什麼用")
+        import tempfile
+        d = tempfile.mkdtemp()
+        p = os.path.join(d, "feed.xml")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(feed)
+        items = AD.load_items(p)
+        gem = [{"title": "研究战后的日本对中国有什么用", "reason": "为何重要"}]
+        out = AD.parse_response(gem, items)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["title"], "研究戰後的日本對中國有什麼用")
+        self.assertEqual(out[0]["reason"], "为何重要")
+
+    def test_parse_response_similar_title_drops_real_paraphrase(self):
+        # 模型自己改写的「另一个说法」相似度过不了线 → 宁可丢，也不能硬配
+        items = AD.load_items(_write_feed(_tmp()))
+        gem = [{"title": "完全不相干的一句话标题而已", "reason": "x"}]
+        self.assertEqual(AD.parse_response(gem, items), [])
+
+
+class TestFmtDateSgt(unittest.TestCase):
+    def test_gmt_converted_to_sgt(self):
+        # 用户要求：时间显示统一为新加坡时间。GMT 04:21 → 新加坡 12:21
+        self.assertEqual(AD._fmt_date_sgt("Fri, 06 Nov 2026 04:21:57 GMT"),
+                         "11-06 12:21 SGT")
+
+    def test_plus8_unchanged(self):
+        # 已经是 +0800 的源：数值不动，只是换统一格式
+        self.assertEqual(AD._fmt_date_sgt("Fri, 06 Nov 2026 11:45:36 +0800"),
+                         "11-06 11:45 SGT")
+
+    def test_naive_date_assumed_sgt(self):
+        # 源没写时区：按项目惯例（SOURCE_TZ_OFFSET=8）当 +8，不猜 UTC
+        self.assertEqual(AD._fmt_date_sgt("06 Nov 2026 09:30:00"),
+                         "11-06 09:30 SGT")
+
+    def test_garbage_kept_as_is(self):
+        # 完全不是日期：原样显示，这页不因时间脏而丢条
+        self.assertEqual(AD._fmt_date_sgt("不是日期"), "不是日期")
+        self.assertEqual(AD._fmt_date_sgt(""), "")
+
 
 class TestRenderHtml(unittest.TestCase):
     def test_render_html_self_canonical_and_no_cross_links(self):
