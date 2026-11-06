@@ -54,8 +54,12 @@ PAGE_TITLE = "RSS 新闻 · AI 的目光"
 GEMINI_ENDPOINT = "https://" + "generativelanguage.googleapis.com/v1beta/models"
 CANONICAL = "https://" + "moreaix.com/rss/ai-digest.html"
 MAX_ITEMS = 120  # 池子硬上限，多取无意义
-_ASK_BUFFER = 4  # 多问几条做缓冲：模型偶发把回显标题改写到对不上而被安全丢弃时，
-              # 仍有余量补到满 AI_TOP_N 条（用户要求一页 20 条刚好看完）
+# 缓冲取 4（请求 24 条）。真机实测免费 8B 模型会超额返回（要 24 常给 25–30，要 32 给 40），
+# 而输出上限卡在 max_tokens=6144（8192 曾在 CF 免费档触发 30s 网关超时，不能用）。缓冲过大会
+# 把 JSON 顶到 6144 被截断、整页走兜底，反而更糟。所以这里只留 4 条余量，真正压住「凑不满 20」
+# 的是另两招：温度压到 0.1（更确定、更少改写/重复）+ 提示词硬性「不得重复、恰好 n 条、逐字回显」，
+# 把重复和少给都压下去。成本大头是固定的 120 条候选输入，多问几条几乎不增费。
+_ASK_BUFFER = 4
 
 # 默认后端：Cloudflare Workers AI 免费档（10,000 Neurons/天，无需绑卡；你已有 CF 账号，
 # 只需建一个带 Workers AI 权限的 API Token，写进 llm.env 的 LLM_API_KEY）。OpenAI 兼容端点，
@@ -68,12 +72,16 @@ DEFAULT_LLM_BASE_URL = os.environ.get(
 DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast"  # 免费档（基础版 llama-3.1-8b 已于
 # 2026-05-30 下线；fp8-fast 更快、同免费；可换更大免费的 70B/30B 变体）
 
+# 采样温度。挑选题是确定性任务，低温让小模型更「照章办事」：回显更逐字（命中率更高）、
+# 更少把同一条重复选多次、少给条数的概率也更低。0.1 比默认的 0.3 实测明显更稳。
+LLM_TEMPERATURE = 0.1
+
 SYSTEM = (
     "你是一名中文新闻编辑。给定一批大中华区 RSS 新闻候选（已按时间倒序、编号从 1 开始），"
     "请挑选出最值得普通读者关注的若干条，按重要性从高到低排序。"
     "挑选标准：优先影响面广的国际、两岸、民生、政策、科技、财经；"
     "剔除广告、征集、纯娱乐八卦、重复转载与低信息量短讯。"
-    "为每条用一句话（不超过 40 字）说明为何值得关注：必须是解释性理由，"
+    "为每条用一句话（不超过 25 字、简洁）说明为何值得关注：必须是解释性理由，"
     "不能照抄或复述该条标题，更不能写另一条新闻的标题或内容。"
 )
 
@@ -88,18 +96,22 @@ SYSTEM = (
 _PROMPT_TAIL_OBJECT = (
     "请挑选最重要的 {n} 条，按重要性从高到低，仅返回 JSON 对象，"
     "对象只有一个键 \"items\"，其值为数组，每个元素格式为 "
-    "{{\"title\": \"逐字照抄你选中的那条新闻的完整标题\", "
-    "\"reason\": \"一句话说明这条新闻（就是 title 那条）为何值得关注（不超过 40 字）\"}}。"
-    "title 必须与候选列表原文完全一致；reason 只能谈 title 那条新闻本身，"
-    "严禁照抄任何标题、严禁谈论其它新闻。不要输出该对象以外的任何内容。"
+    "{{\"title\": \"逐字照抄你选中的那条新闻在候选列表里的完整文字（包括开头的【栏目】标记，不得省略、增删或改写任何一个字）\", "
+    "\"reason\": \"一句话说明这条新闻（就是 title 那条）为何值得关注（不超过 25 字、简洁）\"}}。"
+    "硬性规则：① title 必须与候选列表原文逐字一致，严禁自行概括、换说法或省略【栏目】标记；"
+    "② 每条新闻只选一次，不得重复；③ 必须返回恰好 {n} 条互不相同的 title；"
+    "④ reason 只能谈 title 那条新闻本身，严禁照抄任何标题、严禁谈论其它新闻。"
+    "不要输出该对象以外的任何内容。"
 )
 _PROMPT_TAIL_ARRAY = (
     "请挑选最重要的 {n} 条，按重要性从高到低，仅返回 JSON 数组，"
     "每个元素格式为 "
-    "{{\"title\": \"逐字照抄你选中的那条新闻的完整标题\", "
-    "\"reason\": \"一句话说明这条新闻（就是 title 那条）为何值得关注（不超过 40 字）\"}}。"
-    "title 必须与候选列表原文完全一致；reason 只能谈 title 那条新闻本身，"
-    "严禁照抄任何标题、严禁谈论其它新闻。不要输出数组以外的任何内容。"
+    "{{\"title\": \"逐字照抄你选中的那条新闻在候选列表里的完整文字（包括开头的【栏目】标记，不得省略、增删或改写任何一个字）\", "
+    "\"reason\": \"一句话说明这条新闻（就是 title 那条）为何值得关注（不超过 25 字、简洁）\"}}。"
+    "硬性规则：① title 必须与候选列表原文逐字一致，严禁自行概括、换说法或省略【栏目】标记；"
+    "② 每条新闻只选一次，不得重复；③ 必须返回恰好 {n} 条互不相同的 title；"
+    "④ reason 只能谈 title 那条新闻本身，严禁照抄任何标题、严禁谈论其它新闻。"
+    "不要输出数组以外的任何内容。"
 )
 
 
@@ -181,8 +193,8 @@ def call_gemini(api_key, model, system, prompt):
                     "required": ["title", "reason"],
                 },
             },
-            "maxOutputTokens": 6144,
-            "temperature": 0.3,
+            "maxOutputTokens": 8192,
+            "temperature": LLM_TEMPERATURE,
         },
     }
     req = urllib.request.Request(
@@ -190,7 +202,7 @@ def call_gemini(api_key, model, system, prompt):
         data=json.dumps(body).encode("utf-8"),
         headers={"Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=60) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     text = data["candidates"][0]["content"]["parts"][0]["text"]
     return _extract_json_array(text)
@@ -230,7 +242,7 @@ def _extract_json_array(text):
     raise ValueError("无法解析 JSON 数组: %r" % text[:200])
 
 
-def call_openai(base_url, api_key, model, system, prompt, max_tokens=6144):
+def call_openai(base_url, api_key, model, system, prompt, max_tokens=8192):
     """调用 OpenAI 兼容聊天接口（DeepSeek / 通义 / Kimi 等），返回解析后的数组。
 
     只依赖标准库。任何网络 / 协议错误都向上抛，由调用方决定兜底。
@@ -244,7 +256,7 @@ def call_openai(base_url, api_key, model, system, prompt, max_tokens=6144):
         ],
         "response_format": {"type": "json_object"},
         "max_tokens": max_tokens,
-        "temperature": 0.3,
+        "temperature": LLM_TEMPERATURE,
     }
     req = urllib.request.Request(
         url,
@@ -254,7 +266,7 @@ def call_openai(base_url, api_key, model, system, prompt, max_tokens=6144):
             "Authorization": "Bearer %s" % api_key,
         },
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=60) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     text = data["choices"][0]["message"]["content"]
     return _extract_json_array(text)
