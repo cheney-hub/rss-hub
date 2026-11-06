@@ -64,6 +64,9 @@ class TestBuildPrompt(unittest.TestCase):
         # 新契约：模型必须回显它选中的标题（title），配对由 title↔reason 锁定
         self.assertIn("title", prompt)
         self.assertIn("reason", prompt)
+        # 每条精华概况限制为 ≤10 汉字（2026-11-06 需求：压缩成一页快速扫读的极简要点）
+        self.assertIn("10", prompt)
+        self.assertIn("精华", prompt)
 
     def test_prompt_tail_openai_asks_items_object(self):
         items = AD.load_items(_write_feed(_tmp()))
