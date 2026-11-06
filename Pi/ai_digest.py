@@ -181,7 +181,7 @@ def call_gemini(api_key, model, system, prompt):
                     "required": ["title", "reason"],
                 },
             },
-            "maxOutputTokens": 2048,
+            "maxOutputTokens": 6144,
             "temperature": 0.3,
         },
     }
@@ -230,7 +230,7 @@ def _extract_json_array(text):
     raise ValueError("无法解析 JSON 数组: %r" % text[:200])
 
 
-def call_openai(base_url, api_key, model, system, prompt):
+def call_openai(base_url, api_key, model, system, prompt, max_tokens=6144):
     """调用 OpenAI 兼容聊天接口（DeepSeek / 通义 / Kimi 等），返回解析后的数组。
 
     只依赖标准库。任何网络 / 协议错误都向上抛，由调用方决定兜底。
@@ -243,7 +243,7 @@ def call_openai(base_url, api_key, model, system, prompt):
             {"role": "user", "content": prompt},
         ],
         "response_format": {"type": "json_object"},
-        "max_tokens": 4096,
+        "max_tokens": max_tokens,
         "temperature": 0.3,
     }
     req = urllib.request.Request(
