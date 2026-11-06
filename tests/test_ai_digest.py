@@ -269,6 +269,30 @@ class TestRenderHtml(unittest.TestCase):
         self.assertIn('href="http://c/3"', html)
         self.assertIn('target="_blank"', html)
 
+    def test_render_html_reports_pool_size_not_result_count(self):
+        items = AD.load_items(_write_feed(_tmp()))
+        results = AD.parse_response([{"idx": 1, "reason": "甲"}], items)
+        # 只命中 1 条结果，但候选池是 3 条 —— 文案必须显示池大小，而非结果数
+        html = AD.render_html(results, "gemini-1.5-flash", pool_size=len(items))
+        self.assertIn("从当日 3 条 RSS 候选中筛选", html)
+        self.assertNotIn("从当日 1 条 RSS 候选中筛选", html)
+
+
+class TestPoolSignature(unittest.TestCase):
+    def _items(self):
+        return AD.load_items(_write_feed(_tmp()))
+
+    def test_signature_stable_for_same_items(self):
+        items = self._items()
+        self.assertEqual(AD._pool_signature(items), AD._pool_signature(list(items)))
+
+    def test_signature_changes_when_item_added(self):
+        items = self._items()
+        sig0 = AD._pool_signature(items)
+        mutated = list(items) + [{"title": "新增条目", "link": "http://x/new",
+                                  "date_raw": "Fri, 06 Nov 2026 00:00:00 +0800"}]
+        self.assertNotEqual(sig0, AD._pool_signature(mutated))
+
 
 class TestMainFallback(unittest.TestCase):
     def _run_main(self, tmp, prev_exists, call_side_effect, provider="openai"):
@@ -321,6 +345,52 @@ class TestMainFallback(unittest.TestCase):
         self.assertEqual(rc, 0)
         with open(out, encoding="utf-8") as f:
             self.assertEqual(f.read(), "<html>PREV</html>")
+
+    def test_main_skips_cf_when_feed_unchanged(self):
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        feed = _write_feed(tmp)
+        out = os.path.join(tmp, "ai-digest.html")
+        with open(out, "w", encoding="utf-8") as f:
+            f.write("<html>PREV</html>")
+        # 预写与当前池一致的指纹：源未变，应当跳过 CF 调用
+        items = AD.load_items(feed)
+        with open(out + ".sig", "w", encoding="utf-8") as f:
+            f.write(AD._pool_signature(items))
+        env = {"FEED_XML": feed, "OUT_HTML": out, "AI_TOP_N": "2",
+               "LLM_PROVIDER": "openai", "LLM_API_KEY": "x",
+               "LLM_MODEL": "deepseek-chat"}
+        fake = mock.MagicMock()
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(AD, "call_openai", fake):
+            rc = AD.main()
+        self.assertEqual(rc, 0)
+        fake.assert_not_called()  # 没有消耗任何 CF 额度
+        with open(out, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "<html>PREV</html>")
+
+    def test_main_calls_cf_when_feed_changed(self):
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        feed = _write_feed(tmp)
+        out = os.path.join(tmp, "ai-digest.html")
+        with open(out, "w", encoding="utf-8") as f:
+            f.write("<html>PREV</html>")
+        # 指纹与当前池不一致（陈旧）：应当触发 CF 重算
+        with open(out + ".sig", "w", encoding="utf-8") as f:
+            f.write("stale-signature")
+        env = {"FEED_XML": feed, "OUT_HTML": out, "AI_TOP_N": "2",
+               "LLM_PROVIDER": "openai", "LLM_API_KEY": "x",
+               "LLM_MODEL": "deepseek-chat"}
+        fake = mock.MagicMock(return_value=[{"idx": 1, "reason": "甲"}])
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(AD, "call_openai", fake):
+            rc = AD.main()
+        self.assertEqual(rc, 0)
+        fake.assert_called_once()  # 真的去重算了
+        with open(out + ".sig", encoding="utf-8") as f:
+            # 成功后刷新成新指纹，下次若仍不变才会跳过
+            self.assertNotEqual(f.read(), "stale-signature")
 
 
 class TestCallGeminiRequest(unittest.TestCase):

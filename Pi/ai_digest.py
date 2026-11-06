@@ -11,6 +11,8 @@
   * **兜底不阻断**：AI 调用超时 / 限流 / 返回脏数据 / 缺 key 时，一律保留上一期页面；
     若从没有过页面，则写一张「今日暂时无法生成」的占位页（同样自包含、自 canonical）。
     单元以退出码 0 结束，绝不连累 rss-build / moreaix-site。
+  * **省额度**：源 feed 指纹未变时跳过 CF 调用、直接保留现有页面（指纹随 120 条池的
+    增删/换位而变，只跳真正静止的时段，如深夜）。定时器白天每小时触发一次、夜间不跑。
 
 读取：/dev/shm/rss-hub/feed.xml（rss-build 维护的最新池子，tmpfs，不落盘）。
 写出：/dev/shm/rss-hub/ai-digest.html（同目录，经 --alias /rss 暴露为
@@ -36,6 +38,7 @@ import sys
 import time
 import html
 import difflib
+import hashlib
 import email.utils
 import urllib.request
 import urllib.error
@@ -462,7 +465,7 @@ def _safe_href(link):
     return ""
 
 
-def render_html(results, model):
+def render_html(results, model, pool_size=0):
     """渲染独立页。只外链到原文，不链接任何站内页面；canonical 指向自己。"""
     gen_time = time.strftime("%Y-%m-%d %H:%M", time.localtime())
     cards = []
@@ -483,8 +486,8 @@ def render_html(results, model):
             % (r["rank"], title_cell, html.escape(meta), reason))
     cards_html = "\n".join(cards)
     return _HTML_TEMPLATE % (
-        html.escape(PAGE_TITLE), len(results), html.escape(PAGE_TITLE),
-        CANONICAL, CANONICAL, html.escape(PAGE_TITLE), len(results),
+        html.escape(PAGE_TITLE), pool_size, html.escape(PAGE_TITLE),
+        CANONICAL, CANONICAL, html.escape(PAGE_TITLE), pool_size,
         gen_time, html.escape(model), cards_html)
 
 
@@ -540,11 +543,36 @@ def _atomic_write(path, text):
     os.replace(tmp, path)
 
 
-def _fallback(out_path, reason, had_key):
+def _pool_signature(items):
+    """候选池指纹：池子（最新 120 条）有任何条目增删/换位即变，用于判断是否需要重算。"""
+    h = hashlib.sha256()
+    for it in items:
+        h.update("\u0001".join((it.get("title", ""), it.get("link", ""),
+                               it.get("date_raw", ""))).encode("utf-8"))
+    return h.hexdigest()
+
+
+def _read_sig(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return ""
+
+
+def _write_sig(path, sig):
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(sig)
+    except OSError:
+        pass
+
+
+def _fallback(out_path, reason, had_key, pool_size=0):
     if os.path.exists(out_path):
         _log("兜底：保留上一期页面（%s，had_key=%s）" % (reason, had_key))
         return
-    placeholder = render_html([], "unavailable")
+    placeholder = render_html([], "unavailable", pool_size)
     _atomic_write(out_path, placeholder)
     _log("兜底：写入占位页（%s，had_key=%s）" % (reason, had_key))
 
@@ -560,7 +588,16 @@ def main():
     provider = os.environ.get("LLM_PROVIDER", DEFAULT_PROVIDER)
     items = load_items(feed)
     if not items:
-        _fallback(out, "feed 为空或不存在", False)
+        _fallback(out, "feed 为空或不存在", False, 0)
+        return 0
+
+    # 源 feed 指纹未变则跳过 CF 调用（省免费额度）：仅当已有产物页且指纹一致才跳；
+    # 指纹变了（哪怕只增删/换位一条）就必须重算，因为 20 条重点可能随之不同。
+    sig = _pool_signature(items)
+    sig_path = out + ".sig"
+    if (os.path.exists(out) and os.path.getsize(out) > 0
+            and sig == _read_sig(sig_path)):
+        _log("源 feed 未变（指纹一致），跳过 CF 调用，保留现有页面 -> %s" % out)
         return 0
 
     prompt = build_prompt(items, top_n + _ASK_BUFFER, provider)
@@ -579,16 +616,17 @@ def main():
             base = os.environ.get("LLM_BASE_URL", DEFAULT_LLM_BASE_URL)
             raw = call_openai(base, api_key, model, SYSTEM, prompt)
     except Exception as e:  # 网络/限流/协议/缺 key —— 一律兜底
-        _fallback(out, "AI 调用失败: %s" % e, bool(api_key))
+        _fallback(out, "AI 调用失败: %s" % e, bool(api_key), len(items))
         return 0
 
     results = parse_response(raw, items)
     if not results:
-        _fallback(out, "AI 返回为空或无法解析", bool(api_key))
+        _fallback(out, "AI 返回为空或无法解析", bool(api_key), len(items))
         return 0
     results = _keep_top(results, top_n)
 
-    _atomic_write(out, render_html(results, model))
+    _atomic_write(out, render_html(results, model, len(items)))
+    _write_sig(sig_path, sig)
     n_raw = len(raw) if isinstance(raw, list) else 0
     _log("已生成 %d 条重点新闻 -> %s（模型 %s，请求 %d 条 / 返回 %d 条 / 对上 %d 条）"
          % (len(results), out, model, top_n + _ASK_BUFFER, n_raw, len(results)))
