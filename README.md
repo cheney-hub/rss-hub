@@ -427,7 +427,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.21.8` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.21.9` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 

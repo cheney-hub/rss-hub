@@ -1,10 +1,11 @@
 [Unit]
-Description=Run AI digest 3x/day (07:00 / 13:00 / 19:00)
+Description=Run AI digest hourly (07:00–21:00, off at night)
 
 [Timer]
-# 与「120 条池约 4.3 小时翻一轮」匹配：一天三次让重点页不长期滞后。
+# 白天每小时触发一次（07:00–21:00），夜间 22:00–06:00 不跑——与「当日滚动池」设计匹配：
+# 每小时从「今天见过的全部条目」里挑最新的 20 条，让重点页每小时刷新。
 # 不 Persistent：重启后若错过某次，下一次到点再跑，不补跑（避免重复消耗配额）。
-OnCalendar=*-*-* 07,13,19:00:00
+OnCalendar=*-*-* 07..21:00:00
 AccuracySec=10min
 Persistent=false
 
