@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSS 聚合头条 · 阅读</title>
+<meta name="description" content="RSS 聚合头条网页阅读版：62 个源合并、去重后取最新 120 条，实时拉取 feed.xml 渲染为卡片，支持来源 / 标题筛选；设备版由树莓派每 5 分钟换一条。">
+<meta name="keywords" content="RSS 阅读, 大中华区新闻, 墨水屏新闻, Kindle 新闻, 多源头条聚合">
+<link rel="canonical" href="https://moreaix.com/rss/reader.html">
+<link rel="alternate" type="application/rss+xml" title="RSS 聚合头条（完整版）" href="https://moreaix.com/rss/feed.xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RSS 聚合头条">
+<meta property="og:title" content="RSS 聚合头条 · 网页阅读版">
+<meta property="og:description" content="62 个源合并、去重后取最新 120 条，实时卡片阅读，支持筛选；设备版由树莓派每 5 分钟换一条。">
+<meta property="og:url" content="https://moreaix.com/rss/reader.html">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://moreaix.com/kindle/rss-pw2.png">
+<meta property="og:image:width" content="758">
+<meta property="og:image:height" content="1024">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://moreaix.com/kindle/rss-pw2.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "RSS 聚合头条",
+  "url": "https://moreaix.com/rss/reader.html",
+  "inLanguage": "zh-CN",
+  "description": "62 个源合并、去重后取最新 120 条，实时卡片阅读，支持筛选；设备版由树莓派每 5 分钟换一条。"
+}
+</script>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --text:#161a20; --sub:#5c6675;
+    --line:#e8ebf0; --accent:#3b6ef5; --accent-2:#7c4dff;
+    --accent-soft:#eef3ff; --shadow:0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+    --shadow-hover:0 4px 10px rgba(16,24,40,.08), 0 16px 40px rgba(16,24,40,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0e1116; --card:#161b22; --text:#e9edf2; --sub:#9aa6b6;
+      --line:#232a34; --accent:#6f9bff; --accent-2:#a78bfa;
+      --accent-soft:#1b2740; --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --shadow-hover:0 4px 10px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.5);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:16px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+       -webkit-font-smoothing:antialiased}
+
+  /* 顶部毛玻璃导航 */
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+          padding:12px 18px;backdrop-filter:saturate(180%) blur(12px);
+          background:color-mix(in srgb, var(--bg) 82%, transparent);
+          border-bottom:1px solid var(--line)}
+  .brand{font-weight:700;font-size:15px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+              box-shadow:0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+              animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}
+                   70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .actions{display:flex;align-items:center;gap:12px}
+  .live{display:inline-flex;align-items:center;gap:6px;color:var(--sub);font-size:12.5px}
+  .live i{width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block}
+  button.rf{padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+            color:var(--text);font-size:13px;cursor:pointer;transition:.15s}
+  button.rf:hover{border-color:var(--accent);color:var(--accent)}
+  button.rf:active{transform:scale(.97)}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 64px}
+
+  /* 主视觉 */
+  .hero{margin:8px 0 26px}
+  .hero h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:0 0 10px;font-weight:800;
+           background:linear-gradient(92deg,var(--accent),var(--accent-2));
+           -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{color:var(--sub);font-size:14.5px;margin:0 0 20px;max-width:720px}
+
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 18px;
+        min-width:120px;box-shadow:var(--shadow)}
+  .chip b{display:block;font-size:21px;font-weight:700;line-height:1.1}
+  .chip span{color:var(--sub);font-size:12px}
+
+  .search{position:relative;max-width:420px}
+  .search input{width:100%;padding:12px 14px 12px 38px;border:1px solid var(--line);border-radius:12px;
+                background:var(--card);color:var(--text);font-size:14px;box-shadow:var(--shadow)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .search input:focus{outline:none;border-color:var(--accent)}
+
+  /* 卡片网格 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 17px;
+        box-shadow:var(--shadow);transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        display:flex;flex-direction:column;gap:9px;opacity:0;transform:translateY(8px);
+        animation:rise .5s ease forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+  .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);
+       border-radius:7px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap;
+       overflow:hidden;text-overflow:ellipsis;max-width:70%}
+  .time{color:var(--sub);font-size:11.5px;white-space:nowrap;flex:none}
+  .title{font-size:16px;font-weight:650;line-height:1.45;color:var(--text);text-decoration:none;
+         display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .title:hover{color:var(--accent)}
+  .excerpt{color:var(--sub);font-size:13px;line-height:1.6;margin:0;
+           display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:48px 0;font-size:14px}
+
+  .foot{color:var(--sub);font-size:12px;text-align:center;margin-top:34px;line-height:2}
+  .foot a{color:var(--sub);text-decoration:none}
+  .foot a:hover{color:var(--accent)}
+  .foot .v{margin-top:6px}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span>RSS 聚合头条</div>
+  <div class="actions">
+    <span class="live"><i></i>实时</span>
+    <button class="rf" id="refresh" onclick="loadFeed()">刷新</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <h1>大中华区头条 · 实时聚合阅读</h1>
+    <p class="lede">62 个源合并 · 每源 5 条、去重后取最新 120 条（正文全文不截断） · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。</p>
+    <div class="stats" id="stats">
+      <div class="chip"><b id="n">—</b><span>当前条目</span></div>
+      <div class="chip"><b id="t">—</b><span>最后构建</span></div>
+      <div class="chip"><b id="r">—</b><span>设备版轮播</span></div>
+    </div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="q" type="search" placeholder="筛选标题或来源…" aria-label="筛选">
+    </div>
+  </section>
+
+  <section class="grid" id="grid"><div class="empty">正在载入…</div></section>
+</div>
+
+<footer class="foot">
+  <a href="./">订阅页</a> ·
+  <a href="./feed.xml">feed.xml</a> ·
+  <a href="https://moreaix.com/rss/feed-wrap.xml">feed-wrap.xml（设备版）</a> ·
+  <a href="./screen.html">屏幕效果</a> ·
+  <a href="https://moreaix.com/kindle/">kindle 看板</a> ·
+  <a href="./board.html">看板实时图</a> ·
+  <a href="./subscribe.html">用 iPhone 订阅</a> ·
+  <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
+  <div class="v">rss-hub v1.21.10 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
+</footer>
+
+<script>
+/* 设备版与轮播游标都在树莓派上（moreaix.com），GitHub Pages 只发完整版 feed.xml。
+   跨域读是允许的：Pi 的 serve.py 对所有响应都带 access-control-allow-origin: *。 */
+const DEVICE_URL = 'https://moreaix.com/rss/feed-wrap.xml';
+const STATE_URL  = 'https://moreaix.com/rss/rotate.json';
+
+let ALL_ITEMS = [];   // 原始条目，供搜索筛选复用，不重复请求
+
+function fmt(d){
+  if(!d) return '';
+  const now = Date.now(), ts = d.getTime(), min = Math.round((now-ts)/60000);
+  if(min < 1) return '刚刚';
+  if(min < 60) return min + ' 分钟前';
+  if(min < 1440) return Math.round(min/60) + ' 小时前';
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+
+// 逐条建 DOM 节点，不拼 HTML 字符串：标题、链接、源名都来自第三方 RSS，
+// 拼进 innerHTML 等于让任何一家源站都能在本页执行脚本（`<img onerror=…>` 就够）。
+// 链接只认 http(s)：`javascript:` 这类伪协议即使只是被点开也一样危险。
+function makeCard(it, idx){
+  const art = document.createElement('article');
+  art.className = 'card';
+  art.style.animationDelay = Math.min(idx * 28, 600) + 'ms';
+
+  const top = document.createElement('div');
+  top.className = 'card-top';
+  const src = (it.source || '').trim();
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.textContent = src || '未知来源';
+  const time = document.createElement('span');
+  time.className = 'time';
+  time.textContent = fmt(it.date);
+  top.appendChild(tag);
+  top.appendChild(time);
+  art.appendChild(top);
+
+  const a = document.createElement('a');
+  a.className = 'title';
+  a.textContent = it.title || '(无标题)';
+  if(/^https?:\/\//i.test(it.link)){
+    a.href = it.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  }
+  art.appendChild(a);
+
+  if(it.desc){
+    const p = document.createElement('p');
+    p.className = 'excerpt';
+    p.textContent = it.desc;
+    art.appendChild(p);
+  }
+  return art;
+}
+
+function render(){
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  const grid = document.getElementById('grid');
+  const list = q
+    ? ALL_ITEMS.filter(it =>
+        (it.title||'').toLowerCase().includes(q) || (it.source||'').toLowerCase().includes(q))
+    : ALL_ITEMS;
+  grid.replaceChildren();
+  if(!list.length){
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = q ? '没有匹配的条目' : '暂无条目';
+    grid.appendChild(e);
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  list.forEach((it, i) => frag.appendChild(makeCard(it, i)));
+  grid.appendChild(frag);
+}
+
+function parseFeed(txt){
+  const doc = new DOMParser().parseFromString(txt, 'text/xml');
+  const items = [...doc.querySelectorAll('item')];
+  document.getElementById('n').textContent = items.length;
+  const lb = doc.querySelector('lastBuildDate')?.textContent;
+  const lbd = lb ? new Date(lb) : null;
+  document.getElementById('t').textContent = lbd && !isNaN(lbd) ? fmt(lbd) : '—';
+  ALL_ITEMS = items.map(it => ({
+    title: it.querySelector('title')?.textContent || '',
+    link:  (it.querySelector('link')?.textContent || '').trim(),
+    source:(it.querySelector('source')?.textContent || '').trim(),
+    desc:  (it.querySelector('description')?.textContent || '').trim(),
+    date:  (() => { const d = it.querySelector('pubDate')?.textContent; const dt = d ? new Date(d) : null; return dt && !isNaN(dt) ? dt : null; })()
+  }));
+  render();
+}
+
+function loadFeed(){
+  const rf = document.getElementById('refresh');
+  if(rf){ rf.disabled = true; rf.textContent = '刷新中…'; }
+  fetch('./feed.xml?t=' + Date.now(), {cache:'no-store'})
+    .then(r => r.text())
+    .then(parseFeed)
+    .catch(e => {
+      const grid = document.getElementById('grid');
+      const em = document.createElement('div');
+      em.className = 'empty';
+      em.textContent = 'feed 载入失败：' + e.message;
+      grid.replaceChildren(em);
+    })
+    .finally(() => { if(rf){ rf.disabled = false; rf.textContent = '刷新'; } });
+}
+
+// 设备版轮播状态（与订阅页同一数据源）
+fetch(STATE_URL + '?t=' + Date.now(), {cache:'no-store'})
+  .then(r => r.json())
+  .then(st => {
+    let back = st.back;
+    if (back == null && st.lag != null) back = st.lag;   // 兼容升级途中残留的 1.6.x 状态
+    document.getElementById('r').textContent =
+      (back == null) ? '—'
+        : (back <= 1 ? '实时（' + (st.at || '未知时间') + '）'
+                     : '落后 ' + back + ' 条（屏上是 ' + (st.at || '未知时间') + ' 的）');
+  })
+  .catch(() => {});
+
+document.getElementById('q').addEventListener('input', render);
+loadFeed();
+// 与设备版节拍对齐：每 5 分钟回填一次，避免停留页面时数据陈旧
+setInterval(loadFeed, 300000);
+</script>
+</body>
+</html>

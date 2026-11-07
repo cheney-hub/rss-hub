@@ -101,10 +101,11 @@ for f in "${HERE}"/site/*; do
 done
 
 echo "==> 上传 /rss 静态页（内存盘冷启动的源文件）"
-# moreaix-site 的 ExecStartPre 会把这两页 cp 进 /dev/shm/rss-hub。
+# moreaix-site 的 ExecStartPre 会把这几页 cp 进 /dev/shm/rss-hub。
 # 不传的话 Pi 上那份是旧副本，页脚版本号会一直停在过去，而部署看起来完全成功。
 # 只传 HTML：feed.xml / feed-wrap.xml / rotate.json 都是构建产物，绝不从仓库覆盖。
-for f in index.html screen.html; do
+# 新增页面记得同步这里与 moreaix-site.service 的 ExecStartPre cp 行，否则线上 404。
+for f in index.html screen.html reader.html; do
     "${SCP[@]}" "${HERE}/../docs/${f}" "${PI_USER}@${PI_HOST}:${FEED_ROOT}/${f}"
 done
 

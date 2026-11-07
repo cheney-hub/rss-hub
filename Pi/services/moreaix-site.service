@@ -29,7 +29,7 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 # 开机 / 重启后 /dev/shm 是空的：先把目录和两个静态页放进内存。
 # 动态产物由上面 [Unit] 的 Wants 拉起的那一轮构建填回来。
 ExecStartPre=/usr/bin/install -d -m 700 /dev/shm/rss-hub /dev/shm/rss-hub/kindle
-ExecStartPre=-/bin/cp -f /home/user/rss-hub/docs/index.html /home/user/rss-hub/docs/screen.html /dev/shm/rss-hub/
+ExecStartPre=-/bin/cp -f /home/user/rss-hub/docs/index.html /home/user/rss-hub/docs/screen.html /home/user/rss-hub/docs/reader.html /dev/shm/rss-hub/
 # 纵深防御：服务即使被利用，也不能提权、改 /home、碰内核参数或申请可执行内存。
 # 不用 ProtectSystem=strict —— 它会把 /dev/shm 一并设成只读，和上面的 cp 冲突；
 # full 只锁 /usr /boot /etc，产物目录在 /dev/shm 与 /home，不受影响。

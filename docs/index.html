@@ -103,6 +103,17 @@
   </div>
 
   <div class="card">
+    <div class="row">
+      <input id="kurl" readonly value="https://moreaix.com/kindle/">
+      <button onclick="copyUrl('kurl', this)">复制 Kindle 地址</button>
+    </div>
+    <div class="meta" style="margin-top:10px">
+      Kindle（KPW2）屏上效果看板：把这份头条直接推到墨水屏，手机 / 电脑也能打开看屏上长什么样；
+      与设备同源，<b>地址即所见</b>，页面每 300 秒自动刷新。想看原图效果也可进 <a href="./screen.html">屏幕效果</a>。
+    </div>
+  </div>
+
+  <div class="card">
     <div class="stats" id="stats">
       <div><b id="n">—</b>条目</div>
       <div><b id="t">—</b>最后构建</div>
@@ -118,6 +129,7 @@
     <a href="./feed.xml">feed.xml</a> ·
     <a href="https://moreaix.com/rss/feed-wrap.xml">feed-wrap.xml（设备版，树莓派）</a> ·
     <a href="./screen.html">屏幕效果</a> ·
+    <a href="https://moreaix.com/kindle/">kindle 看板</a> ·
     <a href="./board.html">看板实时图</a> ·
     <a href="./subscribe.html">用 iPhone 订阅</a> ·
     <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
