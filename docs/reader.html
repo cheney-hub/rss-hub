@@ -180,7 +180,7 @@
    跨域读是允许的：Pi 的 serve.py 对所有响应都带 access-control-allow-origin: *。
    两个数据源（全天缓存视图二者按 link 去重合并，保证含当前条目）：
      · feed.xml      —— 每 5 分钟重建，去重后最新 120 条（任意主机都有）。
-     · ai-accum.json —— 当日滚动池（tmpfs，本地零点重置，上限 AI_ACCUM_CAP=2000），
+     · ai-accum.json —— 当日滚动池（tmpfs，本地零点重置，默认不限 AI_ACCUM_CAP=0），
                        由 rss-build 每 5 分钟并入、按标题去重累积；GitHub Pages 镜像没有，
                        此时全天缓存降级显示当前 feed 的 120 条并提示回 moreaix.com。 */
 

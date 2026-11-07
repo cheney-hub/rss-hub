@@ -108,6 +108,23 @@ class TestAccumUpdate(unittest.TestCase):
         self.assertEqual(AU.main(), 0)
         self.assertFalse(os.path.exists(self.accum))
 
+    def test_cap_zero_means_unlimited(self):
+        # cap=0（默认）时不截断：喂 30 条全部保留，而非被截到某个上限
+        with mock.patch.object(AD, "ACCUM_CAP", 0):
+            _write(self.feed, _feed_xml(self._items(30)))
+            AU.main()
+        d = self._read()
+        self.assertEqual(len(d["items"]), 30)
+
+    def test_cap_zero_keeps_growing_all_day(self):
+        # 模拟跨多个节拍累积（不限时 union 持续增长，不被丢最旧）
+        with mock.patch.object(AD, "ACCUM_CAP", 0):
+            for batch in range(3):
+                _write(self.feed, _feed_xml(self._items(10, prefix="b%d" % batch)))
+                AU.main()
+        d = self._read()
+        self.assertEqual(len(d["items"]), 30)  # 3×10 全留，无截断
+
 
 if __name__ == "__main__":
     unittest.main()

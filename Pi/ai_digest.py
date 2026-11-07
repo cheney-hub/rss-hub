@@ -12,7 +12,7 @@
     若从没有过页面，则写一张「今日暂时无法生成」的占位页（同样自包含、自 canonical）。
     单元以退出码 0 结束，绝不连累 rss-build / moreaix-site。
     * **省额度 + 当天滚动池**：「当日滚动池」（存于 /dev/shm，按本地零点重置，
-    存储上限 AI_ACCUM_CAP=2000，可经环境变量调大）现在由 rss-build 每 5 分钟经
+    存储上限 AI_ACCUM_CAP=0（不限，按本地零点重置），可经环境变量设正整数硬上限）现在由 rss-build 每 5 分钟经
     accum_update.py 持续并入（见该脚本），保证「当天见过的全部条目、且实时」；
     本脚本 main() 仍保留一次合并作兜底，二者幂等。AI 从
     「今天的新闻」而非仅最近 120 条里挑。**存储与送选分离**：滚动池只管存
@@ -35,9 +35,9 @@
   OUT_HTML     输出页路径，默认 /dev/shm/rss-hub/ai-digest.html
   AI_TOP_N     挑多少条，默认 20（一页刚好快速看完）
   AI_ACCUM_PATH 当日滚动池落盘路径，默认 /dev/shm/rss-hub/ai-accum.json（tmpfs，不写 SD）
-  AI_ACCUM_CAP  当日滚动池**存储**上限，默认 2000（tmpfs 廉价，足以容纳全天去重后的
-                全部独立头条；若仍不够可由环境变量调大。送选条数由 token 预算决定，
-                见 AI_PROMPT_TOKEN_BUDGET）
+  AI_ACCUM_CAP  当日滚动池**存储**上限，默认 0（**0 表示不限**：tmpfs 廉价，且池子按本地
+                零点重置、一天的去重头条总量本就有限，内存占用可忽略；如需硬上限设正整数即可）。
+                送选条数由 token 预算决定，见 AI_PROMPT_TOKEN_BUDGET（与存储上限解耦）
   AI_PROMPT_TOKEN_BUDGET 送选 token 预算，默认 30000（每条候选估 150 token、
                 固定开销 500，约可送 196 条）
   LLM_PROVIDER 后端：openai（默认，Cloudflare Workers AI 免费档，10,000 Neurons/天、
@@ -88,18 +88,20 @@ _ASK_BUFFER = 4
 # 这样 9 点的大新闻被新稿顶出 120 快照后，傍晚仍能因重要性变化再次入选（用户定：全天不去重）。
 # 存储与送选分离：这里的上限只是**存储**上限（tmpfs 廉价，尽量保住全天条目），
 # 真正送 AI 的条数由 token 预算决定（见 _budget_items）——调大存储不会顶爆 8B 上下文。
+# 默认 0 = 不限：池子按本地零点重置、一天去重头条总量有限，内存占用可忽略；
+# 设正整数即变回硬上限（安全旋钮不丢）。
 DEFAULT_ACCUM_PATH = "/dev/shm/rss-hub/ai-accum.json"
 # 模块级读环境必须防崩：unit 的 EnvironmentFile 配错（如 "400 条" 带单位/空格）
 # 若在 import 时抛 ValueError，服务启动即退非零——违背文件头「缺了也不崩」的
 # 自我声明。坏值一律回退默认值；os.environ.get("名字","字面量") 的字面形状
 # 必须留在 try 块内原样保留（门禁靠这个形状收参数表，不能改成变量传参）。
-ACCUM_CAP = 2000
+ACCUM_CAP = 0
 try:
-    ACCUM_CAP = int(os.environ.get("AI_ACCUM_CAP", "2000"))
+    ACCUM_CAP = int(os.environ.get("AI_ACCUM_CAP", "0"))
 except ValueError:
     pass
 
-# 送选按 token 预算截取（存储 2000 / 送选 ≈196 条）：每条候选估 150 token ——
+# 送选按 token 预算截取（存储默认不限 / 送选 ≈196 条）：每条候选估 150 token ——
 # 标题+来源+摘要≤120 字 ≈ 170 字，按 Llama-3 分词留余量；固定开销 500 token
 # 是 system 提示 + 尾部格式约束的底价。预算 30000 → (30000-500)/150 ≈ 196 条，
 # 超出真机验证过的 120 条包线；若 CF 端上下文不够，兜底会保留上一期页面（安全失败）。
@@ -703,7 +705,10 @@ def _merge_accum(accum, new_items, cap):
     """把本小时新抓到的条目并入当日滚动池。
 
     按归一标题去重（同一稿只留一份，不重复占候选位），feed 在前保证较新的
-    版本覆盖旧的；按出现顺序保留「最新在前」，超出 cap 丢最旧的。
+    版本覆盖旧的；按出现顺序保留「最新在前」。
+
+    cap 语义：cap 为正整数时，超出丢最旧（硬上限）；cap <= 0（默认 0）表示**不限**，
+    保留去重后的全部条目（池子按本地零点重置，一天总量有限，内存可忽略）。
 
     注意：这里的去重是为了「候选列表里不出现重复条目」，绝不是「排除已推荐
     过的条目」—— 用户定：全天不去重，同一稿可因重要性变化隔几小时再次入选。
@@ -717,7 +722,8 @@ def _merge_accum(accum, new_items, cap):
         if k not in d:
             d[k] = it
             order.append(k)
-    return [d[k] for k in order[:cap]]
+    kept = order if not cap or cap <= 0 else order[:cap]
+    return [d[k] for k in kept]
 
 
 def _budget_items(items, budget):
@@ -855,7 +861,7 @@ def main():
     # 并入当日滚动池（不去重已推荐条目；同稿可因重要性变化重复入选）。
     # 滚动池主要由 rss-build 每 5 分钟经 accum_update.py 维护；这里再并一次作兜底
     # （例如手动触发本脚本而 rss-build 尚未跑），幂等、不冲突。
-    # 滚动池只管**存储**（上限 2000，tmpfs 廉价尽量保住全天条目）；真正送 AI 的
+    # 滚动池只管**存储**（默认不限，按本地零点重置，内存可忽略；设正整数即硬上限），真正送 AI 的
     # 是按 token 预算截取的「最新在前」送选前缀，二者解耦见 _budget_items。
     accum = _merge_accum(_load_accum(accum_path), items, ACCUM_CAP)
     _save_accum(accum_path, accum)
