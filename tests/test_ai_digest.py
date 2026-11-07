@@ -279,8 +279,8 @@ class TestRenderHtml(unittest.TestCase):
         results = AD.parse_response([{"idx": 1, "reason": "甲"}], items)
         # 只命中 1 条结果，但候选池是 3 条 —— 文案必须显示池大小，而非结果数
         html = AD.render_html(results, "gemini-1.5-flash", pool_size=len(items))
-        self.assertIn("从当日 3 条 RSS 候选中筛选", html)
-        self.assertNotIn("从当日 1 条 RSS 候选中筛选", html)
+        self.assertIn("从这一小时 3 条 RSS 候选中筛选", html)
+        self.assertNotIn("从这一小时 1 条 RSS 候选中筛选", html)
 
     def test_render_html_truncates_essence_to_10_chars(self):
         items = AD.load_items(_write_feed(_tmp()))
@@ -454,7 +454,7 @@ class TestMainFallback(unittest.TestCase):
         self.assertNotIn("乙事件", prompt)  # 预算只装得下最新 1 条
         self.assertNotIn("丙事件", prompt)
         with open(out, encoding="utf-8") as f:
-            self.assertIn("从当日 1 条 RSS 候选中筛选", f.read())
+            self.assertIn("从这一小时 1 条 RSS 候选中筛选", f.read())
 
     def test_main_calls_cf_when_feed_changed(self):
         import tempfile

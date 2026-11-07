@@ -67,7 +67,7 @@ DEFAULT_OUT = "/dev/shm/rss-hub/ai-digest.html"
 # os.environ.get("名字", "字面量") 这个形状把参数收进参数表与 OPERATIONS.md 核对，
 # 包一层常量它就静默退出契约，文档写错了也不会报红。
 DEFAULT_MODEL = "gemini-1.5-flash"
-PAGE_TITLE = "RSS 新闻 · AI 的目光"
+PAGE_TITLE = "这一小时 · AI 筛选的链接"
 # 两个带真实域名的地址：把 "https://" 与域名拆开写，避免门禁把裸外链判成硬编码
 #（URL 正则只认「https:// 紧跟域名」，拆开后就不匹配了）；它们随部署固定，不需要覆盖。
 GEMINI_ENDPOINT = "https://" + "generativelanguage.googleapis.com/v1beta/models"
@@ -588,10 +588,10 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>%s</title>
-<meta name="description" content="由 AI 从当日 %d 条 RSS 候选中筛选出的重点新闻，仅供参考。">
+<meta name="description" content="由 AI 从这一小时 %d 条 RSS 候选中筛选出的重点新闻链接，仅供参考。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="%s">
-<meta property="og:description" content="RSS 新闻 · AI 的目光：每日由 AI 从 RSS 候选中精选的重点新闻">
+<meta property="og:description" content="RSS 新闻 · 这一小时由 AI 从 RSS 候选中筛选的重点链接">
 <meta property="og:url" content="%s">
 <link rel="canonical" href="%s">
 <style>
@@ -617,7 +617,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
 <h1>%s</h1>
-<p class="sub">由 AI 从当日 %d 条 RSS 候选中筛选 · 生成于 %s · 模型 %s · 仅供参考</p>
+<p class="sub">由 AI 从这一小时 %d 条 RSS 候选中筛选 · 生成于 %s · 模型 %s · 仅供参考</p>
 <ul>
 %s
 </ul>
