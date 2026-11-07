@@ -5,6 +5,7 @@
 """
 import io
 import os
+import re
 import subprocess
 import sys
 import unittest
@@ -581,6 +582,107 @@ class TestExtractJsonArray(unittest.TestCase):
             AD._extract_json_array("完全没有 JSON 的文字")
         with self.assertRaises(ValueError):
             AD._extract_json_array("")
+
+
+class TestDedupSimilar(unittest.TestCase):
+    def _mk(self, titles):
+        return [{"title": t, "link": "http://x/%d" % i, "source": "S",
+                 "summary": "s", "date": "", "date_raw": ""}
+                for i, t in enumerate(titles)]
+
+    def test_folds_exact_duplicates(self):
+        # 两条标题逐字相同（不同源）→ 折叠成 1 条，保留最新（列表首条）
+        out = AD._dedup_similar(self._mk(["甲事件", "甲事件", "乙事件"]))
+        self.assertEqual([o["title"] for o in out], ["甲事件", "乙事件"])
+
+    def test_keeps_distinct(self):
+        out = AD._dedup_similar(self._mk(["甲事件", "乙事件", "丙事件"]))
+        self.assertEqual(len(out), 3)
+
+    def test_single_and_empty(self):
+        self.assertEqual(AD._dedup_similar(self._mk(["甲事件"])),
+                         self._mk(["甲事件"]))
+        self.assertEqual(AD._dedup_similar([]), [])
+
+    def test_near_duplicate_default_threshold(self):
+        # 「台风登陆台湾岛」与「台风登陆台湾」语义近似（差一字）→ 默认阈值折叠，
+        # 保留最新那条；与真正不同的「法国大选结果出炉」互不干扰
+        titles = ["台风登陆台湾岛", "台风登陆台湾", "法国大选结果出炉"]
+        out = AD._dedup_similar(self._mk(titles))
+        self.assertEqual([o["title"] for o in out],
+                         ["台风登陆台湾岛", "法国大选结果出炉"])
+
+    def test_threshold_param_controllable(self):
+        # 同一对近似稿，阈值抬到 0.99 就不再折叠（ratio 约 0.92 < 0.99）
+        titles = ["台风登陆台湾岛", "台风登陆台湾", "法国大选结果出炉"]
+        out = AD._dedup_similar(self._mk(titles), threshold=0.99)
+        self.assertEqual(len(out), 3)
+
+
+class TestSalvageJsonArray(unittest.TestCase):
+    def test_salvage_returns_partial_on_truncation(self):
+        # 最后一个对象被 max_tokens 截断（缺收尾 ]）→ 救回前面所有完整对象
+        text = '[{"idx":1,"reason":"甲"},{"idx":2,"reason":"乙"},{"idx":3,"reason":"丙'
+        self.assertEqual(len(AD._salvage_json_array(text)), 2)
+
+    def test_salvage_handles_fenced_truncated(self):
+        text = '```json\n[{"idx":1,"reason":"甲"},{"idx":2,"reason":"乙"},{"idx":3,"rea'
+        self.assertEqual(len(AD._salvage_json_array(text)), 2)
+
+    def test_salvage_no_complete_object_raises(self):
+        with self.assertRaises(ValueError):
+            AD._salvage_json_array('[{"idx":1,"reason":"甲')  # 连一个完整对象都没有
+
+    def test_extract_uses_salvage_on_truncation(self):
+        # _extract_json_array 在常规解析失败（典型截断）时改走抢救，而非抛错
+        text = '[{"idx":1,"reason":"甲"},{"idx":2,"reason":"乙"},{"idx":3,"reason":"丙'
+        self.assertEqual(len(AD._extract_json_array(text)), 2)
+
+
+class TestParseResponseRawTolerance(unittest.TestCase):
+    def test_parse_response_salvages_raw_truncated_text(self):
+        # parse_response 直接容错原始字符串：截断文本也能救回完整稿
+        items = AD.load_items(_write_feed(_tmp()))
+        text = '[{"title":"甲事件","reason":"甲"},{"title":"乙事件","rea'
+        out = AD.parse_response(text, items)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["title"], "甲事件")
+
+
+class TestMainDedupIntegration(unittest.TestCase):
+    def test_main_folds_near_duplicates_before_ai(self):
+        # 3 条喂入，其中两条语义近似 → 送 AI 的 prompt 只剩 2 条编号候选
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        feed_xml = (
+            '<?xml version="1.0"?><rss><channel>'
+            '<item><title>台风登陆台湾岛</title><link>http://a/1</link>'
+            '<description>摘要甲</description>'
+            '<pubDate>Mon, 01 Jan 2026 00:00:00 +0800</pubDate>'
+            '<source>来源A</source></item>'
+            '<item><title>台风登陆台湾</title><link>http://b/2</link>'
+            '<description>摘要乙</description>'
+            '<pubDate>Mon, 01 Jan 2026 00:00:00 +0800</pubDate>'
+            '<source>来源B</source></item>'
+            '<item><title>法国大选结果出炉</title><link>http://c/3</link>'
+            '<description>摘要丙</description>'
+            '<pubDate>Mon, 01 Jan 2026 00:00:00 +0800</pubDate>'
+            '<source>来源C</source></item>'
+            '</channel></rss>')
+        feed = os.path.join(tmp, "feed.xml")
+        with open(feed, "w", encoding="utf-8") as f:
+            f.write(feed_xml)
+        out = os.path.join(tmp, "ai-digest.html")
+        fake = mock.MagicMock(return_value=[{"idx": 1, "reason": "甲"}])
+        env = {"FEED_XML": feed, "OUT_HTML": out, "AI_TOP_N": "2",
+               "LLM_PROVIDER": "openai", "LLM_API_KEY": "x",
+               "LLM_MODEL": "deepseek-chat"}
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(AD, "call_openai", fake):
+            AD.main()
+        prompt = fake.call_args[0][4]
+        numbered = [ln for ln in prompt.split("\n") if re.match(r"^\d+\. \[", ln)]
+        self.assertEqual(len(numbered), 2)  # 近义两条折叠 → 2 条送 AI
 
 
 if __name__ == "__main__":

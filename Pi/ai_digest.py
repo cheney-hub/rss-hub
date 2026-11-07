@@ -16,9 +16,10 @@
     「今天的新闻」而非仅最近 120 条里挑。**存储与送选分离**：滚动池只管存
     （tmpfs 廉价，尽量保住全天条目），真正送 AI 的是「最新在前」的送选前缀，
     条数由 token 预算决定（AI_PROMPT_TOKEN_BUDGET，默认 30000 → 约 196 条，
-    比真机验证过的 120 条略多、仍在 8B 上下文安全区，绝不顶爆）。同一稿不全局去重，
-    可因重要性变化隔几小时再入选。送选前缀指纹未变才跳 CF 调用（只跳真正
-    静止时段）。定时器白天每小时、夜间不跑。
+    比真机验证过的 120 条略多、仍在 8B 上下文安全区，绝不顶爆）。送选前缀还会按
+    标题语义近似折叠同事件的冗余稿（_dedup_similar），让 AI 看到去重后的事件集合、
+    挑出的重点更多样。同一稿不全局去重，可因重要性变化隔几小时再入选。送选前缀指纹
+    未变才跳 CF 调用（只跳真正静止时段）。定时器白天每小时、夜间不跑。
     单次成本核算（明细见下方常量注释）：合计 ≈165 neurons/次；白天 15 次触发
     （指纹未变还会跳过）≤2.5k neurons/天 ≈ 25% 免费档 10,000 neurons。
 
@@ -257,6 +258,37 @@ def call_gemini(api_key, model, system, prompt):
     return _extract_json_array(text)
 
 
+def _salvage_json_array(text):
+    """从可能被 max_tokens 截断的文本里尽量抠出「所有完整对象」组成的列表。
+
+    模型在免费 8B 上偶发输出被 max_tokens 截断：最后一个 {...} 不完整、没有收尾
+    的 ]，json.loads 必然失败、整页走兜底。这里用 raw_decode 从头逐个解析完整
+    对象，遇到第一个不完整处停下 —— 于是除最后那条截断稿外的所有完整稿都保住，
+    页面照常出（少一条远胜整页停更）。抠不出任何完整对象才抛错，交给调用方兜底。
+    """
+    if not text:
+        raise ValueError("模型返回为空")
+    start = text.find("[")
+    if start == -1:
+        raise ValueError("未找到 JSON 数组")
+    decoder = json.JSONDecoder()
+    i, n, items = start, len(text), []
+    while i < n:
+        i = text.find("{", i)
+        if i == -1:
+            break
+        try:
+            obj, end = decoder.raw_decode(text, i)
+        except ValueError:
+            break  # 第一个不完整对象处停下：其后的都不要了
+        if isinstance(obj, dict):
+            items.append(obj)
+        i = end
+    if not items:
+        raise ValueError("截断文本中无完整对象")
+    return items
+
+
 def _extract_json_array(text):
     """从模型文本里尽量抠出一个 JSON 数组，兼容四类情况：
        - 直接就是 JSON 数组；
@@ -288,7 +320,9 @@ def _extract_json_array(text):
             for v in val.values():
                 if isinstance(v, list):
                     return v
-    raise ValueError("无法解析 JSON 数组: %r" % text[:200])
+    # 上述都失败：多半是输出被 max_tokens 截断（最后一个对象不完整、无收尾 ]）。
+    # 尽力救回所有完整对象，除最后那条截断稿外都保住，避免整页走兜底。
+    return _salvage_json_array(text)
 
 
 def call_openai(base_url, api_key, model, system, prompt, max_tokens=8192):
@@ -364,6 +398,13 @@ def parse_response(gem_list, items):
       * 同一条标题被模型返回两次时只保留第一次，配 rank 连续。
     """
     out = []
+    # 容错：若拿到的是模型原始文本（而非已解析列表），先尽力救回完整对象
+    # （可能含被 max_tokens 截断的残稿）——少一条远胜整页停更。
+    if isinstance(gem_list, str):
+        try:
+            gem_list = _salvage_json_array(gem_list)
+        except ValueError:
+            return out
     if not isinstance(gem_list, list):
         return out
     pool = {}
@@ -695,6 +736,42 @@ def _budget_items(items, budget):
     return kept
 
 
+# 同事件近似稿折叠阈值：标题归一后 difflib 字符 ratio ≥ 此值，视为「同一事件的不同
+# 表述」，只留最新那条。取保守 0.72：仅折叠强近似稿（不同媒体对同一事件的措辞差异、
+# 漏字/多「的」之类），不会误伤只是共享常见词、实则不同的新闻。低于阈值一律不同事件。
+_SEMANTIC_DUP_THRESHOLD = 0.72
+
+
+def _dedup_similar(items, threshold=_SEMANTIC_DUP_THRESHOLD):
+    """按标题语义近似折叠同事件的冗余稿，只保留每个事件簇里最新的那条。
+
+    为什么在送 AI 之前做：62 个源常对同一事件用不同措辞发稿，196 条候选里混着
+    大量「同一事件、不同标题」的近似稿。它们既挤占 token 预算，又让 AI 在重复
+    事件里挑、稀释真正多样的重点。折叠后 AI 看到的是去重后的事件集合，挑出的
+    20 条更多样、更少「同事件刷屏」。
+
+    为什么保守阈值 + 只与已保留者比：避免误伤标题相近但内容不同的稿；候选已按
+    最新在前排列，先入者即最新，故保留的是每个事件最新鲜的那份。注意：这不是
+    「排除已推荐条目」——用户定全天不去重，这里只折叠同一时刻同一事件的多份
+    冗余副本，不影响隔几小时因重要性变化再次入选（那时它已不在本轮送选前缀里）。
+
+    复杂度：逐条与已保留者比对，O(n²) 短串 difflib，n≤196，毫秒级。
+    """
+    kept = []
+    kept_norm = []
+    for it in items:
+        n = _norm_title(it.get("title", ""))
+        dup = False
+        for kn in kept_norm:
+            if kn and difflib.SequenceMatcher(None, n, kn).ratio() >= threshold:
+                dup = True
+                break
+        if not dup:
+            kept.append(it)
+            kept_norm.append(n)
+    return kept
+
+
 def _fallback(out_path, reason, had_key, pool_size=0):
     if os.path.exists(out_path):
         _log("兜底：保留上一期页面（%s，had_key=%s）" % (reason, had_key))
@@ -724,6 +801,38 @@ def _invoke_llm(provider, prompt):
     return call_openai(base, api_key, model, SYSTEM, prompt), model, api_key
 
 
+def _generate_and_write(out, prompt_items, top_n, accum, budget_items, sig,
+                        sig_path, provider):
+    """成功路径：调 LLM → 解析 → 截断 → 渲染 → 落盘 → 写指纹 → 日志。
+
+    从 main 抽出只为压住函数行数；逻辑与「一致性铁律」不变：页面 N 永远等于
+    AI 实际看到的送选前缀（去重后）条数。
+    """
+    prompt = build_prompt(prompt_items, top_n + _ASK_BUFFER, provider)
+    api_key = ""
+    try:
+        raw, model, api_key = _invoke_llm(provider, prompt)
+    except Exception as e:  # 网络/限流/协议/缺 key —— 一律兜底
+        _fallback(out, "AI 调用失败: %s" % e, bool(api_key), len(prompt_items))
+        return 0
+
+    # 一致性铁律：解析/页面文案全以「AI 实际看到的送选前缀」为准 —— 它看到几条，
+    # 页面「从当日 N 条 RSS 候选中筛选」就写几条，绝不拿全量滚动池充数。
+    results = parse_response(raw, prompt_items)
+    if not results:
+        _fallback(out, "AI 返回为空或无法解析", bool(api_key), len(prompt_items))
+        return 0
+    results = _keep_top(results, top_n)
+
+    _atomic_write(out, render_html(results, model, len(prompt_items)))
+    _write_sig(sig_path, sig)
+    n_raw = len(raw) if isinstance(raw, list) else 0
+    _log("已生成 %d 条重点新闻 -> %s（模型 %s，滚动池 %d 条 / 送选 %d 条 / 去重后 %d 条 / 请求 %d 条 / 返回 %d 条 / 对上 %d 条）"
+         % (len(results), out, model, len(accum), len(budget_items), len(prompt_items),
+            top_n + _ASK_BUFFER, n_raw, len(results)))
+    return 0
+
+
 def main():
     feed = os.environ.get("FEED_XML", DEFAULT_FEED)
     out = os.environ.get("OUT_HTML", DEFAULT_OUT)
@@ -749,7 +858,10 @@ def main():
                                     str(AI_PROMPT_TOKEN_BUDGET)))
     except ValueError:
         budget = AI_PROMPT_TOKEN_BUDGET
-    prompt_items = _budget_items(accum, budget)
+    budget_items = _budget_items(accum, budget)
+    # 送选前缀再按标题语义近似折叠同事件的冗余稿（不同媒体对同一事件的措辞差异），
+    # 让 AI 看到去重后的事件集合、挑出的重点更多样（详见 _dedup_similar）。
+    prompt_items = _dedup_similar(budget_items)
 
     # 送选前缀指纹未变则跳过 CF 调用（省免费额度）：仅当已有产物页且指纹一致才跳；
     # 指纹变了（哪怕只增删/换位一条）就必须重算，因为 20 条重点可能随之不同。
@@ -759,30 +871,8 @@ def main():
             and sig == _read_sig(sig_path)):
         _log("源 feed 未变（指纹一致），跳过 CF 调用，保留现有页面 -> %s" % out)
         return 0
-
-    prompt = build_prompt(prompt_items, top_n + _ASK_BUFFER, provider)
-    api_key = ""
-    try:
-        raw, model, api_key = _invoke_llm(provider, prompt)
-    except Exception as e:  # 网络/限流/协议/缺 key —— 一律兜底
-        _fallback(out, "AI 调用失败: %s" % e, bool(api_key), len(prompt_items))
-        return 0
-
-    # 一致性铁律：解析/页面文案全以「AI 实际看到的送选前缀」为准 —— 它看到几条，
-    # 页面「从当日 N 条 RSS 候选中筛选」就写几条，绝不拿全量滚动池充数。
-    results = parse_response(raw, prompt_items)
-    if not results:
-        _fallback(out, "AI 返回为空或无法解析", bool(api_key), len(prompt_items))
-        return 0
-    results = _keep_top(results, top_n)
-
-    _atomic_write(out, render_html(results, model, len(prompt_items)))
-    _write_sig(sig_path, sig)
-    n_raw = len(raw) if isinstance(raw, list) else 0
-    _log("已生成 %d 条重点新闻 -> %s（模型 %s，滚动池 %d 条 / 送选 %d 条 / 请求 %d 条 / 返回 %d 条 / 对上 %d 条）"
-         % (len(results), out, model, len(accum), len(prompt_items),
-            top_n + _ASK_BUFFER, n_raw, len(results)))
-    return 0
+    return _generate_and_write(out, prompt_items, top_n, accum, budget_items,
+                              sig, sig_path, provider)
 
 
 if __name__ == "__main__":

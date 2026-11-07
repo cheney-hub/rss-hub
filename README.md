@@ -120,7 +120,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── audit_source_dates.py   # 源时间戳体检：逐个源量它的发布时间能不能信
 │   ├── gate_contracts.py        # 跨文件契约：版本 / workflow 调参 / timer 节拍 / 用例数 ↔ 文档 / 快照目录
 │   └── sim_rotate.py            # 24 小时轮播仿真（新鲜度 / 覆盖率 / 名次 / 落后片数）
-├── tests/                   # 432 个用例，零依赖、不联网（数量由门禁核对，别手改）
+├── tests/                   # 443 个用例，零依赖、不联网（数量由门禁核对，别手改）
 │   ├── test_arrival.py      #   14 例：时间戳失真源的排序修正（谁算「首次见到」、记忆链不断）
 │   ├── test_audit_source_dates.py # 14 例：源时间戳体检判据（共用时钟 / 逐条改时间 / 未来时间 / 时钟偏差容忍）
 │   ├── test_core.py         #   58 例：抓取与序列化的核心行为（清洗、去重、解析、轮播稳态、workflow 参数契约）
@@ -134,7 +134,7 @@ feeds.txt ──► build_feed.py ──► docs/feed.xml ──► GitHub Pages
 │   ├── test_golden.py       #    1 例：渲染输出与 golden.txt 按行比对（换行已归一）
 │   ├── test_pi_serve.py     #   58 例：静态服务（穿越、白名单、Host、限流、响应缓存、304、CORS 与 beacon）
 │   ├── test_journal_snapshot.py # 16 例：每日日志快照（落盘位置、只留 3 份、按文件名清理、原子写、24h 窗口）
-│   ├── test_ai_digest.py   #  50 例：AI 重点页（feed 解析、提示词按后端区分对象/数组且要求回显选中标题、模型按标题回显映射（简繁归一/空格漂移容错/相似度兜底救轻微改写/idx 兜底/同条去重/改写过线即丢）、理由抄任何标题即判无效、≤10字精华渲染端硬截断、简繁对照表格式自检、时间统一新加坡时间、_keep_top 截断、当日滚动池 token 预算送选（预算内全收/超预算只留最新前缀/预算极小至少 1 条/main 按 550 预算只送 1 条且页面候选数同步）、坏数值 env 不崩 import（subprocess 走真实启动路径）、渲染（文案报候选池尺寸而非结果数）、候选池指纹跳过未变源、自 canonical、无交叉链接、Gemini/OpenAI 请求构造、JSON 抠取健壮化含模型自选键名兜底、Gemini/OpenAI 两后端兜底）
+│   ├── test_ai_digest.py   #  61 例：AI 重点页（feed 解析、提示词按后端区分对象/数组且要求回显选中标题、模型按标题回显映射（简繁归一/空格漂移容错/相似度兜底救轻微改写/idx 兜底/同条去重/改写过线即丢）、理由抄任何标题即判无效、≤10字精华渲染端硬截断、简繁对照表格式自检、时间统一新加坡时间、_keep_top 截断、当日滚动池 token 预算送选（预算内全收/超预算只留最新前缀/预算极小至少 1 条/main 按 550 预算只送 1 条且页面候选数同步）、语义近似去重（精确折叠/保留最新/阈值可调/main 集成折叠后送 AI）、JSON 截断容错（raw_decode 救回完整对象/围栏截断/无完整对象仍抛错/_extract 截断改走抢救/parse_response 直接容错原始串）、坏数值 env 不崩 import（subprocess 走真实启动路径）、渲染（文案报候选池尺寸而非结果数）、候选池指纹跳过未变源、自 canonical、无交叉链接、Gemini/OpenAI 请求构造、JSON 抠取健壮化含模型自选键名兜底、Gemini/OpenAI 两后端兜底）
 │   ├── test_pi_rotate_screen.py # 21 例：显示时间线（按需落盘、坏状态自愈、地址不写死）
 │   ├── test_kindle_screen.py # 31 例：Kindle 排版（折行硬上限、只画一遍列表、PNG 原子替换、时间归一到东八区）
 │   ├── test_kindle_page.py   # 16 例：网页看板（伪协议过滤、HTML 转义、空池子不砸旧页、时间归一）
@@ -379,7 +379,7 @@ python3 build_feed.py
 改动代码前后跑这三条，全绿再提交（完整标准见 [CODE_REVIEW.md](CODE_REVIEW.md)）：
 
 ```bash
-python3 -m unittest discover -s tests -v    # 单测：432 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
+python3 -m unittest discover -s tests -v    # 单测：443 个用例（含分层契约、行为基线、轮播边界、清洗边界、门禁自检）
 python3 tools/review_check.py               # 审查门禁：文件/函数超限、裸 except、生成物漂移、文档脱节、版本号
 python3 tools/check_secrets.py              # 凭据扫描
 ```
@@ -427,7 +427,7 @@ python3 tools/golden_snapshot.py --write    # 更新基线
 | 位置 | 怎么看 |
 |---|---|
 | 当前版本 | [version.py](version.py) 的 `__version__`，本页顶部与两个页面页脚同步显示 |
-| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.21.9` |
+| 命令行 | `python3 build_feed.py --version` → `rss-hub 1.21.10` |
 | 线上 | `curl -s https://cheney-hub.github.io/rss-hub/feed.xml \| grep generator` |
 | 历史 | [CHANGELOG.md](CHANGELOG.md) |
 
