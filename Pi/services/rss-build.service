@@ -50,3 +50,8 @@ TimeoutStopSec=30
 # 免得每 5 分钟在 SD 卡上碰一次 /tmp。
 ExecStartPre=/usr/bin/install -d -m 700 /dev/shm/rss-hub /dev/shm/rss-hub/kindle
 ExecStart=/bin/bash -c 'exec 9>/dev/shm/rss-hub/rss-build.lock; flock -n 9 || exit 0; exec /usr/bin/python3 /home/user/rss-hub/build_feed.py'
+
+# 每次构建后把当前 feed 并入「当日滚动池」ai-accum.json（reader「全天缓存」视图的数据源）：
+# 随 rss-build 全天节拍刷新（白天每 5 分钟、夜间每小时），按归一标题去重 + 原子写 tmpfs，
+# 不落 SD。AI 摘要进程不再负责维护池子，只从池子读。失败以 0 退出，绝不影响本次构建。
+ExecStartPost=/bin/bash -c 'exec /usr/bin/python3 /home/user/pi-pipeline/accum_update.py || true'

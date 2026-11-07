@@ -120,6 +120,7 @@
            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:48px 0;font-size:14px;line-height:1.9}
   .empty a{color:var(--accent)}
+  .acc-note{color:var(--sub);font-size:12.5px;margin:-6px 0 18px;min-height:0;line-height:1.6}
 
   .foot{color:var(--sub);font-size:12px;text-align:center;margin-top:34px;line-height:2}
   .foot a{color:var(--sub);text-decoration:none}
@@ -151,6 +152,7 @@
       <div class="chip"><b id="t">—</b><span id="tL">最后构建</span></div>
       <div class="chip"><b id="r">—</b><span>设备版轮播</span></div>
     </div>
+    <p class="acc-note" id="accNote"></p>
 
     <div class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -176,10 +178,11 @@
 <script>
 /* 设备版与轮播游标都在树莓派上（moreaix.com），GitHub Pages 只发完整版 feed.xml。
    跨域读是允许的：Pi 的 serve.py 对所有响应都带 access-control-allow-origin: *。
-   两个数据源：
+   两个数据源（全天缓存视图二者按 link 去重合并，保证含当前条目）：
      · feed.xml      —— 每 5 分钟重建，去重后最新 120 条（任意主机都有）。
      · ai-accum.json —— 当日滚动池（tmpfs，本地零点重置，上限 AI_ACCUM_CAP=2000），
-                       由树莓派上的 AI 摘要进程累积，GitHub Pages 镜像没有。 */
+                       由 rss-build 每 5 分钟并入、按标题去重累积；GitHub Pages 镜像没有，
+                       此时全天缓存降级显示当前 feed 的 120 条并提示回 moreaix.com。 */
 
 const STATE_URL  = 'https://moreaix.com/rss/rotate.json';
 
@@ -276,18 +279,47 @@ function parseFeed(txt){
   render();
 }
 
-// 视图二：ai-accum.json（{date, items:[{title,link,source,summary,date_raw}]}）
-function parseAccum(obj){
-  const items = Array.isArray(obj?.items) ? obj.items : [];
-  ALL_ITEMS = items.map(it => ({
+// 视图二：全天缓存 = ai-accum.json（当天见过的全部）+ 当前 feed.xml（保证含最新条目）
+// 两份按 link 去重合并，feed 里不在池中的当前条目一定会出现 —— 「全天 = 所有」。
+function toItem(it){
+  return {
     title: it.title || '',
     link:  (it.link || '').trim(),
-    source:(it.source || '').trim(),
+    source:(it.source || '').trim() || '未知来源',
     desc:  (it.summary || '').trim(),
     date:  parseDate(it.date_raw)
-  })).sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
-  setAccumStats(ALL_ITEMS.length, obj?.date || '—');
-  render();
+  };
+}
+function loadAccum(){
+  const t = Date.now();
+  Promise.all([
+    fetch('./ai-accum.json?t=' + t, {cache:'no-store'}).then(r => r.ok ? r.json() : null),
+    fetch('./feed.xml?t=' + t, {cache:'no-store'}).then(r => r.ok ? r.text() : null)
+  ]).then(([acc, feedTxt]) => {
+    let items = (acc && Array.isArray(acc.items)) ? acc.items.map(toItem) : [];
+    const have = new Set(items.map(i => i.link));
+    let fromFeed = 0;
+    if (feedTxt){
+      const doc = new DOMParser().parseFromString(feedTxt, 'text/xml');
+      doc.querySelectorAll('item').forEach(it => {
+        const link = (it.querySelector('link')?.textContent || '').trim();
+        if (!link || have.has(link)) return;
+        items.push({
+          title: it.querySelector('title')?.textContent || '',
+          link: link,
+          source: (it.querySelector('source')?.textContent || '').trim() || '未知来源',
+          desc: (it.querySelector('description')?.textContent || '').trim(),
+          date: parseDate(it.querySelector('pubDate')?.textContent)
+        });
+        have.add(link);
+        fromFeed++;
+      });
+    }
+    items.sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
+    ALL_ITEMS = items;
+    setAccumStats(items.length, (acc && acc.date) ? acc.date : '—', fromFeed, !acc);
+    render();
+  }).catch(() => showError('全天缓存载入失败，请稍后重试或切到「最新头条」。'));
 }
 
 function setFeedStats(n, t){
@@ -296,12 +328,21 @@ function setFeedStats(n, t){
   document.getElementById('nL').textContent = '当前条目';
   document.getElementById('tL').textContent = '最后构建';
 }
-function setAccumStats(n, date){
+function setAccumStats(n, date, fromFeed, isMirror){
   document.getElementById('n').textContent = n;
   document.getElementById('t').textContent = date;
   document.getElementById('nL').textContent = '全天条目';
   document.getElementById('tL').textContent = '缓存日期';
   document.getElementById('accN').textContent = n ? '(' + n + ')' : '';
+  const note = document.getElementById('accNote');
+  if (isMirror){
+    note.textContent = 'GitHub Pages 镜像没有全天缓存文件，这里显示当前 ' + n
+      + ' 条；完整「全天所有」请在 moreaix.com/rss/reader.html 查看。';
+  } else if (fromFeed > 0){
+    note.textContent = '已并入当前 feed 的 ' + fromFeed + ' 条最新条目，确保含当下头条。';
+  } else {
+    note.textContent = '';
+  }
 }
 
 function showError(msg){
@@ -316,24 +357,20 @@ function showError(msg){
 function loadView(){
   const rf = document.getElementById('refresh');
   if(rf){ rf.disabled = true; rf.textContent = '刷新中…'; }
-  const url = CURRENT_VIEW === 'accum'
-    ? './ai-accum.json?t=' + Date.now()
-    : './feed.xml?t=' + Date.now();
-  fetch(url, {cache:'no-store'})
+  const done = () => { if(rf){ rf.disabled = false; rf.textContent = '刷新'; } };
+  if(CURRENT_VIEW === 'accum'){
+    // loadAccum 内部已 .catch 处理错误与渲染，这里只负责复位刷新按钮
+    Promise.resolve(loadAccum()).finally(done);
+    return;
+  }
+  fetch('./feed.xml?t=' + Date.now(), {cache:'no-store'})
     .then(r => {
       if(!r.ok) throw new Error('HTTP ' + r.status);
-      return CURRENT_VIEW === 'accum' ? r.json() : r.text();
+      return r.text();
     })
-    .then(CURRENT_VIEW === 'accum' ? parseAccum : parseFeed)
-    .catch(e => {
-      if(CURRENT_VIEW === 'accum'){
-        showError('全天缓存仅由树莓派提供（moreaix.com），GitHub Pages 镜像没有这一份。'
-          + '请访问 moreaix.com/rss/reader.html，或切到「最新头条」查看最近 120 条。');
-      } else {
-        showError('feed 载入失败：' + e.message);
-      }
-    })
-    .finally(() => { if(rf){ rf.disabled = false; rf.textContent = '刷新'; } });
+    .then(parseFeed)
+    .catch(e => showError('feed 载入失败：' + e.message))
+    .finally(done);
 }
 
 function switchView(v){
@@ -343,7 +380,7 @@ function switchView(v){
   document.getElementById('tab-accum').classList.toggle('active', v === 'accum');
   document.getElementById('lede').textContent = v === 'feed'
     ? '62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。'
-    : '当日滚动缓存（最多 400 条，本地零点重置）· 由树莓派上的 AI 摘要进程全天累积去重头条；点标题跳原文，可搜索筛选。';
+    : '当天见过的全部 RSS 条目（本地零点重置）· 由 rss-build 每 5 分钟并入、按标题去重；已并入当前 feed 确保含当下头条；点标题跳原文，可搜索筛选。';
   loadView();
 }
 

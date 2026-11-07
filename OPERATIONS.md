@@ -70,7 +70,7 @@ python3 tools/gen_minute_workflow.py 13
 | `LLM_API_KEY` | 空（由 `llm.env` 注入） | **只有树莓派**：OpenAI 兼容平台 key；默认后端是 **Cloudflare Workers AI 免费档**（10,000 Neurons/天、无需绑卡，你已有 CF 账号，只需一个带 Workers AI 权限的 API Token），写在 `/home/user/site/llm.env`（不进仓库，`EnvironmentFile=-` 注入）；空 = 走兜底保留上一期重点页。配合 `LLM_PROVIDER`（默认 `openai`，可设 `gemini` 切回 Gemini 后端，需境外网络/代理）、`LLM_MODEL`（默认 `@cf/meta/llama-3.1-8b-instruct-fp8-fast`（基础版 llama-3.1-8b 已于 2026-05-30 下线），免费档；可换更大免费的 70B/30B）、`LLM_BASE_URL`（默认 Cloudflare Workers AI 端点，含你的 account id，见 `ai_digest.py` 常量）使用 |
 | `LLM_BASE_URL` | `https://api.cloudflare.com/client/v4/accounts/<你的id>/ai/v1` | OpenAI 兼容接口基址（默认 Cloudflare Workers AI 免费档）。一般不用改；若换 DeepSeek/通义等，设此变量 + `LLM_MODEL` 即可，无需改代码 |
 | `AI_TOP_N` | `20` | **只有树莓派**：AI 重点页每期从当日滚动池的送选前缀里挑多少条（20 条一页刚好快速看完）。模型被要求回显选中标题并配一句话理由；理由若抄了任何一条的标题会被判无效，页面不出现「标题与那行小字各说各话」 |
-| `AI_ACCUM_PATH` | `/dev/shm/rss-hub/ai-accum.json` | **只有树莓派**：当日滚动池落盘路径（tmpfs，不写 SD），按本地零点重置；每小时把 rss-build 的最新 120 条并进去，AI 从「今天见过的全部条目」而非仅当前 120 快照里挑 |
+| `AI_ACCUM_PATH` | `/dev/shm/rss-hub/ai-accum.json` | **只有树莓派**：当日滚动池落盘路径（tmpfs，不写 SD），按本地零点重置；现在由 `rss-build` 每 5 分钟（白天）/ 每小时（夜间）经 `accum_update.py`（`ExecStartPost`）持续把最新 120 条并进去、按标题去重，reader 的「全天缓存」视图即读它；`ai_digest.main()` 仍并一次作兜底。AI 从「今天见过的全部条目」而非仅当前 120 快照里挑 |
 | `AI_ACCUM_CAP` | `2000` | **只有树莓派**：当日滚动池的**存储**上限（tmpfs 廉价，足以容纳全天去重后的全部独立头条；若仍不够可由环境变量调大，超出丢最旧）。存储与送选分离：真正送 AI 的条数由 `AI_PROMPT_TOKEN_BUDGET` 决定，调大这里不会顶爆 8B 上下文 |
 | `AI_PROMPT_TOKEN_BUDGET` | `30000` | **只有树莓派**：送选 token 预算——从滚动池按「最新在前」截取前缀送 AI，每条估 150 token、固定开销 500，30000 约可送 196 条；超出真机验证过的 120 条包线，若 CF 端上下文不足会走兜底保留上一期页面（安全失败） |
 
