@@ -356,7 +356,7 @@ class TestBadEnvImport(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         # 坏值分别回退各自默认值，而不是带着半初始化模块退出
         # （坏输入故意用 "20000 tokens"≠默认值，证明回退不是原样透传）
-        self.assertEqual(r.stdout.strip(), "400 30000")
+        self.assertEqual(r.stdout.strip(), "2000 30000")
 
 
 class TestMainFallback(unittest.TestCase):

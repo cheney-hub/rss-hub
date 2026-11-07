@@ -12,7 +12,7 @@
     若从没有过页面，则写一张「今日暂时无法生成」的占位页（同样自包含、自 canonical）。
     单元以退出码 0 结束，绝不连累 rss-build / moreaix-site。
   * **省额度 + 当天滚动池**：每小时把 rss-build 的最新 120 条并入「当日滚动池」
-    （存于 /dev/shm，按本地零点重置，存储上限 AI_ACCUM_CAP=400），让 AI 从
+    （存于 /dev/shm，按本地零点重置，存储上限 AI_ACCUM_CAP=2000，可经环境变量调大），让 AI 从
     「今天的新闻」而非仅最近 120 条里挑。**存储与送选分离**：滚动池只管存
     （tmpfs 廉价，尽量保住全天条目），真正送 AI 的是「最新在前」的送选前缀，
     条数由 token 预算决定（AI_PROMPT_TOKEN_BUDGET，默认 30000 → 约 196 条，
@@ -33,8 +33,9 @@
   OUT_HTML     输出页路径，默认 /dev/shm/rss-hub/ai-digest.html
   AI_TOP_N     挑多少条，默认 20（一页刚好快速看完）
   AI_ACCUM_PATH 当日滚动池落盘路径，默认 /dev/shm/rss-hub/ai-accum.json（tmpfs，不写 SD）
-  AI_ACCUM_CAP  当日滚动池**存储**上限，默认 400（tmpfs 廉价，尽量保住全天条目；
-                送选条数由 token 预算决定，见 AI_PROMPT_TOKEN_BUDGET）
+  AI_ACCUM_CAP  当日滚动池**存储**上限，默认 2000（tmpfs 廉价，足以容纳全天去重后的
+                全部独立头条；若仍不够可由环境变量调大。送选条数由 token 预算决定，
+                见 AI_PROMPT_TOKEN_BUDGET）
   AI_PROMPT_TOKEN_BUDGET 送选 token 预算，默认 30000（每条候选估 150 token、
                 固定开销 500，约可送 196 条）
   LLM_PROVIDER 后端：openai（默认，Cloudflare Workers AI 免费档，10,000 Neurons/天、
@@ -89,13 +90,13 @@ DEFAULT_ACCUM_PATH = "/dev/shm/rss-hub/ai-accum.json"
 # 若在 import 时抛 ValueError，服务启动即退非零——违背文件头「缺了也不崩」的
 # 自我声明。坏值一律回退默认值；os.environ.get("名字","字面量") 的字面形状
 # 必须留在 try 块内原样保留（门禁靠这个形状收参数表，不能改成变量传参）。
-ACCUM_CAP = 400
+ACCUM_CAP = 2000
 try:
-    ACCUM_CAP = int(os.environ.get("AI_ACCUM_CAP", "400"))
+    ACCUM_CAP = int(os.environ.get("AI_ACCUM_CAP", "2000"))
 except ValueError:
     pass
 
-# 送选按 token 预算截取（存储 400 / 送选 ≈196 条）：每条候选估 150 token ——
+# 送选按 token 预算截取（存储 2000 / 送选 ≈196 条）：每条候选估 150 token ——
 # 标题+来源+摘要≤120 字 ≈ 170 字，按 Llama-3 分词留余量；固定开销 500 token
 # 是 system 提示 + 尾部格式约束的底价。预算 30000 → (30000-500)/150 ≈ 196 条，
 # 超出真机验证过的 120 条包线；若 CF 端上下文不够，兜底会保留上一期页面（安全失败）。

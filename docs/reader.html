@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RSS 聚合头条 · 阅读</title>
-<meta name="description" content="RSS 聚合头条网页阅读版：可选「最新头条」（feed.xml，120 条）或「全天缓存」（当日滚动池，最多 400 条、本地零点重置）；实时卡片、搜索筛选、设备版轮播状态。">
+<meta name="description" content="RSS 聚合头条网页阅读版：可选「最新头条」（feed.xml，120 条）或「全天缓存」（当日滚动池，最多 2000 条、本地零点重置）；实时卡片、搜索筛选、设备版轮播状态。">
 <meta name="keywords" content="RSS 阅读, 大中华区新闻, 墨水屏新闻, Kindle 新闻, 多源头条聚合">
 <link rel="canonical" href="https://moreaix.com/rss/reader.html">
 <link rel="alternate" type="application/rss+xml" title="RSS 聚合头条（完整版）" href="https://moreaix.com/rss/feed.xml">
@@ -178,7 +178,7 @@
    跨域读是允许的：Pi 的 serve.py 对所有响应都带 access-control-allow-origin: *。
    两个数据源：
      · feed.xml      —— 每 5 分钟重建，去重后最新 120 条（任意主机都有）。
-     · ai-accum.json —— 当日滚动池（tmpfs，本地零点重置，上限 AI_ACCUM_CAP=400），
+     · ai-accum.json —— 当日滚动池（tmpfs，本地零点重置，上限 AI_ACCUM_CAP=2000），
                        由树莓派上的 AI 摘要进程累积，GitHub Pages 镜像没有。 */
 
 const STATE_URL  = 'https://moreaix.com/rss/rotate.json';
