@@ -87,9 +87,21 @@
            -webkit-background-clip:text;background-clip:text;color:transparent}
   .hero .lede{color:var(--sub);font-size:13px;margin:0 0 10px;max-width:760px;line-height:1.6}
 
-  /* 视图切换 */
+  /* 视图切换 + 右侧 AI 入口 */
+  .tabs-row{display:flex;align-items:center;gap:14px;justify-content:space-between;
+            flex-wrap:wrap;margin-bottom:18px}
   .tabs{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;
-        padding:4px;gap:4px;margin-bottom:18px;box-shadow:var(--shadow);flex-wrap:wrap}
+        padding:4px;gap:4px;margin-bottom:0;box-shadow:var(--shadow);flex-wrap:wrap}
+  .ai-gaze{display:inline-flex;align-items:center;gap:6px;flex:none;
+           padding:9px 16px;border-radius:11px;font-size:13.5px;font-weight:700;
+           text-decoration:none;color:#fff;white-space:nowrap;
+           background:linear-gradient(92deg,var(--accent-2),#5b8def);
+           box-shadow:var(--shadow);transition:.15s}
+  .ai-gaze:hover{transform:translateY(-1px);box-shadow:var(--shadow-hover);filter:brightness(1.04)}
+  .ai-gaze .arrow{font-size:12px;opacity:.9}
+  .ai-gaze .spark{width:7px;height:7px;border-radius:50%;background:#fff;opacity:.85;
+                  box-shadow:0 0 6px rgba(255,255,255,.7)}
+  @media (max-width:560px){ .ai-gaze{order:3;flex-basis:100%;justify-content:center} }
   .tab{border:0;background:transparent;color:var(--sub);font-size:14px;padding:8px 16px;border-radius:9px;
        cursor:pointer;transition:.15s;font-weight:600;display:inline-flex;align-items:center;gap:6px}
   .tab:hover{color:var(--text)}
@@ -154,9 +166,14 @@
     <h1>大中华区头条 · 实时聚合阅读</h1>
     <p class="lede" id="lede">62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。</p>
 
-    <div class="tabs" role="tablist">
-      <button class="tab active" id="tab-feed" onclick="switchView('feed')">最新头条</button>
-      <button class="tab" id="tab-accum" onclick="switchView('accum')">全天缓存 <span class="cnt" id="accN"></span></button>
+    <div class="tabs-row">
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="tab-feed" onclick="switchView('feed')">最新头条</button>
+        <button class="tab" id="tab-accum" onclick="switchView('accum')">全天缓存 <span class="cnt" id="accN"></span></button>
+      </div>
+      <a class="ai-gaze" href="./ai-digest.html" target="_blank" rel="noopener noreferrer">
+        <span class="spark"></span>一小时 AI 目光<span class="arrow">↗</span>
+      </a>
     </div>
 
     <p class="acc-note" id="accNote"></p>
