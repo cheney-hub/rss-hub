@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RSS 聚合头条 · 阅读</title>
-<meta name="description" content="RSS 聚合头条网页阅读版：可选「最新头条」（feed.xml，120 条）或「全天缓存」（当日滚动池，最多 2000 条、本地零点重置）；实时卡片、搜索筛选、设备版轮播状态。">
+<meta name="description" content="RSS 聚合头条网页阅读版：可选「最新头条」（feed.xml，120 条）或「全天缓存」（当天见过的全部条目、本地零点重置）；虚拟滚动扛住几千条，实时卡片、搜索筛选、设备版轮播状态。">
 <meta name="keywords" content="RSS 阅读, 大中华区新闻, 墨水屏新闻, Kindle 新闻, 多源头条聚合">
 <link rel="canonical" href="https://moreaix.com/rss/reader.html">
 <link rel="alternate" type="application/rss+xml" title="RSS 聚合头条（完整版）" href="https://moreaix.com/rss/feed.xml">
@@ -100,13 +100,15 @@
   .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
   .search input:focus{outline:none;border-color:var(--accent)}
 
-  /* 卡片网格 */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:8px}
+  /* 虚拟滚动容器：列表在自身盒子里滚动，hero 固定在上方 */
+  .vscroller{position:relative;overflow-y:auto;height:calc(100vh - 330px);min-height:320px;
+             margin-top:8px;overscroll-behavior:contain;scrollbar-width:thin}
+  .vspacer{position:relative;width:100%}
+  .grid{position:absolute;top:0;left:0;right:0;display:grid;
+        grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 17px;
         box-shadow:var(--shadow);transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-        display:flex;flex-direction:column;gap:9px;opacity:0;transform:translateY(8px);
-        animation:rise .5s ease forwards}
-  @keyframes rise{to{opacity:1;transform:none}}
+        display:flex;flex-direction:column;gap:9px;height:190px;overflow:hidden}
   .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
   .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);
@@ -118,8 +120,9 @@
   .title:hover{color:var(--accent)}
   .excerpt{color:var(--sub);font-size:13px;line-height:1.6;margin:0;
            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:48px 0;font-size:14px;line-height:1.9}
-  .empty a{color:var(--accent)}
+  .empty-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+               text-align:center;color:var(--sub);font-size:14px;line-height:1.9;padding:20px}
+  .empty-state a{color:var(--accent)}
   .acc-note{color:var(--sub);font-size:12.5px;margin:-6px 0 18px;min-height:0;line-height:1.6}
 
   .foot{color:var(--sub);font-size:12px;text-align:center;margin-top:34px;line-height:2}
@@ -160,7 +163,10 @@
     </div>
   </section>
 
-  <section class="grid" id="grid"><div class="empty">正在载入…</div></section>
+  <div id="vscroller" class="vscroller">
+    <div id="vspacer" class="vspacer"><div id="grid" class="grid"></div></div>
+    <div id="empty" class="empty-state" hidden>正在载入…</div>
+  </div>
 </div>
 
 <footer class="foot">
@@ -189,6 +195,36 @@ const STATE_URL  = 'https://moreaix.com/rss/rotate.json';
 let CURRENT_VIEW = 'feed';   // 'feed' | 'accum'
 let ALL_ITEMS = [];          // 当前视图的原始条目，供搜索筛选复用，不重复请求
 
+// 虚拟滚动：卡片固定高度，只渲染视口附近的一窗，几千条也不卡 DOM
+const scroller = document.getElementById('vscroller');
+const spacer  = document.getElementById('vspacer');
+const grid    = document.getElementById('grid');
+const VROW_H  = 190;         // 与 .card 的 height 对应（含卡片本身高度）
+const VGAP    = 16;          // 与 .grid 的 gap 对应
+const VBUFFER = 4;           // 可视区上下各多渲染的行数，避免快速滚动露白
+let cols = 1, vScrollTop = 0, filtered = [], scrollTicking = false;
+
+function computeCols(){
+  // 直接读浏览器解析后的真实列数，比按宽度估算更准（auto-fill 响应式）
+  const t = getComputedStyle(grid).gridTemplateColumns;
+  const n = t.split(' ').filter(Boolean).length;
+  cols = n > 0 ? n : 1;
+}
+function renderWindow(){
+  const total = filtered.length;
+  const rows  = Math.ceil(total / cols);
+  spacer.style.height = (rows * (VROW_H + VGAP)) + 'px';
+  const firstRow = Math.max(0, Math.floor(vScrollTop / (VROW_H + VGAP)) - VBUFFER);
+  const visible  = Math.ceil(scroller.clientHeight / (VROW_H + VGAP)) + 1;
+  const lastRow  = Math.min(rows, firstRow + visible + 2 * VBUFFER);
+  const start = firstRow * cols;
+  const end   = Math.min(total, lastRow * cols);
+  grid.style.transform = 'translateY(' + (firstRow * (VROW_H + VGAP)) + 'px)';
+  const frag = document.createDocumentFragment();
+  for(let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i]));
+  grid.replaceChildren(frag);
+}
+
 function fmt(d){
   if(!d) return '';
   const now = Date.now(), ts = d.getTime(), min = Math.round((now-ts)/60000);
@@ -201,10 +237,9 @@ function fmt(d){
 // 逐条建 DOM 节点，不拼 HTML 字符串：标题、链接、源名都来自第三方 RSS，
 // 拼进 innerHTML 等于让任何一家源站都能在本页执行脚本（`<img onerror=…>` 就够）。
 // 链接只认 http(s)：`javascript:` 这类伪协议即使只是被点开也一样危险。
-function makeCard(it, idx){
+function makeCard(it){
   const art = document.createElement('article');
   art.className = 'card';
-  art.style.animationDelay = Math.min(idx * 28, 600) + 'ms';
 
   const top = document.createElement('div');
   top.className = 'card-top';
@@ -238,22 +273,23 @@ function makeCard(it, idx){
 
 function render(){
   const q = (document.getElementById('q').value || '').trim().toLowerCase();
-  const grid = document.getElementById('grid');
-  const list = q
+  filtered = q
     ? ALL_ITEMS.filter(it =>
         (it.title||'').toLowerCase().includes(q) || (it.source||'').toLowerCase().includes(q))
     : ALL_ITEMS;
-  grid.replaceChildren();
-  if(!list.length){
-    const e = document.createElement('div');
-    e.className = 'empty';
-    e.textContent = q ? '没有匹配的条目' : '暂无条目';
-    grid.appendChild(e);
+  const empty = document.getElementById('empty');
+  if(!filtered.length){
+    empty.hidden = false;
+    empty.textContent = q ? '没有匹配的条目' : '暂无条目';
+    grid.replaceChildren();
+    spacer.style.height = '0px';
     return;
   }
-  const frag = document.createDocumentFragment();
-  list.forEach((it, i) => frag.appendChild(makeCard(it, i)));
-  grid.appendChild(frag);
+  empty.hidden = true;
+  scroller.scrollTop = 0;     // 数据刷新 / 切换筛选后回到顶部
+  vScrollTop = 0;
+  computeCols();
+  renderWindow();
 }
 
 function parseDate(s){
@@ -346,12 +382,11 @@ function setAccumStats(n, date, fromFeed, isMirror){
 }
 
 function showError(msg){
-  const grid = document.getElementById('grid');
-  const e = document.createElement('div');
-  e.className = 'empty';
-  e.innerHTML = '';   // 纯静态文案，无第三方内容
-  e.textContent = msg;
-  grid.replaceChildren(e);
+  const empty = document.getElementById('empty');
+  empty.hidden = false;
+  empty.textContent = msg;   // 纯静态文案，无第三方内容
+  grid.replaceChildren();
+  spacer.style.height = '0px';
 }
 
 function loadView(){
@@ -398,6 +433,22 @@ fetch(STATE_URL + '?t=' + Date.now(), {cache:'no-store'})
   .catch(() => {});
 
 document.getElementById('q').addEventListener('input', render);
+
+// 虚拟滚动：滚动时按行窗口重渲染（rAF 节流），避免每次滚动重排整列
+scroller.addEventListener('scroll', () => {
+  vScrollTop = scroller.scrollTop;
+  if(scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => { renderWindow(); scrollTicking = false; });
+}, {passive:true});
+
+// 视口宽度变化会改变列数，需重算窗口
+let resizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => { if(!filtered.length) return; computeCols(); renderWindow(); }, 120);
+});
+
 loadView();
 // 与设备版节拍对齐：每 5 分钟回填一次，避免停留页面时数据陈旧
 setInterval(loadView, 300000);
