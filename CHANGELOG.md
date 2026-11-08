@@ -39,6 +39,20 @@
   ai-digest.html；GitHub Pages 镜像没有这份文件，面板自动保持隐藏（与「全天缓存」镜像降级一致）。
   AI 页标题/链接来自第三方 RSS，渲染沿用 `createElement` + `textContent`，绝不用 innerHTML。
 
+- **Cloudflare 安全洞察整改（源站侧，serve.py）**：依 `Account_SecurityInsights` 报告，
+  把能靠代码改的两项在源站直接修掉——
+  - **HSTS**：`end_headers` 统一发 `Strict-Transport-Security: max-age=31536000; includeSubDomains`，
+    经 Cloudflare 透传到浏览器后对本域+子域强制 HTTPS，缓解 SSL 剥离 / Cookie 劫持
+    （报告中「Domains without HSTS」Moderate）。不加 `preload`，避免提交预加载列表后难以回退；
+    Cloudflare 边缘日后开 HSTS 会用它自己的头覆盖这条，不冲突。
+  - **security.txt**：`/.well-known/security.txt` 由 `_send` 单独放行、直接回内置 RFC 9116 内容
+    （联系邮箱 + 一年期 Expires + 中英文偏好），不落盘、不增写盘、部署也省一份文件
+    （报告中「Security.txt not configured」Low）。路径是隐藏目录，走 `_target` 会被隐藏文件拦截挡掉，
+    故在剥前缀/别名后精确匹配、其余隐藏路径仍 404。
+  - 其余报告项（Always Use HTTPS、TLS 最低 1.2、Bot Fight Mode、MFA、DMARC、AI Labyrinth、
+    Turnstile）均在 Cloudflare 控制台 / DNS 层，源站代码改不了，已另附控制台操作清单。
+  - 函数拆分：`_send` 抽出 `_try_304` / `_maybe_compress` / `_send_text` / `_strip_prefix`，保持单函数 ≤60 行。
+
 ## [1.21.10] - 2026-11-07
 
 **AI 重点页：送 AI 前按语义近似去重 + 解析截断容错**

@@ -139,6 +139,23 @@ CC_HTML = "public, max-age=60"                          # 页面只在发版时�
 CC_STATIC = "public, max-age=300"                        # sitemap 等几乎不变
 CC_NOCACHE = "no-cache"                                  # 看板 PNG：保留 304 行为
 
+# HSTS：源站这一层先发 Strict-Transport-Security，经 Cloudflare 透传到浏览器后，
+# 对本域及子域强制 HTTPS，缓解 SSL 剥离 / Cookie 劫持（报告「Domains without HSTS」）。
+# includeSubDomains 覆盖 rss/kindle 两个已全 HTTPS 的子域；刻意不加 preload，
+# 避免一旦提交到预加载列表后难以回退。Cloudflare 边缘日后开启 HSTS 会用它自己的头覆盖
+# 这条，不冲突。
+HSTS_VALUE = "max-age=31536000; includeSubDomains"
+
+# security.txt（RFC 9116）内置内容：漏洞披露联系通道。其路径是「隐藏目录」，不在
+# _target 的隐藏文件白名单里，由 _send 单独放行（见 _strip_prefix / _send_text）。
+# Expires 必须是未来时间，这里取扫描日一年后。联系邮箱即本站账户邮箱（报告里的
+# cheney.wong@gmail.com），可按需替换；不改也行，它本来就是要公开给研究员用的联系方式。
+SECURITY_TXT = (
+    "Contact: mailto:cheney.wong@gmail.com\n"
+    "Expires: 2027-11-08T00:00:00.000Z\n"
+    "Preferred-Languages: zh, en\n"
+)
+
 # beacon 脚本地址写成 os.environ.get 的默认值：它本来就该可配置，也顺带符合门禁
 # 「源码里不许出现带真实域名的裸地址」。Cloudflare 控制台给的手动 snippet 就是这个地址。
 BEACON_JS = os.environ.get("CF_BEACON_JS", "https://static.cloudflareinsights.com/beacon.min.js")
@@ -428,6 +445,20 @@ class _StaticHandler(BaseHTTPRequestHandler):
             dt = dt.replace(tzinfo=timezone.utc)
         return int(dt.timestamp())
 
+    def _try_304(self, st):
+        """If-Modified-Since 命中就回 304 并 return True；否则 False。
+
+        304 只回一个 Last-Modified 头，连缓存都不查，直接由 stat 回答。
+        秒级比较：Last-Modified 只有秒精度，用 int() 向下取整才不会同一秒里反复 200。
+        """
+        since = self._ims_since()
+        if since is None or int(st.st_mtime) > since:
+            return False
+        self.send_response(304)
+        self.send_header("Last-Modified", self.date_time_string(st.st_mtime))
+        self.end_headers()
+        return True
+
     def _send(self, head_only):
         """过闸 → 一次 stat → 能 304 就 304，否则从内存缓存取全文（head_only 只回头）。
 
@@ -438,8 +469,18 @@ class _StaticHandler(BaseHTTPRequestHandler):
         200 分支会按资源选定 Cache-Control，并在客户端支持时把文本响应 gzip 掉
         （只压 GET，HEAD 永远发未压缩的长度，方便 Kindle 先探大小），把 Pi→Cloudflare
         隧道那段 286KB 的 feed 压到 ~40KB。
+
+        进 _target 之前先剥前缀/别名看是不是 /.well-known/security.txt：它是「隐藏目录」
+        路径，会被 _target 的隐藏文件拦截挡掉，所以在这里单独放行、直接回内置内容
+        （不落盘、不增写盘，部署也省一份文件）。
         """
         if not self._precheck():
+            return
+        stripped = self._strip_prefix(
+            self.path.split("?", 1)[0].lstrip("/"))
+        if stripped == ".well-known/security.txt":
+            self._send_text(SECURITY_TXT, "text/plain; charset=utf-8",
+                            CC_STATIC, head_only)
             return
         target = self._target()
         if target is None:
@@ -454,14 +495,9 @@ class _StaticHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Not Found")
             return
         ext = os.path.splitext(target)[1].lower()
-        last_mod = self.date_time_string(st.st_mtime)
-        since = self._ims_since()
-        # 秒级比较：Last-Modified 只有秒精度，用 int() 向下取整才不会同一秒里反复 200
-        if since is not None and int(st.st_mtime) <= since:
-            self.send_response(304)
-            self.send_header("Last-Modified", last_mod)
-            self.end_headers()
+        if self._try_304(st):
             return
+        last_mod = self.date_time_string(st.st_mtime)
         key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
         try:
             body = self.runtime.body(target, key, ext, self.beacon_token)
@@ -469,13 +505,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
             self.send_error(500, "Read Error")
             return
         # 缓存里存的是未压缩字节；是否压缩只在「传输」这层决定，不污染缓存。
-        ce = None
-        if not head_only and self._wants_gzip(ext):
-            compressed = gzip.compress(body, _GZIP_LEVEL)
-            # 压缩后反而更大（极小或不可压的内容）就别压了
-            if len(compressed) < len(body):
-                body = compressed
-                ce = "gzip"
+        body, ce = self._maybe_compress(ext, body, head_only)
         self.send_response(200)
         self.send_header("Content-Type", _content_type(target, ext))
         self.send_header("Content-Length", str(len(body)))
@@ -486,6 +516,20 @@ class _StaticHandler(BaseHTTPRequestHandler):
         self.end_headers()
         if not head_only:
             self.wfile.write(body)
+
+    def _maybe_compress(self, ext, body, head_only):
+        """传输层压缩：只压 GET、只压文本类、且压缩后确实更小才压。
+
+        缓存里存的是未压缩字节，压缩与否只在「传输」这层决定，不污染缓存。
+        HEAD 永远发未压缩长度（Kindle 先探大小），故 head_only 直接返回原文。
+        """
+        if head_only or not self._wants_gzip(ext):
+            return body, None
+        compressed = gzip.compress(body, _GZIP_LEVEL)
+        # 压缩后反而更大（极小或不可压的内容）就别压了
+        if len(compressed) < len(body):
+            return compressed, "gzip"
+        return body, None
 
     def _wants_gzip(self, ext):
         """客户端（经 Cloudflare 透传的 Accept-Encoding）要 gzip、且本文件类型可压才压。
@@ -498,6 +542,36 @@ class _StaticHandler(BaseHTTPRequestHandler):
         # 容忍 `gzip;q=0.9` 这类带权重写法：取每项去权重后的首个 token 比对。
         return any(tok.split(";", 1)[0].strip() == "gzip"
                    for tok in ae.lower().split(",") if tok.strip())
+
+    def _strip_prefix(self, rel):
+        """把前缀/别名从 URL 路径里剥掉，得到相对根的 rel；与 _target 的剥法逐字一致。
+
+        单独抽出来只为给 /.well-known/security.txt 这类「隐藏目录路径」做精确匹配——
+        它不能走 _target 的隐藏文件拦截，要先剥前缀才能认定是不是 well-known 文件。
+        """
+        if self.prefix and (rel == self.prefix or rel.startswith(self.prefix + "/")):
+            rel = rel[len(self.prefix):].lstrip("/")
+        for apath, aroot in self.aliases:
+            if rel == apath or rel.startswith(apath + "/"):
+                rel = rel[len(apath):].lstrip("/")
+                break
+        return rel
+
+    def _send_text(self, text, ctype, cc, head_only):
+        """回一段内置文本（如 security.txt）：HEAD 只回头、不写 body，统一走 end_headers。
+
+        _send_text 自己设 _cache_cc / _content_encoding，这样 HSTS/CORS/安全头/缓存头
+        仍由 end_headers 统一发出，与文件响应完全一致。
+        """
+        body = text.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self._cache_cc = cc
+        self._content_encoding = None
+        self.end_headers()
+        if not head_only:
+            self.wfile.write(body)
 
     def end_headers(self):
         """统一出口：CORS、缓存头、压缩头在这里发，200/304/404/500 一个不漏。
@@ -516,6 +590,7 @@ class _StaticHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", getattr(self, "_cache_cc", CC_NOCACHE)
                          or CC_NOCACHE)
         # 低风险安全头：不改页面内容，也不挡现有的内联脚本与跨域读 feed。
+        # 含 HSTS（经 Cloudflare 透传后浏览器据此强制 HTTPS）。
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         self.send_header("X-Frame-Options", "SAMEORIGIN")
@@ -524,6 +599,9 @@ class _StaticHandler(BaseHTTPRequestHandler):
         # 贸然加 default-src 会把首页 canvas 动画与 CF 统计一起弄坏。
         self.send_header("Content-Security-Policy",
                          "frame-ancestors 'self'; object-src 'none'; base-uri 'self'")
+        # HSTS：经 Cloudflare 透传到浏览器后，对本域+子域强制 HTTPS，缓解 SSL 剥离 /
+        # Cookie 劫持。includeSubDomains 覆盖 rss/kindle；不加 preload，回退无负担。
+        self.send_header("Strict-Transport-Security", HSTS_VALUE)
         super().end_headers()
 
     def do_GET(self):

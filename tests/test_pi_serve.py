@@ -185,6 +185,28 @@ class TestStaticServer(unittest.TestCase):
         with ask("%s/rss/index.html" % self.base) as r:
             self.assertIn("max-age=60", r.headers.get("Cache-Control", ""))
 
+    def test_security_txt_is_served_and_head_only_returns_no_body(self):
+        """/.well-known/security.txt 经前缀剥离后命中内置内容（漏洞披露通道）。
+
+        路径本身是「隐藏目录」，必须经 _send 的单独放行，不能直接走 _target 的隐藏
+        文件拦截；其余隐藏路径仍然 404。
+        """
+        with ask("%s/rss/.well-known/security.txt" % self.base) as r:
+            self.assertEqual(r.status, 200)
+            self.assertEqual(r.headers.get("Content-Type"), "text/plain; charset=utf-8")
+            body = r.read().decode("utf-8")
+            self.assertIn("Contact: mailto:", body)
+            self.assertIn("Expires:", body)
+            self.assertIn("Preferred-Languages:", body)
+        # HEAD 只回头、不写 body
+        with ask("%s/rss/.well-known/security.txt" % self.base, method="HEAD") as r:
+            self.assertEqual(r.status, 200)
+            self.assertEqual(r.read(), b"")
+        # 其它隐藏路径仍被拦截（确认放行是「精确匹配」而非「放行所有隐藏文件」）
+        with self.assertRaises(urllib.error.HTTPError) as cm:
+            ask("%s/rss/.well-known/secret" % self.base)
+        self.assertEqual(cm.exception.code, 404)
+
     def test_404_is_not_cached(self):
         """错误响应一律 no-cache，避免边缘把「旧 404」缓存成 4 小时。"""
         with self.assertRaises(urllib.error.HTTPError) as cm:
@@ -677,6 +699,10 @@ class TestServeHardening(unittest.TestCase):
             self.assertIn("frame-ancestors", csp, path)
             self.assertNotIn("default-src", csp, path)  # 会掐掉首页内联脚本
             self.assertEqual(headers.get("Access-Control-Allow-Origin"), "*", path)
+            # HSTS：源站先发，经 Cloudflare 透传到浏览器后强制 HTTPS
+            hsts = headers.get("Strict-Transport-Security", "")
+            self.assertIn("max-age=", hsts, path)
+            self.assertIn("includeSubDomains", hsts, path)
 
     def test_rate_limit_returns_429_with_retry_after(self):
         old = serve.RATE_PER_IP
