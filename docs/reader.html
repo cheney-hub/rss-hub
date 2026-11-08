@@ -50,12 +50,20 @@
        font:16px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
        -webkit-font-smoothing:antialiased}
 
-  /* 顶部毛玻璃导航 */
-  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
-          padding:12px 18px;backdrop-filter:saturate(180%) blur(12px);
+  /* 顶部毛玻璃导航：品牌 + 紧凑统计 + 操作，一行排满，省掉下方大块统计卡片 */
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px 16px;
+          padding:10px 18px;flex-wrap:wrap;backdrop-filter:saturate(180%) blur(12px);
           background:color-mix(in srgb, var(--bg) 82%, transparent);
           border-bottom:1px solid var(--line)}
-  .brand{font-weight:700;font-size:15px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+  .brand{font-weight:700;font-size:15px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;flex:none}
+  .topstats{display:flex;gap:16px;align-items:baseline;color:var(--sub);font-size:12.5px;
+            flex:1 1 auto;min-width:0;overflow:hidden}
+  .topstats .ts{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topstats b{font-size:14px;font-weight:700;color:var(--text);margin-right:3px}
+  .topstats i{font-style:normal}
+  @media (max-width:720px){
+    .topstats{order:3;flex-basis:100%;gap:12px;font-size:12px;margin-top:2px}
+  }
   .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
               box-shadow:0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
               animation:pulse 2.4s ease-out infinite}
@@ -72,12 +80,12 @@
 
   .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 64px}
 
-  /* 主视觉 */
-  .hero{margin:8px 0 26px}
-  .hero h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:0 0 10px;font-weight:800;
+  /* 主视觉（压扁，少占竖高） */
+  .hero{margin:4px 0 14px}
+  .hero h1{font-size:clamp(18px,3vw,23px);line-height:1.2;margin:0 0 6px;font-weight:800;
            background:linear-gradient(92deg,var(--accent),var(--accent-2));
            -webkit-background-clip:text;background-clip:text;color:transparent}
-  .hero .lede{color:var(--sub);font-size:14.5px;margin:0 0 18px;max-width:760px}
+  .hero .lede{color:var(--sub);font-size:13px;margin:0 0 10px;max-width:760px;line-height:1.6}
 
   /* 视图切换 */
   .tabs{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;
@@ -88,11 +96,7 @@
   .tab.active{background:var(--accent);color:#fff}
   .tab .cnt{opacity:.75;font-weight:500;font-size:12px}
 
-  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-  .chip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 18px;
-        min-width:120px;box-shadow:var(--shadow)}
-  .chip b{display:block;font-size:21px;font-weight:700;line-height:1.1}
-  .chip span{color:var(--sub);font-size:12px}
+  /* 统计已上移到顶部导航 .topstats（见 .topbar 段），此处不再保留大卡片 */
 
   .search{position:relative;max-width:420px}
   .search input{width:100%;padding:12px 14px 12px 38px;border:1px solid var(--line);border-radius:12px;
@@ -101,7 +105,7 @@
   .search input:focus{outline:none;border-color:var(--accent)}
 
   /* 虚拟滚动容器：列表在自身盒子里滚动，hero 固定在上方 */
-  .vscroller{position:relative;overflow-y:auto;height:calc(100vh - 330px);min-height:320px;
+  .vscroller{position:relative;overflow-y:auto;height:calc(100vh - 200px);min-height:300px;
              margin-top:8px;overscroll-behavior:contain;scrollbar-width:thin}
   .vspacer{position:relative;width:100%}
   .grid{position:absolute;top:0;left:0;right:0;display:grid;
@@ -154,6 +158,11 @@
 <body>
 <header class="topbar">
   <div class="brand"><span class="dot"></span>RSS 聚合头条</div>
+  <div class="topstats">
+    <span class="ts"><b id="n">—</b><i id="nL">当前条目</i></span>
+    <span class="ts"><b id="t">—</b><i id="tL">最后构建</i></span>
+    <span class="ts"><b id="r">—</b><i>设备版轮播</i></span>
+  </div>
   <div class="actions">
     <span class="live"><i></i>实时</span>
     <button class="rf" id="refresh" onclick="loadView()">刷新</button>
@@ -177,11 +186,6 @@
       <button class="tab" id="tab-accum" onclick="switchView('accum')">全天缓存 <span class="cnt" id="accN"></span></button>
     </div>
 
-    <div class="stats" id="stats">
-      <div class="chip"><b id="n">—</b><span id="nL">当前条目</span></div>
-      <div class="chip"><b id="t">—</b><span id="tL">最后构建</span></div>
-      <div class="chip"><b id="r">—</b><span>设备版轮播</span></div>
-    </div>
     <p class="acc-note" id="accNote"></p>
 
     <div class="search">

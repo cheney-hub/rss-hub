@@ -39,6 +39,11 @@
   ai-digest.html；GitHub Pages 镜像没有这份文件，面板自动保持隐藏（与「全天缓存」镜像降级一致）。
   AI 页标题/链接来自第三方 RSS，渲染沿用 `createElement` + `textContent`，绝不用 innerHTML。
 
+- **阅读版顶部压扁（docs/reader.html）**：把 hero 下那一大排统计卡片（当前条目 / 最后构建 /
+  设备版轮播）**上移到顶部 sticky 导航栏**做成一行紧凑小字，同时压扁主标题字号、收紧间距、
+  缩短滚动容器预留高度（`calc(100vh - 330px)` → `- 200px`）。顶部整体少占约 130px，新闻卡片
+  一眼能看到更多；窄屏（≤720px）统计自动折到导航第二行，不丢信息。纯前端显示调整，零后端改动。
+
 - **Cloudflare 安全洞察整改（源站侧，serve.py）**：依 `Account_SecurityInsights` 报告，
   把能靠代码改的两项在源站直接修掉——
   - **HSTS**：`end_headers` 统一发 `Strict-Transport-Security: max-age=31536000; includeSubDomains`，
