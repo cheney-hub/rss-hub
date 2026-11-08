@@ -18,8 +18,15 @@
 设计要点：
 - 只读、只服务静态文件，防目录穿越（root 用 realpath，符号链接也穿不出去）。
 - RSS/JSON/HTML 给正确 Content-Type。
-- 强制 Cache-Control: no-cache —— 此前 Pages CDN 缓存 600 秒踩过坑，
-  这里让 Cloudflare 边缘不缓存，保证客户端拿到的总是最新一版。
+- **差异化** Cache-Control（见 `_cache_policy_for`）：feed.xml / feed-wrap.xml /
+  rotate.json / ai-accum.json 这类「每 5 分钟重建一次」的产物给
+  `public, max-age=120, s-maxage=120, stale-while-revalidate=600` —— 让 Cloudflare
+  边缘缓存 2 分钟。feed 本就 5 分钟才变一次，最坏也只比最新版晚 2 分钟，对新闻阅读器
+  完全够用；而「大量访客」因此几乎全被边缘吃掉，源站（Pi）看到的请求量下降一两个数量级，
+  这是本站扛高并发的关键一招。看板 PNG 仍给 `no-cache` 并保留 304（见下），不能让它
+  因边缘缓存而每次都把整张图下给 Kindle。纯静态、几乎不变的 sitemap / ai-digest.html
+  给更长 TTL。之前那种「一刀切 no-cache」是吃 Pages CDN 缓存 600 秒的亏之后加的，
+  但那是 GitHub Pages 的 CDN；Cloudflare 边缘换成「短 TTL 缓存」既新鲜又抗压。
 - 带 CORS *，方便网页阅读器跨域拉取（docs/screen.html 就跨域读 feed-wrap.xml）。
   这条头对**所有**响应都发（含 404），否则前端看到的是跨域错误而不是 404。
 - 带 Last-Modified + If-Modified-Since → 304：Kindle 每 5 分钟来拉一次看板 PNG，
@@ -31,6 +38,7 @@
 import argparse
 import collections
 import email.utils
+import gzip
 import os
 import stat
 import string
@@ -65,6 +73,36 @@ def _content_type(target, ext):
     return MIME[ext]
 
 
+def _cache_policy_for(target, ext):
+    """按「文件多久变一次」给差异化的 Cache-Control，而不是一刀切 no-cache。
+
+    关键权衡：以前为了「客户端永远拿最新」直接 no-cache，代价是 Cloudflare 边缘
+    一点都不缓存，所有访客的每一个请求都穿透到 Pi 源站。feed.xml 有 286KB、reader.html
+    每 5 分钟轮询一次，高并发下这就是放大器。现在 feed/rotate/accum 给 2 分钟边缘 TTL
+    （s-maxage 只作用于 CDN 这类共享缓存），feed 本身 5 分钟才重建，最坏只晚 2 分钟，
+    新闻阅读器完全无感，但源站请求量能掉一两个数量级。
+
+    看板 PNG 特意保持 no-cache：Kindle 的 board.sh 靠 If-Modified-Since 拿 304 来省流量，
+    一旦边缘把 PNG 也缓存了，设备就再也收不到 304、每次都被迫下整张图 —— 那是对最弱势
+    的客户端（墨水屏、可能走计费/慢网）的回退，不能要。
+    """
+    name = os.path.basename(target)
+    if name in ("feed.xml", "feed-wrap.xml", "rotate.json", "ai-accum.json"):
+        return CC_FEED
+    if name == "ai-digest.html":
+        return CC_DIGEST
+    if ext == ".png":
+        return CC_NOCACHE                      # 设备图：保 304
+    if ext in (".html", ".htm"):
+        return CC_HTML
+    if ext == ".json":
+        return CC_JSON
+    if name == "sitemap.xml" or ext == ".xml":
+        return CC_STATIC
+    return CC_NOCACHE
+
+
+
 # ---- 对外暴露面 ------------------------------------------------------------
 # 只有这些扩展名会被发出去。站点根目录里还躺着 analytics.env（统计 token），
 # 构建任务写的 *.tmp/*.new 半成品也在被服务的目录里；「存在就发」等于把配置挂公网。
@@ -80,6 +118,26 @@ RATE_PER_IP = 600                 # 每访客每分钟；正常订阅/看板远�
 RATE_GLOBAL = 2400                # 全局兜底：伪造不同 CF-Connecting-IP 也挡得住
 CACHE_MAX_ENTRIES = 32
 CACHE_MAX_BYTES = 2 * 1024 * 1024
+
+# 可压缩的文本类响应（PNG 已是压缩格式，不再压）。用在 _wants_gzip 之后，
+# 只有「文本且体积够大」才会真正压缩，零收益的小文件不白耗 CPU。
+_GZIP_EXT = frozenset((".xml", ".json", ".html", ".htm", ".css", ".js",
+                       ".txt", ".svg"))
+_GZIP_MIN_BYTES = 1024            # 小于 1KB 压缩收益抵不过开销，直接发原文
+_GZIP_LEVEL = 6                   # 默认档：压缩率与 CPU 的平衡点
+
+# 源站→Cloudflare 隧道这一段的缓存意图（Cloudflare 边缘是否缓存、缓存多久，
+# 由它和边缘 Cache Rule 共同决定；本站 /rss 的 Cache Rule 从「Bypass」改成
+# 「Cache everything + Edge TTL」后，下面的 s-maxage 才会真正生效）。
+# 口径按「文件多久变一次」分级，而不是一刀切 no-cache：
+#   feed/rotate/accum 每 5 分钟重建一次 → 边缘缓存 2 分钟绰绰有余，
+#   且 stale-while-revalidate 让边界那一下也永远秒回。
+CC_FEED = "public, max-age=120, s-maxage=120, stale-while-revalidate=600"
+CC_JSON = "public, max-age=120, s-maxage=120"          # 其它 JSON（如未来新增）
+CC_DIGEST = "public, max-age=300, s-maxage=300"         # ai-digest.html 每小时变
+CC_HTML = "public, max-age=60"                          # 页面只在发版时变
+CC_STATIC = "public, max-age=300"                        # sitemap 等几乎不变
+CC_NOCACHE = "no-cache"                                  # 看板 PNG：保留 304 行为
 
 # beacon 脚本地址写成 os.environ.get 的默认值：它本来就该可配置，也顺带符合门禁
 # 「源码里不许出现带真实域名的裸地址」。Cloudflare 控制台给的手动 snippet 就是这个地址。
@@ -251,6 +309,10 @@ class _StaticHandler(BaseHTTPRequestHandler):
         """给每条连接设读超时：慢速发头（Slowloris）不能一直占着一个线程。"""
         super().setup()
         self.connection.settimeout(SOCKET_TIMEOUT)
+        # 每条连接（可能复用处理多个请求）都从「不缓存 / 未压缩」起步，
+        # _send 在 200 分支里按资源改写，404/304/405 等一律保持 no-cache。
+        self._cache_cc = CC_NOCACHE
+        self._content_encoding = None
 
     def handle(self):
         """超时的连接安静关掉，不把栈回溯刷进 journal。"""
@@ -372,6 +434,10 @@ class _StaticHandler(BaseHTTPRequestHandler):
         以前每个请求 isfile + stat + open/read 三次系统调用，feed.xml 近 400KB 每次
         都从盘上读一遍；现在只 stat 一次，命中缓存连 open 都没有。304 直接由 stat
         回答，连缓存都不用查。
+
+        200 分支会按资源选定 Cache-Control，并在客户端支持时把文本响应 gzip 掉
+        （只压 GET，HEAD 永远发未压缩的长度，方便 Kindle 先探大小），把 Pi→Cloudflare
+        隧道那段 286KB 的 feed 压到 ~40KB。
         """
         if not self._precheck():
             return
@@ -402,22 +468,53 @@ class _StaticHandler(BaseHTTPRequestHandler):
         except OSError:
             self.send_error(500, "Read Error")
             return
+        # 缓存里存的是未压缩字节；是否压缩只在「传输」这层决定，不污染缓存。
+        ce = None
+        if not head_only and self._wants_gzip(ext):
+            compressed = gzip.compress(body, _GZIP_LEVEL)
+            # 压缩后反而更大（极小或不可压的内容）就别压了
+            if len(compressed) < len(body):
+                body = compressed
+                ce = "gzip"
         self.send_response(200)
         self.send_header("Content-Type", _content_type(target, ext))
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Last-Modified", last_mod)
+        # 差异化缓存：feed/rotate/accum 给短边缘 TTL，PNG 保持 no-cache（保 304）。
+        self._cache_cc = _cache_policy_for(target, ext)
+        self._content_encoding = ce
         self.end_headers()
         if not head_only:
             self.wfile.write(body)
 
-    def end_headers(self):
-        """统一出口：CORS 与缓存头在这里发，200/304/404/500 一个不漏。
+    def _wants_gzip(self, ext):
+        """客户端（经 Cloudflare 透传的 Accept-Encoding）要 gzip、且本文件类型可压才压。
 
-        以前这两条只在 200 里发，跨域读 404 时会变成「CORS 报错」而不是 404，
-        排查时多绕一圈。
+        只压文本类（_GZIP_EXT）；PNG 已是压缩格式、压了也白压还耗 CPU。HEAD 不会调它。
         """
+        if ext not in _GZIP_EXT:
+            return False
+        ae = self.headers.get("Accept-Encoding", "")
+        # 容忍 `gzip;q=0.9` 这类带权重写法：取每项去权重后的首个 token 比对。
+        return any(tok.split(";", 1)[0].strip() == "gzip"
+                   for tok in ae.lower().split(",") if tok.strip())
+
+    def end_headers(self):
+        """统一出口：CORS、缓存头、压缩头在这里发，200/304/404/500 一个不漏。
+
+        以前这些只在 200 里发，跨域读 404 时会变成「CORS 报错」而不是 404，
+        排查时多绕一圈。Cache-Control 走 `_cache_cc`：200 由 _send 按资源选定，
+        其余状态保持 no-cache（错误响应不该被边缘缓存成「旧 404」）。
+        """
+        ce = getattr(self, "_content_encoding", None)
+        if ce:
+            self.send_header("Content-Encoding", ce)
+            # 同一 URL 的 gzip / 非 gzip 两份响应要分开存，否则不支持 gzip 的
+            # 中间层可能拿到压缩字节还当原文解；Cloudflare 也会据此分别缓存。
+            self.send_header("Vary", "Accept-Encoding")
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Cache-Control", "no-cache, must-revalidate")
+        self.send_header("Cache-Control", getattr(self, "_cache_cc", CC_NOCACHE)
+                         or CC_NOCACHE)
         # 低风险安全头：不改页面内容，也不挡现有的内联脚本与跨域读 feed。
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -476,9 +573,15 @@ class _StaticHandler(BaseHTTPRequestHandler):
 
 
 class _Server(ThreadingHTTPServer):
-    """线程随主进程走、半开连接的 backlog 有上限（超时由 Handler.setup 兜）。"""
+    """线程随主进程走、半开连接的 backlog 有上限（超时由 Handler.setup 兜）。
+
+    request_queue_size 是 accept 队列长度：高于它的并发握手会被内核直接拒
+    （ECONNREFUSED），而不是排队。边缘缓存把正常访客挡在外面后，源站真正要接的
+    只剩缓存未命中 / 重校验，量很小；但这儿仍从 64 提到 128，给「缓存刚过期那一瞬
+    的并发穿透」和极端突发留点余量，代价只是十几个处于 SYN 阶段、还没建连接的 socket。
+    """
     daemon_threads = True
-    request_queue_size = 64
+    request_queue_size = 128
 
 
 def make_handler(root, prefix="", aliases=None, beacon_token=None):

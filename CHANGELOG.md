@@ -6,6 +6,34 @@
 每次改动都在这里记一条。**改排版必须重跑 `tools/golden_snapshot.py --write` 更新行为基线**，
 并把「改了什么、为什么」写在这份文件里——否则下次没人知道基线是被谁动的。
 
+## [1.21.11] - 2026-11-08
+
+**扛高并发：差异化边缘缓存 + 源站 gzip 压缩（serve.py 仅改响应头/传输，feed 输出逐字节不变）**
+
+- **问题**：此前 `serve.py` 对所有响应一刀切 `Cache-Control: no-cache`，配合 Cloudflare
+  对 `/rss` 的 **Bypass cache** 规则，导致**每一个访客、reader.html 每 5 分钟轮询的每一次**
+  都穿透到 Pi 源站。feed.xml 有 ~286KB，高并发下既是请求量放大器、也是 Pi→Cloudflare
+  隧道的带宽放大器；限流阈值（全局 2400/min）在真有流量时反而会变成「误伤正常访客」的开关。
+- **差异化缓存**：新增 `_cache_policy_for()`，按「文件多久变一次」给缓存意图——
+  `feed.xml` / `feed-wrap.xml` / `rotate.json` / `ai-accum.json`（每 5 分钟重建）给
+  `public, max-age=120, s-maxage=120, stale-while-revalidate=600`；`ai-digest.html` /
+  `sitemap.xml` 给更长 TTL；页面给 `max-age=60`；**看板 PNG 保持 `no-cache`**（必须保住
+  Kindle 的 304 省流量行为，不能让它因边缘缓存而每次下整张图）。
+- **配套改 Cloudflare 边缘**：`TUNNEL.md` 第 5 步把 `/rss` 的 Cache Rule 从 **Bypass cache**
+  改成 **Cache everything + Edge Cache TTL 120s**（Cloudflare 默认不缓存 `.xml`/`.html`，
+  不显式开规则、源站头再对也没用）；`/kindle` 那条**保持 Bypass**。效果：访客几乎全被边缘
+  吃掉，源站只见缓存未命中/重校验，请求量下降一两个数量级；feed 5 分钟才变、边缘只缓存 2 分钟，
+  最坏晚 2 分钟，阅读器无感。
+- **源站 gzip**：客户端（经 Cloudflare 透传）带 `Accept-Encoding: gzip` 时，对文本类响应
+  （xml/json/html/css/js/svg/txt）按需压缩（≥1KB 才压、压了更大就不压），带
+  `Content-Encoding` + `Vary: Accept-Encoding`；HEAD 永不发压缩长度，缓存仍存未压缩字节。
+  把 Pi→Cloudflare 隧道那段 286KB 的 feed 压到 ~40KB，缩减上行带宽。
+- **连接队列** `request_queue_size` 64 → 128：给缓存刚过期那一瞬的并发穿透与极端突发留余量。
+- **限流保持**：边缘缓存后回源量骤降，2400/min 的全局阈值退化为纯防滥用，不再误伤正常流量；
+  不再调高（避免放松滥用防护）。
+- 仅改 `Pi/serve.py` 的响应头与传输层，feed.xml 字节、设备版、页脚内容均未变；golden 基线不受影响。
+  64 例 serve 测试全绿（新增 gzip / 差异化缓存 / PNG 保持 no-cache 等用例）。
+
 ## [1.21.10] - 2026-11-07
 
 **AI 重点页：送 AI 前按语义近似去重 + 解析截断容错**

@@ -13,6 +13,7 @@ mock 一个子类会把它们绕过去，测了等于没测：
 import builtins
 import collections
 import email.utils
+import gzip
 import os
 import shutil
 import socket
@@ -56,10 +57,21 @@ class TestStaticServer(unittest.TestCase):
             "sitemap.xml": '<?xml version="1.0" encoding="UTF-8"?>'
                            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
             "a.bin": "\x00\x01\x02binary",
+            # 看板图：保留 no-cache + 304 行为，二进制内容（PNG 魔数即可，无需真图）
+            "board.png": b"\x89PNG\r\n\x1a\n" + b"\x00" * 64,
+            # 大文件：>1KB 才会触发 gzip，用来验证压缩路径
+            "big.xml": "<rss><channel>" + "<item><title>%d</title></item>" % 0
+                       + "".join("<item><title>x%d</title></item>" % i
+                                 for i in range(300)) + "</channel></rss>",
         }
         for name, body in cls.files.items():
-            with open(os.path.join(cls.root, name), "w", encoding="utf-8") as f:
-                f.write(body)
+            path = os.path.join(cls.root, name)
+            if isinstance(body, bytes):
+                with open(path, "wb") as f:
+                    f.write(body)
+            else:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(body)
         with open(cls.outside, "w", encoding="utf-8") as f:
             f.write("不该被读到")
 
@@ -156,10 +168,59 @@ class TestStaticServer(unittest.TestCase):
     # ---- 缓存与头 ----
 
     def test_cache_and_cors_on_200(self):
-        """no-cache 是吃 Pages CDN 600 秒缓存的亏之后加的；CORS 给 docs/screen.html 跨域读。"""
+        """feed.xml 给短边缘 TTL（扛高并发的关键），CORS 仍然对所有响应发。"""
         with ask("%s/rss/feed.xml" % self.base) as r:
-            self.assertIn("no-cache", r.headers.get("Cache-Control", ""))
+            cc = r.headers.get("Cache-Control", "")
+            self.assertIn("s-maxage=120", cc)
+            self.assertIn("public", cc)
             self.assertEqual(r.headers.get("Access-Control-Allow-Origin"), "*")
+
+    def test_png_kept_no_cache(self):
+        """看板 PNG 必须保持 no-cache：Kindle 靠 304 省流量，边缘一缓存就回退成每次下整图。"""
+        with ask("%s/rss/board.png" % self.base) as r:
+            self.assertEqual(r.headers.get("Cache-Control"), "no-cache")
+
+    def test_html_short_cache(self):
+        """页面只在发版时变，给 60 秒边缘 TTL 即可。"""
+        with ask("%s/rss/index.html" % self.base) as r:
+            self.assertIn("max-age=60", r.headers.get("Cache-Control", ""))
+
+    def test_404_is_not_cached(self):
+        """错误响应一律 no-cache，避免边缘把「旧 404」缓存成 4 小时。"""
+        with self.assertRaises(urllib.error.HTTPError) as cm:
+            ask("%s/rss/nope.xml" % self.base)
+        self.assertEqual(cm.exception.headers.get("Cache-Control"), "no-cache")
+
+    def test_get_text_is_gzipped_when_asked(self):
+        """客户端带 Accept-Encoding: gzip 时，文本响应应被压缩（Content-Encoding + Vary）。"""
+        with ask("%s/rss/big.xml" % self.base,
+                headers={"Accept-Encoding": "gzip"}) as r:
+            self.assertEqual(r.headers.get("Content-Encoding"), "gzip")
+            self.assertEqual(r.headers.get("Vary"), "Accept-Encoding")
+            raw = gzip.decompress(r.read())
+            self.assertEqual(raw.decode("utf-8"), self.files["big.xml"])
+
+    def test_get_text_without_gzip_header_is_plain(self):
+        """没要 gzip 就发原文，且不能带 Content-Encoding（否则客户端当压缩解会坏）。"""
+        with ask("%s/rss/big.xml" % self.base) as r:
+            self.assertIsNone(r.headers.get("Content-Encoding"))
+            self.assertEqual(r.read().decode("utf-8"), self.files["big.xml"])
+
+    def test_head_is_never_gzipped(self):
+        """HEAD 永远发未压缩长度：Kindle 先探 Content-Length 再决定要不要拉。"""
+        with ask("%s/rss/big.xml" % self.base, method="HEAD",
+                headers={"Accept-Encoding": "gzip"}) as r:
+            self.assertIsNone(r.headers.get("Content-Encoding"))
+            self.assertEqual(int(r.headers.get("Content-Length")),
+                             len(self.files["big.xml"].encode("utf-8")))
+            self.assertEqual(r.read(), b"")
+
+    def test_png_is_not_gzipped(self):
+        """PNG 已是压缩格式，即便带了 gzip 也不该再压（白耗 CPU、可能还变大）。"""
+        with ask("%s/rss/board.png" % self.base,
+                headers={"Accept-Encoding": "gzip"}) as r:
+            self.assertIsNone(r.headers.get("Content-Encoding"))
+            self.assertEqual(r.read(), self.files["board.png"])
 
     def test_cors_also_on_404(self):
         """404 也必须带 CORS：否则跨域场景下前端拿到的是跨域报错，看不出是真 404。"""

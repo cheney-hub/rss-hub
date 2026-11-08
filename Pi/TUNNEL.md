@@ -122,14 +122,34 @@ curl -s  https://moreaix.com/rss/feed.xml | head -n 20
 
 应该看到 `HTTP/2 200`、`content-type: application/rss+xml`，以及 `<rss ...>`。
 
-## 关键：关掉边缘缓存
+## 关键：给 `/rss` 开「短边缘缓存」，但 `/kindle` 保持 Bypass
 
-`serve.py` 已发 `Cache-Control: no-cache`，但 Cloudflare 的默认缓存规则可能仍会
-拦截静态文件。为避免「改了 feed 客户端还是旧内容」（此前 Pages 缓存 600 秒踩过），
-在 **Caching → Cache Rules** 加一条：
+`serve.py` 现在按资源发**差异化** `Cache-Control`（见源码 `_cache_policy_for`）：
 
-- 匹配：`URI Path` `starts_with "/rss"`
-- 动作：**Bypass cache**
+- `feed.xml` / `feed-wrap.xml` / `rotate.json` / `ai-accum.json` →
+  `public, max-age=120, s-maxage=120, stale-while-revalidate=600`
+- `ai-digest.html` / `sitemap.xml` → 更长 TTL；`index.html` / `reader.html` / `screen.html` → `max-age=60`
+- **看板 PNG → `no-cache`**（保留 304，避免 Kindle 每次被迫下整张图）
+
+但 Cloudflare **默认不缓存 `.xml` / `.html`**（不在默认可缓存扩展名里），所以光靠源站
+头没用，必须在边缘显式开一条规则，让上面的 `s-maxage` 真正生效。本站扛高并发靠的就是
+「访客几乎全被边缘吃掉、源站（Pi）只接缓存未命中」这一招——feed 本就每 5 分钟才重建，
+边缘缓存 2 分钟最坏也只晚 2 分钟，新闻阅读器完全无感，但源站请求量能掉一两个数量级。
+
+在 **Caching → Cache Rules** 加/改两条：
+
+1. `/rss` 路径（feed、页面、JSON 全部缓存）：
+   - 匹配：`URI Path` `starts_with "/rss"`
+   - 动作：**Cache everything** → 同时把 **Edge Cache TTL** 设成 `120` 秒（与源站
+     `s-maxage` 对齐；不设也行，源站头会兜底）。不要选 Bypass。
+2. `/kindle` 路径（看板图，必须保 304）：
+   - 匹配：`URI Path` `starts_with "/kindle"`
+   - 动作：**Bypass cache**（保持原样，别动）。
+
+> 为什么 `/rss` 用 "Cache everything" 而不是 "Bypass"：早期为了「客户端永远拿最新」
+> 一刀切 Bypass，结果每个访客、reader.html 每 5 分钟轮询都穿透到 Pi，feed.xml 有 286KB，
+> 高并发下就是放大器。现在短 TTL 既新鲜又抗压。注意 `s-maxage` 只对共享缓存（CDN）生效，
+> 浏览器本地仍按 `max-age=120` 缓存，体验一致。
 
 ## 第 6 步（可选）：把 Kindle 看板也放到公网
 
@@ -193,15 +213,17 @@ cloudflared 自上而下逐条求值、**首个命中即停**，不是「最长�
 sudo journalctl -u cloudflared | grep "Updated to new configuration" | tail -1
 ```
 
-### 6.3 边缘缓存也要 bypass
+### 6.3 看板图（/kindle）必须保持 Bypass
+
+看板图 `rss-pw2.png` 是 `board.sh` 每 5 分钟拉一次、靠 `If-Modified-Since` 拿 **304**
+省流量的。一旦边缘把 PNG 也缓存了，设备就再也收不到 304、每次都被迫下整张图——对最弱势
+的客户端（墨水屏、可能走计费/慢网）是回退，不能要。所以 `/kindle` 这条规则**永远保持
+Bypass cache**（见第 5 步第 2 条），不要跟着 `/rss` 一起改成 Cache everything。
 
 Cloudflare 默认会替静态扩展名（含 `.png`）在边缘存一份，优先级高过源站发的
-`Cache-Control`，结果是「图早就重画了、浏览器拿到的还是旧的」。沿用第 5 步那条按路径
-匹配的写法即可，不必改成按 hostname —— 本站的 cache rule 一直是路径口径，保持一致更好找：
-
-- **Caching → Cache Rules** 新建规则
-- 匹配：`URI Path` `starts_with "/kindle"`
-- 动作：**Bypass cache**
+`Cache-Control`——这正是为什么要显式 Bypass：否则即便源站发 `no-cache`，边缘也可能
+把图缓存成「旧的」。沿用第 5 步那条按路径匹配的写法即可，不必改成按 hostname——
+本站的 cache rule 一直是路径口径，保持一致更好找。
 
 ### 6.4 Pi 侧先自证健康（隧道转发到 localhost，与外网无关）
 
@@ -266,7 +288,7 @@ BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh  # 走公网
 | 404 | serve.py 的 `--root` 指错了目录，或 `docs/` 里还没生成 feed.xml（等 rss-build.timer 跑一轮） |
 | `/kindle/*` 或 `/rss/*` 在 Pi 本地 200、公网 404 | 现在只有一条根域规则，正常不会再出现。若你**加过 path 规则**，看 6.2 的两个坑。定位：请求一个不存在的文件名，再看 `journalctl -u moreaix-site`（现在只有这一台静态服务） |
 | 配好了还是旧 404 | 边缘把 404 也缓存了（`.png` 默认 4 小时）。配完 Bypass cache 仍不生效就手动清一次：Caching → Configuration → Custom Purge，填那个 URL |
-| 拿到的总是旧内容 | 边缘缓存：见上面「关掉边缘缓存」 |
+| 拿到的总是旧内容 | 边缘缓存：feed/页面给了 120s/60s 边缘 TTL，最坏晚 2 分钟属正常；若怀疑缓存过头，按第 5 步把 `/rss` 的 Edge Cache TTL 调小或临时改 Bypass 验证 |
 | 客户端跨域被拦 | serve.py 对所有响应（含 404）都带 `Access-Control-Allow-Origin: *`，若仍不行检查是否有别的代理层 |
 | 夜里 feed 不更新 | 夜间节拍是每小时整点（`rss-build.timer`），不是故障；先 `journalctl -u rss-build` 看有没有跑 |
 
