@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RSS 聚合头条 · 阅读</title>
-<meta name="description" content="RSS 聚合头条网页阅读版：可选「最新头条」（feed.xml，120 条）或「全天缓存」（当天见过的全部条目、本地零点重置）；虚拟滚动扛住几千条，实时卡片、搜索筛选、设备版轮播状态。">
+<meta name="description" content="RSS 聚合头条网页阅读版：可选「最新头条」（feed.xml，120 条）或「全天缓存」（当天见过的全部条目、本地零点重置）；看板式自动滚动、搜索筛选、设备版轮播状态。">
 <meta name="keywords" content="RSS 阅读, 大中华区新闻, 墨水屏新闻, Kindle 新闻, 多源头条聚合">
 <link rel="canonical" href="https://moreaix.com/rss/reader.html">
 <link rel="alternate" type="application/rss+xml" title="RSS 聚合头条（完整版）" href="https://moreaix.com/rss/feed.xml">
@@ -116,28 +116,28 @@
   .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
   .search input:focus{outline:none;border-color:var(--accent)}
 
-  /* 虚拟滚动容器：列表在自身盒子里滚动，hero 固定在上方 */
-  .vscroller{position:relative;overflow-y:auto;height:calc(100vh - 200px);min-height:300px;
-             margin-top:8px;overscroll-behavior:contain;scrollbar-width:thin}
-  .vspacer{position:relative;width:100%}
-  .grid{position:absolute;top:0;left:0;right:0;display:grid;
-        grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 17px;
-        box-shadow:var(--shadow);transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-        display:flex;flex-direction:column;gap:9px;height:190px;overflow:hidden}
-  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
-  .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  /* 看板式自动滚动：单列信息流，比大卡片更密、更像现代新闻墙 */
+  .board{position:relative;height:calc(100vh - 200px);min-height:320px;margin-top:8px;
+         overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+         -webkit-mask-image:linear-gradient(to bottom,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+                 mask-image:linear-gradient(to bottom,transparent,#000 18px,#000 calc(100% - 18px),transparent)}
+  .board-track{display:flex;flex-direction:column;gap:14px;padding:6px 4px}
+  .row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+       box-shadow:var(--shadow);transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+       border-left:3px solid var(--accent)}
+  .row:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);
+             border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+  .row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
   .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);
        border-radius:7px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap;
        overflow:hidden;text-overflow:ellipsis;max-width:70%}
   .time{color:var(--sub);font-size:11.5px;white-space:nowrap;flex:none}
-  .title{font-size:16px;font-weight:650;line-height:1.45;color:var(--text);text-decoration:none;
-         display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .title{font-size:16px;font-weight:650;line-height:1.45;color:var(--text);text-decoration:none;display:block}
   .title:hover{color:var(--accent)}
-  .excerpt{color:var(--sub);font-size:13px;line-height:1.6;margin:0;
+  .excerpt{color:var(--sub);font-size:13px;line-height:1.6;margin:6px 0 0;
            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .empty-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-               text-align:center;color:var(--sub);font-size:14px;line-height:1.9;padding:20px}
+               text-align:center;color:var(--sub);font-size:14px;line-height:1.9;padding:20px;pointer-events:none}
   .empty-state a{color:var(--accent)}
   .acc-note{color:var(--sub);font-size:12.5px;margin:-6px 0 18px;min-height:0;line-height:1.6}
 
@@ -157,6 +157,7 @@
   </div>
   <div class="actions">
     <span class="live"><i></i>实时</span>
+    <button class="rf" id="pause" onclick="togglePause()">⏸ 暂停</button>
     <button class="rf" id="refresh" onclick="loadView()">刷新</button>
   </div>
 </header>
@@ -184,8 +185,8 @@
     </div>
   </section>
 
-  <div id="vscroller" class="vscroller">
-    <div id="vspacer" class="vspacer"><div id="grid" class="grid"></div></div>
+  <div id="board" class="board">
+    <div id="track" class="board-track"></div>
     <div id="empty" class="empty-state" hidden>正在载入…</div>
   </div>
 </div>
@@ -217,34 +218,49 @@ const STATE_URL  = 'https://moreaix.com/rss/rotate.json';
 let CURRENT_VIEW = 'feed';   // 'feed' | 'accum'
 let ALL_ITEMS = [];          // 当前视图的原始条目，供搜索筛选复用，不重复请求
 
-// 虚拟滚动：卡片固定高度，只渲染视口附近的一窗，几千条也不卡 DOM
-const scroller = document.getElementById('vscroller');
-const spacer  = document.getElementById('vspacer');
-const grid    = document.getElementById('grid');
-const VROW_H  = 190;         // 与 .card 的 height 对应（含卡片本身高度）
-const VGAP    = 16;          // 与 .grid 的 gap 对应
-const VBUFFER = 4;           // 可视区上下各多渲染的行数，避免快速滚动露白
-let cols = 1, vScrollTop = 0, filtered = [], scrollTicking = false;
+// 看板式自动滚动：单列信息流，整份渲染后做无缝循环（内容不多时整屏装得下，不滚）
+const board = document.getElementById('board');
+const track = document.getElementById('track');
+const empty = document.getElementById('empty');
+let filtered = [];
+let copyH = 0;            // 一份内容的高度（track 里渲染了两份用于无缝循环）
+let autoPos = 0;          // 虚拟滚动偏移
+let hovering = false;     // 鼠标悬停暂停
+let userPaused = false;   // 手动暂停
+let interactUntil = 0;    // 手动滚动后暂停到的时刻
+const SCROLL_SPEED = 0.5; // px/帧（≈30px/s，舒适阅读速度）
 
-function computeCols(){
-  // 直接读浏览器解析后的真实列数，比按宽度估算更准（auto-fill 响应式）
-  const t = getComputedStyle(grid).gridTemplateColumns;
-  const n = t.split(' ').filter(Boolean).length;
-  cols = n > 0 ? n : 1;
-}
-function renderWindow(){
-  const total = filtered.length;
-  const rows  = Math.ceil(total / cols);
-  spacer.style.height = (rows * (VROW_H + VGAP)) + 'px';
-  const firstRow = Math.max(0, Math.floor(vScrollTop / (VROW_H + VGAP)) - VBUFFER);
-  const visible  = Math.ceil(scroller.clientHeight / (VROW_H + VGAP)) + 1;
-  const lastRow  = Math.min(rows, firstRow + visible + 2 * VBUFFER);
-  const start = firstRow * cols;
-  const end   = Math.min(total, lastRow * cols);
-  grid.style.transform = 'translateY(' + (firstRow * (VROW_H + VGAP)) + 'px)';
-  const frag = document.createDocumentFragment();
-  for(let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i]));
-  grid.replaceChildren(frag);
+// 逐条建 DOM，不拼 innerHTML：标题/链接/源名来自第三方 RSS，拼串等于给任意源站
+// 在本页执行脚本的机会；链接只认 http(s)。（沿用原安全策略）
+function makeRow(it){
+  const art = document.createElement('article');
+  art.className = 'row';
+  const top = document.createElement('div');
+  top.className = 'row-top';
+  const src = (it.source || '').trim();
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.textContent = src || '未知来源';
+  const time = document.createElement('span');
+  time.className = 'time';
+  time.textContent = fmt(it.date);
+  top.appendChild(tag);
+  top.appendChild(time);
+  art.appendChild(top);
+  const a = document.createElement('a');
+  a.className = 'title';
+  a.textContent = it.title || '(无标题)';
+  if(/^https?:\/\//i.test(it.link)){
+    a.href = it.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  }
+  art.appendChild(a);
+  if(it.desc){
+    const p = document.createElement('p');
+    p.className = 'excerpt';
+    p.textContent = it.desc;
+    art.appendChild(p);
+  }
+  return art;
 }
 
 function fmt(d){
@@ -256,62 +272,38 @@ function fmt(d){
   return (d.getMonth()+1) + '/' + d.getDate();
 }
 
-// 逐条建 DOM 节点，不拼 HTML 字符串：标题、链接、源名都来自第三方 RSS，
-// 拼进 innerHTML 等于让任何一家源站都能在本页执行脚本（`<img onerror=…>` 就够）。
-// 链接只认 http(s)：`javascript:` 这类伪协议即使只是被点开也一样危险。
-function makeCard(it){
-  const art = document.createElement('article');
-  art.className = 'card';
+// （卡片工厂已改为 makeRow，见上方自动滚动段）
 
-  const top = document.createElement('div');
-  top.className = 'card-top';
-  const src = (it.source || '').trim();
-  const tag = document.createElement('span');
-  tag.className = 'tag';
-  tag.textContent = src || '未知来源';
-  const time = document.createElement('span');
-  time.className = 'time';
-  time.textContent = fmt(it.date);
-  top.appendChild(tag);
-  top.appendChild(time);
-  art.appendChild(top);
-
-  const a = document.createElement('a');
-  a.className = 'title';
-  a.textContent = it.title || '(无标题)';
-  if(/^https?:\/\//i.test(it.link)){
-    a.href = it.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
-  }
-  art.appendChild(a);
-
-  if(it.desc){
-    const p = document.createElement('p');
-    p.className = 'excerpt';
-    p.textContent = it.desc;
-    art.appendChild(p);
-  }
-  return art;
-}
-
-function render(){
+function render(preserve){
   const q = (document.getElementById('q').value || '').trim().toLowerCase();
   filtered = q
     ? ALL_ITEMS.filter(it =>
         (it.title||'').toLowerCase().includes(q) || (it.source||'').toLowerCase().includes(q))
     : ALL_ITEMS;
-  const empty = document.getElementById('empty');
   if(!filtered.length){
     empty.hidden = false;
     empty.textContent = q ? '没有匹配的条目' : '暂无条目';
-    grid.replaceChildren();
-    spacer.style.height = '0px';
+    track.replaceChildren();
+    copyH = 0;
     return;
   }
   empty.hidden = true;
-  scroller.scrollTop = 0;     // 数据刷新 / 切换筛选后回到顶部
-  vScrollTop = 0;
-  computeCols();
-  renderWindow();
+  const frag = document.createDocumentFragment();
+  filtered.forEach(it => frag.appendChild(makeRow(it)));   // 第一份
+  filtered.forEach(it => frag.appendChild(makeRow(it)));   // 第二份：无缝循环用
+  track.replaceChildren(frag);
+  if(preserve){
+    // 后台刷新：保持当前滚动位置连续，不跳回顶部
+    requestAnimationFrame(() => {
+      copyH = track.scrollHeight / 2;
+      if(copyH > 0 && autoPos > copyH) autoPos = copyH;
+      board.scrollTop = autoPos;
+    });
+  } else {
+    autoPos = 0;
+    board.scrollTop = 0;
+    requestAnimationFrame(() => { copyH = track.scrollHeight / 2; });
+  }
 }
 
 function parseDate(s){
@@ -321,7 +313,7 @@ function parseDate(s){
 }
 
 // 视图一：feed.xml（RSS 2.0，字段 title/link/source/description/pubDate）
-function parseFeed(txt){
+function parseFeed(txt, preserve){
   const doc = new DOMParser().parseFromString(txt, 'text/xml');
   const items = [...doc.querySelectorAll('item')];
   const lb = doc.querySelector('lastBuildDate')?.textContent;
@@ -334,7 +326,7 @@ function parseFeed(txt){
     date:  parseDate(it.querySelector('pubDate')?.textContent)
   }));
   setFeedStats(ALL_ITEMS.length, lbd && !isNaN(lbd) ? fmt(lbd) : '—');
-  render();
+  render(preserve);
 }
 
 // 视图二：全天缓存 = ai-accum.json（当天见过的全部）+ 当前 feed.xml（保证含最新条目）
@@ -348,7 +340,7 @@ function toItem(it){
     date:  parseDate(it.date_raw)
   };
 }
-function loadAccum(){
+function loadAccum(preserve){
   const t = Date.now();
   Promise.all([
     fetch('./ai-accum.json?t=' + t, {cache:'no-store'}).then(r => r.ok ? r.json() : null),
@@ -376,7 +368,7 @@ function loadAccum(){
     items.sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
     ALL_ITEMS = items;
     setAccumStats(items.length, (acc && acc.date) ? acc.date : '—', fromFeed, !acc);
-    render();
+    render(preserve);
   }).catch(() => showError('全天缓存载入失败，请稍后重试或切到「最新头条」。'));
 }
 
@@ -404,20 +396,20 @@ function setAccumStats(n, date, fromFeed, isMirror){
 }
 
 function showError(msg){
-  const empty = document.getElementById('empty');
   empty.hidden = false;
   empty.textContent = msg;   // 纯静态文案，无第三方内容
-  grid.replaceChildren();
-  spacer.style.height = '0px';
+  track.replaceChildren();
+  copyH = 0;
 }
 
-function loadView(){
+function loadView(preserve, interactive){
+  interactive = interactive !== false;   // 后台自动刷新不闪按钮
   const rf = document.getElementById('refresh');
-  if(rf){ rf.disabled = true; rf.textContent = '刷新中…'; }
-  const done = () => { if(rf){ rf.disabled = false; rf.textContent = '刷新'; } };
+  if(interactive && rf){ rf.disabled = true; rf.textContent = '刷新中…'; }
+  const done = () => { if(interactive && rf){ rf.disabled = false; rf.textContent = '刷新'; } };
   if(CURRENT_VIEW === 'accum'){
     // loadAccum 内部已 .catch 处理错误与渲染，这里只负责复位刷新按钮
-    Promise.resolve(loadAccum()).finally(done);
+    Promise.resolve(loadAccum(preserve)).finally(done);
     return;
   }
   fetch('./feed.xml?t=' + Date.now(), {cache:'no-store'})
@@ -425,7 +417,7 @@ function loadView(){
       if(!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     })
-    .then(parseFeed)
+    .then(t => parseFeed(t, preserve))
     .catch(e => showError('feed 载入失败：' + e.message))
     .finally(done);
 }
@@ -454,26 +446,48 @@ fetch(STATE_URL + '?t=' + Date.now(), {cache:'no-store'})
   })
   .catch(() => {});
 
-document.getElementById('q').addEventListener('input', render);
+document.getElementById('q').addEventListener('input', () => render(false));
 
-// 虚拟滚动：滚动时按行窗口重渲染（rAF 节流），避免每次滚动重排整列
-scroller.addEventListener('scroll', () => {
-  vScrollTop = scroller.scrollTop;
-  if(scrollTicking) return;
-  scrollTicking = true;
-  requestAnimationFrame(() => { renderWindow(); scrollTicking = false; });
-}, {passive:true});
-
-// 视口宽度变化会改变列数，需重算窗口
+// 自动滚动：内容比视口高才滚；鼠标悬停 / 手动滚动 / 手动暂停都停，松开或超时后继续。
+function togglePause(){
+  userPaused = !userPaused;
+  const b = document.getElementById('pause');
+  b.textContent = userPaused ? '▶ 继续' : '⏸ 暂停';
+}
+function tick(){
+  const now = Date.now();
+  const paused = hovering || userPaused || now < interactUntil;
+  const viewH = board.clientHeight;
+  if(copyH > viewH && !paused){
+    autoPos += SCROLL_SPEED;
+    if(autoPos >= copyH) autoPos -= copyH;   // 越过一份就回卷，第二份保证无跳变
+    board.scrollTop = autoPos;
+  } else {
+    autoPos = board.scrollTop;               // 暂停时跟手，不抢滚动条
+  }
+  requestAnimationFrame(tick);
+}
+// 自动滚动自身改 scrollTop 也会触发 scroll 事件，用偏移差分辨：差 <2px 即自动，否则是用户
+board.addEventListener('scroll', () => {
+  if(Math.abs(board.scrollTop - autoPos) < 2) return;
+  interactUntil = Date.now() + 4000;         // 用户手动滚动后暂停 4 秒
+  autoPos = board.scrollTop;
+});
+board.addEventListener('mouseenter', () => { hovering = true; });
+board.addEventListener('mouseleave', () => { hovering = false; });
+board.addEventListener('wheel', () => { interactUntil = Date.now() + 4000; autoPos = board.scrollTop; }, {passive:true});
+board.addEventListener('touchmove', () => { interactUntil = Date.now() + 4000; autoPos = board.scrollTop; }, {passive:true});
+// 视口尺寸变化后重量一份高度（单列无需重算列数）
 let resizeT;
 window.addEventListener('resize', () => {
   clearTimeout(resizeT);
-  resizeT = setTimeout(() => { if(!filtered.length) return; computeCols(); renderWindow(); }, 120);
+  resizeT = setTimeout(() => { if(filtered.length) copyH = track.scrollHeight / 2; }, 120);
 });
 
 loadView();
-// 与设备版节拍对齐：每 5 分钟回填一次，避免停留页面时数据陈旧
-setInterval(loadView, 300000);
+// 与设备版节拍对齐：每 5 分钟回填一次，保持滚动连续（不回顶），避免停留页面时数据陈旧
+setInterval(() => loadView(true, false), 300000);
+tick();
 </script>
 </body>
 </html>
