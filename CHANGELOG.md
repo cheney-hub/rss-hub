@@ -33,11 +33,11 @@
   不再调高（避免放松滥用防护）。
 - 仅改 `Pi/serve.py` 的响应头与传输层，feed.xml 字节、设备版、页脚内容均未变；golden 基线不受影响。
   64 例 serve 测试全绿（新增 gzip / 差异化缓存 / PNG 保持 no-cache 等用例）。
-- **阅读版新增「AI 精选」面板（docs/reader.html）**：顶栏正下方加一块精选带，同源拉
-  `ai-digest.html`、解析出 AI 挑的链接（标题 + 精华 + 原文链接）做成卡片网格，并带
-  「查看全部 →」跳完整 AI 页。零后端改动、不增写盘——只复用 Pi 已每小时生成的
-  ai-digest.html；GitHub Pages 镜像没有这份文件，面板自动保持隐藏（与「全天缓存」镜像降级一致）。
-  AI 页标题/链接来自第三方 RSS，渲染沿用 `createElement` + `textContent`，绝不用 innerHTML。
+- **阅读版 AI 精选：改为仅页脚链接跳转（docs/reader.html）**：不再在本页内联渲染 AI 卡片
+  面板（此前加的 `ai-panel` 区块、相关 CSS 与 `parseAiDigest/makeAiCard/loadAiDigest`
+  已整体移除，每 5 分钟也不再为它额外 fetch `ai-digest.html`）。保留页脚的「AI 精选」链接
+  直接跳 `./ai-digest.html`，需要看 AI 挑的链接点一下即可。好处：页面更干净、少占高度、
+  少一次跨页请求。
 
 - **阅读版顶部压扁（docs/reader.html）**：把 hero 下那一大排统计卡片（当前条目 / 最后构建 /
   设备版轮播）**上移到顶部 sticky 导航栏**做成一行紧凑小字，同时压扁主标题字号、收紧间距、
