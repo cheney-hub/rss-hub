@@ -129,6 +129,26 @@
   .foot a{color:var(--sub);text-decoration:none}
   .foot a:hover{color:var(--accent)}
   .foot .v{margin-top:6px}
+
+  /* AI 精选面板：顶栏正下方，把 AI 挑的链接作成精选带 */
+  .ai-panel{margin:0 0 26px;background:linear-gradient(135deg,var(--accent-soft),color-mix(in srgb,var(--accent-2) 14%,var(--bg)));
+            border:1px solid var(--line);border-radius:16px;padding:15px 18px;box-shadow:var(--shadow)}
+  .ai-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .ai-head .t{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px}
+  .ai-head .badge{font-size:10.5px;font-weight:700;color:#fff;background:linear-gradient(92deg,var(--accent),var(--accent-2));
+            padding:2px 9px;border-radius:999px;letter-spacing:.4px}
+  .ai-head a{font-size:12.5px;color:var(--accent);text-decoration:none;white-space:nowrap}
+  .ai-head a:hover{text-decoration:underline}
+  .ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+  .ai-card{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;
+           text-decoration:none;color:var(--text);transition:.15s}
+  .ai-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+  .ai-card .ti{font-size:13.5px;font-weight:600;line-height:1.45}
+  .ai-card .ti .rk{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 4px;
+            margin-right:6px;border-radius:6px;background:color-mix(in srgb,var(--accent) 14%,transparent);
+            color:var(--accent);font-size:11px;font-weight:700;vertical-align:1px}
+  .ai-card .rs{display:block;margin-top:5px;color:var(--sub);font-size:12px;line-height:1.5;
+           display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 </style>
 </head>
 <body>
@@ -141,6 +161,13 @@
 </header>
 
 <div class="wrap">
+  <section class="ai-panel" id="aiPanel" hidden>
+    <div class="ai-head">
+      <div class="t"><span class="badge">AI</span>AI 精选 · 这一小时</div>
+      <a href="./ai-digest.html" target="_blank" rel="noopener noreferrer">查看全部 →</a>
+    </div>
+    <div class="ai-grid" id="aiGrid"></div>
+  </section>
   <section class="hero">
     <h1>大中华区头条 · 实时聚合阅读</h1>
     <p class="lede" id="lede">62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。</p>
@@ -389,6 +416,67 @@ function showError(msg){
   spacer.style.height = '0px';
 }
 
+// 视图三（信息带，不进主列表）：AI 精选 —— 同源拉 ai-digest.html，解析出 AI 挑的链接
+// 作成顶栏正下方的精选带。ai-digest.html 由 Pi 每小时生成（当天零点重置、夜间保留末次），
+// GitHub Pages 镜像没有这份文件，此时面板保持隐藏、不报错（与「全天缓存」镜像降级一致）。
+// 同样只用 createElement + textContent，标题/链接都来自 AI 页（第三方 RSS 标题），绝不用 innerHTML。
+function parseAiDigest(txt){
+  const panel = document.getElementById('aiPanel');
+  const grid  = document.getElementById('aiGrid');
+  const items = [];
+  if(txt){
+    const doc = new DOMParser().parseFromString(txt, 'text/html');
+    for(const li of doc.querySelectorAll('ul li.card')){
+      const a = li.querySelector('h2 a');
+      if(!a) continue;
+      const link  = (a.getAttribute('href') || '').trim();
+      const title = (a.textContent || '').trim();
+      if(!title) continue;
+      const rkEl = li.querySelector('.rank');
+      const rsEl = li.querySelector('p.reason');
+      let reason = rsEl ? (rsEl.textContent || '').trim() : '';
+      if(reason === '（未提供精华概况）') reason = '';   // 占位文案不当精华显示
+      items.push({
+        rank: rkEl ? (rkEl.textContent || '').trim() : '',
+        title, link, reason
+      });
+    }
+  }
+  if(!items.length){ panel.hidden = true; return; }
+  grid.replaceChildren(...items.map(makeAiCard));
+  panel.hidden = false;
+}
+function makeAiCard(it){
+  const a = document.createElement('a');
+  a.className = 'ai-card';
+  if(/^https?:\/\//i.test(it.link)){
+    a.href = it.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  }
+  const ti = document.createElement('div');
+  ti.className = 'ti';
+  if(it.rank){
+    const rk = document.createElement('span');
+    rk.className = 'rk';
+    rk.textContent = it.rank;
+    ti.appendChild(rk);
+  }
+  ti.appendChild(document.createTextNode(it.title));
+  a.appendChild(ti);
+  if(it.reason){
+    const rs = document.createElement('div');
+    rs.className = 'rs';
+    rs.textContent = it.reason;
+    a.appendChild(rs);
+  }
+  return a;
+}
+function loadAiDigest(){
+  fetch('./ai-digest.html?t=' + Date.now(), {cache:'no-store'})
+    .then(r => r.ok ? r.text() : null)
+    .then(parseAiDigest)
+    .catch(() => { document.getElementById('aiPanel').hidden = true; });
+}
+
 function loadView(){
   const rf = document.getElementById('refresh');
   if(rf){ rf.disabled = true; rf.textContent = '刷新中…'; }
@@ -450,8 +538,9 @@ window.addEventListener('resize', () => {
 });
 
 loadView();
+loadAiDigest();
 // 与设备版节拍对齐：每 5 分钟回填一次，避免停留页面时数据陈旧
-setInterval(loadView, 300000);
+setInterval(() => { loadView(); loadAiDigest(); }, 300000);
 </script>
 </body>
 </html>

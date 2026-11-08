@@ -33,6 +33,11 @@
   不再调高（避免放松滥用防护）。
 - 仅改 `Pi/serve.py` 的响应头与传输层，feed.xml 字节、设备版、页脚内容均未变；golden 基线不受影响。
   64 例 serve 测试全绿（新增 gzip / 差异化缓存 / PNG 保持 no-cache 等用例）。
+- **阅读版新增「AI 精选」面板（docs/reader.html）**：顶栏正下方加一块精选带，同源拉
+  `ai-digest.html`、解析出 AI 挑的链接（标题 + 精华 + 原文链接）做成卡片网格，并带
+  「查看全部 →」跳完整 AI 页。零后端改动、不增写盘——只复用 Pi 已每小时生成的
+  ai-digest.html；GitHub Pages 镜像没有这份文件，面板自动保持隐藏（与「全天缓存」镜像降级一致）。
+  AI 页标题/链接来自第三方 RSS，渲染沿用 `createElement` + `textContent`，绝不用 innerHTML。
 
 ## [1.21.10] - 2026-11-07
 
