@@ -492,8 +492,8 @@ window.addEventListener('resize', () => {
 });
 
 loadView();
-// 与设备版节拍对齐：每 5 分钟回填一次，保持滚动连续（不回顶），避免停留页面时数据陈旧
-setInterval(() => loadView(true, false), 300000);
+// 只在自动滚动跑完一轮（回卷到顶部）时才回填一次数据；不挂固定定时器，
+// 让刷新完全跟随滚动节奏——停留或暂停时不会打断阅读。
 tick();
 </script>
 </body>
