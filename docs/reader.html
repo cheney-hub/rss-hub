@@ -228,7 +228,8 @@ let autoPos = 0;          // 虚拟滚动偏移
 let hovering = false;     // 鼠标悬停暂停
 let userPaused = false;   // 手动暂停
 let interactUntil = 0;    // 手动滚动后暂停到的时刻
-const SCROLL_SPEED = 0.5; // px/帧（≈30px/s，舒适阅读速度）
+let lastLoopRefresh = 0;  // 上次「跑完一轮」回填的时间，避免同轮重复触发
+const SCROLL_SPEED = 0.4; // px/帧（≈24px/s，0.8× 原速，舒适阅读速度）
 
 // 逐条建 DOM，不拼 innerHTML：标题/链接/源名来自第三方 RSS，拼串等于给任意源站
 // 在本页执行脚本的机会；链接只认 http(s)。（沿用原安全策略）
@@ -460,7 +461,13 @@ function tick(){
   const viewH = board.clientHeight;
   if(copyH > viewH && !paused){
     autoPos += SCROLL_SPEED;
-    if(autoPos >= copyH) autoPos -= copyH;   // 越过一份就回卷，第二份保证无跳变
+    if(autoPos >= copyH){
+      autoPos -= copyH;                      // 越过一份就回卷，第二份保证无跳变
+      if(now - lastLoopRefresh > 60000){     // 跑完一轮（120 条）即回填一次数据
+        lastLoopRefresh = now;
+        loadView(true, false);
+      }
+    }
     board.scrollTop = autoPos;
   } else {
     autoPos = board.scrollTop;               // 暂停时跟手，不抢滚动条
