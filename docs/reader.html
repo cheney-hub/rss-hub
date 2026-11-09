@@ -231,6 +231,7 @@ let userPaused = false;   // 手动暂停
 let interactUntil = 0;    // 手动滚动后暂停到的时刻
 let lastLoopRefresh = 0;  // 上次「跑完一轮」回填的时间，避免同轮重复触发
 const SCROLL_SPEED = 0.4; // px/帧（≈24px/s，0.8× 原速，舒适阅读速度）
+const ACC_RENDER_CAP = 500; // 全天缓存视图最多渲染的条目数（滚动池自身仍不限）
 
 // 逐条建 DOM，不拼 innerHTML：标题/链接/源名来自第三方 RSS，拼串等于给任意源站
 // 在本页执行脚本的机会；链接只认 http(s)。（沿用原安全策略）
@@ -291,9 +292,12 @@ function render(preserve){
   }
   empty.hidden = true;
   const marquee = (CURRENT_VIEW === 'feed');   // 仅「最新头条」做无缝自动滚动
+  // 全天缓存可能几千条，仅渲染最近 N 条（ALL_ITEMS 已按时间倒序）；有搜索词时尊重检索不截断
+  const cap = (!marquee && !q && ACC_RENDER_CAP > 0) ? ACC_RENDER_CAP : filtered.length;
+  const toRender = filtered.slice(0, cap);
   const frag = document.createDocumentFragment();
-  filtered.forEach(it => frag.appendChild(makeRow(it)));
-  if(marquee) filtered.forEach(it => frag.appendChild(makeRow(it)));  // 第二份只给滚动视图
+  toRender.forEach(it => frag.appendChild(makeRow(it)));
+  if(marquee) toRender.forEach(it => frag.appendChild(makeRow(it)));  // 第二份只给滚动视图
   track.replaceChildren(frag);
   if(preserve){
     // 后台刷新：保持当前滚动位置连续，不跳回顶部
@@ -395,6 +399,10 @@ function setAccumStats(n, date, fromFeed, isMirror){
     note.textContent = '已并入当前 feed 的 ' + fromFeed + ' 条最新条目，确保含当下头条。';
   } else {
     note.textContent = '';
+  }
+  if (n > ACC_RENDER_CAP){
+    note.textContent += (note.textContent ? ' ' : '') + '网页端为轻量仅渲染最近 '
+      + ACC_RENDER_CAP + ' 条（按时间倒序）；检索更早条目请用上方筛选。';
   }
 }
 
