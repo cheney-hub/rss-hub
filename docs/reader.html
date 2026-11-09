@@ -218,7 +218,8 @@ const STATE_URL  = 'https://moreaix.com/rss/rotate.json';
 let CURRENT_VIEW = 'feed';   // 'feed' | 'accum'
 let ALL_ITEMS = [];          // 当前视图的原始条目，供搜索筛选复用，不重复请求
 
-// 看板式自动滚动：单列信息流，整份渲染后做无缝循环（内容不多时整屏装得下，不滚）
+// 看板式布局：单列信息流。「最新头条」做无缝自动滚动（渲染两份循环），
+// 「全天缓存」为静态可手动滚动列表（只渲染一份、不自动滚，避免几千条翻倍）。
 const board = document.getElementById('board');
 const track = document.getElementById('track');
 const empty = document.getElementById('empty');
@@ -289,21 +290,22 @@ function render(preserve){
     return;
   }
   empty.hidden = true;
+  const marquee = (CURRENT_VIEW === 'feed');   // 仅「最新头条」做无缝自动滚动
   const frag = document.createDocumentFragment();
-  filtered.forEach(it => frag.appendChild(makeRow(it)));   // 第一份
-  filtered.forEach(it => frag.appendChild(makeRow(it)));   // 第二份：无缝循环用
+  filtered.forEach(it => frag.appendChild(makeRow(it)));
+  if(marquee) filtered.forEach(it => frag.appendChild(makeRow(it)));  // 第二份只给滚动视图
   track.replaceChildren(frag);
   if(preserve){
     // 后台刷新：保持当前滚动位置连续，不跳回顶部
     requestAnimationFrame(() => {
-      copyH = track.scrollHeight / 2;
+      copyH = marquee ? track.scrollHeight / 2 : 0;
       if(copyH > 0 && autoPos > copyH) autoPos = copyH;
       board.scrollTop = autoPos;
     });
   } else {
     autoPos = 0;
     board.scrollTop = 0;
-    requestAnimationFrame(() => { copyH = track.scrollHeight / 2; });
+    requestAnimationFrame(() => { copyH = marquee ? track.scrollHeight / 2 : 0; });
   }
 }
 
@@ -428,6 +430,8 @@ function switchView(v){
   CURRENT_VIEW = v;
   document.getElementById('tab-feed').classList.toggle('active', v === 'feed');
   document.getElementById('tab-accum').classList.toggle('active', v === 'accum');
+  const pauseBtn = document.getElementById('pause');
+  if(pauseBtn) pauseBtn.style.display = (v === 'feed') ? '' : 'none';  // 静态视图无需暂停
   document.getElementById('lede').textContent = v === 'feed'
     ? '62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。'
     : '当天见过的全部 RSS 条目（本地零点重置）· 由 rss-build 每 5 分钟并入、按标题去重；已并入当前 feed 确保含当下头条；点标题跳原文，可搜索筛选。';
