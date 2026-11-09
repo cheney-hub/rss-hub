@@ -136,6 +136,17 @@
   .title:hover{color:var(--accent)}
   .excerpt{color:var(--sub);font-size:13px;line-height:1.6;margin:6px 0 0;
            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* 全天缓存 = kindle「RSS 头条看板」文本行模式：无卡片、发丝分隔线、标题链接、时间·来源 */
+  .board-track.is-board{gap:0;padding:4px 2px}
+  .kitem{background:transparent;border:0;border-radius:0;box-shadow:none;padding:11px 2px 12px;
+         border-bottom:1px solid var(--line)}
+  .kitem:last-child{border-bottom:0}
+  .ktitle{font-size:17px;font-weight:700;line-height:1.42;color:var(--text);
+          text-decoration:none;display:block;word-break:break-word}
+  .ktitle:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .kdesc{font-size:14px;line-height:1.62;color:var(--sub);margin:5px 0 0;word-break:break-word}
+  .kmeta{font-size:12.5px;line-height:1.5;color:var(--sub);margin:5px 0 0}
   .empty-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
                text-align:center;color:var(--sub);font-size:14px;line-height:1.9;padding:20px;pointer-events:none}
   .empty-state a{color:var(--accent)}
@@ -164,7 +175,7 @@
 
 <div class="wrap">
   <section class="hero">
-    <h1>大中华区头条 · 实时聚合阅读</h1>
+    <h1 id="h1">大中华区头条 · 实时聚合阅读</h1>
     <p class="lede" id="lede">62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。</p>
 
     <div class="tabs-row">
@@ -230,6 +241,7 @@ let hovering = false;     // 鼠标悬停暂停
 let userPaused = false;   // 手动暂停
 let interactUntil = 0;    // 手动滚动后暂停到的时刻
 let lastLoopRefresh = 0;  // 上次「跑完一轮」回填的时间，避免同轮重复触发
+let accumTimer = null;     // 全天缓存视图的 300s 自动刷新定时器（仅该视图活跃时运行）
 const SCROLL_SPEED = 0.4; // px/帧（≈24px/s，0.8× 原速，舒适阅读速度）
 
 // 逐条建 DOM，不拼 innerHTML：标题/链接/源名来自第三方 RSS，拼串等于给任意源站
@@ -265,6 +277,37 @@ function makeRow(it){
   return art;
 }
 
+function fmtClock(d){
+  if(!d || isNaN(d)) return '';
+  const now = new Date();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  if(d.toDateString() === now.toDateString()) return hh + ':' + mm;
+  return (d.getMonth()+1) + '-' + d.getDate() + ' ' + hh + ':' + mm;
+}
+function makeBoardRow(it){
+  const art = document.createElement('article');
+  art.className = 'kitem';
+  const a = document.createElement('a');
+  a.className = 'ktitle';
+  a.textContent = it.title || '(无标题)';
+  if(/^https?:\/\//i.test(it.link)){
+    a.href = it.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  }
+  art.appendChild(a);
+  if(it.desc){
+    const p = document.createElement('p');
+    p.className = 'kdesc';
+    p.textContent = it.desc;
+    art.appendChild(p);
+  }
+  const m = document.createElement('p');
+  m.className = 'kmeta';
+  m.textContent = fmtClock(it.date) + ' · ' + ((it.source || '').trim() || '未知来源');
+  art.appendChild(m);
+  return art;
+}
+
 function fmt(d){
   if(!d) return '';
   const now = Date.now(), ts = d.getTime(), min = Math.round((now-ts)/60000);
@@ -291,8 +334,10 @@ function render(preserve){
   }
   empty.hidden = true;
   const marquee = (CURRENT_VIEW === 'feed');   // 仅「最新头条」做无缝自动滚动
+  track.classList.toggle('is-board', !marquee);
+  const make = marquee ? makeRow : makeBoardRow;
   const frag = document.createDocumentFragment();
-  filtered.forEach(it => frag.appendChild(makeRow(it)));
+  filtered.forEach(it => frag.appendChild(make(it)));
   if(marquee) filtered.forEach(it => frag.appendChild(makeRow(it)));  // 第二份只给滚动视图
   track.replaceChildren(frag);
   if(preserve){
@@ -387,6 +432,12 @@ function setAccumStats(n, date, fromFeed, isMirror){
   document.getElementById('nL').textContent = '全天条目';
   document.getElementById('tL').textContent = '缓存日期';
   document.getElementById('accN').textContent = n ? '(' + n + ')' : '';
+  // 全天缓存副标题沿用 kindle 看板：更新时间 · 共 N 条 · 每 300 秒自动刷新
+  const upd = new Date();
+  const u = upd.getFullYear() + '-' + String(upd.getMonth()+1).padStart(2,'0') + '-'
+            + String(upd.getDate()).padStart(2,'0') + ' ' + String(upd.getHours()).padStart(2,'0')
+            + ':' + String(upd.getMinutes()).padStart(2,'0');
+  document.getElementById('lede').textContent = '更新 ' + u + ' · 共 ' + n + ' 条 · 每 300 秒自动刷新';
   const note = document.getElementById('accNote');
   if (isMirror){
     note.textContent = 'GitHub Pages 镜像没有全天缓存文件，这里显示当前 ' + n
@@ -432,9 +483,18 @@ function switchView(v){
   document.getElementById('tab-accum').classList.toggle('active', v === 'accum');
   const pauseBtn = document.getElementById('pause');
   if(pauseBtn) pauseBtn.style.display = (v === 'feed') ? '' : 'none';  // 静态视图无需暂停
-  document.getElementById('lede').textContent = v === 'feed'
-    ? '62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。'
-    : '当天见过的全部 RSS 条目（本地零点重置）· 由 rss-build 每 5 分钟并入、按标题去重；已并入当前 feed 确保含当下头条；点标题跳原文，可搜索筛选。';
+  const h1 = document.getElementById('h1');
+  const lede = document.getElementById('lede');
+  if(v === 'feed'){
+    h1.textContent = '大中华区头条 · 实时聚合阅读';
+    lede.textContent = '62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。';
+    if(accumTimer){ clearInterval(accumTimer); accumTimer = null; }   // 离开全天缓存：停掉 300s 自刷
+  } else {
+    h1.textContent = 'RSS 头条看板';
+    lede.textContent = '载入中…';
+    // 全天缓存参照 kindle 看板：每 300 秒自动刷新一次（仅本视图活跃时运行，保持滚动位置）
+    if(!accumTimer) accumTimer = setInterval(() => { if(CURRENT_VIEW === 'accum') loadView(true, false); }, 300000);
+  }
   loadView();
 }
 
