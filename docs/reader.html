@@ -236,7 +236,7 @@ const track = document.getElementById('track');
 const empty = document.getElementById('empty');
 let filtered = [];
 let copyH = 0;            // 一份内容的高度（track 里渲染了两份用于无缝循环）
-let autoPos = 0;          // 虚拟滚动偏移
+let autoPos = 0;          // 自动滚动游标（无缝循环 marquee：滚过一份高度即回卷到开头）
 let hovering = false;     // 鼠标悬停暂停
 let userPaused = false;   // 手动暂停
 let interactUntil = 0;    // 手动滚动后暂停到的时刻
@@ -317,7 +317,8 @@ function fmt(d){
   return (d.getMonth()+1) + '/' + d.getDate();
 }
 
-// （卡片工厂已改为 makeRow，见上方自动滚动段）
+// render() 见下：按当前视图选用行工厂——「最新头条」用 makeRow（滚动卡片行），
+// 「全天缓存」用 makeBoardRow（kindle 文本看板静态行）。
 
 function render(preserve){
   const q = (document.getElementById('q').value || '').trim().toLowerCase();
