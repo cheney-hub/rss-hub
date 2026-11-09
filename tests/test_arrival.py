@@ -70,7 +70,7 @@ class TestSettle(unittest.TestCase):
         # 那正是这个模块要治的现象（取舍见 prev_source_index 的注释）。
         items = group("https://nk/rss", 5, 2000)
         prev = self.prev("https://nk/rss", ["t0", "t1", "t2"], 1000)
-        self.assertEqual(A.settle(items, prev), 5)
+        self.assertEqual(A.settle(items, prev), (5, 0))
         self.assertEqual([it["ts"] for it in items], [1000] * 5,
                          "整批都应回到上一轮认定的时间，而不是本轮标称")
 
@@ -87,7 +87,7 @@ class TestSettle(unittest.TestCase):
         prev = {src: [{"title": "t9", "link": "https://x/t9", "ts": 1000,
                        "src": src, "date_raw": "n/a"}]}
         items = group(src, 3, 5000)          # 本轮源把整批刷成 5000
-        self.assertEqual(A.settle(items, prev), 3)
+        self.assertEqual(A.settle(items, prev), (3, 0))
         self.assertTrue(all(it["ts"] == 1000 for it in items),
                         "老条目掉出窗口后重新入池，不能拿本轮的新时钟当首见时间")
 
@@ -123,12 +123,12 @@ class TestSettle(unittest.TestCase):
     def test_normal_source_untouched(self):
         items = [mk("t%d" % i, src="https://good/rss", ts=2000 + i) for i in range(5)]
         prev = self.prev("https://good/rss", ["t0"], 1000)
-        self.assertEqual(A.settle(items, prev), 0)
+        self.assertEqual(A.settle(items, prev), (0, 0))
         self.assertEqual([it["ts"] for it in items], [2000, 2001, 2002, 2003, 2004])
 
     def test_first_run_without_prev_is_noop(self):
         items = group("https://nk/rss", 5, 2000)
-        self.assertEqual(A.settle(items, {}), 0)
+        self.assertEqual(A.settle(items, {}), (0, 0))
         self.assertTrue(all(it["ts"] == 2000 for it in items))
 
     def test_only_flagged_source_is_adjusted(self):
@@ -136,7 +136,7 @@ class TestSettle(unittest.TestCase):
             [mk("g%d" % i, src="https://good/rss", ts=3000 + i) for i in range(3)]
         prev = self.prev("https://nk/rss", ["t0", "t1", "t2"], 1000)
         prev.update(self.prev("https://good/rss", ["g0", "g1", "g2"], 1000))
-        self.assertEqual(A.settle(items, prev), 3)
+        self.assertEqual(A.settle(items, prev), (3, 0))
         good = [it for it in items if it["src"] == "https://good/rss"]
         self.assertEqual([it["ts"] for it in good], [3000, 3001, 3002])
 
@@ -145,7 +145,7 @@ class TestSettle(unittest.TestCase):
         items = group("https://nk/rss", 3, 5000)
         prev = {"https://other/rss": [{"title": "t0", "link": "https://x/t0",
                                        "ts": 1000, "src": "https://other/rss"}]}
-        self.assertEqual(A.settle(items, prev), 0)
+        self.assertEqual(A.settle(items, prev), (0, 0))
 
     def test_round_trip_two_rounds_in_a_row(self):
         """连跑两轮：时间必须稳定在第一轮那个值，不能跟着源一路往上漂。"""
@@ -155,6 +155,68 @@ class TestSettle(unittest.TestCase):
             A.settle(items, prev)
             prev = {"https://nk/rss": [dict(it) for it in items]}
         self.assertEqual(items[0]["ts"], 1000, "源每轮刷新时间戳，时间应停在首次见到")
+
+
+class TestSettleNoSourceTime(unittest.TestCase):
+    """情况 B：源根本没给时间（pubDate 缺失 / 解析失败，ts==0）。
+
+    第一次见到就以抓取时刻落定并打标记；之后再见到同一条沿用首次时间，
+    不跟着每轮刷新往前漂；源一旦补上真实时间就以源时间为准。
+    """
+
+    def prev_from(self, items):
+        return {"https://src/rss": [dict(it) for it in items]}
+
+    def test_first_seen_uses_now_and_is_marked(self):
+        # 源无时间、也没有历史 → 以传入的 now 为准（真实运行里是本轮抓取时刻）
+        items = [mk("t%d" % i, src="https://src/rss", ts=0) for i in range(3)]
+        settled, no_time = A.settle(items, {}, now=1000)
+        self.assertEqual((settled, no_time), (0, 3))
+        self.assertTrue(all(it["ts"] == 1000 for it in items))
+        self.assertTrue(all(it.get("no_source_time") for it in items))
+        # 改写后的 date_raw 必须能被自己解析回同一时间戳
+        self.assertEqual(B._parse_date(items[0]["date_raw"]), 1000)
+
+    def test_reappearance_keeps_first_seen(self):
+        # 第一轮落定 1000；第二轮源仍无时间（ts==0）、但 now 已变成 2000，
+        # 应沿用首次 1000，而不是跟着 now 往前漂成 2000。
+        items = [mk("t%d" % i, src="https://src/rss", ts=0) for i in range(3)]
+        A.settle(items, {}, now=1000)
+        prev = self.prev_from(items)
+        items2 = [mk("t%d" % i, src="https://src/rss", ts=0) for i in range(3)]
+        settled, no_time = A.settle(items2, prev, now=2000)
+        self.assertEqual((settled, no_time), (0, 3))
+        self.assertTrue(all(it["ts"] == 1000 for it in items2),
+                        "同一条再次出现应沿用首次获取时间，不能跟着 now 漂")
+
+    def test_no_time_does_not_touch_timed_items(self):
+        # 同一批里有的有真实时间、有的没有：有时间的原样保留，没时间的按 now 落定
+        mixed = ([mk("a%d" % i, src="https://has/rss", ts=5000 + i) for i in range(2)]
+                 + [mk("b%d" % i, src="https://none/rss", ts=0) for i in range(2)])
+        settled, no_time = A.settle(mixed, {}, now=9000)
+        self.assertEqual((settled, no_time), (0, 2))
+        self.assertEqual([it["ts"] for it in mixed[:2]], [5000, 5001])
+        self.assertEqual([it["ts"] for it in mixed[2:]], [9000, 9000])
+
+    def test_source_time_wins_once_present(self):
+        # 首轮无时间落定 1000 并打标记；次轮源突然给了真实时间 7000 → 以源时间为准
+        items = [mk("t0", src="https://src/rss", ts=0)]
+        A.settle(items, {}, now=1000)
+        prev = self.prev_from(items)
+        items2 = [mk("t0", src="https://src/rss", ts=7000)]   # 这次源给了真实时间
+        settled, no_time = A.settle(items2, prev, now=2000)
+        self.assertEqual((settled, no_time), (0, 0))
+        self.assertEqual(items2[0]["ts"], 7000,
+                        "源一旦提供真实时间，就必须以源时间为准、覆盖首抓时间")
+
+    def test_round_trip_stays_at_first_seen(self):
+        """连跑两轮：无时间条目必须停在首次获取时间，不能跟着 now 一路往上漂。"""
+        prev = {}
+        for now in (1000, 5000, 8000):
+            items = [mk("t%d" % i, src="https://src/rss", ts=0) for i in range(3)]
+            A.settle(items, prev, now=now)
+            prev = self.prev_from(items)
+        self.assertEqual(items[0]["ts"], 1000, "源一直无时间，时间应停在首次获取")
 
 
 if __name__ == "__main__":

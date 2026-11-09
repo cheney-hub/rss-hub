@@ -657,8 +657,10 @@ def run_once(entries, prev_items):
     items, counts = _collect(entries, prev_items)
     # 个别源给整份 feed 打同一个时间戳且每轮刷成当前时刻（日经、光明日报·版面），
     # 那样它们会永远排在最新 —— 这里把它们的排序时间改回「首次见到那条的时间」。
+    # 另外，源根本没有 pubDate 的条目（ts==0）以「首次抓取时刻」落定并标记，
+    # 之后沿用首次时间，免得沉底被裁或永远最新霸榜。
     # 依据是上一轮产物，所以第一次运行没有效果，从第二轮起才认得出来。
-    settled = arrival.settle(items, prev_items)
+    settled, no_time = arrival.settle(items, prev_items)
     items.sort(key=lambda x: (-(x.get("ts") or 0), item_guid(x)))
     items, dedup_dropped = dedupe(items)
     # 排序在前、裁剪在后，留下的一定是最新的那批（120 条 ≈ 4.3 小时产出）。
@@ -670,6 +672,7 @@ def run_once(entries, prev_items):
     # dedup_dropped 与 trimmed 分开统计：前者是「重复」，后者是「排在 120 名之外」，
     # 合成一个数字时日志会把「池子满了」误读成「重复变多了」
     counts["settled"] = settled
+    counts["no_time"] = no_time
     stats = {"total": len(entries), "items": len(items),
              "dedup_dropped": dedup_dropped, "trimmed": trimmed}
     stats.update(counts)
@@ -817,6 +820,9 @@ def _log_round(rounds, pick, note, stats, elapsed):
     if stats.get("settled"):
         print("       其中 %d 条按「首次见到」排序（源每轮刷新整个时间戳）"
               % stats["settled"])
+    if stats.get("no_time"):
+        print("       其中 %d 条源无时间，以首次获取时间记录并标记"
+              % stats["no_time"])
     print("        上屏：%s ｜ %s"
           % (note, (pick.get("title") or "")[:36] if pick else "（设备版保持上一版）"))
 
