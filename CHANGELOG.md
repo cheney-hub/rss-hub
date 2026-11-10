@@ -43,7 +43,24 @@
   新增一行 `其中 N 条源无时间，以首次获取时间记录并标记`，把「标记」落到构建日志与持久化的
   `pubDate` 上（`no_source_time` 仅作内部标记，未单独写进 feed/前端展示）。
 - `tests/test_arrival.py` 新增 `TestSettleNoSourceTime`（5 例：首抓落定 / 复用首见 / 不碰有时间的
-  条目 / 源补时间优先 / 两轮稳定）。全仓 **463 例全绿**（458→463，README 口径同步）。
+  条目 / 源补时间优先 / 两轮稳定）。全仓 **468 例全绿**（458→468，README 口径同步）。
+
+### 公共源备用实例（fallback）+ 抓取调参
+
+- **`feeds.txt` 给 4 个关键公共 RSSHub 源加备用实例**：央视要闻 / 国际（主 `rsshub.rssforever.com`
+  → 备 `rsshub.rss.tips`）、一财要闻（主 `rsshub.rss.tips` → 备 `rsshub.rssforever.com`）、
+  网易今日关注（主 `hub.slarker.me` → 备 `rsshub.rss.tips`）。格式为「紧贴的下一地址行」即视为
+  同一源的备用（主地址取首个，其后同名 http 行追加进 `fallbacks`）。
+- **`build_feed.read_feed_entries` 支持连续地址解析 fallback**：只有「紧邻的地址行」（中间不被
+  `#` 名字行 / 空行 / 杂行隔断）才算同一源的备用；被隔断的后续地址回退成「以自己的 URL 当源名」
+  的独立源（旧行为）。`#` 名字行 / 杂行都会重置连续性，避免把整份清单塌成第一个源的 fallback。
+- **`fetch_with_retry` 主挂切备**：主地址超时 / 非 200 / 解析错后依次试 fallback，每个地址最多
+  重试 1 次；日志打 `[fallback] 源 主→备 成功`。`src`（回退键 / 展示）统一用主地址，保证无论
+  最终从哪个实例取到，`prev_items` 历史命中都不受影响。
+- **抓取调参（零风险）**：`rss-build.service` 的 `CONCURRENCY` 10→20、`FETCH_TIMEOUT` 15→10。
+  Pi 实测单轮 43s→21.7s（62 源 / 0 备用触发 / 0 失败），4 核 CPU 空闲、纯 I/O 受限，调高并发安全。
+- 新增 `tests/test_feed_fallback.py`（5 例：连续地址解析 / 每条目含 fallbacks 键 / 主 OK 用主 /
+  主挂切备 / 全挂返回空），全仓 **468 例全绿**（463→468，README 口径同步）。
 
 ## [1.21.11] - 2026-11-08
 

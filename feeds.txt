@@ -99,9 +99,11 @@ https://feed.quanwenrss.com/feed/xinhua-yw.xml
 
 # 央视新闻·要闻（官方无 RSS，RSSHub 镜像；复测三轮稳定、80 条）
 https://rsshub.rssforever.com/cctv/news
+https://rsshub.rss.tips/cctv/news  # 备用实例
 
 # 央视新闻·国际（同上）
 https://rsshub.rssforever.com/cctv/world
+https://rsshub.rss.tips/cctv/world  # 备用实例
 
 # 人民日报·人民网评（官方无 RSS，评论为主）
 https://feed.quanwenrss.com/feed/people-pinglun.xml
@@ -173,6 +175,7 @@ https://dedicated.wallstreetcn.com/rss.xml
 
 # 第一财经·要闻（官方无 RSS，RSSHub 镜像，已验证实时更新）
 https://rsshub.rss.tips/yicai/news
+https://rsshub.rssforever.com/yicai/news  # 备用实例
 
 # 金十数据·7×24 快讯（滚动快讯，刷屏可注释掉）
 https://feed.quanwenrss.com/feed/jin10-flash.xml
@@ -201,6 +204,7 @@ https://rsshub.rss.tips/sina/rollnews
 
 # 网易新闻·今日关注（官方 RSS 已停更，此为实时镜像）
 https://hub.slarker.me/163/today
+https://rsshub.rss.tips/163/today  # 备用实例：主 hub.slarker.me 常挂时取此
 
 # 凤凰网·资讯（官方 RSS 已停更，RSSHub 镜像，已验证更新）
 https://rsshub.rss.tips/ifeng/news

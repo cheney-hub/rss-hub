@@ -194,6 +194,7 @@ def read_feed_entries(path=None, skipped=None):
     """
     path = path or FEEDS_FILE
     entries, pending = [], ""
+    prev_was_url = False  # 上一行是不是地址行：只有紧邻地址行才算「同一源的备用地址」
     # 清单是**手工维护**的文件：被记事本存成 GBK、被误删、路径写错都可能发生。
     # 这里不 try 的话异常会一路穿出 main()，表现为 traceback + CI 红，
     # 而排障的人会当成代码 bug 去查——它其实是配置问题。坏字节用 replace 退化成
@@ -214,13 +215,27 @@ def read_feed_entries(path=None, skipped=None):
                     # 源名后面常跟括号备注（「财联社（快讯）」）：备注只给人看，
                     # 上屏时占宽度，所以从第一个中/英文左括号起整段截掉
                     pending = re.sub(r"[（(].*?$", "", txt).strip()
+                # 注释行（哪怕是分组标题）都打断连续性：下一地址是「新源首条」，
+                # 不是上一个源的备用。不重置的话会一路把后续所有源吞成第一个源的 fallback。
+                prev_was_url = False
                 continue
             url = raw.split("#")[0].strip()
             if url.startswith("http"):
-                entries.append({"name": pending or url, "url": url})
-                pending = ""
+                # 连续地址（上一行也是地址、中间不被 # 名字行/空行/杂行隔断）视为同一源的
+                # 「主地址 + 备用地址」：主地址取首个，其后同名 http 行追加进 fallbacks，
+                # 抓取时主实例挂了再依次试。源名只给本源首条地址用，用完即清——
+                # 这样被杂行隔断的后续地址会回退成「以自己的 URL 当源名」的独立源（旧行为），
+                # 不会被错当成上一个源的备用地址。
+                if (prev_was_url and entries and entries[-1]["url"] != url
+                        and url not in entries[-1].get("fallbacks", [])):
+                    entries[-1].setdefault("fallbacks", []).append(url)
+                else:
+                    entries.append({"name": pending or url, "url": url, "fallbacks": []})
+                    pending = ""  # 源名只给本源首条地址用，后续地址是备用或独立源
+                prev_was_url = True
             elif skipped is not None:
                 skipped.append("%s:%d %s" % (os.path.basename(path), lineno, raw[:60]))
+                prev_was_url = False  # 杂行打断连续性，下一地址不再算上一个源的备用
     seen, out = set(), []
     for e in entries:
         if e["url"] not in seen:
@@ -596,33 +611,6 @@ def _collect(entries, prev_items):
     已完成的结果全都压着不处理。放进 worker 后并发的 12 路各睡各的，主线程只管收结果。
     """
     items, ok, fail, stale = [], 0, 0, 0
-
-    def fetch_one(e):
-        """抓一个源并解析。任何异常都收成 (entry, None, err) 交给主线程决定回退，
-        不在这里 sleep / 重试 —— 重试策略只写在 fetch_with_retry 一处。"""
-        try:
-            status, body, charset = http_get(e["url"])
-            if status != 200:
-                raise RuntimeError("HTTP %s" % status)
-            got = parse_items(decode_body(body, charset), e["url"], PER_SOURCE)
-            for it in got:
-                it["src_name"] = e["name"]
-            return e, got, None
-        except Exception as err:
-            return e, None, err
-
-    def fetch_with_retry(e):
-        """失败一次后隔 RETRY_DELAY 再试一次：源站偶发 5xx / 连接重置很常见。
-
-        不区分错因，404 / 解析失败也会重试一次 —— 判错因要把异常分类带下来，
-        而代价是每个坏源多 1 秒，比误判「偶发」变「永久」便宜。
-        """
-        _, got, err = fetch_one(e)
-        if got:
-            return e, got, None
-        time.sleep(RETRY_DELAY)
-        return fetch_one(e)
-
     with ThreadPoolExecutor(max_workers=CONCURRENCY) as ex:
         for fut in as_completed([ex.submit(fetch_with_retry, e) for e in entries]):
             e, got, err = fut.result()
@@ -641,6 +629,51 @@ def _collect(entries, prev_items):
             else:
                 print("[失败] %-22s %s (%s)" % (e["name"][:20], e["url"][:70], err))
     return items, {"ok": ok, "fail": fail, "stale": stale}
+
+
+def _try_url(e, url):
+    """抓单个地址并解析。任何异常（含非 200）都收成 (got, err)，由上层决定回退。
+    失败（含超时 / 非 200 / 解析错）后隔 RETRY_DELAY 再试一次 —— 源站偶发 5xx /
+    连接重置很常见，不区分错因：判错因要把异常分类带下来，而代价是每个坏源多 1 秒，
+    比误判「偶发」变「永久」便宜。"""
+    try:
+        status, body, charset = http_get(url)
+        if status != 200:
+            raise RuntimeError("HTTP %s" % status)
+        got = parse_items(decode_body(body, charset), url, PER_SOURCE)
+        for it in got:
+            it["src_name"] = e["name"]
+            it["src"] = e["url"]   # 回退键 / 展示统一用主地址，保证 prev_items 命中
+        return got, None
+    except Exception as err:
+        time.sleep(RETRY_DELAY)
+        try:
+            status, body, charset = http_get(url)
+            if status != 200:
+                raise RuntimeError("HTTP %s" % status)
+            got = parse_items(decode_body(body, charset), url, PER_SOURCE)
+            for it in got:
+                it["src_name"] = e["name"]
+                it["src"] = e["url"]
+            return got, None
+        except Exception as err2:
+            return None, err2
+
+
+def fetch_with_retry(e):
+    """主地址失败（超时 / 非 200 / 解析错）后依次试 fallback 地址；每个地址最多重试 1 次。
+    src（回退键）始终用主地址，所以无论最终从哪个实例取到，回退都命中同一份历史。"""
+    urls = [e["url"]] + list(e.get("fallbacks") or [])
+    last_err = None
+    for idx, url in enumerate(urls):
+        got, err = _try_url(e, url)
+        if got:
+            if idx:
+                print("[fallback] %-20s 主 %s → 备 %s 成功"
+                      % (e["name"][:18], e["url"][:34], url[:34]))
+            return e, got, None
+        last_err = err
+    return e, None, last_err
 
 
 def run_once(entries, prev_items):
