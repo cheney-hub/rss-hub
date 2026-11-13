@@ -62,6 +62,22 @@
 - 新增 `tests/test_feed_fallback.py`（5 例：连续地址解析 / 每条目含 fallbacks 键 / 主 OK 用主 /
   主挂切备 / 全挂返回空），全仓 **468 例全绿**（463→468，README 口径同步）。
 
+### 备用实例扩面（跨境/港媒源）
+
+> 2026-11-13 巡检发现：当日失败源集中在跨境/港媒（环球/凤凰/香港01/FT/观察者/8world/东网/新浪），
+> 这批主挂 `rsshub.rss.tips` 且无 fallback。逐个在 Pi 实测候选备用实例可达性后，**只给确实可达的源加**：
+
+- **FT中文网·最新**：主 `www.ftchinese.com` 官方源 → 备 `feed.quanwenrss.com/feed/ftchinese-all.xml`
+  （quanwenrss 镜像，跨主机、稳定，实测 200 / 1.5s）。
+- **观察者网·头条**：主 `rsshub.rss.tips` → 备 `hub.slarker.me/guancha/headline`（实测 200 / 1.8s）。
+- **香港01·热榜 / 凤凰网·资讯**：主 `rsshub.rss.tips` → 备 `rsshub.rssforever.com` 同路由
+  （实测快返 0.7s / 2.4s，但 `rssforever` 本身偶发 000 抖动，属 best-effort，非稳备）。
+- 带 fallback 源由 4 个增至 **8 个**；`test_feed_fallback.py` 的解析断言同步 4→8（仍 468 例全绿）。
+- **诚实说明无法加固的 6 个源**：① `8world`/`东网` 的两个备用实例（rssforever/slarker）全 000，
+  无路由可加；② `环球`/`新浪` 在 rssforever 时好时坏且 8–9s 接近超时阈值，加进去只在主挂时多等
+  10s 死跳、净负面；③ `网易`/`央视国际` 已各有 1 个备用，第三实例 000/抖，不再叠加。
+  公共 RSSHub 镜像生态已退化，这三个互通实例本身也偶抖，是结构性限制，非配置可解。
+
 ## [1.21.11] - 2026-11-08
 
 **扛高并发：差异化边缘缓存 + 源站 gzip 压缩（serve.py 仅改响应头/传输，feed 输出逐字节不变）**
