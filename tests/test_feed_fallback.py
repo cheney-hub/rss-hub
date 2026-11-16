@@ -15,21 +15,24 @@ BACKUP = "https://backup/163/today"
 
 
 class TestFallbackParse(unittest.TestCase):
-    def test_eight_sources_have_fallbacks(self):
+    def test_twelve_sources_have_fallbacks(self):
         es = B.read_feed_entries(os.path.join(ROOT, "feeds.txt"))
         by_name = {e["name"]: e for e in es}
-        # feeds.txt 里手写了 8 个公共源带备用实例：
+        # feeds.txt 里手写了 12 个公共源带备用实例：
         #   原始 4 个（央视要闻/国际、一财要闻、网易今日关注）
         #   + 后续 4 个（FT中文网、观察者网、香港01、凤凰网）
+        #   + 2026-11-16 扩面 4 个（8world、东网、环球时报、新浪滚动）
+        #   注意：央视国际、一财的备用地址换过实例，但仍是「1 主 + 1 备」
         fb = [e for e in es if e.get("fallbacks")]
-        self.assertEqual(len(fb), 8)
+        self.assertEqual(len(fb), 12)
         # 每个带 fallback 的源都恰好 1 个备用地址
         for e in fb:
             self.assertEqual(len(e["fallbacks"]), 1, e["name"])
-        # 8 个具体源都要在列表里
+        # 12 个具体源都要在列表里
         for name in ("央视新闻·要闻", "央视新闻·国际", "第一财经·要闻",
                      "网易新闻·今日关注", "FT中文网·最新", "观察者网·头条",
-                     "香港01", "凤凰网·资讯"):
+                     "香港01", "凤凰网·资讯", "8world", "东网",
+                     "环球时报·要闻", "新浪新闻·滚动"):
             self.assertIn(name, by_name, "feeds.txt 漏了 %s 的 fallback" % name)
             self.assertEqual(len(by_name[name]["fallbacks"]), 1)
         netease = by_name["网易新闻·今日关注"]

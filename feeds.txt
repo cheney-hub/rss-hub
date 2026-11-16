@@ -21,6 +21,7 @@ https://feed.quanwenrss.com/feed/zaobao-latest.xml
 
 # 8world（新加坡新传媒中文，官方无 RSS，RSSHub 镜像）
 https://rsshub.rss.tips/8world/news
+https://hub.slarker.me/8world/news  # 备用实例：主 rsshub.rss.tips 超时走此（实测 2/3 可用）
 
 # BBC中文·国际（繁体，官方）
 https://feeds.bbci.co.uk/zhongwen/trad/rss.xml
@@ -67,6 +68,7 @@ https://www.rti.org.tw/rss
 
 # 东网（中国香港东方日报）·港澳新闻（官方无 RSS）
 https://rsshub.rss.tips/oncc/hk
+https://hub.slarker.me/oncc/hk  # 备用实例：主 rsshub.rss.tips 超时走此（实测 3/3 稳定）
 
 # 香港01（中国香港）·热榜（官方无 RSS）
 https://rsshub.rss.tips/hk01/hot
@@ -104,8 +106,8 @@ https://rsshub.rssforever.com/cctv/news
 https://rsshub.rss.tips/cctv/news  # 备用实例
 
 # 央视新闻·国际（同上）
-https://rsshub.rssforever.com/cctv/world
-https://rsshub.rss.tips/cctv/world  # 备用实例
+https://rsshub.rss.tips/cctv/world
+https://rsshub.rssforever.com/cctv/world  # 备用实例：rssforever 实测 0/3 已残，rss.tips 稳定故提为主
 
 # 人民日报·人民网评（官方无 RSS，评论为主）
 https://feed.quanwenrss.com/feed/people-pinglun.xml
@@ -121,6 +123,7 @@ https://feed.quanwenrss.com/feed/jfjb-yw.xml
 
 # 环球时报·要闻
 https://rsshub.rss.tips/huanqiu/news
+https://hub.slarker.me/huanqiu/news  # 备用实例：主 rsshub.rss.tips 超时走此（实测 2/3 可用）
 
 # 观察者网·头条
 https://rsshub.rss.tips/guancha/headline
@@ -178,7 +181,7 @@ https://dedicated.wallstreetcn.com/rss.xml
 
 # 第一财经·要闻（官方无 RSS，RSSHub 镜像，已验证实时更新）
 https://rsshub.rss.tips/yicai/news
-https://rsshub.rssforever.com/yicai/news  # 备用实例
+https://hub.slarker.me/yicai/news  # 备用实例：rssforever 该路由仅 1/3，改用 slarker（实测 3/3 稳定）
 
 # 金十数据·7×24 快讯（滚动快讯，刷屏可注释掉）
 https://feed.quanwenrss.com/feed/jin10-flash.xml
@@ -204,6 +207,7 @@ https://feed.quanwenrss.com/feed/cnbeta-all.xml
 
 # 新浪新闻·滚动（官方 RSS 停更于 2016/2018，此为实时镜像）
 https://rsshub.rss.tips/sina/rollnews
+https://hub.slarker.me/sina/rollnews  # 备用实例：主 rsshub.rss.tips 超时走此（实测 3/3 稳定）
 
 # 网易新闻·今日关注（官方 RSS 已停更，此为实时镜像）
 https://hub.slarker.me/163/today
