@@ -377,6 +377,7 @@ class TestMainFallback(unittest.TestCase):
                    "LLM_MODEL": "deepseek-chat"}
             target = "call_openai"
         with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(AD, "_LLM_RETRY_DELAY", 0), \
                 mock.patch.object(AD, target, side_effect=call_side_effect):
             rc = AD.main()
         return rc, out
@@ -478,6 +479,54 @@ class TestMainFallback(unittest.TestCase):
         with open(out + ".sig", encoding="utf-8") as f:
             # 成功后刷新成新指纹，下次若仍不变才会跳过
             self.assertNotEqual(f.read(), "stale-signature")
+
+    def test_retry_succeeds_on_second_attempt(self):
+        # 第一次超时、第二次成功：应当真生成新页（而非保留上一期），且确实调了 2 次
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        feed = _write_feed(tmp)
+        out = os.path.join(tmp, "ai-digest.html")
+        with open(out, "w", encoding="utf-8") as f:
+            f.write("<html>PREV</html>")
+        env = {"FEED_XML": feed, "OUT_HTML": out, "AI_TOP_N": "2",
+               "LLM_PROVIDER": "openai", "LLM_API_KEY": "x",
+               "LLM_MODEL": "deepseek-chat", "AI_PROMPT_TOKEN_BUDGET": "550"}
+        calls = []
+        answer = [{"title": "甲事件", "reason": "甲"}]
+
+        def flaky(*args, **kwargs):
+            calls.append(1)
+            if len(calls) == 1:
+                raise RuntimeError("read operation timed out")
+            return answer
+
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(AD, "_LLM_RETRY_DELAY", 0), \
+                mock.patch.object(AD, "call_openai", side_effect=flaky):
+            rc = AD.main()
+        self.assertEqual(rc, 0)
+        self.assertEqual(len(calls), 2)  # 首调失败 + 重试一次
+        with open(out, encoding="utf-8") as f:
+            self.assertNotIn("PREV", f.read())  # 重试成功，页面被真更新
+
+    def test_both_attempts_fail_keeps_previous(self):
+        # 两次都失败：仍保留上一期，不因重试而写坏页面
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        rc, out = self._run_main(
+            tmp, prev_exists=True,
+            call_side_effect=RuntimeError("timed out both times"))
+        self.assertEqual(rc, 0)
+        with open(out, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "<html>PREV</html>")
+
+    def test_key_configured_reports_true_when_set(self):
+        with mock.patch.dict(os.environ, {"LLM_API_KEY": "secret"}, clear=True):
+            self.assertTrue(AD._key_configured("openai"))
+        with mock.patch.dict(os.environ, {"GEMINI_API_KEY": "secret"}, clear=True):
+            self.assertTrue(AD._key_configured("gemini"))
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(AD._key_configured("openai"))
 
 
 class TestCallGeminiRequest(unittest.TestCase):

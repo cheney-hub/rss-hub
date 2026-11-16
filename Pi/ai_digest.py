@@ -8,9 +8,10 @@
   * **不与其它页面关联**：产物是一张独立 HTML，自带模板、不挂站点导航、不链接到
     index.html / screen.html / board.html / subscribe.html，也不被其它页链接；
     canonical 指向自己。它只复用 /rss 这个 systemd 别名所在的目录出页，零 SD 写入。
-  * **兜底不阻断**：AI 调用超时 / 限流 / 返回脏数据 / 缺 key 时，一律保留上一期页面；
-    若从没有过页面，则写一张「今日暂时无法生成」的占位页（同样自包含、自 canonical）。
-    单元以退出码 0 结束，绝不连累 rss-build / moreaix-site。
+  * **兜底不阻断**：AI 调用失败会先重试一次（隔 2s，见 _invoke_with_retry）；两次都失败，
+    或限流 / 返回脏数据 / 缺 key 时，一律保留上一期页面；若从没有过页面，则写一张
+    「今日暂时无法生成」的占位页（同样自包含、自 canonical）。单元以退出码 0 结束，
+    绝不连累 rss-build / moreaix-site。
     * **省额度 + 当天滚动池**：「当日滚动池」（存于 /dev/shm，按本地零点重置，
     存储上限 AI_ACCUM_CAP=0（不限，按本地零点重置），可经环境变量设正整数硬上限）现在由 rss-build 每 5 分钟经
     accum_update.py 持续并入（见该脚本），保证「当天见过的全部条目、且实时」；
@@ -811,19 +812,47 @@ def _invoke_llm(provider, prompt):
     return call_openai(base, api_key, model, SYSTEM, prompt), model, api_key
 
 
+def _key_configured(provider):
+    """调用前就判断 key 是否配好，供兜底日志如实区分「没配」与「配了但调用失败」。
+
+    旧写法靠 `_invoke_llm` 成功后带出的 api_key 判断，超时抛错时它还是初始值 ""，
+    会被误记成 had_key=False（其实 key 配着，只是调用超时）——这里改成调用前预先判定。
+    """
+    name = "GEMINI_API_KEY" if provider == "gemini" else "LLM_API_KEY"
+    return bool(os.environ.get(name, "").strip())
+
+
+# AI 调用失败后重试一次：CF Workers AI 免费档偶发 60s 读超时（今日 5/12 次命中），
+# 实测同一 prompt 隔几秒重试常能成功。延迟给端点一点恢复窗口；两次都失败才走兜底。
+_LLM_RETRIES = 2          # 总尝试次数 = 首次 + 重试 1 次
+_LLM_RETRY_DELAY = 2      # 秒，两次之间的等待
+
+
+def _invoke_with_retry(provider, prompt):
+    """调 LLM，失败隔 _LLM_RETRY_DELAY 秒再试一次；都失败则抛最后一次异常。"""
+    for i in range(_LLM_RETRIES):
+        try:
+            return _invoke_llm(provider, prompt)
+        except Exception as e:
+            if i + 1 < _LLM_RETRIES:  # 还有下次才等，别在最终失败后白等 2s
+                time.sleep(_LLM_RETRY_DELAY)
+            else:
+                raise e
+
+
 def _generate_and_write(out, prompt_items, top_n, accum, budget_items, sig,
                         sig_path, provider):
     """成功路径：调 LLM → 解析 → 截断 → 渲染 → 落盘 → 写指纹 → 日志。
 
     从 main 抽出只为压住函数行数；逻辑与「一致性铁律」不变：页面 N 永远等于
-    AI 实际看到的送选前缀（去重后）条数。
+    AI 实际看到的送选前缀（去重后）条数。LLM 调用失败会重试一次再判兜底。
     """
     prompt = build_prompt(prompt_items, top_n + _ASK_BUFFER, provider)
-    api_key = ""
+    key_on = _key_configured(provider)  # 调用前判定，兜底日志不受超时误导
     try:
-        raw, model, api_key = _invoke_llm(provider, prompt)
-    except Exception as e:  # 网络/限流/协议/缺 key —— 一律兜底
-        _fallback(out, "AI 调用失败: %s" % e, bool(api_key), len(prompt_items))
+        raw, model, _ = _invoke_with_retry(provider, prompt)
+    except Exception as e:  # 两次都失败（网络/限流/协议/缺 key）—— 一律兜底
+        _fallback(out, "AI 调用失败: %s" % e, key_on, len(prompt_items))
         return 0
 
     # 一致性铁律：解析/页面文案全以「AI 实际看到的送选前缀」为准 —— 它看到几条，
