@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RSS 聚合头条 · 阅读</title>
-<meta name="description" content="RSS 聚合头条网页阅读版：可选「最新头条」（feed.xml，120 条）或「全天缓存」（当天见过的全部条目、本地零点重置）；看板式自动滚动、搜索筛选、设备版轮播状态。">
-<meta name="keywords" content="RSS 阅读, 大中华区新闻, 墨水屏新闻, Kindle 新闻, 多源头条聚合">
+<title>RSS 聚合头条 · 免费实时新闻聚合阅读器</title>
+<meta name="description" content="RSS 聚合头条是免费的实时多源头条阅读器：62 个新闻源去重聚合，无需注册、打开即用；提供最新头条与全天缓存双视图，支持自动滚动、搜索筛选与 Kindle 墨水屏版。">
+<meta name="keywords" content="RSS 阅读器, 免费新闻聚合, 大中华区新闻, 实时头条, 墨水屏新闻, Kindle 新闻, 多源头条聚合, 无需注册">
 <link rel="canonical" href="https://moreaix.com/rss/reader.html">
 <link rel="alternate" type="application/rss+xml" title="RSS 聚合头条（完整版）" href="https://moreaix.com/rss/feed.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="RSS 聚合头条">
-<meta property="og:title" content="RSS 聚合头条 · 网页阅读版">
+<meta property="og:title" content="RSS 聚合头条 · 免费实时新闻聚合阅读器">
 <meta property="og:description" content="可选最新头条或全天缓存；实时卡片阅读，支持筛选；设备版由树莓派每 5 分钟换一条。">
 <meta property="og:url" content="https://moreaix.com/rss/reader.html">
 <meta property="og:locale" content="zh_CN">
@@ -27,6 +27,54 @@
   "url": "https://moreaix.com/rss/reader.html",
   "inLanguage": "zh-CN",
   "description": "可选最新头条或全天缓存；实时卡片阅读，支持筛选；设备版由树莓派每 5 分钟换一条。"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "RSS 聚合头条是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "一个免费的实时新闻聚合阅读页，把 62 个新闻源合并、去重，按时间顺序呈现最新头条，打开即用，无需注册。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "需要注册或付费吗？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "都不需要。完全免费，不要求登录，不收集订阅偏好，浏览器打开链接即可阅读。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "「最新头条」和「全天缓存」有什么区别？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "最新头条是去重后的最新 120 条，每 5 分钟重建；全天缓存是当天见过的全部条目、本地零点重置，并与当前头条按链接去重合并，适合回看一整天的内容。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "多久更新一次？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "网页版每 5 分钟重建一次；Kindle 等设备版由树莓派每 5 分钟换一条上屏，优先播最新。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "支持哪些设备？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "任何带浏览器的设备（手机、平板、电脑）均可阅读；另有 Kindle 墨水屏版，可把老设备当作常驻新闻屏。"
+      }
+    }
+  ]
 }
 </script>
 <style>
