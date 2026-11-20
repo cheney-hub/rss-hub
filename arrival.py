@@ -164,14 +164,8 @@ def settle(items, prev_items, now=None):
         ts = it.get("ts") or 0
         is_future = ts > now + FUTURE_SLACK
         if ts == 0 or is_future:
-            # 情况 B（源没给时间）/ C（源给了未来时间）：都以首次获取时间为准。
-            # prev 查得到就沿用首见时间，查不到（第一次见到）就以本轮 now 落定。
             bad_time += 1
-            was = prev.get(_guid(it)) or now
-            it["ts"] = was
-            it["date_raw"] = email.utils.format_datetime(
-                datetime.fromtimestamp(was, timezone.utc))
-            it["future_dated" if is_future else "no_source_time"] = True
+            _settle_bad_time(it, is_future, prev, now)
             continue
         if src in clocked:                       # 情况 A
             # 条目级记忆优先，查不到才退到源级（为什么需要源级见 prev_source_index）
@@ -182,6 +176,23 @@ def settle(items, prev_items, now=None):
                     datetime.fromtimestamp(was, timezone.utc))
                 settled += 1
     return settled, bad_time
+
+
+def _settle_bad_time(it, is_future, prev, now):
+    """把 B（无源时间）/ C（未来时间）条目落定到首次获取时间并打标记。
+
+    prev 查得到就沿用首见时间，查不到就以本轮 now 落定。C 类额外防「首见被污染」：
+    本守卫上线前，旧版本已把源标的未来时间写进产物；下一轮把它当首见读回来会原样
+    沿用、等于没修（2026-11-20 实测）。所以记忆值本身还在未来时丢弃它、改用 now。
+    必须同时改写 ts 与 date_raw，否则下一轮从产物读回又变回源标称时间、记忆链断掉。
+    """
+    was = prev.get(_guid(it)) or now
+    if is_future and was > now + FUTURE_SLACK:
+        was = now
+    it["ts"] = was
+    it["date_raw"] = email.utils.format_datetime(
+        datetime.fromtimestamp(was, timezone.utc))
+    it["future_dated" if is_future else "no_source_time"] = True
 
 
 def _trustworthy_ts(ts, now):

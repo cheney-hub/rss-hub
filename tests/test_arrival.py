@@ -264,6 +264,18 @@ class TestSettleFutureTime(unittest.TestCase):
         self.assertEqual((settled, bad), (0, 1))
         self.assertEqual(items2[0]["ts"], 1000)
 
+    def test_poisoned_first_seen_from_old_build_is_discarded(self):
+        # 回归：本守卫上线前，旧版本已把源标的未来时间写进产物。下一轮从 prev
+        # 读回这个被污染的「首见」若直接沿用，就永远修不好（2026-11-20 实测：
+        # settle 报识别到 1 条，但 ts 原封不动）。必须丢弃、改用 now 落定。
+        claimed = 1000 + 7200
+        items = [mk("apec", src="https://src/rss", ts=claimed)]
+        poisoned_prev = self.prev_from(items)  # prev 里存的也是那个未来时刻
+        settled, bad = A.settle(items, poisoned_prev, now=1000)
+        self.assertEqual((settled, bad), (0, 1))
+        self.assertEqual(items[0]["ts"], 1000,
+                         "prev 里的首见本身是未来时间时必须丢弃，不能沿用")
+
     def test_source_corrects_time_wins(self):
         # 源把错填的未来时间改成合理的过去时刻 → 以源时间为准，不再压首见
         future_ts = 1000 + 7200
