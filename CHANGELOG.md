@@ -9,8 +9,27 @@
 ## [Unreleased]
 
 > 以下改动尚未归入正式发版版本号（当前 `version.py` 仍为 `1.21.11`，因 reader 是纯静态页、
-> feed.xml 输出字节不变；`arrival` 仅影响此前沉底丢弃的「无源时间」条目）。需要发版时再据此
-> 定版本号并补日期。
+> `arrival` 仅影响此前沉底丢弃的「无源时间」与未来时间条目）。需要发版时再据此定版本号并补日期。
+
+### 未来时间戳防霸榜 + 代码体检修复（2026-11-20）
+
+- **新增第 3 类时间不可信：单条 pubDate 被错填成未来时刻**。2026-11-20 纽约时报「深圳变空城」
+  被源标成 12:18（抓取是 10:27，超前近 2 小时），按时间戳倒序永远霸榜。`arrival.settle()` 现在
+  把 `ts > now + FUTURE_SLACK`（私有常量 300s 容差）的条目按「首次见到」落定并打 `future_dated`
+  标记，与既有「无源时间」同口径；第二次返回值统一计为「源时间异常」。`_pickable()` 原本只在
+  轮播层挡未来时间（设备版不播），但网页版 reader 读 `feed.xml` 按 ts 排序仍霸榜 —— 本次在生成层
+  补齐。`test_arrival.py` 19→24 例。
+- **修复 AI 摘要一个潜伏回归（体检发现）**：`_generate_and_write` 在「LLM 返回空/无法解析」分支
+  引用了未定义的 `api_key`（上次加重试时把返回值解包成 `_` 却漏改此处），会抛 NameError 穿出
+  `main()`、兜底不执行、退出码变 1。改用已预判的 `key_on`；补回归用例「返回空仍保上一期且 rc=0」。
+  `test_ai_digest.py` 64→65 例。
+- **修正 `build_prompt` docstring**（H10）：旧注释写「只回 idx + reason」，与 11-06 起实际的
+  「回显 title + reason（idx 仅兼容）」相反，已改正。
+- **原子写改 mkstemp**：`ai_digest._atomic_write()` / `_save_accum()` 原用固定 `.tmp` 名，与
+  `accum_update.py` 并发写同一 `ai-accum.json` 时会互相截断、致当日池子清零。改用 `mkstemp`
+  + 异常清理，与 `build_feed._write()` 同形。
+- **`build_feed._try_url()` 去重**：首调与重试两段逐字复制，抽 `_try_once()`，保留「返回最后一次
+  错误」的语义。README 用例数 471→477。
 
 ### AI 摘要调用失败重试（2026-11-16）
 

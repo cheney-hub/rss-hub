@@ -2,12 +2,16 @@
 # -*- coding: utf-8 -*-
 """给「时间不可信」的源/条目一个可信的排序时间 —— 其余源的 pubDate 一律照用。
 
-不可信分两类：
+不可信分三类：
   (A) 时间戳失真：源给整份 feed 打同一个时间戳，且每次重新生成就刷成当前时刻
       （日经中文网、光明日报·版面）。详见下方正文。
   (B) 无源时间：条目根本没有 pubDate（缺失或解析失败，ts==0）。源连时间戳都没有，
       第一次见到就以「本次抓取时刻」落定并标记，之后再见到同一条沿用首次时间，
       不跟着每轮刷新往前漂。详见 `settle` 的 docstring。
+  (C) 未来时间：单条 pubDate 明显晚于抓取时刻（容差见 FUTURE_SLACK）。如 2026-11-20
+      纽约时报「深圳变空城」那条被源标成 12:18，而抓取是 10:27 —— 超前近 2 小时，
+      在按时间戳倒序的 feed 里永远霸榜。这类和 B 同样按「首次见到」落定：第一次见到
+      就以抓取时刻记录，之后沿用，不跟着源标称的未来时刻往前漂。
 
 绝大多数源的 `<pubDate>` 是逐条各不相同的真实发布时刻，直接可信：2026-11-01 实测
 62 个源里有 60 个如此（德国之声 63 条里 62 个不同时间、纽约时报跨度 82 小时）。
@@ -42,6 +46,12 @@ __version__ = version.__version__
 # 少于这几条的源不足以判断「是不是共用时间戳」：只有 1~2 条时本来就可能同秒，
 # 误判会把正常源按失真处理，代价（条目变旧）大于收益。
 MIN_ITEMS = 3
+
+# 单条 pubDate 比抓取时刻晚超过这个秒数就算「未来时间」，按首见时间落定。
+# 5 分钟容差：既容得下正常的时钟漂移/时区微差，又能挡住源把发布时间错填成
+# 数小时之后那种（2026-11-20 纽约时报那条超前近 2 小时）。用私有常量而非环境变量，
+# 避开 OPERATIONS 参数表与门禁的环境变量契约（与 _LLM_RETRIES 同一考量）。
+FUTURE_SLACK = 300
 
 
 def clock_stamped_sources(items):
@@ -115,46 +125,53 @@ def prev_source_index(prev_items):
 
 
 def settle(items, prev_items, now=None):
-    """把「时间不可信」的条目改成首次见到时间，返回 (失真源改写条数, 无源时间条数)。
+    """把「时间不可信」的条目改成首次见到时间，返回 (失真源改写条数, 无源/未来时间条数)。
 
-    时间不可信分两类，都改成「第一次见到这条的时间」——条目年龄从进入池子那一刻起算：
+    时间不可信分三类，都改成「第一次见到这条的时间」——条目年龄从进入池子那一刻起算：
       (A) 失真源：整份 feed 共用一个时间戳且每轮刷新（日经、光明日报·版面）。源给的时间
           不是发布时间、是生成时钟，按上轮记忆压住，防它每轮往前爬而霸榜（详见模块说明）。
       (B) 无源时间：条目根本没 pubDate（缺失或解析失败，ts==0）。源连时间戳都没有，
           第一次见到就以「本次抓取时刻」落定并打 `no_source_time` 标记；之后再见到同一条
           就沿用首次时间，不再跟着每轮刷新往前漂 —— 与 A 是同一动机（否则无时间源永远
           ts=0、沉底被裁，等于整源在 feed 里消失；或每次都拿 now 当时间、永远最新而霸榜）。
+      (C) 未来时间：单条 pubDate 比抓取时刻晚超过 FUTURE_SLACK 秒（源把发布时间错填到
+          未来）。这类 ts>0、不属于 A 的「整源共用时钟」，若不处理它会永远排在倒序首位。
+          第一次见到以 now 落定并打 `future_dated` 标记；之后沿用首见，不跟着未来时刻漂。
 
-    两种都必须同时改写 `ts` 与 `date_raw`：只改前者会被产物字符串覆盖回去，记忆链断掉。
+    三种都必须同时改写 `ts` 与 `date_raw`：只改前者会被产物字符串覆盖回去，记忆链断掉。
 
     优先级（A 类）：条目级记忆 > 源级记忆（源级只兜底「条目掉出 120 条窗口」那种，
-    B 类按 guid 即可、不需要源级——无时间源每条都靠 link+src 区分，误用源级最小值
+    B/C 类按 guid 即可、不需要源级——它们每条都靠 link+src 区分，误用源级最小值
     会把新稿错配成旧时间，反而造出新 bug）。
+
+    注意 B 与 C 都计入第二个返回值的计数（build_feed 统一显示「源时间异常」），
+    靠 `no_source_time` / `future_dated` 两个标记区分，产物里可分别追溯。
 
     now 允许调用方传入固定值（测试/可复现）；不传则取本轮抓取时刻。
     """
     if now is None:
         now = int(time.time())
     clocked = clock_stamped_sources(items)
-    # 没有失真源、且每条都带着可信时间戳 → 原样返回，省一次遍历
-    if not clocked and all((it.get("ts") or 0) > 0 for it in items):
+    # 没有失真源、且每条都带着可信时间戳（>0 且非未来）→ 原样返回，省一次遍历
+    if not clocked and all(_trustworthy_ts(it.get("ts") or 0, now) for it in items):
         return 0, 0
     prev = prev_seen_index(prev_items)        # guid → 上次认定的 ts
     prev_src = prev_source_index(prev_items)  # 源 → 上次该源最早 ts（A 类兜底）
 
-    settled, no_time = 0, 0
+    settled, bad_time = 0, 0
     for it in items:
         src = it.get("src") or ""
         ts = it.get("ts") or 0
-        if ts == 0:
-            # 情况 B：源没给时间，以首次获取时间为准。prev 查得到就沿用首见时间，
-            # 查不到（第一次见到）就以本轮抓取时刻 now 落定，并打标记。
-            no_time += 1
+        is_future = ts > now + FUTURE_SLACK
+        if ts == 0 or is_future:
+            # 情况 B（源没给时间）/ C（源给了未来时间）：都以首次获取时间为准。
+            # prev 查得到就沿用首见时间，查不到（第一次见到）就以本轮 now 落定。
+            bad_time += 1
             was = prev.get(_guid(it)) or now
             it["ts"] = was
             it["date_raw"] = email.utils.format_datetime(
                 datetime.fromtimestamp(was, timezone.utc))
-            it["no_source_time"] = True
+            it["future_dated" if is_future else "no_source_time"] = True
             continue
         if src in clocked:                       # 情况 A
             # 条目级记忆优先，查不到才退到源级（为什么需要源级见 prev_source_index）
@@ -164,7 +181,12 @@ def settle(items, prev_items, now=None):
                 it["date_raw"] = email.utils.format_datetime(
                     datetime.fromtimestamp(was, timezone.utc))
                 settled += 1
-    return settled, no_time
+    return settled, bad_time
+
+
+def _trustworthy_ts(ts, now):
+    """条目时间戳是否可信：有值（>0）且不在未来（超出容差）。供快速返回判断用。"""
+    return ts > 0 and ts <= now + FUTURE_SLACK
 
 
 def _guid(it):

@@ -199,14 +199,16 @@ class TestSettleNoSourceTime(unittest.TestCase):
         self.assertEqual([it["ts"] for it in mixed[2:]], [9000, 9000])
 
     def test_source_time_wins_once_present(self):
-        # 首轮无时间落定 1000 并打标记；次轮源突然给了真实时间 7000 → 以源时间为准
+        # 首轮无时间落定 1000 并打标记；次轮源突然给了真实时间 → 以源时间为准。
+        # 真实时间取 1500（相对 now=2000 是合理的过去时刻）：不能设成远超过 now 的
+        # 值，那会落成「未来时间」新口径（C 类），测的就不是本条要验证的行为了。
         items = [mk("t0", src="https://src/rss", ts=0)]
         A.settle(items, {}, now=1000)
         prev = self.prev_from(items)
-        items2 = [mk("t0", src="https://src/rss", ts=7000)]   # 这次源给了真实时间
+        items2 = [mk("t0", src="https://src/rss", ts=1500)]   # 这次源给了真实时间
         settled, no_time = A.settle(items2, prev, now=2000)
         self.assertEqual((settled, no_time), (0, 0))
-        self.assertEqual(items2[0]["ts"], 7000,
+        self.assertEqual(items2[0]["ts"], 1500,
                         "源一旦提供真实时间，就必须以源时间为准、覆盖首抓时间")
 
     def test_round_trip_stays_at_first_seen(self):
@@ -217,6 +219,71 @@ class TestSettleNoSourceTime(unittest.TestCase):
             A.settle(items, prev, now=now)
             prev = self.prev_from(items)
         self.assertEqual(items[0]["ts"], 1000, "源一直无时间，时间应停在首次获取")
+
+
+class TestSettleFutureTime(unittest.TestCase):
+    """情况 C：单条 pubDate 被错填成未来时刻（2026-11-20 纽约时报「深圳变空城」）。
+
+    这类 ts>0、不属于失真源（整源共用时钟），却因按时间戳倒序而永远霸榜。
+    第一次见到以 now 落定并打 future_dated 标记，之后沿用首见、不跟着未来时刻漂。
+    """
+
+    def prev_from(self, items):
+        return {"https://src/rss": [dict(it) for it in items]}
+
+    def test_future_item_uses_now_and_is_marked(self):
+        # now=1000，源标称超前 2 小时（对齐 2026-11-20 纽约时报那条的真实量级）
+        # → 判未来、落定到 now。偏移写死而非引用 A.FUTURE_SLACK，否则红检查
+        # patch 容差时输入跟着一起漂、用例永远不红（测不到守卫）。
+        future_ts = 1000 + 7200
+        items = [mk("apec", src="https://src/rss", ts=future_ts)]
+        settled, bad = A.settle(items, {}, now=1000)
+        self.assertEqual((settled, bad), (0, 1))
+        self.assertEqual(items[0]["ts"], 1000)
+        self.assertTrue(items[0].get("future_dated"))
+        self.assertFalse(items[0].get("no_source_time"))
+        self.assertEqual(B._parse_date(items[0]["date_raw"]), 1000,
+                         "改写后的 date_raw 必须能解析回首见时间")
+
+    def test_within_slack_is_not_future(self):
+        # 容差内的「略微超前」属正常时钟漂移，不能误判
+        edge = 1000 + A.FUTURE_SLACK
+        items = [mk("near", src="https://src/rss", ts=edge)]
+        self.assertEqual(A.settle(items, {}, now=1000), (0, 0))
+        self.assertEqual(items[0]["ts"], edge)
+
+    def test_reappearance_keeps_first_seen_not_future_label(self):
+        # 第一轮把未来时间压到 1000；第二轮源仍标未来、now 已到 2000，
+        # 应沿用首见 1000，不能跟着 now 漂、也不能跟着源标的未来时刻漂。
+        future_ts = 1000 + 7200
+        items = [mk("apec", src="https://src/rss", ts=future_ts)]
+        A.settle(items, {}, now=1000)
+        prev = self.prev_from(items)
+        items2 = [mk("apec", src="https://src/rss", ts=future_ts + 5000)]
+        settled, bad = A.settle(items2, prev, now=2000)
+        self.assertEqual((settled, bad), (0, 1))
+        self.assertEqual(items2[0]["ts"], 1000)
+
+    def test_source_corrects_time_wins(self):
+        # 源把错填的未来时间改成合理的过去时刻 → 以源时间为准，不再压首见
+        future_ts = 1000 + 7200
+        items = [mk("apec", src="https://src/rss", ts=future_ts)]
+        A.settle(items, {}, now=1000)
+        prev = self.prev_from(items)
+        items2 = [mk("apec", src="https://src/rss", ts=1500)]  # 修正后的真实时间
+        settled, bad = A.settle(items2, prev, now=2000)
+        self.assertEqual((settled, bad), (0, 0))
+        self.assertEqual(items2[0]["ts"], 1500)
+
+    def test_future_does_not_touch_normal_items(self):
+        # 同批里一条未来、一条正常：正常的原样保留，未来的按 now 落定
+        future_ts = 1000 + 7200
+        mixed = [mk("apec", src="https://nyt/rss", ts=future_ts),
+                 mk("good", src="https://good/rss", ts=900)]
+        settled, bad = A.settle(mixed, {}, now=1000)
+        self.assertEqual((settled, bad), (0, 1))
+        self.assertEqual(mixed[0]["ts"], 1000)
+        self.assertEqual(mixed[1]["ts"], 900)
 
 
 if __name__ == "__main__":

@@ -54,6 +54,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import time
 import html
 import difflib
@@ -209,9 +210,11 @@ def load_items(feed_path):
 
 
 def build_prompt(items, top_n, provider):
-    """把候选拼成带编号的提示词，让模型只回 idx + reason。
+    """把候选拼成带编号的提示词，让模型回显选中的 title + reason。
 
-    provider 决定尾部格式约束：openai 走 json_object（要对象），gemini 走 ARRAY schema（要数组）。
+    2026-11-06 起配对口径是 title（逐字照抄候选标题），idx 仅作旧输出兼容；
+    parse_response() 以 title 匹配为主。provider 决定尾部格式约束：openai 走
+    json_object（要对象），gemini 走 ARRAY schema（要数组）。
     """
     lines = ["以下是今日通过 RSS 聚合得到的大中华区新闻候选（共 %d 条，按时间倒序）："
              % len(items), ""]
@@ -634,10 +637,24 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 def _atomic_write(path, text):
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(text)
-    os.replace(tmp, path)
+    """原子写：用 mkstemp 而非固定 .tmp 名。
+
+    ai-digest 与 accum_update 可能同时写不同的目标文件，固定名即使目标不同也共享
+    不到 tmp（各带各的路径），但同一目标若被并发触发（如手动+定时器）就会踩踏。
+    mkstemp 给每次写独立 tmp；异常时清理残骸，与 build_feed._write 同形。
+    """
+    d = os.path.dirname(path) or "."
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=os.path.basename(path) + ".", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def _pool_signature(items):
@@ -691,15 +708,29 @@ def _load_accum(path):
 
 
 def _save_accum(path, items):
-    """原子写当日滚动池；目录/权限不可用（如 /dev/shm 未建）静默放弃，下次重攒。"""
+    """原子写当日滚动池；目录/权限不可用（如 /dev/shm 未建）静默放弃，下次重攒。
+
+    用 mkstemp 而非固定 .tmp 名：accum_update.py（rss-build 的 ExecStartPost）与
+    ai_digest.main() 会写同一个 ai-accum.json，时间重叠时固定 tmp 名会互相截断，
+    导致下一轮读到半份 JSON、当日池子清零。独立 tmp 杜绝踩踏。
+    """
+    tmp = None
     try:
-        tmp = path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
+        d = os.path.dirname(path) or "."
+        fd, tmp = tempfile.mkstemp(dir=d, prefix=os.path.basename(path) + ".", suffix=".tmp")
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump({"date": _today_local(), "items": items},
                       f, ensure_ascii=False)
         os.replace(tmp, path)
+        tmp = None
     except OSError:
         pass
+    finally:
+        if tmp:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 def _merge_accum(accum, new_items, cap):
@@ -859,7 +890,7 @@ def _generate_and_write(out, prompt_items, top_n, accum, budget_items, sig,
     # 页面「从当日 N 条 RSS 候选中筛选」就写几条，绝不拿全量滚动池充数。
     results = parse_response(raw, prompt_items)
     if not results:
-        _fallback(out, "AI 返回为空或无法解析", bool(api_key), len(prompt_items))
+        _fallback(out, "AI 返回为空或无法解析", key_on, len(prompt_items))
         return 0
     results = _keep_top(results, top_n)
 

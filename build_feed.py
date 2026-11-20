@@ -631,31 +631,33 @@ def _collect(entries, prev_items):
     return items, {"ok": ok, "fail": fail, "stale": stale}
 
 
+def _try_once(e, url):
+    """单attempt：抓一个地址并解析成条目。异常由调用方收成 (None, err)。
+
+    src 统一用 e["url"]（主地址）—— 回退键 / 展示都靠它命中 prev_items，
+    所以即便这次是从备用实例取到的，历史也认得出来。
+    """
+    status, body, charset = http_get(url)
+    if status != 200:
+        raise RuntimeError("HTTP %s" % status)
+    got = parse_items(decode_body(body, charset), url, PER_SOURCE)
+    for it in got:
+        it["src_name"] = e["name"]
+        it["src"] = e["url"]
+    return got
+
+
 def _try_url(e, url):
     """抓单个地址并解析。任何异常（含非 200）都收成 (got, err)，由上层决定回退。
     失败（含超时 / 非 200 / 解析错）后隔 RETRY_DELAY 再试一次 —— 源站偶发 5xx /
     连接重置很常见，不区分错因：判错因要把异常分类带下来，而代价是每个坏源多 1 秒，
-    比误判「偶发」变「永久」便宜。"""
+    比误判「偶发」变「永久」便宜。两次都不成功时返回最后一次的错误。"""
     try:
-        status, body, charset = http_get(url)
-        if status != 200:
-            raise RuntimeError("HTTP %s" % status)
-        got = parse_items(decode_body(body, charset), url, PER_SOURCE)
-        for it in got:
-            it["src_name"] = e["name"]
-            it["src"] = e["url"]   # 回退键 / 展示统一用主地址，保证 prev_items 命中
-        return got, None
-    except Exception as err:
+        return _try_once(e, url), None
+    except Exception:
         time.sleep(RETRY_DELAY)
         try:
-            status, body, charset = http_get(url)
-            if status != 200:
-                raise RuntimeError("HTTP %s" % status)
-            got = parse_items(decode_body(body, charset), url, PER_SOURCE)
-            for it in got:
-                it["src_name"] = e["name"]
-                it["src"] = e["url"]
-            return got, None
+            return _try_once(e, url), None
         except Exception as err2:
             return None, err2
 
@@ -690,8 +692,9 @@ def run_once(entries, prev_items):
     items, counts = _collect(entries, prev_items)
     # 个别源给整份 feed 打同一个时间戳且每轮刷成当前时刻（日经、光明日报·版面），
     # 那样它们会永远排在最新 —— 这里把它们的排序时间改回「首次见到那条的时间」。
-    # 另外，源根本没有 pubDate 的条目（ts==0）以「首次抓取时刻」落定并标记，
-    # 之后沿用首次时间，免得沉底被裁或永远最新霸榜。
+    # 另外两类「源时间异常」同样以「首次抓取时刻」落定并标记：源根本没有 pubDate
+    # （ts==0），以及单条 pubDate 被错填成未来时刻（如纽约时报 2026-11-20 那条
+    # 超前近 2 小时、永远霸榜）。之后沿用首次时间，免得沉底被裁或永远最新霸榜。
     # 依据是上一轮产物，所以第一次运行没有效果，从第二轮起才认得出来。
     settled, no_time = arrival.settle(items, prev_items)
     items.sort(key=lambda x: (-(x.get("ts") or 0), item_guid(x)))
@@ -854,7 +857,7 @@ def _log_round(rounds, pick, note, stats, elapsed):
         print("       其中 %d 条按「首次见到」排序（源每轮刷新整个时间戳）"
               % stats["settled"])
     if stats.get("no_time"):
-        print("       其中 %d 条源无时间，以首次获取时间记录并标记"
+        print("       其中 %d 条源时间异常（无时间/未来时间），以首次获取时间记录并标记"
               % stats["no_time"])
     print("        上屏：%s ｜ %s"
           % (note, (pick.get("title") or "")[:36] if pick else "（设备版保持上一版）"))

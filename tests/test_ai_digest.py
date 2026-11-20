@@ -391,6 +391,18 @@ class TestMainFallback(unittest.TestCase):
         with open(out, encoding="utf-8") as f:
             self.assertEqual(f.read(), "<html>PREV</html>")
 
+    def test_main_keeps_previous_on_empty_ai_result(self):
+        # 回归：LLM 调用成功但返回空数组（模型回 []、或回显标题全对不上且无 idx
+        # 兜底）。这条路径曾用未定义的 api_key 变量触发 NameError 穿出 main →
+        # 保留上一期的兜底根本没执行、rc=1（破坏「退出码 0」承诺）。
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        rc, out = self._run_main(tmp, prev_exists=True,
+                                 call_side_effect=lambda *a, **k: [])
+        self.assertEqual(rc, 0)
+        with open(out, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "<html>PREV</html>")
+
     def test_main_writes_placeholder_when_missing(self):
         import tempfile
         tmp = tempfile.mkdtemp()
