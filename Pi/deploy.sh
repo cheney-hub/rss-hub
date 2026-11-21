@@ -87,8 +87,9 @@ for f in build_feed.py render.py rotate.py version.py feeds_sync.py arrival.py; 
 done
 
 echo "==> 上传脚本"
-# 三个 Pi 侧脚本：静态服务、轮播、每日日志快照。Kindle 那两个渲染器虽然也落在
-# 同一个远程目录，但归 kindle/deploy.sh 传 —— 两套 pipeline 各管一半，不会互相覆盖。
+# 五个 Pi 侧脚本：静态服务、轮播、每日日志快照、AI 摘要、当日滚动池维护。
+# Kindle 那两个渲染器虽然也落在同一个远程目录，但归 kindle/deploy.sh 传 ——
+# 两套 pipeline 各管一半，不会互相覆盖。
 for f in serve.py rotate_screen.py journal_snapshot.py ai_digest.py accum_update.py; do
     "${SCP[@]}" "${HERE}/${f}" "${PI_USER}@${PI_HOST}:${REMOTE_DIR}/${f}"
 done
