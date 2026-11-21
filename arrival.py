@@ -144,8 +144,9 @@ def settle(items, prev_items, now=None):
     B/C 类按 guid 即可、不需要源级——它们每条都靠 link+src 区分，误用源级最小值
     会把新稿错配成旧时间，反而造出新 bug）。
 
-    注意 B 与 C 都计入第二个返回值的计数（build_feed 统一显示「源时间异常」），
-    靠 `no_source_time` / `future_dated` 两个标记区分，产物里可分别追溯。
+    注意 B 与 C 都计入第二个返回值的计数（build_feed 统一显示「源时间异常」）。
+    `no_source_time` / `future_dated` 只是**内存标记**，不写进 RSS 产物；产物里只有
+    被改写后的 pubDate，两类各自的可追溯性靠构建日志那行「源时间异常」计数体现。
 
     now 允许调用方传入固定值（测试/可复现）；不传则取本轮抓取时刻。
     """
@@ -168,8 +169,14 @@ def settle(items, prev_items, now=None):
             _settle_bad_time(it, is_future, prev, now)
             continue
         if src in clocked:                       # 情况 A
-            # 条目级记忆优先，查不到才退到源级（为什么需要源级见 prev_source_index）
+            # 条目级记忆优先，查不到才退到源级（为什么需要源级见 prev_source_index）。
+            # 两级都要过「首见不能被污染成未来」守卫，与 C 类同口径：旧版本若把
+            # 失真源落定成未来时刻，下一轮从 prev 读回会原样沿用、等于没修。
             was = prev.get(_guid(it)) or prev_src.get(src)
+            if was and was > now + FUTURE_SLACK:
+                was = prev_src.get(src)          # 条目级被污染，退源级再试
+            if was and was > now + FUTURE_SLACK:
+                was = now                        # 源级也被污染，用本轮 now 重新落定（同 C 类）
             if was and was < ts:
                 it["ts"] = was
                 it["date_raw"] = email.utils.format_datetime(
@@ -187,7 +194,9 @@ def _settle_bad_time(it, is_future, prev, now):
     必须同时改写 ts 与 date_raw，否则下一轮从产物读回又变回源标称时间、记忆链断掉。
     """
     was = prev.get(_guid(it)) or now
-    if is_future and was > now + FUTURE_SLACK:
+    # B 与 C 都要过污染守卫：上一轮时钟错误时，首见会被落定成未来时刻写进产物，
+    # 下一轮从 prev 读回若原样沿用就永远修不好（C 类 2026-11-20 实测、A 类同构）。
+    if was > now + FUTURE_SLACK:
         was = now
     it["ts"] = was
     it["date_raw"] = email.utils.format_datetime(

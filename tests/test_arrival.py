@@ -106,6 +106,23 @@ class TestSettle(unittest.TestCase):
         self.assertEqual(by_title["t0"], 3000, "条目级记录优先于源级兜底")
         self.assertEqual(by_title["t1"], 1000)
 
+    def test_poisoned_a_class_first_seen_is_discarded(self):
+        """A 类污染首见守卫：旧产物把失真源落定成未来时刻时必须丢弃、改用 now。
+
+        与 C 类的 test_poisoned_first_seen_from_old_build_is_discarded 同构——A 类
+        上一轮时钟错误时 prev 里存的是未来时刻，若直接沿用就永远修不好。偏移写死
+        7200 而非引用 FUTURE_SLACK，红检查 patch 容差后这条才会真的变红。
+        """
+        src = "https://nk/rss"
+        poisoned = 1000 + 7200                  # 旧产物里被错误时钟污染成未来的首见
+        # 本轮源时钟 1200：仍在容差内（非未来，不走 C 类），但已刷到 now 之上。
+        # 整源共用 → 判 A 类失真源。若无守卫，was=8200 被沿用、条目跟着源刷到 1200。
+        items = group(src, 3, 1200)
+        poisoned_prev = self.prev(src, ["t0", "t1", "t2"], poisoned)
+        settled, bad = A.settle(items, poisoned_prev, now=1000)
+        self.assertTrue(all(it["ts"] == 1000 for it in items),
+                        "prev 里条目级与源级首见都被污染成未来时，都要丢弃改用 now")
+
     def test_rewrites_date_raw_so_next_round_can_remember(self):
         # 只改 ts 不改写出去的字符串，下一轮从产物读回来还是源标称的时钟 —— 记忆链断了
         items = group("https://nk/rss", 3, 2000)
@@ -188,6 +205,22 @@ class TestSettleNoSourceTime(unittest.TestCase):
         self.assertEqual((settled, no_time), (0, 3))
         self.assertTrue(all(it["ts"] == 1000 for it in items2),
                         "同一条再次出现应沿用首次获取时间，不能跟着 now 漂")
+
+    def test_poisoned_first_seen_is_discarded(self):
+        """B 类污染守卫：prev 里的首见若被旧版本的错误时钟写成未来，必须丢弃。
+
+        与 C 类那条同构，只是源持续无时间（ts==0）。守卫原本只判 is_future，
+        B 类漏掉；上一轮落定成未来时刻后本轮沿用会继续霸榜。偏移写死 7200。
+        """
+        poisoned = 1000 + 7200
+        items = [mk("t%d" % i, src="https://src/rss", ts=0) for i in range(3)]
+        # 伪造 prev：条目带 no_source_time 标记、ts 是未来时刻（旧版本污染产物）
+        poisoned_prev = [dict(it, ts=poisoned, date_raw="n/a", no_source_time=True)
+                         for it in items]
+        settled, no_time = A.settle(items, {"https://src/rss": poisoned_prev}, now=1000)
+        self.assertEqual((settled, no_time), (0, 3))
+        self.assertTrue(all(it["ts"] == 1000 for it in items),
+                        "prev 里 B 类首见被污染成未来时必须丢弃、改用 now")
 
     def test_no_time_does_not_touch_timed_items(self):
         # 同一批里有的有真实时间、有的没有：有时间的原样保留，没时间的按 now 落定

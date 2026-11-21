@@ -99,6 +99,38 @@ class TestFeedsSync(unittest.TestCase):
         # 写进去的必须真是能用的清单，而不是一堆字节
         self.assertEqual(_sources(p), n)
 
+    def test_rewritten_list_chmods_before_replace(self):
+        """同步必须在 replace 前 chmod 644，别让 mkstemp 的 0600 收窄权限。
+
+        与 build_feed._write / rotate.save_rotate_state 同一约定：三个服务都跑在
+        user 下，收窄暂时不炸，但「清单谁都能读」是隐含契约，换用户就踩。
+        这里断言 chmod 的调用与顺序，而不是文件 stat —— Windows 上 os.chmod
+        只切只读位、stat 不反映 unix 权限，断言 stat 会平台假红（本项目栽过）。
+        """
+        new = _list_text(S.FEEDS_SYNC_MIN_SOURCES + 2).encode("utf-8")
+        self._patch(body=new)
+        p = self._path()
+        calls = []
+        real_chmod, real_replace = S.os.chmod, S.os.replace
+
+        def spy_chmod(path, mode):
+            calls.append(("chmod", mode))
+            return real_chmod(path, mode)
+
+        def spy_replace(src, dst):
+            calls.append(("replace", src))
+            return real_replace(src, dst)
+
+        S.os.chmod, S.os.replace = spy_chmod, spy_replace
+        try:
+            self.assertEqual(S.sync(p, UA, url="http://x/feeds.txt"), "updated")
+        finally:
+            S.os.chmod, S.os.replace = real_chmod, real_replace
+        self.assertIn(("chmod", 0o644), calls, "replace 前要用 644 chmod 临时文件")
+        # 顺序：先 chmod 再 replace，否则 replace 出去的还是 0600
+        kinds = [c[0] for c in calls]
+        self.assertLess(kinds.index("chmod"), kinds.index("replace"))
+
     def test_identical_content_is_same_and_not_rewritten(self):
         self._patch(body=self.OLD)
         p = self._path()

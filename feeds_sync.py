@@ -82,6 +82,10 @@ def write_list(path, body):
     try:
         with os.fdopen(fd, "wb") as f:
             f.write(body)
+        # mkstemp 建的是 0600，直接 replace 会把清单权限从仓库默认的 644 静默收窄。
+        # build_feed._write / rotate.save_rotate_state 都补了 chmod，这里同一约定：
+        # 三个服务都跑在 user 下暂时不炸，但「谁都能读清单」是隐含契约，别破坏。
+        os.chmod(tmp, 0o644)
         os.replace(tmp, path)
     except OSError as exc:
         # 磁盘满、目录只读都会走到这里。宁可用旧清单继续构建，也不要一轮都跑不出来

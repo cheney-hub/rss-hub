@@ -21,10 +21,9 @@ on:
       - "render.py"           # 改排版规则也要立刻重建，否则要等下一个整点
       - "rotate.py"          # 改轮播规则同理：不重建就还是旧规则在发设备版
       - "version.py"
-      - "docs/index.html"     # 静态页改动也要重新部署 Pages，否则线上停在旧版
-      - "docs/screen.html"
-      - "docs/board.html"
-      - "docs/subscribe.html"
+      # 静态页用通配一次覆盖全部（含主推的 reader.html）：以前逐文件列，
+      # 11-20 给 reader 做 SEO 时就漏了它，单推那一页不会触发 Pages 重建。
+      - "docs/*.html"
       - "docs/sitemap.xml"    # SEO：站点地图也要重新部署 Pages
       - "docs/robots.txt"     # SEO：爬虫规则也要重新部署 Pages
       - ".github/workflows/rss.yml"

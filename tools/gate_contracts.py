@@ -33,17 +33,25 @@ import review_check as RC
 
 # 版本号必须出现在这几处页面上（人一眼能看到的地方），漏一处就是发版漏了
 VERSION_DOCS = ("README.md", "OPERATIONS.md", "docs/index.html", "docs/screen.html")
+# 发版四件套的另两件：CHANGELOG 顶部与已发布 feed.xml 的 <generator>。
+# 与 VERSION_DOCS 不同，这两份**缺席不报**（沙箱最小仓库没有它们，且部分仓库形态
+# 确实不发布 feed.xml）；只在其存在时做等值核对——「存在但漂移」正是要抓的。
+VERSION_ARTIFACTS = ("CHANGELOG.md", "docs/feed.xml")
 
 
 def check_version_sync(rep):
-    """版本号必须从 version.py 一路传到页面上。
+    """版本号必须从 version.py 一路传到页面与已发布产物上。
 
     漏更新的后果不是报错，而是「页脚写着 v1.0.0、线上跑的是 1.1.0」，
-    排查时按旧版行为去推断，越查越偏。这里只做「有没有出现」的判断，
-    CHANGELOG 里出现历史版本号是正常的，所以不查那一份。
+    排查时按旧版行为去推断，越查越偏。这里只做「有没有出现」的判断。
 
     匹配必须带边界：`ver not in text` 会让 v1.7.2 被 v1.7.20 命中——
     页脚写错一位反而算通过，而这正是要抓的错。
+
+    四件套里 CHANGELOG 与磁盘 feed.xml 曾长期缺席核对：docs/feed.xml 在
+    review_check 的 STYLE_EXEMPT 里、又不在 GENERATED 字典，改 version.py 忘了
+    重跑构建时，页面四项都同步了、磁盘那份却留着旧号而且全绿（2026-11-21 实测
+    1.21.10 vs 1.21.11）。所以这两份存在时必须与 version.py 等值。
     """
     vp = os.path.join(RC.ROOT, "version.py")
     if not os.path.exists(vp):
@@ -61,6 +69,23 @@ def check_version_sync(rep):
             rep.add(RC.REQUIRED, name, 0, "版本号应展示的文件不存在")
         elif not pat.search(RC.read(p)):
             rep.add(RC.REQUIRED, name, 0, "没有出现当前版本号 %s，发版要同步页面" % ver)
+    # 另两件：存在才查。generator 要精确取 <generator> 里的号，不能只搜子串——
+    # 正文历史版本号一大堆，子串匹配会假绿（所以要 regex 抓标签内容再等值）。
+    for name in VERSION_ARTIFACTS:
+        p = os.path.join(RC.ROOT, *name.split("/"))
+        if not os.path.exists(p):
+            continue
+        text = RC.read(p)
+        if name == "docs/feed.xml":
+            m_gen = re.search(r"<generator>\s*rss-hub\s+([0-9.]+)\s*</generator>", text)
+            if m_gen and m_gen.group(1) != ver:
+                rep.add(RC.REQUIRED, name, 0,
+                        "<generator> 是 %s，与 version.py 的 %s 不一致，重跑构建更新产物"
+                        % (m_gen.group(1), ver))
+        elif not pat.search(text):
+            # CHANGELOG：当前版本号必须出现（Unreleased 说明或 [x.y.z] 段都算）
+            rep.add(RC.REQUIRED, name, 0,
+                    "CHANGELOG 没有提到当前版本号 %s，发版四件套漏一件" % ver)
 
 
 _RE_WF_ENV = re.compile(r'^\s*([A-Z][A-Z0-9_]*):\s*"?([0-9.]+)"?\s*$', re.M)

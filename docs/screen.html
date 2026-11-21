@@ -31,8 +31,13 @@
   .wrap{max-width:560px;margin:0 auto}
   h1{font-size:22px;margin:0 0 4px}
   .sub{color:var(--sub);font-size:13px;margin:0 0 24px}
-  .stage{display:flex;justify-content:center;height:180px}
+  .stage{display:flex;justify-content:center;height:180px;overflow:hidden}
   .stage.z2{height:340px}
+  /* 放大态在窄屏收敛倍数：296px×2=592px 会超出手机宽度造成横向拖动，
+     用固定 1.25 倍（≈370px，贴着常见 375px 屏）配 overflow:hidden，兼容所有浏览器 */
+  @media (max-width:640px){
+    .stage.z2 .device{transform:scale(1.25)}
+  }
 
   /* 尺寸按 296×152 写死；样式只是示意，真实渲染由 Dot 云端模板决定 */
   .device{width:296px;height:152px;padding:11px 13px;background:#fff;color:#000;
@@ -61,7 +66,9 @@
   <p class="sub">读的是设备版 <code>feed-wrap.xml</code>（由树莓派每 5 分钟换一条，发布在 <code>moreaix.com/rss/</code>；GitHub Pages 只放完整版，不再发设备版）：标题只放屏上显示得下的 13 全角字，装不下的原文连同原文摘要一起接在正文里（最多 90 全角）。点击屏幕可放大。</p>
 
   <div class="stage" id="stage">
-    <div class="device" onclick="toggleZoom()" title="点击放大 / 缩小">
+    <div class="device" role="button" tabindex="0" aria-label="点击放大或缩小屏幕示意"
+         onclick="toggleZoom()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleZoom();}"
+         title="点击放大 / 缩小">
       <div class="t" id="t">—</div>
       <div class="b" id="b">—</div>
       <div class="m" id="m">—</div>
@@ -81,6 +88,7 @@
   </div>
 
   <div class="foot">
+    <a href="https://moreaix.com/rss/reader.html">网页阅读版</a> ·
     <a href="https://moreaix.com/rss/feed-wrap.xml">feed-wrap.xml（设备版，树莓派）</a> ·
     <a href="./feed.xml">feed.xml</a> ·
     <a href="./">订阅说明</a> ·

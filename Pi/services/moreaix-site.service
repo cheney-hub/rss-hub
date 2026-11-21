@@ -2,9 +2,12 @@
 Description=moreaix.com Static Homepage Server
 After=network-online.target
 # 开机/重启后 /dev/shm 是空的：靠 systemd 层的 Wants 顺带拉起一轮构建填回产物。
+# 同时拉 ai-digest.service 补回 AI 页：ai-digest.timer 只在 07..21 跑且不 Persistent，
+# 22:00–07:00 之间重启后它不会自己补跑，AI 页会 404 到次日 07:00（sitemap 仍列它 daily）。
+# Wants 是弱依赖：AI 生成失败（缺 key / 超时走兜底）不会拖垮站点本身。
 # 不用 ExecStartPost 里的 systemctl —— 服务以普通用户运行，polkit 会回
 # "Interactive authentication required"（部署实测），加了 sudo 又被 NoNewPrivileges 挡。
-Wants=network-online.target rss-build.service
+Wants=network-online.target rss-build.service ai-digest.service
 
 [Service]
 Type=simple

@@ -2,7 +2,8 @@
 # 把 Pi 侧的脚本与 systemd 单元装到树莓派上（不装 Python 依赖）。
 #
 # 上传什么：
-#   serve.py / rotate_screen.py / journal_snapshot.py → ${PI_USER}/pi-pipeline/
+#   serve.py / rotate_screen.py / journal_snapshot.py / ai_digest.py / accum_update.py
+#                                                     → ${PI_USER}/pi-pipeline/
 #   build_feed.py / render.py / rotate.py / version.py / feeds_sync.py / arrival.py
 #                                                     → ${HUB_ROOT}（根目录的引擎）
 #   services/*.service / *.path / *.timer             → /etc/systemd/system/（经 /tmp 中转）
@@ -67,7 +68,7 @@ UNITS="rss-build.service rss-build.timer \
 rss-rotate.service rss-rotate.timer moreaix-site.service \
 journal-snapshot.service journal-snapshot.timer \
 ai-digest.service ai-digest.timer"
-# 只有带 [Install] 的才能 enable：三个 oneshot（rss-build / rss-rotate /
+# 只有带 [Install] 的才能 enable：四个 oneshot（rss-build / rss-rotate /
 # journal-snapshot / ai-digest）都由 timer 触发，enable 它们会直接报「no installation config」。
 ENABLE_UNITS="rss-build.timer rss-rotate.timer \
 moreaix-site.service journal-snapshot.timer ai-digest.timer"
@@ -121,7 +122,7 @@ echo "==> 启用并重启"
 
 echo "==> 状态"
 "${SSH[@]}" "systemctl is-active moreaix-site.service \
-rss-build.timer rss-rotate.timer journal-snapshot.timer || true"
+rss-build.timer rss-rotate.timer journal-snapshot.timer ai-digest.timer || true"
 
 echo "==> 本机自检（docs/ 里还没 feed.xml 时 404 属正常）"
 "${SSH[@]}" 'curl -s -o /dev/null -w "127.0.0.1:8081/rss/feed.xml -> %{http_code}\n" \

@@ -11,6 +11,48 @@
 > 以下改动尚未归入正式发版版本号（当前 `version.py` 仍为 `1.21.11`，因 reader 是纯静态页、
 > `arrival` 仅影响此前沉底丢弃的「无源时间」与未来时间条目）。需要发版时再据此定版本号并补日期。
 
+### 全量优化体检第二轮（2026-11-21）
+
+用户要求「全部优化」+「优化要确认不会产生更多问题、完善错误捕获机制让运维能发现错误」。
+三路只读体检（引擎 / Pi 运行时 / 前端）报 29 条，剔除已做过、MFA、硬约束与凑数项后落地以下改动；
+**每项都配验证：逻辑改动补用例 + 红检查（退回缺陷态必须变红），不靠「全绿」自证**。
+
+- **正确性（arrival.py）**：A 类失真源与 B 类无源时间都补上「首见被旧版本污染成未来」的守卫，
+  与 C 类同口径——上一轮时钟错误落定的未来首见若原样沿用就永远修不好。注释同步改为
+  「`no_source_time`/`future_dated` 是内存标记、不写进产物」（此前称「产物可追溯」是实现不支持的）。
+  `test_arrival.py` 25→27 例，两条新用例经红检查确认守卫可红。
+- **发版门禁（gate_contracts.py）**：`check_version_sync` 补查 CHANGELOG 顶部与磁盘 `docs/feed.xml`
+  的 `<generator>`——此前 feed.xml 在 STYLE_EXEMPT 里、又不在 GENERATED 字典，版本从 1.21.10→1.21.11
+  时页面四项都同步了、磁盘那份却留旧号且门禁全绿（2026-11-21 实测已漂移）。两件产物**存在才查**
+  （缺席不报，兼容不发布 feed.xml 的仓库形态），generator 精确取标签内容做等值比对并用错误信息
+  写出两个版本号+修复动作。`test_gate.py` 62→65 例，红检查确认可红；顺手把漂移的 feed.xml 修正为 1.21.11。
+- **Pi 服务**：`moreaix-site.service` 的 Wants 加 `ai-digest.service`——AI timer 只在 07–21 跑且不
+  Persistent，22:00–07:00 重启后 AI 页会 404 到次日 07:00（sitemap 仍列它 daily）；Wants 是弱依赖，
+  AI 失败不拖垮站点。`rss-build.service`（全机唯一拉 62 个不可信源+XML 解析的服务）与
+  `ai-digest.service` 补齐纵深防御沙箱——rss-build 特意**不加** `ProtectHome=read-only`（要写 feeds.txt）
+  与 `ProtectSystem=strict`（会锁 /dev/shm）。`deploy.sh` 终态自检补 `ai-digest.timer`、「三个 oneshot」
+  订正为四个，部署后能发现 timer 没起来（错误可观测）。
+- **Pi 代码**：`feeds_sync.write_list` 原子写在 replace 前补 `chmod 644`——mkstemp 的 0600 会把清单
+  权限静默收窄，与另两处原子写同约定；新增用例按「chmod 调用+顺序」断言而非文件 stat（Windows
+  上 os.chmod 只切只读位、stat 不反映 unix 权限，断言 stat 会平台假红），红检查确认可红。
+  `ai_digest.py` 头部过时注释（写 max_tokens=6144/8192 不可用）订正为与 1.21.x 一致的 8192/60s。
+  `serve.py` 的 security.txt 加到期维护提醒（Expires 硬编码 2027-11-08）。
+- **前端**：reader.html 补 5 组可见 FAQ 区块（与页头 FAQPage JSON-LD 逐字对应，Google 要求内容可见）；
+  AI 精选链接改绝对地址（Pages 下相对路径必 404）；tablist 补 `role=tab`/`aria-selected`/方向键导航、
+  无缝滚动第二份加 `aria-hidden`（读屏不再把 120 读成 240）、响应 `prefers-reduced-motion`（默认暂停
+  自动滚动且按钮文案同步）；订阅页旧文案「1~3 小时一版」改为现行「每天 3 次 08/13/18 + Pi 每 5 分」。
+  index/screen/board/subscribe 四页页脚统一加入口链接；screen 放大态窄屏收敛倍数防横向溢出、
+  设备示意 div 补键盘可达。推广页不在本仓库（在工作区 `promo/`），其 SEO 项另行处理。
+- **发布链与文档**：`rss.yml` 的 push paths 由逐文件列静态页改为 `docs/*.html`（此前漏了主推的
+  reader.html，单推它不触发 Pages 重建）；`feeds.txt` 频率注释改为现行每天 3 次；Pi/README 与
+  TUNNEL.md 多处路径对齐内存盘迁移后的实际（产物在 /dev/shm、上传脚本 5 个、别名指向 tmpfs）。
+
+**刻意不做（避免引入新问题）**：reader 首屏 no-store 全量拉 feed.xml（伤「实时」卖点，370KB 经
+源站 gzip 实为约 173KB，收益不抵风险）；build_feed.py 918 行拆分（超线主因是 docstring 占 30%，
+拆模块会碰 check_doc_sync 的环境变量提取路径、使其静默失效）。B/C 类条目掉出 120 窗口再入池的
+源级兜底也未做——它与 arrival.py 原设计注释（B/C 用源级会误配新稿）直接冲突，且无真实报障支撑。
+README 用例数 478→484（arrival +2 / gate +3 / feeds_sync +1）。
+
 ### 阅读版 SEO 优化（2026-11-20）
 
 - **搜索与分享元数据改为具体卖点**：`docs/reader.html` 的 `<title>`、meta description、keywords、

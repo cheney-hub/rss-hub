@@ -117,6 +117,11 @@
               animation:pulse 2.4s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}
                    70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  /* 尊重系统「减少动态效果」：停掉脉冲，自动滚动在 JS 里默认暂停（见 userPaused） */
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .brand .dot{animation:none}
+  }
   .actions{display:flex;align-items:center;gap:12px}
   .live{display:inline-flex;align-items:center;gap:6px;color:var(--sub);font-size:12.5px}
   .live i{width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block}
@@ -200,6 +205,16 @@
   .empty-state a{color:var(--accent)}
   .acc-note{color:var(--sub);font-size:12.5px;margin:-6px 0 18px;min-height:0;line-height:1.6}
 
+  /* FAQ：正文可见，与页头 FAQPage JSON-LD 逐字对应（Google 要求结构化数据内容可见） */
+  .faq{max-width:760px;margin:32px auto 0}
+  .faq h2{font-size:17px;font-weight:700;margin:0 0 12px}
+  .faq details{border-bottom:1px solid var(--line);padding:10px 0}
+  .faq summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--text);list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"＋";color:var(--accent);margin-right:8px;font-weight:700}
+  .faq details[open] summary::before{content:"－"}
+  .faq p{font-size:13.5px;line-height:1.7;color:var(--sub);margin:10px 0 2px}
+
   .foot{color:var(--sub);font-size:12px;text-align:center;margin-top:34px;line-height:2}
   .foot a{color:var(--sub);text-decoration:none}
   .foot a:hover{color:var(--accent)}
@@ -227,11 +242,11 @@
     <p class="lede" id="lede">62 个源合并 · 每源 5 条、去重后取最新 120 条 · 设备版由树莓派每 5 分钟换一条、优先播最新。下方为网页阅读版，可直接点标题跳原文。</p>
 
     <div class="tabs-row">
-      <div class="tabs" role="tablist">
-        <button class="tab active" id="tab-feed" onclick="switchView('feed')">最新头条</button>
-        <button class="tab" id="tab-accum" onclick="switchView('accum')">全天缓存 <span class="cnt" id="accN"></span></button>
+      <div class="tabs" role="tablist" aria-label="视图切换">
+        <button class="tab active" id="tab-feed" role="tab" aria-controls="board" aria-selected="true" tabindex="0" onclick="switchView('feed')" onkeydown="tabKey(event)">最新头条</button>
+        <button class="tab" id="tab-accum" role="tab" aria-controls="board" aria-selected="false" tabindex="-1" onclick="switchView('accum')" onkeydown="tabKey(event)">全天缓存 <span class="cnt" id="accN"></span></button>
       </div>
-      <a class="ai-gaze" href="./ai-digest.html" target="_blank" rel="noopener noreferrer">
+      <a class="ai-gaze" href="https://moreaix.com/rss/ai-digest.html" target="_blank" rel="noopener noreferrer">
         <span class="spark"></span>一小时 AI 目光<span class="arrow">↗</span>
       </a>
     </div>
@@ -250,6 +265,30 @@
   </div>
 </div>
 
+<section class="faq" aria-labelledby="faq-h">
+  <h2 id="faq-h">常见问题</h2>
+  <details>
+    <summary>RSS 聚合头条是什么？</summary>
+    <p>一个免费的实时新闻聚合阅读页，把 62 个新闻源合并、去重，按时间顺序呈现最新头条，打开即用，无需注册。</p>
+  </details>
+  <details>
+    <summary>需要注册或付费吗？</summary>
+    <p>都不需要。完全免费，不要求登录，不收集订阅偏好，浏览器打开链接即可阅读。</p>
+  </details>
+  <details>
+    <summary>「最新头条」和「全天缓存」有什么区别？</summary>
+    <p>最新头条是去重后的最新 120 条，每 5 分钟重建；全天缓存是当天见过的全部条目、本地零点重置，并与当前头条按链接去重合并，适合回看一整天的内容。</p>
+  </details>
+  <details>
+    <summary>多久更新一次？</summary>
+    <p>网页版每 5 分钟重建一次；Kindle 等设备版由树莓派每 5 分钟换一条上屏，优先播最新。</p>
+  </details>
+  <details>
+    <summary>支持哪些设备？</summary>
+    <p>任何带浏览器的设备（手机、平板、电脑）均可阅读；另有 Kindle 墨水屏版，可把老设备当作常驻新闻屏。</p>
+  </details>
+</section>
+
 <footer class="foot">
   <a href="./">订阅页</a> ·
   <a href="./feed.xml">feed.xml</a> ·
@@ -258,7 +297,7 @@
   <a href="https://moreaix.com/kindle/">kindle 看板</a> ·
   <a href="./board.html">看板实时图</a> ·
   <a href="./subscribe.html">用 iPhone 订阅</a> ·
-  <a href="./ai-digest.html">AI 精选</a> ·
+  <a href="https://moreaix.com/rss/ai-digest.html">AI 精选</a> ·
   <a href="https://github.com/cheney-hub/rss-hub">源码仓库</a>
   <div class="v">rss-hub v1.21.11 · 版本历史见 <a href="https://github.com/cheney-hub/rss-hub/blob/main/CHANGELOG.md">CHANGELOG</a></div>
 </footer>
@@ -286,7 +325,8 @@ let filtered = [];
 let copyH = 0;            // 一份内容的高度（track 里渲染了两份用于无缝循环）
 let autoPos = 0;          // 自动滚动游标（无缝循环 marquee：滚过一份高度即回卷到开头）
 let hovering = false;     // 鼠标悬停暂停
-let userPaused = false;   // 手动暂停
+// 系统开启「减少动态效果」时默认暂停自动滚动；用户仍可用暂停按钮主动继续。
+let userPaused = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let interactUntil = 0;    // 手动滚动后暂停到的时刻
 let lastLoopRefresh = 0;  // 上次「跑完一轮」回填的时间，避免同轮重复触发
 let accumTimer = null;     // 全天缓存视图的 300s 自动刷新定时器（仅该视图活跃时运行）
@@ -387,7 +427,13 @@ function render(preserve){
   const make = marquee ? makeRow : makeBoardRow;
   const frag = document.createDocumentFragment();
   filtered.forEach(it => frag.appendChild(make(it)));
-  if(marquee) filtered.forEach(it => frag.appendChild(makeRow(it)));  // 第二份只给滚动视图
+  // 第二份纯为无缝循环，对读屏软件隐藏，否则 120 条被读成 240 条。
+  // 不包容器：board-track 是 flex column + gap，包一层会破坏布局与 copyH 高度计算。
+  if(marquee) filtered.forEach(it => {
+    const row = makeRow(it);
+    row.setAttribute('aria-hidden', 'true');
+    frag.appendChild(row);
+  });
   track.replaceChildren(frag);
   if(preserve){
     // 后台刷新：保持当前滚动位置连续，不跳回顶部
@@ -528,8 +574,15 @@ function loadView(preserve, interactive){
 function switchView(v){
   if(v === CURRENT_VIEW) return;
   CURRENT_VIEW = v;
-  document.getElementById('tab-feed').classList.toggle('active', v === 'feed');
-  document.getElementById('tab-accum').classList.toggle('active', v === 'accum');
+  const tf = document.getElementById('tab-feed');
+  const ta = document.getElementById('tab-accum');
+  tf.classList.toggle('active', v === 'feed');
+  ta.classList.toggle('active', v === 'accum');
+  // a11y：读屏软件靠 aria-selected 知道当前视图；tabindex 让方向键焦点模型正确
+  tf.setAttribute('aria-selected', v === 'feed' ? 'true' : 'false');
+  ta.setAttribute('aria-selected', v === 'accum' ? 'true' : 'false');
+  tf.tabIndex = v === 'feed' ? 0 : -1;
+  ta.tabIndex = v === 'accum' ? 0 : -1;
   const pauseBtn = document.getElementById('pause');
   if(pauseBtn) pauseBtn.style.display = (v === 'feed') ? '' : 'none';  // 静态视图无需暂停
   const h1 = document.getElementById('h1');
@@ -545,6 +598,19 @@ function switchView(v){
     if(!accumTimer) accumTimer = setInterval(() => { if(CURRENT_VIEW === 'accum') loadView(true, false); }, 300000);
   }
   loadView();
+}
+
+// tablist 键盘导航：左右方向键在两视图间切换（WAI-ARIA tabs 惯例），Home/End 到两端
+function tabKey(e){
+  const next = (e.key === 'ArrowRight') ? 'accum'
+             : (e.key === 'ArrowLeft') ? 'feed'
+             : (e.key === 'Home') ? 'feed'
+             : (e.key === 'End') ? 'accum' : null;
+  if(!next) return;
+  e.preventDefault();
+  const id = next === 'feed' ? 'tab-feed' : 'tab-accum';
+  document.getElementById(id).focus();
+  switchView(next);
 }
 
 // 设备版轮播状态（与订阅页同一数据源，两个视图共用）
@@ -604,6 +670,11 @@ window.addEventListener('resize', () => {
   resizeT = setTimeout(() => { if(filtered.length) copyH = track.scrollHeight / 2; }, 120);
 });
 
+// reduced-motion 下 userPaused 初始为 true，按钮文案要同步，否则显示「暂停」却是暂停态
+if(userPaused){
+  const pb = document.getElementById('pause');
+  if(pb){ pb.textContent = '▶ 继续'; pb.title = '系统开启了减少动态效果，已默认暂停'; }
+}
 loadView();
 // 只在自动滚动跑完一轮（回卷到顶部）时才回填一次数据；不挂固定定时器，
 // 让刷新完全跟随滚动节奏——停留或暂停时不会打断阅读。

@@ -32,7 +32,8 @@
 - `site/` — 根域主页 `index.html` + logo（`logo.svg` / `logo-lockup.svg`）
 - `sshd-99-hardening.conf` — SSH 加固 drop-in（关密码、仅公钥）
 - `TUNNEL.md` — Cloudflare Tunnel 接入指引
-- `deploy.sh` — 部署脚本：上传本目录的两个 `.py`、`services/*`，**以及根目录的引擎代码**
+- `deploy.sh` — 部署脚本：上传本目录的五个 `.py`（`serve.py` / `rotate_screen.py` /
+  `journal_snapshot.py` / `ai_digest.py` / `accum_update.py`）、`services/*`，**以及根目录的引擎代码**
   （含 `feeds_sync.py` / `arrival.py`）。`feeds.txt` 不在上传清单里 —— 它由引擎每轮构建前
   自己去仓库拉（`FEEDS_SYNC_URL`，见 `services/rss-build.service`），不需要 `deploy.sh` 代劳。
   **不管 Kindle**：那两个渲染器与 `kindle-screen.*` 单元归 `../kindle/deploy.sh` 管
@@ -45,8 +46,12 @@
 ## Pi 上的实际部署路径
 
 - 服务文件：`/etc/systemd/system/`（`moreaix-site.service` 等）
-- 辅助脚本：`/home/user/pi-pipeline/` —— `serve.py` / `rotate_screen.py`（本目录上传）+
+- 辅助脚本：`/home/user/pi-pipeline/` —— `serve.py` / `rotate_screen.py` /
+  `journal_snapshot.py` / `ai_digest.py` / `accum_update.py`（本目录上传）+
   `kindle_screen.py` / `kindle_page.py`（`../kindle/deploy.sh` 上传）
+- **运行产物全在 `/dev/shm/rss-hub`（tmpfs）**：`feed.xml` / `feed-wrap.xml` / `rotate.json` /
+  `ai-accum.json` / `ai-digest.html` / kindle PNG / 三个静态页。磁盘上的 `/home/user/rss-hub/docs`
+  与 `/home/user/kindle` 只是静态页源与冷备，排障时别去磁盘找运行产物。
 - 主页：`/home/user/site/`
 - 看板图输出：`/home/user/kindle/`（`rss-pw2.png` 等，由 `kindle/` 那边的渲染器写；
   对外地址 `https://moreaix.com/kindle/rss-pw2.png`，网页版 `https://moreaix.com/kindle/`。

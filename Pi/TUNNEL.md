@@ -6,11 +6,12 @@
 ## 架构
 
 ```
- 各 RSS 源 ──抓取──> 树莓派 rss-build.timer (build_feed.py) ──写──> docs/feed.xml
+ 各 RSS 源 ──抓取──> 树莓派 rss-build.timer (build_feed.py) ──写──> /dev/shm/rss-hub/feed.xml
                                                                         │
                                   rss-rotate.timer (rotate_screen.py) ──┤ 只读 feed.xml
                                                                         ▼
-                                                        docs/feed-wrap.xml + docs/rotate.json
+                                       /dev/shm/rss-hub/feed-wrap.xml + rotate.json
+                                       （全部运行产物在 tmpfs；磁盘 docs/ 只是静态页源/冷备）
                                                                         │
                                        serve.py (:8081) 一份实例服务三处：
                                         /        → site/        （根域主页）
@@ -166,8 +167,8 @@ curl -s  https://moreaix.com/rss/feed.xml | head -n 20
 
 ```
 serve.py --root /home/user/site \
-         --alias /rss=/home/user/rss-hub/docs \
-         --alias /kindle=/home/user/kindle --port 8081
+         --alias /rss=/dev/shm/rss-hub \
+         --alias /kindle=/dev/shm/rss-hub/kindle --port 8081
 ```
 
 Tunnel 只要把整个 `moreaix.com` 指向 `localhost:8081`，三条路径各归各的目录。
@@ -295,8 +296,9 @@ BOARD_URL="https://moreaix.com/kindle/rss-pw2.png" sh board.sh  # 走公网
 ## 注意
 
 - `rotate.json` 是**显示游标**，由 `rss-rotate.timer` 每 5 分钟推进并写在本机
-  `docs/rotate.json`；`rss-build.service` 那份被指到 `/tmp`（它不参与轮播）。
-  游标只在 Pi 上有一份真源，别去同步 GitHub 那份 —— 两边窗口号会互相打架。
+  `/dev/shm/rss-hub/rotate.json`；`rss-build.service` 另写 `rotate-build.json`（tmpfs，
+  它不参与轮播，两者节奏不同）。游标只在 Pi 上有一份真源，别去同步 GitHub 那份 ——
+  两边窗口号会互相打架。
 - 端口 `8081` 可改，改了要同步改第 2 步的 `Service · URL` 和 `moreaix-site.service`。
 - 时区：`rss-build.timer` 的日夜两条 `OnCalendar` 按系统时区解释，
   Pi 必须是 `Asia/Shanghai`（见 `README.md`「时区」一节）。

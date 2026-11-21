@@ -156,6 +156,10 @@ class TestVersionSync(Sandbox):
         self.write("version.py", '#!/usr/bin/env python3\n__version__ = "1.7.2"\n')
         for d in self.DOCS:
             self.write(d, page_text if d.startswith("docs/") else "当前版本 **v1.7.2**")
+        # 发版四件套另两件：存在才查，这里造一致的两份，让旧用例保持通过
+        self.write("CHANGELOG.md", "## [1.7.2] - 2026-01-01\n\n变更内容\n")
+        self.write("docs/feed.xml",
+                   "<rss><channel><generator>rss-hub 1.7.2</generator></channel></rss>")
 
     def test_exact_version_passes(self):
         self._setup()
@@ -176,6 +180,41 @@ class TestVersionSync(Sandbox):
         GC.check_version_sync(rep)
         self.assertEqual([r[0] for r in rep.rows], [RC.REQUIRED])
         self.assertIn("version.py", rep.rows[0][1])
+
+    def test_drifted_feed_generator_is_required(self):
+        """磁盘 feed.xml 的 generator 落后于 version.py → 必改（2026-11-21 真实漂移）。
+
+        这是「存在但漂移」，不是缺文件：错误信息要写出两个版本号和修复动作，
+        让运维一眼知道该重跑构建，而不是只看到一句「版本不一致」。
+        """
+        self._setup()
+        self.write("docs/feed.xml",
+                   "<rss><channel><generator>rss-hub 1.7.1</generator></channel></rss>")
+        rep = RC.Report()
+        GC.check_version_sync(rep)
+        self.assertEqual([r[1] for r in rep.rows], ["docs/feed.xml"])
+        self.assertEqual(rep.rows[0][0], RC.REQUIRED)
+        self.assertIn("1.7.1", rep.rows[0][3])
+        self.assertIn("1.7.2", rep.rows[0][3])
+        self.assertIn("重跑构建", rep.rows[0][3])
+
+    def test_changelog_missing_current_version_is_required(self):
+        """CHANGELOG 没提到当前版本号 → 必改，发版四件套漏了一件。"""
+        self._setup()
+        self.write("CHANGELOG.md", "## [1.7.1] - 2026-01-01\n\n只有旧版本\n")
+        rep = RC.Report()
+        GC.check_version_sync(rep)
+        self.assertEqual([r[1] for r in rep.rows], ["CHANGELOG.md"])
+        self.assertEqual(rep.rows[0][0], RC.REQUIRED)
+
+    def test_absent_artifacts_are_not_reported(self):
+        """两件产物缺席时不报必改（兼容不发布 feed.xml 的仓库形态与最小沙箱）。"""
+        self._setup()
+        os.remove(os.path.join(self.tmp, "docs/feed.xml"))
+        os.remove(os.path.join(self.tmp, "CHANGELOG.md"))
+        rep = RC.Report()
+        GC.check_version_sync(rep)
+        self.assertEqual(rep.rows, [])
 
 
 class TestDocValues(Sandbox):

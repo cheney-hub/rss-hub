@@ -150,6 +150,9 @@ HSTS_VALUE = "max-age=31536000; includeSubDomains"
 # _target 的隐藏文件白名单里，由 _send 单独放行（见 _strip_prefix / _send_text）。
 # Expires 必须是未来时间，这里取扫描日一年后。联系邮箱即本站账户邮箱（报告里的
 # cheney.wong@gmail.com），可按需替换；不改也行，它本来就是要公开给研究员用的联系方式。
+# 维护提醒：Expires 是硬编码日期，2027-11-08 之后这份披露声明就失效（RFC 9116 要求
+# 未过期）。年度检查记得把它往后推一年；故意不写成「今天+1年」——那会让响应头每次
+# 请求都变、失去固定声明的意义，也和源站缓存策略打架。
 SECURITY_TXT = (
     "Contact: mailto:cheney.wong@gmail.com\n"
     "Expires: 2027-11-08T00:00:00.000Z\n"

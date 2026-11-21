@@ -55,3 +55,21 @@ ExecStart=/bin/bash -c 'exec 9>/dev/shm/rss-hub/rss-build.lock; flock -n 9 || ex
 # 随 rss-build 全天节拍刷新（白天每 5 分钟、夜间每小时），按归一标题去重 + 原子写 tmpfs，
 # 不落 SD。AI 摘要进程不再负责维护池子，只从池子读。失败以 0 退出，绝不影响本次构建。
 ExecStartPost=/bin/bash -c 'exec /usr/bin/python3 /home/user/pi-pipeline/accum_update.py || true'
+
+# 纵深防御：这是全机唯一「主动拉 62 个不可信外部源 + XML 解析」的服务，攻击面最大。
+# 与 ai-digest.service 同级沙箱。注意两点（改前必读，改错会静默让构建失败）：
+#   ① 不能加 ProtectHome=read-only —— feeds_sync.write_list 要改写
+#      /home/user/rss-hub/feeds.txt；ProtectSystem=full 只锁 /usr /boot /etc，
+#      不碰 /home 与 /dev/shm，产物与清单写入都不受影响。
+#   ② 不能加 ProtectSystem=strict —— 它会把 /dev/shm 一并设只读，与产物落盘冲突。
+NoNewPrivileges=yes
+ProtectSystem=full
+PrivateTmp=yes
+UMask=0077
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
