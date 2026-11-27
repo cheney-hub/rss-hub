@@ -31,7 +31,7 @@ on:
 concurrency:
   # 这个 group 只防「自己和自己」重叠（手动 dispatch 连点、push 与 schedule 撞一起）。
   # 和 minute.yml / nightly.yml 不是同一个 group，抢不到它们；Pages 同一时刻只允许
-  # 一个部署，那件事靠下面「等 Pages 空档 + 重新部署」两步兜。
+  # 一个部署，那件事靠下面 deploy 的递增间隔重试（5/20/60s）兜。
   group: rss-oneshot
   cancel-in-progress: true
 
@@ -86,27 +86,44 @@ jobs:
           path: docs
           retention-days: 1
 
+      # deploy-pages 有个已知 bug（actions/deploy-pages#451）：artifact 上传后元数据
+      # 在 API 里还没可见，紧接着部署会报 "No artifacts named ... were found" /
+      # "Fetching artifact metadata failed"（11-24、11-25 各红一次就是这个）。
+      # 对策：只重试 deploy，绝不重新上传——重复上传的 artifact 反而查不到（原逻辑
+      # 用新名字 site-oneshot-retry 再传一次，第二次部署照样失败）。间隔 5/20/60s
+      # 递增，兼顾 GitHub 侧元数据传播和 Pages 并发部署 in progress 的短暂空档。
+      # 最后一次重试不设 continue-on-error：三次都失败要让 job 变红，运维能发现。
       - id: deploy
         uses: actions/deploy-pages@v4
         with:
           artifact_name: site-oneshot
         continue-on-error: true
 
-      # Pages 同一时刻只允许一个部署。若正好撞上 minute.yml 的轮次会报 in progress，
-      # 这里等一轮再试，避免改个源就红一次。
-      - name: 等 Pages 空档
+      - name: 等 5 秒重试部署
         if: steps.deploy.outcome == 'failure'
-        run: sleep 35
-
-      - uses: actions/upload-pages-artifact@v3
-        if: steps.deploy.outcome == 'failure'
-        with:
-          name: site-oneshot-retry
-          path: docs
-          retention-days: 1
-
-      - name: 重新部署
+        run: sleep 5
+      - id: deploy_retry_1
         if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4
         with:
-          artifact_name: site-oneshot-retry
+          artifact_name: site-oneshot
+        continue-on-error: true
+
+      - name: 等 20 秒重试部署
+        if: steps.deploy_retry_1.outcome == 'failure'
+        run: sleep 20
+      - id: deploy_retry_2
+        if: steps.deploy_retry_1.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-oneshot
+        continue-on-error: true
+
+      - name: 等 60 秒最后重试部署
+        if: steps.deploy_retry_2.outcome == 'failure'
+        run: sleep 60
+      - name: 最后重试部署（失败则报红）
+        if: steps.deploy_retry_2.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-oneshot
